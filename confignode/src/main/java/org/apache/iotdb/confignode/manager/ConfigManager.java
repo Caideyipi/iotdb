@@ -1011,7 +1011,6 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  @TestOnly
   public TGetRoutingResp getRouting(GetRoutingPlan plan) {
     TSStatus status = confirmLeader();
     return status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
@@ -1020,7 +1019,6 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  @TestOnly
   public TGetTimeSlotListResp getTimeSlotList(GetTimeSlotListPlan plan) {
     TSStatus status = confirmLeader();
     return status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
@@ -1029,7 +1027,6 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  @TestOnly
   public TGetSeriesSlotListResp getSeriesSlotList(GetSeriesSlotListPlan plan) {
     TSStatus status = confirmLeader();
     TGetSeriesSlotListResp resp = new TGetSeriesSlotListResp();

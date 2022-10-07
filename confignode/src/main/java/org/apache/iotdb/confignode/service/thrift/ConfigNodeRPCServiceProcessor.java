@@ -621,7 +621,6 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   }
 
   @Override
-  @TestOnly
   public TGetRoutingResp getRouting(TGetRoutingReq req) {
     GetRoutingPlan plan =
         new GetRoutingPlan(req.getStorageGroup(), req.getSeriesSlotId(), req.getTimeSlotId());
@@ -629,7 +628,6 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   }
 
   @Override
-  @TestOnly
   public TGetTimeSlotListResp getTimeSlotList(TGetTimeSlotListReq req) {
     long startTime = req.isSetStartTime() ? req.getStartTime() : Long.MIN_VALUE;
     long endTime = req.isSetEndTime() ? req.getEndTime() : Long.MAX_VALUE;
@@ -639,7 +637,6 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   }
 
   @Override
-  @TestOnly
   public TGetSeriesSlotListResp getSeriesSlotList(TGetSeriesSlotListReq req) {
     TConsensusGroupType type =
         req.isSetType() ? req.getType() : TConsensusGroupType.PartitionRegion;
