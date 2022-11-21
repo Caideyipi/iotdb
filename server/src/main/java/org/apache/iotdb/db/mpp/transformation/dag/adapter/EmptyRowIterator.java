@@ -17,37 +17,24 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.engine.trigger.executor;
+package org.apache.iotdb.db.mpp.transformation.dag.adapter;
 
-public enum TriggerEvent {
-  BEFORE_INSERT((byte) 0, "before insert"),
-  AFTER_INSERT((byte) 1, "after insert");
+import org.apache.iotdb.udf.api.access.Row;
+import org.apache.iotdb.udf.api.access.RowIterator;
 
-  private final byte id;
-  private final String event;
+import java.io.IOException;
 
-  TriggerEvent(byte id, String event) {
-    this.id = id;
-    this.event = event;
-  }
-
-  public byte getId() {
-    return id;
+public class EmptyRowIterator implements RowIterator {
+  @Override
+  public boolean hasNextRow() {
+    return false;
   }
 
   @Override
-  public String toString() {
-    return event;
+  public Row next() throws IOException {
+    throw new UnsupportedOperationException("Can not call next on EmptyRowIterator");
   }
 
-  public static TriggerEvent construct(byte id) {
-    switch (id) {
-      case 0:
-        return BEFORE_INSERT;
-      case 1:
-        return AFTER_INSERT;
-      default:
-        throw new IllegalArgumentException(String.format("No such trigger event (id: %d)", id));
-    }
-  }
+  @Override
+  public void reset() {}
 }

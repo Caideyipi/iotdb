@@ -16,17 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.iotdb.confignode.exception;
 
-package org.apache.iotdb.db.exception;
+import org.apache.iotdb.common.rpc.thrift.TConsensusGroupType;
 
-public class TriggerManagementException extends StorageEngineException {
+public class NoAvailableRegionGroupException extends ConfigNodeException {
 
-  public TriggerManagementException(String message, Throwable cause) {
-    super(message);
-    this.initCause(cause);
-  }
+  private static final String SCHEMA_REGION_GROUP = "SchemaRegionGroup";
+  private static final String DATA_REGION_GROUP = "DataRegionGroup";
 
-  public TriggerManagementException(String message) {
-    super(message);
+  public NoAvailableRegionGroupException(TConsensusGroupType regionGroupType) {
+    super(
+        String.format(
+            "There are no available %s RegionGroups currently, please use \"show cluster\" or \"show regions\" to check the cluster status",
+            TConsensusGroupType.SchemaRegion.equals(regionGroupType)
+                ? SCHEMA_REGION_GROUP
+                : DATA_REGION_GROUP));
   }
 }
