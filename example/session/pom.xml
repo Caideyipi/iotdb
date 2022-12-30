@@ -35,9 +35,15 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-session</artifactId>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>session-parent</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>timecho-session</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

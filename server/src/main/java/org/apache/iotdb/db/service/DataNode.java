@@ -102,7 +102,7 @@ import static org.apache.iotdb.commons.conf.IoTDBConstant.DEFAULT_CLUSTER_NAME;
 public class DataNode implements DataNodeMBean {
 
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
-  private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
+  protected static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
 
   private final String mbeanName =
       String.format(
@@ -130,11 +130,11 @@ public class DataNode implements DataNodeMBean {
   private final TriggerInformationUpdater triggerInformationUpdater =
       new TriggerInformationUpdater();
 
-  private DataNode() {
+  protected DataNode() {
     // we do not init anything here, so that we can re-initialize the instance in IT.
   }
 
-  private static final RegisterManager registerManager = new RegisterManager();
+  protected static final RegisterManager registerManager = new RegisterManager();
 
   public static DataNode getInstance() {
     return DataNodeHolder.INSTANCE;
@@ -145,7 +145,7 @@ public class DataNode implements DataNodeMBean {
     new DataNodeServerCommandLine().doMain(args);
   }
 
-  protected void doAddNode() {
+  public void doAddNode() {
     boolean isFirstStart = false;
     try {
       // Check if this DataNode is start for the first time and do other pre-checks
@@ -530,7 +530,7 @@ public class DataNode implements DataNodeMBean {
   }
 
   /** set up RPC and protocols after DataNode is available */
-  private void setUpRPCService() throws StartupException {
+  protected void setUpRPCService() throws StartupException {
     // Start InternalRPCService to indicate that the current DataNode can accept cluster scheduling
     registerManager.register(DataNodeInternalRPCService.getInstance());
 
@@ -838,7 +838,7 @@ public class DataNode implements DataNodeMBean {
     }
   }
 
-  private void initProtocols() throws StartupException {
+  protected void initProtocols() throws StartupException {
     if (config.isEnableInfluxDBRpcService()) {
       registerManager.register(InfluxDBRPCService.getInstance());
     }

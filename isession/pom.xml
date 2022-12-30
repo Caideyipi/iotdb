@@ -26,10 +26,11 @@
         <version>1.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>isession</artifactId>
+    <groupId>com.timecho.timechodb</groupId>
+    <artifactId>isession-parent</artifactId>
     <dependencies>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.timechodb</groupId>
             <artifactId>service-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>

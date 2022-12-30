@@ -92,7 +92,7 @@ public class DataNodeServerCommandLine extends ServerCommandLine {
    *
    * @param args id or ip:rpc_port for removed datanode
    */
-  private void doRemoveDataNode(String[] args)
+  protected void doRemoveDataNode(String[] args)
       throws BadNodeUrlException, TException, IoTDBException, ClientManagerException {
 
     if (args.length != 2) {

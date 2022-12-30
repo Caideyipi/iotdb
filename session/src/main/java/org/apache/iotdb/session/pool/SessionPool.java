@@ -75,49 +75,49 @@ public class SessionPool implements ISessionPool {
   public static final String SESSION_POOL_IS_CLOSED = "Session pool is closed";
   public static final String CLOSE_THE_SESSION_FAILED = "close the session failed.";
 
-  private static final int RETRY = 3;
-  private static final int FINAL_RETRY = RETRY - 1;
+  protected static final int RETRY = 3;
+  protected static final int FINAL_RETRY = RETRY - 1;
 
-  private final ConcurrentLinkedDeque<ISession> queue = new ConcurrentLinkedDeque<>();
+  protected final ConcurrentLinkedDeque<ISession> queue = new ConcurrentLinkedDeque<>();
   // for session whose resultSet is not released.
-  private final ConcurrentMap<ISession, ISession> occupied = new ConcurrentHashMap<>();
-  private int size = 0;
-  private int maxSize = 0;
-  private final long waitToGetSessionTimeoutInMs;
+  protected final ConcurrentMap<ISession, ISession> occupied = new ConcurrentHashMap<>();
+  protected int size = 0;
+  protected int maxSize = 0;
+  protected final long waitToGetSessionTimeoutInMs;
 
   // parameters for Session constructor
-  private final String host;
-  private final int port;
-  private final String user;
-  private final String password;
-  private int fetchSize;
-  private ZoneId zoneId;
-  private boolean enableRedirection;
-  private boolean enableQueryRedirection = false;
+  protected final String host;
+  protected final int port;
+  protected final String user;
+  protected final String password;
+  protected int fetchSize;
+  protected ZoneId zoneId;
+  protected boolean enableRedirection;
+  protected boolean enableQueryRedirection = false;
 
-  private Map<String, TEndPoint> deviceIdToEndpoint;
+  protected Map<String, TEndPoint> deviceIdToEndpoint;
 
-  private int thriftDefaultBufferSize;
-  private int thriftMaxFrameSize;
+  protected int thriftDefaultBufferSize;
+  protected int thriftMaxFrameSize;
 
   /**
    * Timeout of query can be set by users. A negative number means using the default configuration
    * of server. And value 0 will disable the function of query timeout.
    */
-  private long queryTimeoutInMs = -1;
+  protected long queryTimeoutInMs = -1;
 
   // The version number of the client which used for compatibility in the server
-  private Version version;
+  protected Version version;
 
   // parameters for Session#open()
-  private final int connectionTimeoutInMs;
-  private final boolean enableCompression;
+  protected final int connectionTimeoutInMs;
+  protected final boolean enableCompression;
 
   // whether the queue is closed.
-  private boolean closed;
+  protected boolean closed;
 
   // Redirect-able SessionPool
-  private final List<String> nodeUrls;
+  protected final List<String> nodeUrls;
 
   public SessionPool(String host, int port, String user, String password, int maxSize) {
     this(
@@ -346,7 +346,7 @@ public class SessionPool implements ISessionPool {
     this.thriftMaxFrameSize = thriftMaxFrameSize;
   }
 
-  private Session constructNewSession() {
+  protected ISession constructNewSession() {
     Session session;
     if (nodeUrls == null) {
       // Construct custom Session
@@ -385,7 +385,7 @@ public class SessionPool implements ISessionPool {
   // if this method throws an exception, either the server is broken, or the ip/port/user/password
   // is incorrect.
   @SuppressWarnings({"squid:S3776", "squid:S2446"}) // Suppress high Cognitive Complexity warning
-  private ISession getSession() throws IoTDBConnectionException {
+  protected ISession getSession() throws IoTDBConnectionException {
     ISession session = queue.poll();
     if (closed) {
       throw new IoTDBConnectionException(SESSION_POOL_IS_CLOSED);
@@ -496,7 +496,7 @@ public class SessionPool implements ISessionPool {
   }
 
   @SuppressWarnings({"squid:S2446"})
-  private void putBack(ISession session) {
+  protected void putBack(ISession session) {
     queue.push(session);
     synchronized (this) {
       // we do not need to notifyAll as any waited thread can continue to work after waked up.
@@ -509,7 +509,7 @@ public class SessionPool implements ISessionPool {
     }
   }
 
-  private void occupy(ISession session) {
+  protected void occupy(ISession session) {
     occupied.put(session, session);
   }
 
@@ -556,7 +556,7 @@ public class SessionPool implements ISessionPool {
 
   @SuppressWarnings({"squid:S2446"})
   private void tryConstructNewSession() {
-    Session session = constructNewSession();
+    ISession session = constructNewSession();
     try {
       session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint);
       // avoid someone has called close() the session pool
@@ -592,7 +592,7 @@ public class SessionPool implements ISessionPool {
     }
   }
 
-  private void cleanSessionAndMayThrowConnectionException(
+  protected void cleanSessionAndMayThrowConnectionException(
       ISession session, int times, IoTDBConnectionException e) throws IoTDBConnectionException {
     closeSession(session);
     tryConstructNewSession();

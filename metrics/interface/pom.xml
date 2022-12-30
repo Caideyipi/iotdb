@@ -37,8 +37,8 @@
     <url>https://github.com/thulab/iotdb/tree/master/tsfile</url>
     <dependencies>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-session</artifactId>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>session-parent</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -587,4 +587,23 @@ service IClientRPCService {
   TSBackupConfigurationResp getBackupConfiguration();
 
   TSConnectionInfoResp fetchAllConnectionsInfo();
+
+  WhiteListInfoResp getWhiteIpSet()
+
+  common.TSStatus updateWhiteList(1:set<string> ipSet)
+
+  LicenseInfoResp getLicenseInfo()
+}
+
+
+struct LicenseInfoResp{
+  1: required common.TSStatus status
+  2: optional bool isActive
+  3: optional string expireDate
+  4: optional bool isEnterprise
+}
+
+struct WhiteListInfoResp{
+  1: required common.TSStatus status
+  2: optional set<string> whiteList
 }

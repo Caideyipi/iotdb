@@ -47,7 +47,7 @@
             <artifactId>libthrift</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.timechodb</groupId>
             <artifactId>service-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -88,8 +88,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-thrift</artifactId>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>timechodb-thrift</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -44,14 +44,14 @@
             <version>${eclipse-collections.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.timechodb</groupId>
             <artifactId>tsfile</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-session</artifactId>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>session-parent</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -1038,6 +1038,8 @@ public class IoTDBConfig {
   /** whether the local write api records audit logs * */
   private boolean enableAuditLogForNativeInsertApi = true;
 
+  private boolean enableWhiteList = false;
+
   // customizedProperties, this should be empty by default.
   private Properties customizedProperties = new Properties();
 
@@ -3612,5 +3614,13 @@ public class IoTDBConfig {
 
   public void setEnableAuditLogForNativeInsertApi(boolean enableAuditLogForNativeInsertApi) {
     this.enableAuditLogForNativeInsertApi = enableAuditLogForNativeInsertApi;
+  }
+
+  public boolean isEnableWhiteList() {
+    return enableWhiteList;
+  }
+
+  public void setEnableWhiteList(boolean enableWhiteList) {
+    this.enableWhiteList = enableWhiteList;
   }
 }

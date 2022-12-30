@@ -36,8 +36,8 @@
             <artifactId>libthrift</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-thrift-commons</artifactId>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>timechodb-thrift</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

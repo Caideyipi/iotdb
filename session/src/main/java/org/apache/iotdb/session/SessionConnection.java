@@ -201,7 +201,7 @@ public class SessionConnection {
     }
   }
 
-  protected IClientRPCService.Iface getClient() {
+  public IClientRPCService.Iface getClient() {
     return client;
   }
 
@@ -885,7 +885,7 @@ public class SessionConnection {
     }
   }
 
-  private boolean reconnect() {
+  public boolean reconnect() {
     boolean connectedSuccess = false;
     Random random = new Random();
     for (int i = 1; i <= SessionConfig.RETRY_NUM; i++) {
@@ -1111,7 +1111,7 @@ public class SessionConnection {
   }
 
   // error log for connection failure
-  private String logForReconnectionFailure() {
+  public String logForReconnectionFailure() {
     if (endPointList == null) {
       return MSG_RECONNECTION_FAIL;
     }

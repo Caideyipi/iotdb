@@ -47,14 +47,15 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>src/assembly/all.xml</descriptor>
-                                <descriptor>src/assembly/datanode.xml</descriptor>
-                                <descriptor>src/assembly/confignode.xml</descriptor>
-                                <descriptor>src/assembly/cli.xml</descriptor>
-                                <descriptor>src/assembly/client-cpp.xml</descriptor>
-                                <descriptor>src/assembly/grafana-plugin.xml</descriptor>
-                                <descriptor>src/assembly/library-udf.xml</descriptor>
+                                <!--                                <descriptor>src/assembly/datanode.xml</descriptor>-->
+                                <!--                                <descriptor>src/assembly/confignode.xml</descriptor>-->
+                                <!--                                <descriptor>src/assembly/cli.xml</descriptor>-->
+                                <!--                                <descriptor>src/assembly/client-cpp.xml</descriptor>-->
+                                <!--                                <descriptor>src/assembly/grafana-plugin.xml</descriptor>-->
+                                <!--                                <descriptor>src/assembly/library-udf.xml</descriptor>-->
+                                <descriptor>src/assembly/timechodb-datanode.xml</descriptor>
                             </descriptors>
-                            <finalName>apache-iotdb-${project.version}</finalName>
+                            <finalName>timecho-timechodb-${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -82,13 +83,14 @@
                                 <fileSet>
                                     <directory>${project.build.directory}</directory>
                                     <includes>
-                                        <include>apache-iotdb-${project.version}-all-bin.zip</include>
-                                        <include>apache-iotdb-${project.version}-datanode-bin.zip</include>
-                                        <include>apache-iotdb-${project.version}-cli-bin.zip</include>
-                                        <include>apache-iotdb-${project.version}-confignode-bin.zip</include>
-                                        <include>apache-iotdb-${project.version}-client-cpp-${os.classifier}-bin.zip</include>
-                                        <include>apache-iotdb-${project.version}-grafana-plugin-bin.zip</include>
-                                        <include>apache-iotdb-${project.version}-library-udf-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-all-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-datanode-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-cli-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-confignode-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-client-cpp-${os.classifier}-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-grafana-plugin-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-library-udf-bin.zip</include>
+                                        <include>timecho-timechodb-${project.version}-timecho-server-bin.zip</include>
                                     </includes>
                                 </fileSet>
                             </fileSets>
@@ -142,11 +144,17 @@
             <version>${project.version}</version>
             <type>pom</type>
         </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.iotdb</groupId>-->
+        <!--            <artifactId>library-udf</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--            <type>jar</type>-->
+        <!--        </dependency>-->
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>library-udf</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
+            <groupId>com.timecho.timechodb</groupId>
+            <artifactId>timecho-server</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
+            <type>zip</type>
         </dependency>
     </dependencies>
 </project>
