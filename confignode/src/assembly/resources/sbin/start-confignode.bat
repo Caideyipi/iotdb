@@ -20,7 +20,7 @@
 @echo off
 
 echo ```````````````````````````
-echo Starting IoTDB ConfigNode
+echo Starting TimechoDB ConfigNode
 echo ```````````````````````````
 
 set PATH="%JAVA_HOME%\bin\";%PATH%

@@ -19,7 +19,7 @@
 #
 
 echo ----------------------------
-echo Starting IoTDB ConfigNode
+echo Starting TimechoDB ConfigNode
 echo ----------------------------
 
 
