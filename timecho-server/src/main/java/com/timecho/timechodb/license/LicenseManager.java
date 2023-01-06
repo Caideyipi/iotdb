@@ -95,6 +95,9 @@ public class LicenseManager implements LicenseVerifier {
 
   @Override
   public boolean verify(SystemInfo var1) {
+    if (licenseContent == null) {
+      return false;
+    }
     return licenseContent.getCpu().equals(var1.getCpu())
         && licenseContent.getMainBoard().equals(var1.getMainBoard())
         && licenseContent.getExpireDate().compareTo(DateUtil.format(new Date(), "yyyy-MM-dd")) > -1;
