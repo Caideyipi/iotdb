@@ -19,7 +19,7 @@
 
 @echo off
 echo ````````````````````````
-echo Starting IoTDB DataNode
+echo Starting TimechoDB DataNode
 echo ````````````````````````
 
 @REM -----------------------------------------------------------------------------
@@ -195,7 +195,7 @@ if %occupied%==1 (
 
 @setlocal ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS
 set CONF_PARAMS=-s
-if NOT DEFINED MAIN_CLASS set MAIN_CLASS=org.apache.iotdb.db.service.DataNode
+if NOT DEFINED MAIN_CLASS set MAIN_CLASS=com.timecho.timechodb.DataNodeNew
 if NOT DEFINED JAVA_HOME goto :err
 
 @REM -----------------------------------------------------------------------------

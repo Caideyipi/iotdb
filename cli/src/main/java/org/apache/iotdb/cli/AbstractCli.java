@@ -90,7 +90,7 @@ public abstract class AbstractCli {
   static final String SET_FETCH_SIZE = "set fetch_size";
   static final String SHOW_FETCH_SIZE = "show fetch_size";
   private static final String HELP = "help";
-  static final String IOTDB_CLI_PREFIX = "IoTDB";
+  static final String IOTDB_CLI_PREFIX = "TimechoDB";
   static final String SCRIPT_HINT = "./start-cli.sh(start-cli.bat if Windows)";
   static final String QUIT_COMMAND = "quit";
   static final String EXIT_COMMAND = "exit";
@@ -341,7 +341,7 @@ public abstract class AbstractCli {
 
   static void echoStarting() {
     println("---------------------");
-    println("Starting IoTDB Cli");
+    println("Starting TimechoDB Cli");
     println("---------------------");
   }
 

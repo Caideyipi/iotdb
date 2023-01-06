@@ -113,7 +113,7 @@ for f in "${IOTDB_HOME}"/lib/*.jar; do
   CLASSPATH=${CLASSPATH}":"$f
 done
 
-classname=org.apache.iotdb.db.service.DataNode
+classname=com.timecho.timechodb.DataNodeNew
 
 
 if [ "x$SHOW_VERSION" != "x" ]; then
@@ -135,7 +135,7 @@ if [ "x$SHOW_VERSION" != "x" ]; then
 fi
 
 echo ---------------------
-echo "Starting IoTDB DataNode"
+echo "Starting IoTDB TimechoDB"
 echo ---------------------
 
 #initEnv is in iotdb-common.sh
@@ -150,7 +150,7 @@ fi
 
 PARAMS="-s $PARAMS"
 
-classname=org.apache.iotdb.db.service.DataNode
+classname=com.timecho.timechodb.DataNodeNew
 
 launch_service()
 {
