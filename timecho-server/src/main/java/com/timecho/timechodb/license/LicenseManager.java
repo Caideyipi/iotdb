@@ -22,7 +22,6 @@ import org.apache.iotdb.commons.conf.IoTDBConstant;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson2.JSON;
-import com.timecho.timechodb.utils.ListUtils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
