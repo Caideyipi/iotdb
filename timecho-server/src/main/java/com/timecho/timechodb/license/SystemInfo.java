@@ -20,11 +20,8 @@ package com.timecho.timechodb.license;
 
 import com.alibaba.fastjson2.JSON;
 
-import java.util.List;
-
 public class SystemInfo {
   private String cpu;
-  private List<String> macs;
   private String mainBoard;
 
   public String getCpu() {
@@ -33,14 +30,6 @@ public class SystemInfo {
 
   public void setCpu(String cpu) {
     this.cpu = cpu;
-  }
-
-  public List<String> getMacs() {
-    return macs;
-  }
-
-  public void setMacs(List<String> macs) {
-    this.macs = macs;
   }
 
   public String getMainBoard() {

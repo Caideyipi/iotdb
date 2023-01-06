@@ -41,7 +41,6 @@ public class MachineCodeManager extends LicenseManager {
     try {
       this.systemInfo = new SystemInfo();
       this.systemInfo.setCpu(systemInfoService.getCPUSerial());
-      this.systemInfo.setMacs(systemInfoService.getMacAddress());
       this.systemInfo.setMainBoard(systemInfoService.getMainBoardSerial());
     } catch (Exception e) {
       logger.error("init error,{}", e.getMessage(), e);
