@@ -61,12 +61,12 @@ public class Activate {
         // license file.
         if (!licenseDirectoryFile.exists() && !licenseDirectoryFile.mkdirs()) {
           SCREEN_PRINTER.println("create directory error, insufficient permissions.");
-          return;
+          System.exit(-1);
         }
         licenseManager.loadLicense(licenseStr);
         if (!licenseManager.verify(machineCodeManager.getMachineCode())) {
           SCREEN_PRINTER.println("license verify error,please check license");
-          return;
+          System.exit(-1);
         }
         licenseManager.write(licenseStr, LICENSE_FILE_PATH);
         SCREEN_PRINTER.println("TimechoDB activate successfully!");
@@ -76,6 +76,8 @@ public class Activate {
       }
     } catch (LicenseException e) {
       SCREEN_PRINTER.println(e.getMessage());
+    }finally {
+      System.exit(-1);
     }
   }
 }

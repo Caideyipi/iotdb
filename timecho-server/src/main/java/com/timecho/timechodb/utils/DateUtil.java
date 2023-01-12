@@ -28,9 +28,11 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class DateUtil {
+  public static final String FORMAT = "yyyy-MM-dd";
+
   public static int timeSub(String early, String late) throws LicenseException {
     try {
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+      SimpleDateFormat sdf = new SimpleDateFormat(FORMAT);
       Long earlyTimeStamp = sdf.parse(early).getTime();
       Long lateTimeStamp = sdf.parse(late).getTime();
       return (int) ((lateTimeStamp - earlyTimeStamp) / (1000 * 3600 * 24));

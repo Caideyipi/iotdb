@@ -37,6 +37,8 @@ import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.timecho.timechodb.utils.DateUtil.FORMAT;
+
 public class LicenseCheckService implements Runnable, IService {
   private static final Logger logger = LoggerFactory.getLogger(LicenseCheckService.class);
   private ScheduledExecutorService executor =
@@ -73,10 +75,10 @@ public class LicenseCheckService implements Runnable, IService {
       licenseManager.loadLicense(licenseStr);
 
       String expireDate = licenseManager.getExpireDate();
-      String today = DateUtil.format(new Date(), "yyyy-MM-dd");
-
-      // compare system time and expire time
-      if (today.compareTo(expireDate) > 0 && config.getNodeStatus() == NodeStatus.Running) {
+      String startDate = licenseManager.getStartDate();
+      String today = DateUtil.format(new Date(), FORMAT);
+      if ((today.compareTo(startDate) < 0 || today.compareTo(expireDate) > 0)
+          && config.getNodeStatus() == NodeStatus.Running) {
         logger.error(
             "The license has expired,system has been set to READ_ONLY,contact the service provider for reauthorization");
         config.setNodeStatus(NodeStatus.ReadOnly);
@@ -90,6 +92,7 @@ public class LicenseCheckService implements Runnable, IService {
       licenseManager.write(
           Base64.encodeBase64String(licenseManager.getLastDate().getBytes()),
           LicenseManager.EXPIRE_FILE_PATH);
+      logger.warn("license check end..");
     } catch (LicenseException e) {
       config.setNodeStatus(NodeStatus.ReadOnly);
       logger.error("license file not found,system status set to READ_ONLY");

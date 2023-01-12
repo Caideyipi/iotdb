@@ -38,12 +38,21 @@ public class MachineCodeManager extends LicenseManager {
     } else {
       systemInfoService = new LinuxSystem();
     }
+    this.systemInfo = new SystemInfo();
     try {
-      this.systemInfo = new SystemInfo();
       this.systemInfo.setCpu(systemInfoService.getCPUSerial());
+    } catch (Exception e) {
+      logger.error("init error,{}", e.getMessage());
+    }
+    try {
       this.systemInfo.setMainBoard(systemInfoService.getMainBoardSerial());
     } catch (Exception e) {
-      logger.error("init error,{}", e.getMessage(), e);
+      logger.error("init error,{}", e.getMessage());
+    }
+    if (systemInfo.getCpu() == null && systemInfo.getMainBoard() == null) {
+      logger.error(
+          "The program cannot obtain the fingerprint information of the current server, and activation fails. You can try this script as root or sudo.");
+      System.exit(-1);
     }
   }
 

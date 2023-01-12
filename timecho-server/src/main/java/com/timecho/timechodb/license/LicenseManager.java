@@ -18,27 +18,35 @@
  */
 package com.timecho.timechodb.license;
 
-import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson2.JSON;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 
+import static com.timecho.timechodb.utils.DateUtil.FORMAT;
+
 public class LicenseManager implements LicenseVerifier {
-  public static final String LICENSE_PATH =
-      System.getProperty(IoTDBConstant.IOTDB_HOME) + "/data/system/license";
+  private static final String SYSTEM_DIR = IoTDBDescriptor.getInstance().getConfig().getSystemDir();
+  public static final String LICENSE_PATH = SYSTEM_DIR + File.separatorChar + "license";
+
   public static final String LICENSE_FILE_PATH =
-      System.getProperty(IoTDBConstant.IOTDB_HOME) + "/data/system/license/active.license";
+      LICENSE_PATH + File.separatorChar + "active.license";
   public static final String EXPIRE_FILE_PATH =
-      System.getProperty(IoTDBConstant.IOTDB_HOME) + "/data/system/license/expire.license";
+      LICENSE_PATH + File.separatorChar + "expire.license";
   private LicenseContent licenseContent;
 
-  private String lastDate = DateUtil.format(new Date(), "yyyy-MM-dd");
+  private static final String SPECIFIED = "Specified";
+
+  private static final String VERSION = "V1.0+";
+
+  private String lastDate = DateUtil.format(new Date(), FORMAT);
 
   public LicenseContent getLicense() {
     return this.licenseContent;
@@ -81,6 +89,10 @@ public class LicenseManager implements LicenseVerifier {
     return this.licenseContent.getExpireDate();
   }
 
+  public String getStartDate() {
+    return this.licenseContent.getStartDate();
+  }
+
   public static LicenseManager getInstance() {
     return LicenseManager.InstanceHolder.instance;
   }
@@ -98,9 +110,23 @@ public class LicenseManager implements LicenseVerifier {
     if (licenseContent == null) {
       return false;
     }
-    return licenseContent.getCpu().equals(var1.getCpu())
-        && licenseContent.getMainBoard().equals(var1.getMainBoard())
-        && licenseContent.getExpireDate().compareTo(DateUtil.format(new Date(), "yyyy-MM-dd")) > -1;
+    String cpu = licenseContent.getCpu();
+    String mainBoard = licenseContent.getMainBoard();
+
+    boolean cpuCheckPassed = cpu != null && cpu.equals(var1.getCpu());
+    boolean mainBoardCheckPassed =
+        mainBoard != null
+            && mainBoard.equals(var1.getMainBoard())
+            && !mainBoard.contains(SPECIFIED);
+    boolean expiredDateCheckPassed =
+        licenseContent.getExpireDate().compareTo(DateUtil.format(new Date(), FORMAT)) > -1;
+    boolean startDateCheckPassed =
+        licenseContent.getStartDate().compareTo(DateUtil.format(new Date(), FORMAT)) <= 0;
+    boolean versionPassed = VERSION.equals(licenseContent.getVersion());
+    return (cpuCheckPassed || mainBoardCheckPassed)
+        && expiredDateCheckPassed
+        && startDateCheckPassed
+        && versionPassed;
   }
 
   @Override

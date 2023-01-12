@@ -25,8 +25,11 @@ public class LicenseContent {
   private ArrayList<String> macs;
   private String mainBoard;
   private String expireDate;
+  private String startDate;
   private long maxAllowedTimeSeriesNumber;
   private long maxInputFrequence;
+
+  private String version;
 
   public String getCpu() {
     return cpu;
@@ -74,5 +77,21 @@ public class LicenseContent {
 
   public void setMaxInputFrequence(long maxInputFrequence) {
     this.maxInputFrequence = maxInputFrequence;
+  }
+
+  public String getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(String startDate) {
+    this.startDate = startDate;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
 }

@@ -32,7 +32,6 @@ public class WhiteListServerContextFactory implements ServerContextFactory {
 
   @Override
   public JudgableServerContext newServerContext(TProtocol out, Socket socket) {
-    logger.info("white list server context create successfully");
     return new WhiteListServerContext(socket);
   }
 }

@@ -21,7 +21,6 @@ package com.timecho.timechodb.license;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class LinuxSystem extends SystemInfoService {
@@ -37,7 +36,7 @@ public class LinuxSystem extends SystemInfoService {
         "dmidecode -t processor | grep 'ID' | awk -F ':' '{print $2}' | head -n 1"
       };
       return executeShell(serialNumber, shell);
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new LicenseException("CPU information cannot be read");
     }
   }
@@ -50,12 +49,12 @@ public class LinuxSystem extends SystemInfoService {
         "/bin/bash", "-c", "dmidecode | grep 'Serial Number' | awk -F ':' '{print $2}' | head -n 1"
       };
       return executeShell(serialNumber, shell);
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new LicenseException("MainBoard information cannot be read");
     }
   }
 
-  protected String executeShell(String serialNumber, String[] shell) throws IOException {
+  protected String executeShell(String serialNumber, String[] shell) throws Exception {
     Process process = Runtime.getRuntime().exec(shell);
     process.getOutputStream().close();
     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
