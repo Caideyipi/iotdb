@@ -516,10 +516,7 @@ public class IoTDBConnection implements Connection {
             e);
       }
       throw new SQLException(
-          String.format(
-              "Can not establish connection with %s : %s. ",
-              params.getJdbcUriString(), e.getMessage()),
-          e);
+          "Check whether the server exists or is alive, or whether the server IP address is correct, or whether the server IP address is in the whitelist.");
     } catch (StatementExecutionException e) {
       // failed to connect, disconnect from the server
       transport.close();

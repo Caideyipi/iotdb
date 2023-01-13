@@ -1454,6 +1454,12 @@ public class IoTDBDescriptor {
       if (prevDeleteWalFilesPeriodInMs != conf.getDeleteWalFilesPeriodInMs()) {
         WALManager.getInstance().rebootWALDeleteThread();
       }
+
+      // update client white list
+      conf.setEnableWhiteList(
+          Boolean.parseBoolean(
+              properties.getProperty(
+                  "enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }

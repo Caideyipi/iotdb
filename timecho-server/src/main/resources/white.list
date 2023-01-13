@@ -1,7 +1,8 @@
-# 支持注释
-#支持精确匹配，每行一个ip
-10.2.3.4
+# do not delete 127.0.0.1 of the local ip address. Otherwise, the local client cannot connect to the server after the whitelist is enabled
+127.0.0.1
 
-#支持*通配符，每行一个ip
-10.*.1.3
-10.100.0.*
+# support exact matching, each line has one ip address
+# 10.2.3.4
+
+# * wildcard characters are supported, with one ip address per line
+# 10.*.1.3
