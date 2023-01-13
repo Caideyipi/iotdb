@@ -76,7 +76,7 @@ public class Activate {
       }
     } catch (LicenseException e) {
       SCREEN_PRINTER.println(e.getMessage());
-    }finally {
+    } finally {
       System.exit(-1);
     }
   }
