@@ -84,7 +84,7 @@ public class IPFilter {
 
   public static boolean isInWhiteList(String ip) {
     if (INSTANCE.pattern == null) {
-      return true;
+      return false;
     }
     INSTANCE.lock.readLock().lock();
     try {
