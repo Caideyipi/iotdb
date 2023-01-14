@@ -102,11 +102,13 @@ public class IPFilter {
       // 检查文件是否被修改。如果存在被修改的，就同步。否则不同步。
       try {
         File file = whiteListFile.toFile();
-        if (file.exists() && file.lastModified() > lastModification) {
-          updateWhiteList();
+        if (file.exists()) {
+          if (file.lastModified() > lastModification) {
+            updateWhiteList();
+          }
         } else {
-          // 无白名单，不同步
-          return;
+          // 文件不存在，要更新内存中的值
+          updateWhiteList();
         }
       } catch (Exception e) {
         logger.error("error when check whether whitelist is update: ", e);

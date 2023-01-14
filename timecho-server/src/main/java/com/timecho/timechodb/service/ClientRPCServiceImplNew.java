@@ -19,6 +19,7 @@
 package com.timecho.timechodb.service;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.db.query.control.SessionManager;
 import org.apache.iotdb.db.service.thrift.impl.ClientRPCServiceImpl;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -30,8 +31,13 @@ import com.timecho.timechodb.rpc.IPFilter;
 import org.apache.thrift.TException;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
+  public static final String WHITE_LIST_PATTERN =
+      "(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)";
+
+  public static final String ROOT_USER = "root";
 
   @Override
   public WhiteListInfoResp getWhiteIpSet() throws TException {
@@ -43,6 +49,23 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
 
   @Override
   public TSStatus updateWhiteList(Set<String> ipSet) throws TException {
+    if (ipSet == null) {
+      TSStatus status = new TSStatus(TSStatusCode.ILLEGAL_PARAMETER.getStatusCode());
+      status.setMessage("illegal parameter");
+      return status;
+    }
+    boolean illegal = ipSet.stream().anyMatch(ip -> !Pattern.matches(WHITE_LIST_PATTERN, ip));
+    if (illegal) {
+      TSStatus status = new TSStatus(TSStatusCode.ILLEGAL_PARAMETER.getStatusCode());
+      status.setMessage("illegal parameter");
+      return status;
+    }
+    if (!ROOT_USER.equals(SessionManager.getInstance().getCurrSession().getUsername())) {
+      TSStatus status = new TSStatus(TSStatusCode.NO_PERMISSION_ERROR.getStatusCode());
+      status.setMessage(
+          "current user have no permission,only the root user can perform this operation");
+      return status;
+    }
     IPFilter.getInstance().setAllowListPatterns(ipSet);
     return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
   }

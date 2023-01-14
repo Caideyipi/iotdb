@@ -24,7 +24,6 @@ import org.apache.iotdb.isession.template.Template;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
-import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 import org.apache.iotdb.session.SessionDataSet;
 import org.apache.iotdb.session.template.MeasurementNode;
 import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
@@ -43,9 +42,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 @SuppressWarnings("squid:S106")
 public class SessionPlusExample {
@@ -61,33 +62,35 @@ public class SessionPlusExample {
   private static final String LOCAL_HOST = "127.0.0.1";
 
   public static void main(String[] args)
-      throws IoTDBConnectionException, StatementExecutionException, TException {
+      throws IoTDBConnectionException, StatementExecutionException, TException, IOException {
     session =
         new Session.Builder()
             .host(LOCAL_HOST)
             .port(6667)
-            .username("root")
-            .password("root")
+            .username("test")
+            .password("tttt")
             .version(Version.V_0_13)
             .build();
     session.open(false);
+    System.out.println(session.getWhiteIpSet());
 
+    Set<String> ipSet = new HashSet<>();
+    ipSet.add("192.168.1.1");
+    session.updateWhiteList(ipSet);
     // set session fetchSize
-    session.setFetchSize(10000);
-    WhiteListInfoResp whiteIpSet = session.getWhiteIpSet();
-    session.showAllTemplates();
-    System.out.println(whiteIpSet);
+    //    session.setFetchSize(10000);
+
     //    try {
-    //      session.createDatabase("root.sg1");
+    //      session.setStorageGroup("root.sg1");
     //    } catch (StatementExecutionException e) {
-    //      if (e.getStatusCode() != TSStatusCode.PATH_ALREADY_EXIST.getStatusCode()) {
+    //      if (e.getStatusCode() != TSStatusCode.PATH_ALREADY_EXIST_ERROR.getStatusCode()) {
     //        throw e;
     //      }
     //    }
-
+    //
     //     createTemplate();
-    //    createTimeseries();
-    //    createMultiTimeseries();
+    //        createTimeseries();
+    //        createMultiTimeseries();
     //    insertRecord();
     //    insertTablet();
     //    insertTabletWithNullValues();
@@ -105,7 +108,7 @@ public class SessionPlusExample {
     //    deleteData();
     //    deleteTimeseries();
     //    setTimeout();
-
+    //
     //    sessionEnableRedirect = new Session(LOCAL_HOST, 6667, "root", "root");
     //    sessionEnableRedirect.setEnableQueryRedirection(true);
     //    sessionEnableRedirect.open(false);
@@ -610,7 +613,7 @@ public class SessionPlusExample {
    * write data of String type or Binary type.
    */
   private static void insertText() throws IoTDBConnectionException, StatementExecutionException {
-    String device = "root.sg1.text";
+    String device = "root.sg1.text_type";
     // the first data is String type and the second data is Binary type
     List<Object> datas = Arrays.asList("String", new Binary("Binary"));
     // insertRecord example
@@ -758,9 +761,8 @@ public class SessionPlusExample {
     paths.add(ROOT_SG1_D1_S3);
     long startTime = 10L;
     long endTime = 200L;
-    long timeOut = 60000;
 
-    try (SessionDataSet dataSet = session.executeRawDataQuery(paths, startTime, endTime, timeOut)) {
+    try (SessionDataSet dataSet = session.executeRawDataQuery(paths, startTime, endTime)) {
 
       System.out.println(dataSet.getColumnNames());
       dataSet.setFetchSize(1024);
@@ -775,7 +777,7 @@ public class SessionPlusExample {
     paths.add(ROOT_SG1_D1_S1);
     paths.add(ROOT_SG1_D1_S2);
     paths.add(ROOT_SG1_D1_S3);
-    try (SessionDataSet sessionDataSet = session.executeLastDataQuery(paths, 3, 60000)) {
+    try (SessionDataSet sessionDataSet = session.executeLastDataQuery(paths, 3)) {
       System.out.println(sessionDataSet.getColumnNames());
       sessionDataSet.setFetchSize(1024);
       while (sessionDataSet.hasNext()) {
