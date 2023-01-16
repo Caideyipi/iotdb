@@ -60,7 +60,7 @@ setup_env
 # Checkout to rel/1.0
 git checkout rel/1.0
 
-PRIVATE_COMMIT_PREFIX="TimechoDB"
+PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 # Find the last community commit
 LAST_COMMUNITY_COMMIT_MSG=$(git log --pretty=format:"%s" | grep -v "${PRIVATE_COMMIT_PREFIX}" | head -1)
