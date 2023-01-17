@@ -59,9 +59,9 @@
     </profiles>
     <dependencies>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.timechodb</groupId>
             <artifactId>tsfile</artifactId>
-            <version>${project.version}</version>
+            <version>1.0.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
