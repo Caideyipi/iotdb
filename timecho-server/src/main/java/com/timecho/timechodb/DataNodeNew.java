@@ -80,6 +80,7 @@ public class DataNodeNew extends DataNode {
       if (licenseManager.verify(machineCodeManager.getMachineCode())) {
         registerManager.register(LicenseCheckService.getInstance());
         new DataNodeServerCommandLineNew().doMain(args);
+        logger.info("The license expires at {}", LicenseManager.getInstance().getExpireDate());
       } else {
         logger.info("license verify error,please check license");
       }

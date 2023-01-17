@@ -601,6 +601,7 @@ struct LicenseInfoResp{
   2: optional bool isActive
   3: optional string expireDate
   4: optional bool isEnterprise
+  5: optional i64 maxAllowedTimeSeriesNumber
 }
 
 struct WhiteListInfoResp{

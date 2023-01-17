@@ -77,6 +77,8 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
     licenseInfoResp.setExpireDate(LicenseManager.getInstance().getExpireDate());
     licenseInfoResp.setIsActive(true);
     licenseInfoResp.setIsEnterprise(true);
+    licenseInfoResp.setMaxAllowedTimeSeriesNumber(
+        LicenseManager.getInstance().getMaxAllowedTimeSeriesNumber());
     return licenseInfoResp;
   }
 }

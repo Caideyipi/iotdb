@@ -44,10 +44,13 @@ public class SeriesNumberLimiter implements ISeriesNumerMonitor {
 
   @Override
   public boolean addTimeSeries(int number) {
-    logger.info(
-        "max allowed series number:{},curr exist series number:{}",
-        maxAllowedSeriesNumber,
-        currentSeriesNumber);
+    if (logger.isDebugEnabled()) {
+      logger.info(
+          "max allowed series number:{},curr exist series number:{}",
+          maxAllowedSeriesNumber,
+          currentSeriesNumber);
+    }
+
     if (currentSeriesNumber + number > maxAllowedSeriesNumber) {
       return false;
     } else {

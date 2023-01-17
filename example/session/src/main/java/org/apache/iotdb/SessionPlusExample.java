@@ -24,6 +24,7 @@ import org.apache.iotdb.isession.template.Template;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
+import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 import org.apache.iotdb.session.SessionDataSet;
 import org.apache.iotdb.session.template.MeasurementNode;
 import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
@@ -72,6 +73,7 @@ public class SessionPlusExample {
             .version(Version.V_0_13)
             .build();
     session.open(false);
+    LicenseInfoResp licenseInfo = session.getLicenseInfo();
     System.out.println(session.getWhiteIpSet());
 
     Set<String> ipSet = new HashSet<>();

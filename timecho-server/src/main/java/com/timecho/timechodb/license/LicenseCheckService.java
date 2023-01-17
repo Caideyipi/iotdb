@@ -92,7 +92,7 @@ public class LicenseCheckService implements Runnable, IService {
       licenseManager.write(
           Base64.encodeBase64String(licenseManager.getLastDate().getBytes()),
           LicenseManager.EXPIRE_FILE_PATH);
-      logger.warn("license check end..");
+      logger.warn("The license is valid. The license expires at,{}", expireDate);
     } catch (LicenseException e) {
       config.setNodeStatus(NodeStatus.ReadOnly);
       logger.error("license file not found,system status set to READ_ONLY");
