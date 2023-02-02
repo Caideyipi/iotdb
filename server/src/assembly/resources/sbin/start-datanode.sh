@@ -113,7 +113,7 @@ for f in "${IOTDB_HOME}"/lib/*.jar; do
   CLASSPATH=${CLASSPATH}":"$f
 done
 
-classname=com.timecho.timechodb.DataNodeNew
+classname=com.timecho.timechodb.DataNode
 
 
 if [ "x$SHOW_VERSION" != "x" ]; then
@@ -150,7 +150,7 @@ fi
 
 PARAMS="-s $PARAMS"
 
-classname=com.timecho.timechodb.DataNodeNew
+classname=com.timecho.timechodb.DataNode
 
 launch_service()
 {

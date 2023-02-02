@@ -20,7 +20,6 @@ package com.timecho.timechodb;
 
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
-import org.apache.iotdb.db.service.DataNode;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
 import org.apache.iotdb.db.service.RPCService;
 
@@ -39,8 +38,8 @@ import java.util.Scanner;
 import static com.timecho.timechodb.license.LicenseManager.LICENSE_FILE_PATH;
 import static com.timecho.timechodb.license.LicenseManager.LICENSE_PATH;
 
-public class DataNodeNew extends DataNode {
-  private static final Logger logger = LoggerFactory.getLogger(DataNodeNew.class);
+public class DataNode extends org.apache.iotdb.db.service.DataNode {
+  private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
 
   public static void main(String[] args) {
     try {
@@ -116,12 +115,12 @@ public class DataNodeNew extends DataNode {
 
   private static class DataNodeNewHolder {
 
-    private static final DataNodeNew INSTANCE = new DataNodeNew();
+    private static final DataNode INSTANCE = new DataNode();
 
     private DataNodeNewHolder() {}
   }
 
-  public static DataNodeNew getInstance() {
-    return DataNodeNew.DataNodeNewHolder.INSTANCE;
+  public static DataNode getInstance() {
+    return DataNode.DataNodeNewHolder.INSTANCE;
   }
 }

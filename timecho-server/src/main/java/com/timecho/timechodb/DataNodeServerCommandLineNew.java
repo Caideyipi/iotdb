@@ -33,7 +33,7 @@ public class DataNodeServerCommandLineNew extends DataNodeServerCommandLine {
       return -1;
     }
 
-    DataNodeNew dataNode = DataNodeNew.getInstance();
+    DataNode dataNode = DataNode.getInstance();
 
     String mode = args[0];
     LOGGER.info("Running mode {}", mode);
