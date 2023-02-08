@@ -18,19 +18,19 @@
 # under the License.
 #
 function setup_env() {
-	HAS_MASTER_IOTDB=$(git branch -vv | grep "cherry_pick_1.0")
+	HAS_MASTER_IOTDB=$(git branch -vv | grep "cherry_pick_rc1.0.1")
 	if [ -z "${HAS_MASTER_IOTDB}" ]
 	then
-		echo "Create branch cherry_pick_1.0"
+		echo "Create branch cherry_pick_rc1.0.1"
 		git remote add iotdb https://github.com/apache/iotdb.git
-		git fetch --quiet iotdb rel/1.0
+		git fetch --quiet iotdb rc/1.0.1
 		git checkout --quiet FETCH_HEAD
-		git checkout -b cherry_pick_1.0
+		git checkout -b cherry_pick_rc1.0.1
 	else
-		git checkout cherry_pick_1.0
+		git checkout cherry_pick_rc1.0.1
 	fi
-	echo "Pull iotdb rel/1.0"
-	git pull --quiet iotdb rel/1.0
+	echo "Pull iotdb rc/1.0.1"
+	git pull --quiet iotdb rc/1.0.1
 
 	HAS_MASTER=$(git branch -vv | grep "rel/1.0")
 	if [ -z "${HAS_MASTER}" ]
