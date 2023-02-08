@@ -71,7 +71,7 @@ then
 fi
 echo "Last community commit: ${LAST_COMMUNITY_COMMIT_MSG}"
 
-LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" cherry_pick_1.0 | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
+LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" cherry_pick_1.0.1 | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
 if [ -z "${LAST_COMMUNITY_COMMIT_HASH}" ]
 then
 	echo "Failed to find the hash of the last community commit"
@@ -80,11 +80,11 @@ fi
 echo "Last community commit hash: ${LAST_COMMUNITY_COMMIT_HASH}"
 
 # Cherry-pick new commits one by one
-NUM_COMMITS=$(git log --pretty=format:"%h" cherry_pick_1.0 | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | wc -l)
+NUM_COMMITS=$(git log --pretty=format:"%h" cherry_pick_1.0.1 | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | wc -l)
 echo "Found ${NUM_COMMITS} commit(s) to cherry-pick"
 echo ""
 
-for COMMIT_HASH in $(git log --pretty=format:"%h" cherry_pick_1.0 | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | tac)
+for COMMIT_HASH in $(git log --pretty=format:"%h" cherry_pick_1.0.1 | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | tac)
 do
 	echo "Working on:"
 	echo $(git show --oneline --quiet ${COMMIT_HASH})
