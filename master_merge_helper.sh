@@ -63,7 +63,7 @@ git checkout rel/1.0
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 # Find the last community commit
-LAST_COMMUNITY_COMMIT_MSG=$(git log --pretty=format:"%s" | grep -v "${PRIVATE_COMMIT_PREFIX}" | head -1)
+LAST_COMMUNITY_COMMIT_MSG=$(git log --pretty=format:"%s" | grep -i -v "${PRIVATE_COMMIT_PREFIX}" | head -1)
 if [ -z "${LAST_COMMUNITY_COMMIT_MSG}" ]
 then
 	echo "Failed to find the last community commit"
