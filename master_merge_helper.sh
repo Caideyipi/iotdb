@@ -17,87 +17,95 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-function setup_env() {
-	HAS_MASTER_IOTDB=$(git branch -vv | grep "cherry_pick_rc1.0.1")
-	if [ -z "${HAS_MASTER_IOTDB}" ]
-	then
-		echo "Create branch cherry_pick_rc1.0.1"
-		git remote add iotdb https://github.com/apache/iotdb.git
-		git fetch --quiet iotdb rc/1.0.1
-		git checkout --quiet FETCH_HEAD
-		git checkout -b cherry_pick_rc1.0.1
-	else
-		git checkout cherry_pick_rc1.0.1
-	fi
-	echo "Pull iotdb rc/1.0.1"
-	git pull --quiet iotdb rc/1.0.1
 
-	HAS_MASTER=$(git branch -vv | grep "rel/1.0")
-	if [ -z "${HAS_MASTER}" ]
-	then
-		echo "Create branch rel/1.0"
-		git fetch --quiet origin rel/1.0
-		git checkout --quiet FETCH_HEAD
-		git checkout -b rel/1.0
-	else
-		git checkout rel/1.0
-	fi
-	echo "Pull origin rel/1.0"
-	git pull --quiet origin rel/1.0
+LOCAL_REMOTE_BRANCH="cherry_pick_rc1.0.1"
+NEWEST_RC_BRANCH="rc/1.0.1"
+LOCAL_REL_BRANCH="rel/1.0"
+LOCAL_MR_BRANCH="rel/1.0_cherry_pick"
+PRIVATE_COMMIT_PREFIX="TIMECHODB"
+
+function setup_env() {
+ HAS_MASTER_IOTDB=$(git branch -vv | grep "${LOCAL_REMOTE_BRANCH}")
+ if [ -z "${HAS_MASTER_IOTDB}" ]
+ then
+  echo "Create branch ${LOCAL_REMOTE_BRANCH}"
+  git remote add iotdb https://github.com/apache/iotdb.git
+  git fetch --quiet iotdb ${NEWEST_RC_BRANCH}
+  git checkout --quiet FETCH_HEAD
+  git checkout -b ${LOCAL_REMOTE_BRANCH}
+ else
+  git checkout ${LOCAL_REMOTE_BRANCH}
+ fi
+ echo "Pull iotdb ${NEWEST_RC_BRANCH}"
+ git pull --quiet iotdb ${NEWEST_RC_BRANCH}
+
+ HAS_MASTER=$(git branch -vv | grep "${LOCAL_REL_BRANCH}")
+ if [ -z "${HAS_MASTER}" ]
+ then
+  echo "Create branch "${LOCAL_REL_BRANCH}""
+  git fetch --quiet origin "${LOCAL_REL_BRANCH}"
+  git checkout --quiet FETCH_HEAD
+  git checkout -b ${LOCAL_REL_BRANCH}
+ else
+  git checkout ${LOCAL_REL_BRANCH}
+ fi
+ echo "Pull origin ${LOCAL_REL_BRANCH}"
+ git pull --quiet origin ${LOCAL_REL_BRANCH}
 }
 
 function cherry_pick() {
-	git cherry-pick $1
-	if [ $? -ne 0 ]
-	then
-    	echo "Please resolve conflicts manually."
-    	exit 1
-	fi
+ git cherry-pick $1
+ if [ $? -ne 0 ]
+ then
+     echo "Please resolve conflicts manually."
+     exit 1
+ fi
 }
 
 setup_env
 
 # Checkout to rel/1.0
-git checkout rel/1.0
-
-PRIVATE_COMMIT_PREFIX="TIMECHODB"
+git checkout ${LOCAL_REL_BRANCH}
+echo "delete branch ${LOCAL_MR_BRANCH}"
+git branch -D ${LOCAL_MR_BRANCH}
+echo "create branch ${LOCAL_MR_BRANCH}"
+git checkout -b ${LOCAL_MR_BRANCH}
 
 # Find the last community commit
-LAST_COMMUNITY_COMMIT_MSG=$(git log --pretty=format:"%s" | grep -i -v "${PRIVATE_COMMIT_PREFIX}" | head -1)
+LAST_COMMUNITY_COMMIT_MSG=$(git log --pretty=format:"%s" | grep -i -v "${PRIVATE_COMMIT_PREFIX}" |grep -v "Merge branch" | head -1)
 if [ -z "${LAST_COMMUNITY_COMMIT_MSG}" ]
 then
-	echo "Failed to find the last community commit"
-	exit 1
+ echo "Failed to find the last community commit"
+ exit 1
 fi
 echo "Last community commit: ${LAST_COMMUNITY_COMMIT_MSG}"
 
-LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" cherry_pick_rc1.0.1 | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
+LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" ${LOCAL_REMOTE_BRANCH} | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
 if [ -z "${LAST_COMMUNITY_COMMIT_HASH}" ]
 then
-	echo "Failed to find the hash of the last community commit"
-	exit 1
+ echo "Failed to find the hash of the last community commit"
+ exit 1
 fi
 echo "Last community commit hash: ${LAST_COMMUNITY_COMMIT_HASH}"
 
 # Cherry-pick new commits one by one
-NUM_COMMITS=$(git log --pretty=format:"%h" cherry_pick_rc1.0.1 | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | wc -l)
+NUM_COMMITS=$(git log --pretty=format:"%h" ${LOCAL_REMOTE_BRANCH} | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | wc -l)
 echo "Found ${NUM_COMMITS} commit(s) to cherry-pick"
 echo ""
 
-for COMMIT_HASH in $(git log --pretty=format:"%h" cherry_pick_rc1.0.1 | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | tac)
+for COMMIT_HASH in $(git log --pretty=format:"%h" ${LOCAL_REMOTE_BRANCH} | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | tac)
 do
-	echo "Working on:"
-	echo $(git show --oneline --quiet ${COMMIT_HASH})
-	while true; do
-		read -p "  Input command (summary/detail/cp/skip): " CMD
-		case ${CMD} in
-			summary ) git show --stat ${COMMIT_HASH};;
+ echo "Working on:"
+ echo $(git show --oneline --quiet ${COMMIT_HASH})
+ while true; do
+  read -p "  Input command (summary/detail/cp/skip): " CMD
+  case ${CMD} in
+   summary ) git show --stat ${COMMIT_HASH};;
             detail  ) git show ${COMMIT_HASH};;
-			cp      ) cherry_pick ${COMMIT_HASH}; break;;
+   cp      ) cherry_pick ${COMMIT_HASH}; break;;
             skip    ) break;;
-			*       ) echo "  Invalid command";;
-		esac
-	done
-	echo ""
+   *       ) echo "  Invalid command";;
+  esac
+ done
+ echo ""
 done
-
