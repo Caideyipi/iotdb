@@ -34,8 +34,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class IPFilter {
+  public static final String WHITE_LIST_PATTERN =
+      "(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)";
+
   private static Logger logger = LoggerFactory.getLogger(IPFilter.class);
   static IPFilter INSTANCE = new IPFilter();
 
@@ -68,7 +73,17 @@ public class IPFilter {
         File file = whiteListFile.toFile();
         if (file.exists()) {
           lastModification = Math.max(lastModification, file.lastModified());
-          allowListPatterns = ListMatcher.readPatternsFromFile(file);
+          allowListPatterns =
+              ListMatcher.readPatternsFromFile(file).stream()
+                  .filter(
+                      ip -> {
+                        if (Pattern.matches(WHITE_LIST_PATTERN, ip)) {
+                          return true;
+                        }
+                        logger.error("misconfiguration in white list:{}", ip);
+                        return false;
+                      })
+                  .collect(Collectors.toSet());
           pattern = new PatternList(allowListPatterns, ".", false);
         } else {
           logger.info("Whitelist not found.");

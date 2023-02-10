@@ -30,12 +30,14 @@ import com.timecho.timechodb.license.LicenseManager;
 import com.timecho.timechodb.rpc.IPFilter;
 import org.apache.thrift.TException;
 
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static com.timecho.timechodb.rpc.IPFilter.WHITE_LIST_PATTERN;
 
 public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
-  public static final String WHITE_LIST_PATTERN =
-      "(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)";
 
   public static final String ROOT_USER = "root";
 
@@ -54,10 +56,13 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
       status.setMessage("illegal parameter");
       return status;
     }
-    boolean illegal = ipSet.stream().anyMatch(ip -> !Pattern.matches(WHITE_LIST_PATTERN, ip));
-    if (illegal) {
+    List<String> illegalIpList =
+        ipSet.stream()
+            .filter(ip -> !Pattern.matches(WHITE_LIST_PATTERN, ip))
+            .collect(Collectors.toList());
+    if (!illegalIpList.isEmpty()) {
       TSStatus status = new TSStatus(TSStatusCode.ILLEGAL_PARAMETER.getStatusCode());
-      status.setMessage("illegal parameter");
+      status.setMessage(String.format("The following ip addresses are invalid:%s", illegalIpList));
       return status;
     }
     if (!ROOT_USER.equals(SessionManager.getInstance().getCurrSession().getUsername())) {
