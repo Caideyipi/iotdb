@@ -114,6 +114,7 @@ import org.apache.iotdb.service.rpc.thrift.TSSetTimeZoneReq;
 import org.apache.iotdb.service.rpc.thrift.TSUnsetSchemaTemplateReq;
 import org.apache.iotdb.service.rpc.thrift.TSyncIdentityInfo;
 import org.apache.iotdb.service.rpc.thrift.TSyncTransportMetaInfo;
+import org.apache.iotdb.service.rpc.thrift.TotalPointsReq;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 import org.apache.iotdb.tsfile.read.common.block.TsBlock;
 import org.apache.iotdb.tsfile.read.common.block.column.Column;
@@ -162,7 +163,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         throws IoTDBException, IOException;
   }
 
-  private static final SelectResult SELECT_RESULT =
+  protected static final SelectResult SELECT_RESULT =
       (resp, queryExecution, fetchSize) -> {
         Pair<List<ByteBuffer>, Boolean> pair =
             QueryDataSetUtils.convertQueryResultByFetchSize(queryExecution, fetchSize);
@@ -183,7 +184,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     SCHEMA_FETCHER = ClusterSchemaFetcher.getInstance();
   }
 
-  private TSExecuteStatementResp executeStatementInternal(
+  protected TSExecuteStatementResp executeStatementInternal(
       TSExecuteStatementReq req, SelectResult setResult) {
     boolean finished = false;
     long queryId = Long.MIN_VALUE;
@@ -233,7 +234,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
 
       IQueryExecution queryExecution = COORDINATOR.getQueryExecution(queryId);
-
       try (SetThreadName threadName = new SetThreadName(result.queryId.getId())) {
         TSExecuteStatementResp resp;
         if (queryExecution != null && queryExecution.isQuery()) {
@@ -1954,6 +1954,11 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
   @Override
   public LicenseInfoResp getLicenseInfo() throws TException {
+    return null;
+  }
+
+  @Override
+  public TSExecuteStatementResp getTotalPoints(TotalPointsReq req) throws TException {
     return null;
   }
 }
