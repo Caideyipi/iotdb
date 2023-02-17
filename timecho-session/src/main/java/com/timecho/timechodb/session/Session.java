@@ -19,12 +19,16 @@
 package com.timecho.timechodb.session;
 
 import org.apache.iotdb.isession.SessionConfig;
+import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
+import org.apache.iotdb.service.rpc.thrift.TSExecuteStatementResp;
+import org.apache.iotdb.service.rpc.thrift.TotalPointsReq;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
+import org.apache.iotdb.tsfile.read.common.RowRecord;
 
 import com.timecho.timechodb.isession.ISession;
 import org.apache.thrift.TException;
@@ -168,6 +172,7 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
   public void updateWhiteList(Set<String> ipSet)
       throws IoTDBConnectionException, StatementExecutionException {
     try {
+
       RpcUtils.verifySuccess(defaultSessionConnection.getClient().updateWhiteList(ipSet));
     } catch (TException e) {
       if (defaultSessionConnection.reconnect()) {
@@ -203,6 +208,52 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
       }
     }
     return resp;
+  }
+
+  @Override
+  public long getTotalPoints(Set<String> databaseSet)
+      throws StatementExecutionException, IoTDBConnectionException {
+    TSExecuteStatementResp execResp;
+    TotalPointsReq req = new TotalPointsReq();
+    try {
+      req.setSessionId(defaultSessionConnection.getSessionId());
+      req.setStatementId(defaultSessionConnection.getStatementId());
+      req.setDatabaseSet(databaseSet);
+      execResp = defaultSessionConnection.getClient().getTotalPoints(req);
+      RpcUtils.verifySuccess(execResp.getStatus());
+    } catch (TException e) {
+      if (defaultSessionConnection.reconnect()) {
+        try {
+          execResp = defaultSessionConnection.getClient().getTotalPoints(req);
+          RpcUtils.verifySuccess(execResp.getStatus());
+        } catch (TException tException) {
+          throw new IoTDBConnectionException(tException);
+        }
+      } else {
+        throw new IoTDBConnectionException(defaultSessionConnection.logForReconnectionFailure());
+      }
+    }
+    try (SessionDataSet sessionDataSet =
+        new SessionDataSet(
+            "",
+            execResp.getColumns(),
+            execResp.getDataTypeList(),
+            execResp.columnNameIndexMap,
+            execResp.getQueryId(),
+            defaultSessionConnection.getSessionId(),
+            defaultSessionConnection.getClient(),
+            defaultSessionConnection.getSessionId(),
+            execResp.queryResult,
+            execResp.isIgnoreTimeStamp(),
+            5000,
+            execResp.moreData,
+            10)) {
+      if (sessionDataSet.hasNext()) {
+        RowRecord next = sessionDataSet.next();
+        return (long) next.getFields().get(0).getDoubleV();
+      }
+    }
+    return 0;
   }
 
   public static class Builder {

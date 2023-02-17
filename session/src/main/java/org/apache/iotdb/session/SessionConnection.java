@@ -1129,4 +1129,12 @@ public class SessionConnection {
   public String toString() {
     return "SessionConnection{" + " endPoint=" + endPoint + "}";
   }
+
+  public long getSessionId() {
+    return sessionId;
+  }
+
+  public long getStatementId() {
+    return statementId;
+  }
 }

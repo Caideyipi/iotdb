@@ -32,4 +32,8 @@ public interface ISession extends org.apache.iotdb.isession.ISession {
       throws IoTDBConnectionException, StatementExecutionException;
 
   LicenseInfoResp getLicenseInfo() throws StatementExecutionException, IoTDBConnectionException;
+
+  /** Returns the number of points in the specified database. */
+  long getTotalPoints(Set<String> databaseSet)
+      throws StatementExecutionException, IoTDBConnectionException;
 }
