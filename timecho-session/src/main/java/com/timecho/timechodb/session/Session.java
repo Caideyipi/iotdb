@@ -25,12 +25,11 @@ import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
-import org.apache.iotdb.service.rpc.thrift.TSExecuteStatementResp;
-import org.apache.iotdb.service.rpc.thrift.TotalPointsReq;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 import org.apache.iotdb.tsfile.read.common.RowRecord;
 
 import com.timecho.timechodb.isession.ISession;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +40,14 @@ import java.util.Set;
 
 public class Session extends org.apache.iotdb.session.Session implements ISession {
   private static final Logger logger = LoggerFactory.getLogger(Session.class);
+  public static final String ALL_DB_SQL =
+      "select sum(value) from root.__system.metric.*.points.*.`type=flush` group by level=4";
+  public static final String SPECIFY_DB_SQL_PREFIX =
+      "select sum(value) from root.__system.metric.*.points.";
+  public static final String SPECIFY_DB_SQL_SUFFIX = " group by level=4";
+  public static final String SPECIFY_DB_SQL_DATABASE = "`database=";
+  public static final String SPECIFY_DB_SQL_FLUSH = "`.`type=flush`";
+  public static final String COMMA = ",";
 
   public Session(String host, int rpcPort) {
     super(host, rpcPort);
@@ -213,41 +220,20 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
   @Override
   public long getTotalPoints(Set<String> databaseSet)
       throws StatementExecutionException, IoTDBConnectionException {
-    TSExecuteStatementResp execResp;
-    TotalPointsReq req = new TotalPointsReq();
-    try {
-      req.setSessionId(defaultSessionConnection.getSessionId());
-      req.setStatementId(defaultSessionConnection.getStatementId());
-      req.setDatabaseSet(databaseSet);
-      execResp = defaultSessionConnection.getClient().getTotalPoints(req);
-      RpcUtils.verifySuccess(execResp.getStatus());
-    } catch (TException e) {
-      if (defaultSessionConnection.reconnect()) {
-        try {
-          execResp = defaultSessionConnection.getClient().getTotalPoints(req);
-          RpcUtils.verifySuccess(execResp.getStatus());
-        } catch (TException tException) {
-          throw new IoTDBConnectionException(tException);
-        }
-      } else {
-        throw new IoTDBConnectionException(defaultSessionConnection.logForReconnectionFailure());
+    String sql = ALL_DB_SQL;
+    if (!CollectionUtils.isEmpty(databaseSet)) {
+      StringBuilder baseSql = new StringBuilder(SPECIFY_DB_SQL_PREFIX);
+      for (String database : databaseSet) {
+        baseSql
+            .append(SPECIFY_DB_SQL_DATABASE)
+            .append(database)
+            .append(SPECIFY_DB_SQL_FLUSH)
+            .append(COMMA);
       }
+      baseSql.deleteCharAt(baseSql.length() - 1);
+      baseSql.append(SPECIFY_DB_SQL_SUFFIX);
     }
-    try (SessionDataSet sessionDataSet =
-        new SessionDataSet(
-            "",
-            execResp.getColumns(),
-            execResp.getDataTypeList(),
-            execResp.columnNameIndexMap,
-            execResp.getQueryId(),
-            defaultSessionConnection.getSessionId(),
-            defaultSessionConnection.getClient(),
-            defaultSessionConnection.getSessionId(),
-            execResp.queryResult,
-            execResp.isIgnoreTimeStamp(),
-            5000,
-            execResp.moreData,
-            10)) {
+    try (SessionDataSet sessionDataSet = executeQueryStatement(sql)) {
       if (sessionDataSet.hasNext()) {
         RowRecord next = sessionDataSet.next();
         return (long) next.getFields().get(0).getDoubleV();

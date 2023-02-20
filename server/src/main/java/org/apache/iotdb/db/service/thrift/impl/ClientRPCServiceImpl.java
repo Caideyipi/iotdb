@@ -114,12 +114,12 @@ import org.apache.iotdb.service.rpc.thrift.TSSetTimeZoneReq;
 import org.apache.iotdb.service.rpc.thrift.TSUnsetSchemaTemplateReq;
 import org.apache.iotdb.service.rpc.thrift.TSyncIdentityInfo;
 import org.apache.iotdb.service.rpc.thrift.TSyncTransportMetaInfo;
-import org.apache.iotdb.service.rpc.thrift.TotalPointsReq;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 import org.apache.iotdb.tsfile.read.common.block.TsBlock;
 import org.apache.iotdb.tsfile.read.common.block.column.Column;
 import org.apache.iotdb.tsfile.utils.Pair;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,7 +163,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         throws IoTDBException, IOException;
   }
 
-  protected static final SelectResult SELECT_RESULT =
+  private static final SelectResult SELECT_RESULT =
       (resp, queryExecution, fetchSize) -> {
         Pair<List<ByteBuffer>, Boolean> pair =
             QueryDataSetUtils.convertQueryResultByFetchSize(queryExecution, fetchSize);
@@ -184,7 +184,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     SCHEMA_FETCHER = ClusterSchemaFetcher.getInstance();
   }
 
-  protected TSExecuteStatementResp executeStatementInternal(
+  private TSExecuteStatementResp executeStatementInternal(
       TSExecuteStatementReq req, SelectResult setResult) {
     boolean finished = false;
     long queryId = Long.MIN_VALUE;
@@ -1954,11 +1954,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
   @Override
   public LicenseInfoResp getLicenseInfo() throws TException {
-    return null;
-  }
-
-  @Override
-  public TSExecuteStatementResp getTotalPoints(TotalPointsReq req) throws TException {
     return null;
   }
 }

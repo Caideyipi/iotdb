@@ -593,8 +593,6 @@ service IClientRPCService {
   common.TSStatus updateWhiteList(1:set<string> ipSet)
 
   LicenseInfoResp getLicenseInfo()
-
-  TSExecuteStatementResp getTotalPoints(TotalPointsReq req)
 }
 
 
@@ -609,10 +607,4 @@ struct LicenseInfoResp{
 struct WhiteListInfoResp{
   1: required common.TSStatus status
   2: optional set<string> whiteList
-}
-
-struct TotalPointsReq{
-  1: optional i64 sessionId;
-  2: optional i64 statementId;
-  3: optional set<string> databaseSet;
 }
