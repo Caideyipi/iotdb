@@ -24,14 +24,10 @@ import org.apache.iotdb.db.service.thrift.impl.ClientRPCServiceImpl;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
-import org.apache.iotdb.service.rpc.thrift.TSExecuteStatementReq;
-import org.apache.iotdb.service.rpc.thrift.TSExecuteStatementResp;
-import org.apache.iotdb.service.rpc.thrift.TotalPointsReq;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
 import com.timecho.timechodb.license.LicenseManager;
 import com.timecho.timechodb.rpc.IPFilter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.thrift.TException;
 
 import java.util.List;
@@ -44,15 +40,6 @@ import static com.timecho.timechodb.rpc.IPFilter.WHITE_LIST_PATTERN;
 public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
 
   public static final String ROOT_USER = "root";
-  public static final String ALL_DB_SQL =
-      "select sum(value) from root.__system.metric.*.points.*.`type=flush` group by level=4";
-  public static final String SPECIFY_DB_SQL_PREFIX =
-      "select sum(value) from root.__system.metric.*.points.";
-  public static final String SPECIFY_DB_SQL_SUFFIX = " group by level=4";
-  public static final String SPECIFY_DB_SQL_DATABASE = "`database=";
-  public static final String SPECIFY_DB_SQL_FLUSH = "`.`type=flush`";
-  public static final String COMMA = ",";
-  public static final String BLANK = "";
 
   @Override
   public WhiteListInfoResp getWhiteIpSet() throws TException {
@@ -98,30 +85,5 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
     licenseInfoResp.setMaxAllowedTimeSeriesNumber(
         LicenseManager.getInstance().getMaxAllowedTimeSeriesNumber());
     return licenseInfoResp;
-  }
-
-  @Override
-  public TSExecuteStatementResp getTotalPoints(TotalPointsReq req) throws TException {
-    TSExecuteStatementReq internalReq = new TSExecuteStatementReq();
-    Set<String> databaseSet = req.getDatabaseSet();
-    internalReq.setSessionId(req.getSessionId());
-    internalReq.setStatementId(req.getStatementId());
-    if (CollectionUtils.isEmpty(databaseSet)) {
-      internalReq.setStatement(ALL_DB_SQL);
-      return executeStatementInternal(internalReq, SELECT_RESULT);
-    }
-
-    StringBuilder baseSql = new StringBuilder(SPECIFY_DB_SQL_PREFIX);
-    for (String database : databaseSet) {
-      baseSql
-          .append(SPECIFY_DB_SQL_DATABASE)
-          .append(database)
-          .append(SPECIFY_DB_SQL_FLUSH)
-          .append(COMMA);
-    }
-    baseSql.append(SPECIFY_DB_SQL_SUFFIX);
-    baseSql.replace(baseSql.lastIndexOf(COMMA), baseSql.lastIndexOf(COMMA) + 1, BLANK);
-    internalReq.setStatement(baseSql.toString());
-    return executeStatementInternal(internalReq, SELECT_RESULT);
   }
 }
