@@ -18,10 +18,10 @@
 # under the License.
 #
 
-LOCAL_REMOTE_BRANCH="cherry_pick_rc1.0.1"
-NEWEST_RC_BRANCH="rc/1.0.1"
-LOCAL_REL_BRANCH="rel/1.0"
-LOCAL_MR_BRANCH="rel/1.0_cherry_pick"
+LOCAL_REMOTE_BRANCH="cherry_pick_rc_master"
+NEWEST_RC_BRANCH="master"
+LOCAL_REL_BRANCH="master"
+LOCAL_MR_BRANCH="master_cherry_pick"
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 function setup_env() {
@@ -62,6 +62,7 @@ function cherry_pick() {
  fi
 }
 
+git checkout master
 setup_env
 
 # Checkout to rel/1.0
