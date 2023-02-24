@@ -21,7 +21,7 @@
 LOCAL_REMOTE_BRANCH="cherry_pick_rc_master"
 NEWEST_RC_BRANCH="master"
 LOCAL_REL_BRANCH="master"
-LOCAL_MR_BRANCH="master_cherry_pick"
+LOCAL_MR_BRANCH="master"
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 function setup_env() {
