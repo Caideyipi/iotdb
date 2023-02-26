@@ -128,6 +128,7 @@
         <module>timecho-server</module>
         <module>timecho-isession</module>
         <module>timecho-session</module>
+        <module>pipe-api</module>
     </modules>
     <!-- Properties Management -->
     <properties>
