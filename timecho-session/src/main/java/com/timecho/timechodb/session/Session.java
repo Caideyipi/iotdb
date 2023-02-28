@@ -31,24 +31,21 @@ import org.apache.iotdb.tsfile.read.common.RowRecord;
 import com.timecho.timechodb.isession.ISession;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.thrift.TException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 
-public class Session extends org.apache.iotdb.session.Session implements ISession {
-  private static final Logger logger = LoggerFactory.getLogger(Session.class);
-  public static final String ALL_DB_SQL =
-      "select sum(value) from root.__system.metric.*.points.*.`type=flush` group by level=4";
-  public static final String SPECIFY_DB_SQL_PREFIX =
-      "select sum(value) from root.__system.metric.*.points.";
-  public static final String SPECIFY_DB_SQL_SUFFIX = " group by level=4";
-  public static final String SPECIFY_DB_SQL_DATABASE = "`database=";
-  public static final String SPECIFY_DB_SQL_FLUSH = "`.`type=flush`";
-  public static final String COMMA = ",";
+import static com.timecho.timechodb.session.SQLConstants.ALL_DB_SQL;
+import static com.timecho.timechodb.session.SQLConstants.COMMA;
+import static com.timecho.timechodb.session.SQLConstants.SPECIFY_DB_SQL_DATABASE;
+import static com.timecho.timechodb.session.SQLConstants.SPECIFY_DB_SQL_FLUSH;
+import static com.timecho.timechodb.session.SQLConstants.SPECIFY_DB_SQL_PREFIX;
+import static com.timecho.timechodb.session.SQLConstants.SPECIFY_DB_SQL_SUFFIX;
+import static com.timecho.timechodb.session.SQLConstants.SQL_TIME_GT;
+import static com.timecho.timechodb.session.SQLConstants.SQL_TIME_LT;
 
+public class Session extends org.apache.iotdb.session.Session implements ISession {
   public Session(String host, int rpcPort) {
     super(host, rpcPort);
   }
@@ -220,9 +217,52 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
   @Override
   public long getTotalPoints(Set<String> databaseSet)
       throws StatementExecutionException, IoTDBConnectionException {
-    String sql = ALL_DB_SQL;
+    StringBuilder finalSql = buildQuerySql(databaseSet).append(SPECIFY_DB_SQL_SUFFIX);
+    return getTotalPointsFromDataset(finalSql);
+  }
+
+  @Override
+  public long getTotalPoints(Set<String> databaseSet, long startTime, long endTime)
+      throws StatementExecutionException, IoTDBConnectionException {
+    StringBuilder finalSql =
+        buildQuerySql(databaseSet)
+            .append(SQL_TIME_GT)
+            .append(startTime)
+            .append(SQL_TIME_LT)
+            .append(endTime)
+            .append(SPECIFY_DB_SQL_SUFFIX);
+    return getTotalPointsFromDataset(finalSql);
+  }
+
+  @Override
+  public long getTotalPoints(Set<String> databaseSet, long startTime)
+      throws StatementExecutionException, IoTDBConnectionException {
+    StringBuilder finalSql =
+        buildQuerySql(databaseSet)
+            .append(SQL_TIME_GT)
+            .append(startTime)
+            .append(SPECIFY_DB_SQL_SUFFIX);
+    return getTotalPointsFromDataset(finalSql);
+  }
+
+  private long getTotalPointsFromDataset(StringBuilder baseSql)
+      throws IoTDBConnectionException, StatementExecutionException {
+    try (SessionDataSet sessionDataSet = executeQueryStatement(baseSql.toString())) {
+      if (sessionDataSet.hasNext()) {
+        RowRecord next = sessionDataSet.next();
+        if (next.hasNullField()) {
+          return 0;
+        }
+        return (long) next.getFields().get(0).getDoubleV();
+      }
+    }
+    return 0;
+  }
+
+  private static StringBuilder buildQuerySql(Set<String> databaseSet) {
+    StringBuilder baseSql = new StringBuilder(ALL_DB_SQL);
     if (!CollectionUtils.isEmpty(databaseSet)) {
-      StringBuilder baseSql = new StringBuilder(SPECIFY_DB_SQL_PREFIX);
+      baseSql = new StringBuilder(SPECIFY_DB_SQL_PREFIX);
       for (String database : databaseSet) {
         baseSql
             .append(SPECIFY_DB_SQL_DATABASE)
@@ -231,15 +271,8 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
             .append(COMMA);
       }
       baseSql.deleteCharAt(baseSql.length() - 1);
-      baseSql.append(SPECIFY_DB_SQL_SUFFIX);
     }
-    try (SessionDataSet sessionDataSet = executeQueryStatement(sql)) {
-      if (sessionDataSet.hasNext()) {
-        RowRecord next = sessionDataSet.next();
-        return (long) next.getFields().get(0).getDoubleV();
-      }
-    }
-    return 0;
+    return baseSql;
   }
 
   public static class Builder {

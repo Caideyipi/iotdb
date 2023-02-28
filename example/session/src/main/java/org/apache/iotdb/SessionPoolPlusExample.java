@@ -18,18 +18,19 @@
  */
 package org.apache.iotdb;
 
-import org.apache.iotdb.isession.IDataIterator;
+import org.apache.iotdb.isession.SessionDataSet;
+import org.apache.iotdb.isession.pool.SessionDataSetWrapper;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
-import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
-import org.apache.iotdb.session.pool.SessionDataSetWrapper;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 
 import com.timecho.timechodb.session.pool.SessionPool;
 import org.apache.thrift.TException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public class SessionPoolPlusExample {
@@ -68,8 +69,14 @@ public class SessionPoolPlusExample {
           TException {
     // Choose the SessionPoolPlus you going to use
     constructRedirectSessionPool();
-    WhiteListInfoResp whiteIpSet = sessionPool.getWhiteIpSet();
-    System.out.println(whiteIpSet);
+    Set<String> set = new HashSet<>();
+    set.add("root.db1");
+    long specifiedTotalPoints = sessionPool.getTotalPoints(set);
+    long allTotalPoints = sessionPool.getTotalPoints(null);
+    System.out.println(specifiedTotalPoints);
+    System.out.println(allTotalPoints);
+    //    WhiteListInfoResp whiteIpSet = sessionPool.getWhiteIpSet();
+    //    System.out.println(whiteIpSet);
     //    service = Executors.newFixedThreadPool(10);
     //    insertRecord();
     //    queryByRowRecord();
@@ -130,7 +137,7 @@ public class SessionPoolPlusExample {
             try {
               wrapper = sessionPool.executeQueryStatement("select * from root.sg1.d1");
               // get DataIterator like JDBC
-              IDataIterator dataIterator = wrapper.iterator();
+              SessionDataSet.DataIterator dataIterator = wrapper.iterator();
               System.out.println(wrapper.getColumnNames());
               System.out.println(wrapper.getColumnTypes());
               while (dataIterator.next()) {

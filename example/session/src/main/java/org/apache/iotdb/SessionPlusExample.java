@@ -19,13 +19,11 @@
 
 package org.apache.iotdb;
 
-import org.apache.iotdb.isession.IDataIterator;
+import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.isession.template.Template;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
-import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
-import org.apache.iotdb.session.SessionDataSet;
 import org.apache.iotdb.session.template.MeasurementNode;
 import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
@@ -68,17 +66,24 @@ public class SessionPlusExample {
         new Session.Builder()
             .host(LOCAL_HOST)
             .port(6667)
-            .username("test")
-            .password("tttt")
+            .username("root")
+            .password("root")
             .version(Version.V_0_13)
             .build();
     session.open(false);
-    LicenseInfoResp licenseInfo = session.getLicenseInfo();
-    System.out.println(session.getWhiteIpSet());
-
-    Set<String> ipSet = new HashSet<>();
-    ipSet.add("192.168.1.1");
-    session.updateWhiteList(ipSet);
+    //    LicenseInfoResp licenseInfo = session.getLicenseInfo();
+    //    System.out.println(session.getWhiteIpSet());
+    //
+    //    Set<String> ipSet = new HashSet<>();
+    //    ipSet.add("192.168.1.1");
+    //    session.updateWhiteList(ipSet);
+    //
+    Set<String> set = new HashSet<>();
+    set.add("root.single2");
+    long totalPoints = session.getTotalPoints(null);
+    long totalPoints1 = session.getTotalPoints(set, 1777551648368L);
+    System.out.println(totalPoints);
+    System.out.println(totalPoints1);
     // set session fetchSize
     //    session.setFetchSize(10000);
 
@@ -792,7 +797,7 @@ public class SessionPlusExample {
       throws IoTDBConnectionException, StatementExecutionException {
     try (SessionDataSet dataSet = session.executeQueryStatement("select * from root.sg1.d1")) {
 
-      IDataIterator iterator = dataSet.iterator();
+      SessionDataSet.DataIterator iterator = dataSet.iterator();
       System.out.println(dataSet.getColumnNames());
       dataSet.setFetchSize(1024); // default is 10000
       while (iterator.next()) {

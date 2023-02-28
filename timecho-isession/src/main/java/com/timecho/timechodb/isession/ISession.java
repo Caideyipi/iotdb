@@ -33,7 +33,20 @@ public interface ISession extends org.apache.iotdb.isession.ISession {
 
   LicenseInfoResp getLicenseInfo() throws StatementExecutionException, IoTDBConnectionException;
 
-  /** Returns the number of points in the specified database. */
+  /**
+   * Queries the total number of points of a specified database. If the dataset parameter is empty
+   * or not passed, returns the total number of points of all databases. This method counts the
+   * points in the tsfile file, excluding the points in memory.
+   */
   long getTotalPoints(Set<String> databaseSet)
+      throws StatementExecutionException, IoTDBConnectionException;
+
+  /**
+   * Similar to the above method, start and end timestamp parameters are added to filter the data *
+   */
+  long getTotalPoints(Set<String> databaseSet, long startTime, long endTime)
+      throws StatementExecutionException, IoTDBConnectionException;
+  /** Similar to the above method, start timestamp parameters are added to filter the data * */
+  long getTotalPoints(Set<String> databaseSet, long startTime)
       throws StatementExecutionException, IoTDBConnectionException;
 }

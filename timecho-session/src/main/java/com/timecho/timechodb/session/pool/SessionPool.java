@@ -212,6 +212,69 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
   }
 
   @Override
+  public long getTotalPoints(Set<String> databaseSet)
+      throws StatementExecutionException, IoTDBConnectionException {
+    for (int i = 0; i < RETRY; i++) {
+      ISession session = (ISession) getSession();
+      try {
+        long totalPoints = session.getTotalPoints(databaseSet);
+        putBack(session);
+        return totalPoints;
+      } catch (IoTDBConnectionException e) {
+        // TException means the connection is broken, remove it and get a new one.
+        logger.warn("getTotalPoints failed", e);
+        cleanSessionAndMayThrowConnectionException(session, i, e);
+      } catch (StatementExecutionException | RuntimeException e) {
+        putBack(session);
+        throw e;
+      }
+    }
+    return 0;
+  }
+
+  @Override
+  public long getTotalPoints(Set<String> databaseSet, long startTime, long endTime)
+      throws StatementExecutionException, IoTDBConnectionException {
+    for (int i = 0; i < RETRY; i++) {
+      ISession session = (ISession) getSession();
+      try {
+        long totalPoints = session.getTotalPoints(databaseSet, startTime, endTime);
+        putBack(session);
+        return totalPoints;
+      } catch (IoTDBConnectionException e) {
+        // TException means the connection is broken, remove it and get a new one.
+        logger.warn("getTotalPoints failed", e);
+        cleanSessionAndMayThrowConnectionException(session, i, e);
+      } catch (StatementExecutionException | RuntimeException e) {
+        putBack(session);
+        throw e;
+      }
+    }
+    return 0;
+  }
+
+  @Override
+  public long getTotalPoints(Set<String> databaseSet, long startTime)
+      throws StatementExecutionException, IoTDBConnectionException {
+    for (int i = 0; i < RETRY; i++) {
+      ISession session = (ISession) getSession();
+      try {
+        long totalPoints = session.getTotalPoints(databaseSet, startTime);
+        putBack(session);
+        return totalPoints;
+      } catch (IoTDBConnectionException e) {
+        // TException means the connection is broken, remove it and get a new one.
+        logger.warn("getTotalPoints failed", e);
+        cleanSessionAndMayThrowConnectionException(session, i, e);
+      } catch (StatementExecutionException | RuntimeException e) {
+        putBack(session);
+        throw e;
+      }
+    }
+    return 0;
+  }
+
+  @Override
   protected ISession constructNewSession() {
     Session session;
     if (nodeUrls == null) {
