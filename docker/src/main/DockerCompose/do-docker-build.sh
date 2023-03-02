@@ -58,7 +58,7 @@ done
 
 if [[ -z "$build_what" ]]; then echo "-t is required."; print_usage; fi
 
-version=${version:-"1.1.0-SNAPSHOT"}
+version=${version:-"1.2.0-SNAPSHOT"}
 maintainer=${maintainer:-"$(git config user.name)"}
 build_date="$(date +'%Y-%m-%dT%H:%M:%S+08:00')"
 commit_id=${commit_id:-"$(git rev-parse --short HEAD)"}

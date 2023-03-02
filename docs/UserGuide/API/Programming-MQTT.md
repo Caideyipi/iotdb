@@ -112,7 +112,7 @@ Steps:
         <dependency>
             <groupId>org.apache.iotdb</groupId>
             <artifactId>iotdb-server</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
+            <version>1.2.0-SNAPSHOT</version>
         </dependency>
 ```
 * Define your implementation which implements `org.apache.iotdb.db.protocol.mqtt.PayloadFormatter`
