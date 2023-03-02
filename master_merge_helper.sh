@@ -18,10 +18,11 @@
 # under the License.
 #
 
+time=$(date "+%Y%m%d")
 LOCAL_REMOTE_BRANCH="cherry_pick_rc_master"
 NEWEST_RC_BRANCH="master"
 LOCAL_REL_BRANCH="master"
-LOCAL_MR_BRANCH="master"
+LOCAL_MR_BRANCH="master-${time}"
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 function setup_env() {
