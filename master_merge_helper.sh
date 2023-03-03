@@ -19,39 +19,48 @@
 #
 
 time=$(date "+%Y%m%d")
-LOCAL_REMOTE_BRANCH="cherry_pick_rc_master"
-NEWEST_RC_BRANCH="master"
-LOCAL_REL_BRANCH="master"
-LOCAL_MR_BRANCH="master-${time}"
+
+# pull commit from iotdb
+IoTDB_BASE_BRANCH="master"
+# create brahch base on IoTDB_BASE_BRANCH
+IoTDB_COMMIT_BRANCH="iotdb_${IoTDB_BASE_BRANCH}"
+
+
+# pull commit from timechodb
+TIMECHODB_BASE_BRANCH="master"
+# create mr branch base on TIMECHODB_BASE_BRANCH
+LOCAL_MR_BRANCH="sync_from_iotdb_${IoTDB_BASE_BRANCH}_${time}"
+
+
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 function setup_env() {
- HAS_MASTER_IOTDB=$(git branch -vv | grep "${LOCAL_REMOTE_BRANCH}")
+ HAS_MASTER_IOTDB=$(git branch -vv | grep "${IoTDB_COMMIT_BRANCH}")
  if [ -z "${HAS_MASTER_IOTDB}" ]
  then
-  echo "Create branch ${LOCAL_REMOTE_BRANCH}"
+  echo "Create branch ${IoTDB_COMMIT_BRANCH}"
   git remote add iotdb https://github.com/apache/iotdb.git
-  git fetch --quiet iotdb ${NEWEST_RC_BRANCH}
+  git fetch --quiet iotdb ${IoTDB_BASE_BRANCH}
   git checkout --quiet FETCH_HEAD
-  git checkout -b ${LOCAL_REMOTE_BRANCH}
+  git checkout -b ${IoTDB_COMMIT_BRANCH}
  else
-  git checkout ${LOCAL_REMOTE_BRANCH}
+  git checkout ${IoTDB_COMMIT_BRANCH}
  fi
- echo "Pull iotdb ${NEWEST_RC_BRANCH}"
- git pull --quiet iotdb ${NEWEST_RC_BRANCH}
+ echo "Pull iotdb ${IoTDB_BASE_BRANCH}"
+ git pull --quiet iotdb ${IoTDB_BASE_BRANCH}
 
- HAS_MASTER=$(git branch -vv | grep "${LOCAL_REL_BRANCH}")
+ HAS_MASTER=$(git branch -vv | grep "${TIMECHODB_BASE_BRANCH}")
  if [ -z "${HAS_MASTER}" ]
  then
-  echo "Create branch "${LOCAL_REL_BRANCH}""
-  git fetch --quiet origin "${LOCAL_REL_BRANCH}"
+  echo "Create branch ${TIMECHODB_BASE_BRANCH}"
+  git fetch --quiet origin "${TIMECHODB_BASE_BRANCH}"
   git checkout --quiet FETCH_HEAD
-  git checkout -b ${LOCAL_REL_BRANCH}
  else
-  git checkout ${LOCAL_REL_BRANCH}
+  git checkout ${TIMECHODB_BASE_BRANCH}
  fi
- echo "Pull origin ${LOCAL_REL_BRANCH}"
- git pull --quiet origin ${LOCAL_REL_BRANCH}
+ echo "Pull origin ${TIMECHODB_BASE_BRANCH}"
+ git pull --quiet origin ${TIMECHODB_BASE_BRANCH}
+ git checkout -b ${LOCAL_MR_BRANCH}
 }
 
 function cherry_pick() {
@@ -63,15 +72,7 @@ function cherry_pick() {
  fi
 }
 
-git checkout master
 setup_env
-
-# Checkout to rel/1.0
-git checkout ${LOCAL_REL_BRANCH}
-echo "delete branch ${LOCAL_MR_BRANCH}"
-git branch -D ${LOCAL_MR_BRANCH}
-echo "create branch ${LOCAL_MR_BRANCH}"
-git checkout -b ${LOCAL_MR_BRANCH}
 
 # Find the last community commit
 LAST_COMMUNITY_COMMIT_MSG=$(git log --pretty=format:"%s" | grep -i -v "${PRIVATE_COMMIT_PREFIX}" |grep -v "Merge branch" | head -1)
@@ -82,7 +83,7 @@ then
 fi
 echo "Last community commit: ${LAST_COMMUNITY_COMMIT_MSG}"
 
-LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" ${LOCAL_REMOTE_BRANCH} | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
+LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" ${IoTDB_COMMIT_BRANCH} | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
 if [ -z "${LAST_COMMUNITY_COMMIT_HASH}" ]
 then
  echo "Failed to find the hash of the last community commit"
@@ -91,11 +92,11 @@ fi
 echo "Last community commit hash: ${LAST_COMMUNITY_COMMIT_HASH}"
 
 # Cherry-pick new commits one by one
-NUM_COMMITS=$(git log --pretty=format:"%h" ${LOCAL_REMOTE_BRANCH} | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | wc -l)
+NUM_COMMITS=$(git log --pretty=format:"%h" ${IoTDB_COMMIT_BRANCH} | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | wc -l)
 echo "Found ${NUM_COMMITS} commit(s) to cherry-pick"
 echo ""
 
-for COMMIT_HASH in $(git log --pretty=format:"%h" ${LOCAL_REMOTE_BRANCH} | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | tac)
+for COMMIT_HASH in $(git log --pretty=format:"%h" ${IoTDB_COMMIT_BRANCH} | grep -B 10000 "${LAST_COMMUNITY_COMMIT_HASH}" | grep -v "${LAST_COMMUNITY_COMMIT_HASH}" | tac)
 do
  echo "Working on:"
  echo $(git show --oneline --quiet ${COMMIT_HASH})
