@@ -20,7 +20,6 @@ package com.timecho.timechodb;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import com.timecho.timechodb.conf.TimechoDBDescriptor;
 import com.timecho.timechodb.license.LicenseException;
 import com.timecho.timechodb.license.LicenseManager;
 import com.timecho.timechodb.license.MachineCodeManager;
@@ -40,7 +39,6 @@ public class Activate {
     try {
       LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
       loggerContext.getLoggerList().forEach(x -> x.setLevel(Level.ERROR));
-      TimechoDBDescriptor.getInstance().loadTimechoDBProperties();
       // init licenseManager and machineCodeManager
       LicenseManager licenseManager = LicenseManager.getInstance();
       MachineCodeManager machineCodeManager = MachineCodeManager.getInstance();

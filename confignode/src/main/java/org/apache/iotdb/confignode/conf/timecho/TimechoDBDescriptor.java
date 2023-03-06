@@ -16,12 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.timechodb.conf;
+package org.apache.iotdb.confignode.conf.timecho;
 
-import org.apache.iotdb.db.audit.AuditLogOperation;
-import org.apache.iotdb.db.audit.AuditLogStorage;
-import org.apache.iotdb.db.conf.IoTDBConfig;
-import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.tsfile.utils.PublicBAOS;
 
 import org.apache.commons.codec.binary.Base64;
@@ -44,27 +40,19 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class TimechoDBDescriptor {
   private static final Logger logger = LoggerFactory.getLogger(TimechoDBDescriptor.class);
   private static final String CONFIG_FILE = "timechodb-common.properties";
 
-  private final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
-
   static final String RSA = "RSA";
-
-  public static final String MAX_ALLOWED_TIME_SERIES_NUMBER = "max_allowed_time_series_number";
 
   private static final String PUBLIC_KEY_STR =
       "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAI4imMJhfHdZWWFZ3oYUwK8p04hiUgCUAgg8vyjSTdFJ2kQ-xD9ZQ8Goi_rIxICwwImJVPnZaOSLuYfH46XwIG8CAwEAAQ";
   private final Properties properties = new Properties();
 
-  public TimechoDBDescriptor() {
-    //    loadTimechoDBProperties();
-  }
+  public TimechoDBDescriptor() {}
 
   public void loadTimechoDBProperties(String configFile) {
     Path commonConfig = ConfigFileLoader.getPropsUrl(CONFIG_FILE);
@@ -94,35 +82,6 @@ public class TimechoDBDescriptor {
         if (fileSize > 0) {
           logger.info("load from timechodb-common.properties");
           decryptConfigFile(commonChannel, sizeBuffer, cipher, decryptedData);
-          config.setEnableWhiteList(
-              Boolean.parseBoolean(
-                  properties.getProperty(
-                      "enable_white_list", String.valueOf(config.isEnableWhiteList()))));
-
-          config.setEnableAuditLog(
-              Boolean.parseBoolean(
-                  properties.getProperty(
-                      "enable_audit_log", String.valueOf(config.isEnableAuditLog()))));
-
-          if (properties.getProperty("audit_log_storage") != null) {
-            config.setAuditLogStorage(
-                Arrays.stream(properties.getProperty("audit_log_storage").split(","))
-                    .map(AuditLogStorage::valueOf)
-                    .collect(Collectors.toList()));
-          }
-
-          if (properties.getProperty("audit_log_operation") != null) {
-            config.setAuditLogOperation(
-                Arrays.stream(properties.getProperty("audit_log_operation").split(","))
-                    .map(AuditLogOperation::valueOf)
-                    .collect(Collectors.toList()));
-          }
-
-          config.setEnableAuditLogForNativeInsertApi(
-              Boolean.parseBoolean(
-                  properties.getProperty(
-                      "enable_audit_log_for_native_insert_api",
-                      String.valueOf(config.isEnableAuditLogForNativeInsertApi()))));
         }
       } catch (Throwable t) {
         logger.warn("Error happened while loading properties from {}", commonConfig, t);
@@ -155,14 +114,14 @@ public class TimechoDBDescriptor {
   }
 
   private void decryptConfigFile(
-      FileChannel configChannel, ByteBuffer sizeBuffer, Cipher cipher, PublicBAOS decryptedData)
+      FileChannel otherChannel, ByteBuffer sizeBuffer, Cipher cipher, PublicBAOS decryptedData)
       throws IOException, IllegalBlockSizeException, BadPaddingException {
-    while (configChannel.read(sizeBuffer) > 0) {
+    while (otherChannel.read(sizeBuffer) > 0) {
       sizeBuffer.flip();
       int size = sizeBuffer.getInt();
       sizeBuffer.flip();
       ByteBuffer encryptedData = ByteBuffer.allocate(size);
-      configChannel.read(encryptedData);
+      otherChannel.read(encryptedData);
       decryptedData.write(cipher.doFinal(encryptedData.array()));
     }
     logger.info(new String(decryptedData.getBuf(), 0, decryptedData.size()));

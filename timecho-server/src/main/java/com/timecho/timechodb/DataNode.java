@@ -18,10 +18,12 @@
  */
 package com.timecho.timechodb;
 
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
 import org.apache.iotdb.db.service.RPCService;
+import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
 
 import com.timecho.timechodb.conf.TimechoDBDescriptor;
 import com.timecho.timechodb.license.LicenseCheckService;
@@ -33,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Properties;
 import java.util.Scanner;
 
 import static com.timecho.timechodb.license.LicenseManager.LICENSE_FILE_PATH;
@@ -41,10 +44,12 @@ import static com.timecho.timechodb.license.LicenseManager.LICENSE_PATH;
 public class DataNode extends org.apache.iotdb.db.service.DataNode {
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
 
+  private static final String CONFIG_FILE = "timechodb-datanode.properties";
+
   public static void main(String[] args) {
     try {
       // init licenseManager and machineCodeManager
-      TimechoDBDescriptor.getInstance().loadTimechoDBProperties();
+      TimechoDBDescriptor.getInstance().loadTimechoDBProperties(CONFIG_FILE);
       LicenseManager licenseManager = LicenseManager.getInstance();
       MachineCodeManager machineCodeManager = MachineCodeManager.getInstance();
       machineCodeManager.init();
@@ -78,6 +83,13 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
       // check license effective
       if (licenseManager.verify(machineCodeManager.getMachineCode())) {
         registerManager.register(LicenseCheckService.getInstance());
+        // rewrite
+        Properties properties = TimechoDBDescriptor.getInstance().getCustomizedProperties();
+        CommonDescriptor.getInstance().loadCommonProps(properties);
+        IoTDBDescriptor.getInstance().loadProperties(properties);
+        IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
+        TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
+        TSFileDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
         new DataNodeServerCommandLineNew().doMain(args);
         logger.info("The license expires at {}", LicenseManager.getInstance().getExpireDate());
       } else {

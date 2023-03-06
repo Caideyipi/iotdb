@@ -43,7 +43,6 @@ import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.db.utils.datastructure.TVListSortAlgorithm;
 import org.apache.iotdb.db.wal.WALManager;
 import org.apache.iotdb.db.wal.utils.WALMode;
-import org.apache.iotdb.external.api.IPropertiesLoader;
 import org.apache.iotdb.metrics.config.MetricConfigDescriptor;
 import org.apache.iotdb.metrics.config.ReloadLevel;
 import org.apache.iotdb.metrics.reporter.iotdb.IoTDBInternalMemoryReporter;
@@ -67,7 +66,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
-import java.util.ServiceLoader;
 
 public class IoTDBDescriptor {
 
@@ -79,18 +77,6 @@ public class IoTDBDescriptor {
 
   protected IoTDBDescriptor() {
     loadProps();
-    ServiceLoader<IPropertiesLoader> propertiesLoaderServiceLoader =
-        ServiceLoader.load(IPropertiesLoader.class);
-    for (IPropertiesLoader loader : propertiesLoaderServiceLoader) {
-      logger.info("Will reload properties from {} ", loader.getClass().getName());
-      Properties properties = loader.loadProperties();
-      loadProperties(properties);
-      conf.setCustomizedProperties(loader.getCustomizedProperties());
-      TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
-      TSFileDescriptor.getInstance()
-          .getConfig()
-          .setCustomizedProperties(loader.getCustomizedProperties());
-    }
   }
 
   public static IoTDBDescriptor getInstance() {

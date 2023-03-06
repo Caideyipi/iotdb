@@ -129,6 +129,7 @@
         <module>timecho-isession</module>
         <module>timecho-session</module>
         <module>pipe-api</module>
+        <module>config-encryptor</module>
     </modules>
     <!-- Properties Management -->
     <properties>
