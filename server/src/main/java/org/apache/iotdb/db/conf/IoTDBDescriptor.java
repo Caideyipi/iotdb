@@ -1953,8 +1953,7 @@ public class IoTDBDescriptor {
   public void loadEnterpriseProps(Properties properties) {
     conf.setEnableWhiteList(
         Boolean.parseBoolean(
-            properties.getProperty(
-                "enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
+            properties.getProperty("enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
 
     conf.setEnableAuditLog(
         Boolean.parseBoolean(
