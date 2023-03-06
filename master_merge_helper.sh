@@ -49,18 +49,18 @@ function setup_env() {
  echo "Pull iotdb ${IoTDB_BASE_BRANCH}"
  git pull --quiet iotdb ${IoTDB_BASE_BRANCH}
 
- HAS_MASTER=$(git branch -vv | grep "${TIMECHODB_BASE_BRANCH}")
+ HAS_MASTER=$(git branch -vv | grep "${LOCAL_MR_BRANCH}")
  if [ -z "${HAS_MASTER}" ]
  then
-  echo "Create branch ${TIMECHODB_BASE_BRANCH}"
+  echo "Create branch ${LOCAL_MR_BRANCH}"
   git fetch --quiet origin "${TIMECHODB_BASE_BRANCH}"
   git checkout --quiet FETCH_HEAD
+  git checkout -b ${LOCAL_MR_BRANCH}
  else
-  git checkout ${TIMECHODB_BASE_BRANCH}
+  git checkout ${LOCAL_MR_BRANCH}
+  echo "Pull origin ${TIMECHODB_BASE_BRANCH}"
+  git pull --quiet origin ${TIMECHODB_BASE_BRANCH}
  fi
- echo "Pull origin ${TIMECHODB_BASE_BRANCH}"
- git pull --quiet origin ${TIMECHODB_BASE_BRANCH}
- git checkout -b ${LOCAL_MR_BRANCH}
 }
 
 function cherry_pick() {
