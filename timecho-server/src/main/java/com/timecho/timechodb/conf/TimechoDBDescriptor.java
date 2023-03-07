@@ -18,8 +18,6 @@
  */
 package com.timecho.timechodb.conf;
 
-import org.apache.iotdb.db.audit.AuditLogOperation;
-import org.apache.iotdb.db.audit.AuditLogStorage;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.tsfile.utils.PublicBAOS;
@@ -44,9 +42,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class TimechoDBDescriptor {
   private static final Logger logger = LoggerFactory.getLogger(TimechoDBDescriptor.class);
@@ -94,35 +90,6 @@ public class TimechoDBDescriptor {
         if (fileSize > 0) {
           logger.info("load from timechodb-common.properties");
           decryptConfigFile(commonChannel, sizeBuffer, cipher, decryptedData);
-          config.setEnableWhiteList(
-              Boolean.parseBoolean(
-                  properties.getProperty(
-                      "enable_white_list", String.valueOf(config.isEnableWhiteList()))));
-
-          config.setEnableAuditLog(
-              Boolean.parseBoolean(
-                  properties.getProperty(
-                      "enable_audit_log", String.valueOf(config.isEnableAuditLog()))));
-
-          if (properties.getProperty("audit_log_storage") != null) {
-            config.setAuditLogStorage(
-                Arrays.stream(properties.getProperty("audit_log_storage").split(","))
-                    .map(AuditLogStorage::valueOf)
-                    .collect(Collectors.toList()));
-          }
-
-          if (properties.getProperty("audit_log_operation") != null) {
-            config.setAuditLogOperation(
-                Arrays.stream(properties.getProperty("audit_log_operation").split(","))
-                    .map(AuditLogOperation::valueOf)
-                    .collect(Collectors.toList()));
-          }
-
-          config.setEnableAuditLogForNativeInsertApi(
-              Boolean.parseBoolean(
-                  properties.getProperty(
-                      "enable_audit_log_for_native_insert_api",
-                      String.valueOf(config.isEnableAuditLogForNativeInsertApi()))));
         }
       } catch (Throwable t) {
         logger.warn("Error happened while loading properties from {}", commonConfig, t);

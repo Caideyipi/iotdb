@@ -27,6 +27,8 @@ import org.apache.iotdb.commons.utils.NodeUrlUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TCQConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TGlobalConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TRatisConfig;
+import org.apache.iotdb.db.audit.AuditLogOperation;
+import org.apache.iotdb.db.audit.AuditLogStorage;
 import org.apache.iotdb.db.conf.directories.DirectoryManager;
 import org.apache.iotdb.db.engine.StorageEngine;
 import org.apache.iotdb.db.engine.compaction.execute.performer.constant.CrossCompactionPerformer;
@@ -65,7 +67,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class IoTDBDescriptor {
 
@@ -973,6 +977,9 @@ public class IoTDBDescriptor {
 
     // author cache
     loadAuthorCache(properties);
+
+    // load enterprise properties
+    loadEnterpriseProps(properties);
 
     conf.setTimePartitionInterval(
         DateTimeUtils.convertMilliTimeWithPrecision(
@@ -1923,6 +1930,37 @@ public class IoTDBDescriptor {
     conf.setAllocateMemoryForStorageEngine(
         conf.getAllocateMemoryForStorageEngine() + conf.getAllocateMemoryForConsensus());
     SystemInfo.getInstance().allocateWriteMemory();
+  }
+
+  public void loadEnterpriseProps(Properties properties) {
+    conf.setEnableWhiteList(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
+
+    conf.setEnableAuditLog(
+        Boolean.parseBoolean(
+            properties.getProperty("enable_audit_log", String.valueOf(conf.isEnableAuditLog()))));
+
+    if (properties.getProperty("audit_log_storage") != null) {
+      conf.setAuditLogStorage(
+          Arrays.stream(properties.getProperty("audit_log_storage").split(","))
+              .map(AuditLogStorage::valueOf)
+              .collect(Collectors.toList()));
+    }
+
+    if (properties.getProperty("audit_log_operation") != null) {
+      conf.setAuditLogOperation(
+          Arrays.stream(properties.getProperty("audit_log_operation").split(","))
+              .map(AuditLogOperation::valueOf)
+              .collect(Collectors.toList()));
+    }
+
+    conf.setEnableAuditLogForNativeInsertApi(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_audit_log_for_native_insert_api",
+                String.valueOf(conf.isEnableAuditLogForNativeInsertApi()))));
   }
 
   private static class IoTDBDescriptorHolder {
