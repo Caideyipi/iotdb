@@ -35,7 +35,7 @@ LOCAL_MR_BRANCH="sync_from_iotdb_${IoTDB_BASE_BRANCH}_${time}"
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 function setup_env() {
- HAS_MASTER_IOTDB=$(git branch -vv | grep "${IoTDB_COMMIT_BRANCH}")
+ HAS_MASTER_IOTDB=$(git branch -vv | grep -w "${IoTDB_COMMIT_BRANCH}")
  if [ -z "${HAS_MASTER_IOTDB}" ]
  then
   echo "Create branch ${IoTDB_COMMIT_BRANCH}"
@@ -49,7 +49,7 @@ function setup_env() {
  echo "Pull iotdb ${IoTDB_BASE_BRANCH}"
  git pull --quiet iotdb ${IoTDB_BASE_BRANCH}
 
- HAS_MASTER=$(git branch -vv | grep "${LOCAL_MR_BRANCH}")
+ HAS_MASTER=$(git branch -vv | grep -w "${LOCAL_MR_BRANCH}")
  if [ -z "${HAS_MASTER}" ]
  then
   echo "Create branch ${LOCAL_MR_BRANCH}"
