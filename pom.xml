@@ -130,6 +130,7 @@
         <module>timecho-session</module>
         <module>pipe-api</module>
         <module>config-encryptor</module>
+        <module>subscription-api</module>
     </modules>
     <!-- Properties Management -->
     <properties>
