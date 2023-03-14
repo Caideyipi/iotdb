@@ -22,9 +22,11 @@ import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SessionTests {
+  @Ignore // should be moved to IT
   @Test
   public void testGetTotalPoints() throws IoTDBConnectionException, StatementExecutionException {
     Session session = new Session("127.0.0.1", 6667);
