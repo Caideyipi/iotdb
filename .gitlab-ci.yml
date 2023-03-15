@@ -57,22 +57,13 @@ stages:
   - .pre
   - test
 
-clean-env:
-  stage: .pre
-  tags:
-    - timechodb
-  script:
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/timechodb || true'
-  interruptible: true
-  rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
-
 unit-test:
   stage: test
   tags:
     - timechodb
+  before_script:
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/timechodb || true'
   script:
     - 'mvn clean install -DskipTests -s $MAVEN_SETTINGS_XML'
     - 'mvn clean test -Dtest.port.closed=true -s $MAVEN_SETTINGS_XML'
@@ -85,6 +76,9 @@ integration-test-1c1d:
   stage: test
   tags:
     - timechodb
+  before_script:
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/timechodb || true'
   script:
     - 'mvn verify -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -96,8 +90,11 @@ integration-test-1c3d:
   stage: test
   tags:
     - timechodb
+  before_script:
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/timechodb || true'
   script:
-    - 'mvn verify -DskipUTs -DintegrationTest.forkCount=4 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
+    - 'mvn verify -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
