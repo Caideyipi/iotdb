@@ -136,7 +136,7 @@ public class DataNode implements DataNodeMBean {
   private static final String REGISTER_INTERRUPTION =
       "Unexpected interruption when waiting to register to the cluster";
 
-  private DataNode() {
+  protected DataNode() {
     // we do not init anything here, so that we can re-initialize the instance in IT.
   }
 
