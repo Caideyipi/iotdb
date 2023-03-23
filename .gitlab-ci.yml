@@ -85,6 +85,13 @@ integration-test-1c1d:
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+  artifacts:
+    when: on_failure
+    name: 1c1d-log
+    paths:
+      - integration-test/target/cluster-logs
+    expire_in: 1 day
+
 
 integration-test-1c3d:
   stage: test
@@ -99,5 +106,10 @@ integration-test-1c3d:
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
-
+  artifacts:
+    when: on_failure
+    name: 1c3d-log
+    paths:
+      - integration-test/target/cluster-logs
+    expire_in: 1 day
 
