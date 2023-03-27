@@ -91,7 +91,7 @@ public abstract class AbstractCli {
   static final String SET_FETCH_SIZE = "set fetch_size";
   static final String SHOW_FETCH_SIZE = "show fetch_size";
   private static final String HELP = "help";
-  static final String IOTDB_CLI_PREFIX = "TimechoDB";
+  static final String IOTDB_CLI_PREFIX = "IoTDB";
   static final String SCRIPT_HINT = "./start-cli.sh(start-cli.bat if Windows)";
   static final String QUIT_COMMAND = "quit";
   static final String EXIT_COMMAND = "exit";
@@ -341,14 +341,17 @@ public abstract class AbstractCli {
     }
   }
 
-  static void displayLogo(String version, String buildInfo) {
+  static void displayLogo(String logo, String version, String buildInfo) {
     println(
-        "_____ _                     _          ____________ \n"
-            + "|_   _(_)                   | |         |  _  \\ ___ \\\n"
-            + "  | |  _ _ __ ___   ___  ___| |__   ___ | | | | |_/ /\n"
-            + "  | | | | '_ ` _ \\ / _ \\/ __| '_ \\ / _ \\| | | | ___ \\\n"
-            + "  | | | | | | | | |  __/ (__| | | | (_) | |/ /| |_/ /\n"
-            + "  \\_/ |_|_| |_| |_|\\___|\\___|_| |_|\\___/|___/ \\____/  version "
+        (logo != null
+                ? logo
+                : (" _____       _________  ______   ______    \n"
+                    + "|_   _|     |  _   _  ||_   _ `.|_   _ \\   \n"
+                    + "  | |   .--.|_/ | | \\_|  | | `. \\ | |_) |  \n"
+                    + "  | | / .'`\\ \\  | |      | |  | | |  __'.  \n"
+                    + " _| |_| \\__. | _| |_    _| |_.' /_| |__) | \n"
+                    + "|_____|'.__.' |_____|  |______.'|_______/  Enterprise "))
+            + "version "
             + version
             + " (Build: "
             + (buildInfo != null ? buildInfo : "UNKNOWN")
@@ -359,7 +362,7 @@ public abstract class AbstractCli {
 
   static void echoStarting() {
     println("---------------------");
-    println("Starting TimechoDB Cli");
+    println("Starting IoTDB Cli");
     println("---------------------");
   }
 

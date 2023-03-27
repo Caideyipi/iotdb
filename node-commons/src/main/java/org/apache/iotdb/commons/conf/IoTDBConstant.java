@@ -72,6 +72,15 @@ public class IoTDBConstant {
   public static final String CLUSTER_NAME = "cluster_name";
   public static final String DEFAULT_CLUSTER_NAME = "defaultCluster";
 
+  public static final String LOGO =
+      ""
+          + " _____       _________  ______   ______    \n"
+          + "|_   _|     |  _   _  ||_   _ `.|_   _ \\   \n"
+          + "  | |   .--.|_/ | | \\_|  | | `. \\ | |_) |  \n"
+          + "  | | / .'`\\ \\  | |      | |  | | |  __'.  \n"
+          + " _| |_| \\__. | _| |_    _| |_.' /_| |__) | \n"
+          + "|_____|'.__.' |_____|  |______.'|_______/  Enterprise ";
+
   // when running the program in IDE, we can not get the version info using
   // getImplementationVersion()
   public static final String VERSION =

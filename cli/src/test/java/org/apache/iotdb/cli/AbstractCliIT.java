@@ -101,14 +101,14 @@ public class AbstractCliIT {
           AbstractCli.checkRequiredArg(
               AbstractCli.HOST_ARGS, AbstractCli.HOST_NAME, commandLine, true, "127.0.0.1");
     } catch (ArgsErrorException e) {
-      assertEquals("TimechoDB: Required values for option 'host' not provided", e.getMessage());
+      assertEquals("IoTDB: Required values for option 'host' not provided", e.getMessage());
     }
     try {
       str =
           AbstractCli.checkRequiredArg(
               AbstractCli.HOST_ARGS, AbstractCli.HOST_NAME, commandLine, false, null);
     } catch (ArgsErrorException e) {
-      assertEquals("TimechoDB: Required values for option 'host' is null.", e.getMessage());
+      assertEquals("IoTDB: Required values for option 'host' is null.", e.getMessage());
     }
   }
 
