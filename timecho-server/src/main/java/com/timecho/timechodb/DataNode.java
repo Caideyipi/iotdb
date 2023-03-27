@@ -21,6 +21,7 @@ package com.timecho.timechodb;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.db.metadata.schemaregion.SchemaEngine;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
 import org.apache.iotdb.db.service.RPCService;
 import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
@@ -90,6 +91,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
         IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
         TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
         TSFileDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
+        SchemaEngine.getInstance().getSeriesNumerMonitor().init(null);
         new DataNodeServerCommandLineNew().doMain(args);
         logger.info("The license expires at {}", LicenseManager.getInstance().getExpireDate());
       } else {

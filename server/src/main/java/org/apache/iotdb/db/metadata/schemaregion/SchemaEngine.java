@@ -339,6 +339,10 @@ public class SchemaEngine {
     this.seriesNumerMonitor = seriesNumerMonitor;
   }
 
+  public ISeriesNumerMonitor getSeriesNumerMonitor() {
+    return seriesNumerMonitor;
+  }
+
   public int getSchemaRegionNumber() {
     return schemaRegionMap == null ? 0 : schemaRegionMap.size();
   }
