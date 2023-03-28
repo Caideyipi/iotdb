@@ -83,7 +83,7 @@ then
 fi
 echo "Last community commit: ${LAST_COMMUNITY_COMMIT_MSG}"
 
-LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" ${IoTDB_COMMIT_BRANCH} | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}')
+LAST_COMMUNITY_COMMIT_HASH=$(git log --pretty=format:"%h %s" ${IoTDB_COMMIT_BRANCH} | grep -F "${LAST_COMMUNITY_COMMIT_MSG}" | awk '{print $1}' | head -1)
 if [ -z "${LAST_COMMUNITY_COMMIT_HASH}" ]
 then
  echo "Failed to find the hash of the last community commit"
