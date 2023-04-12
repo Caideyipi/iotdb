@@ -455,6 +455,11 @@ struct TGetPipePluginTableResp {
   2: required list<binary> allPipePluginMeta
 }
 
+struct TSyncPipeMetaResp {
+  1: required common.TSStatus status
+  2: required list<binary> pipeMetas
+}
+
 // Show cluster
 struct TShowClusterResp {
   1: required common.TSStatus status
@@ -1123,6 +1128,15 @@ service IConfigNodeRPCService {
    * Return the pipe plugin jar list of the plugin name list
    */
   TGetJarInListResp getPipePluginJar(TGetJarInListReq req)
+
+  // ======================================================
+  // Pipe Runtime
+  // ======================================================
+
+  /**
+   * Return all the pipeMetas of the configNode
+   */
+  TSyncPipeMetaResp syncPipeMeta()
 
   // ======================================================
   // Maintenance Tools

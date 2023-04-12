@@ -216,6 +216,11 @@ public class AsyncClientHandler<Q, R> {
       case UPDATE_TEMPLATE:
       case CHANGE_REGION_LEADER:
       case KILL_QUERY_INSTANCE:
+      case CREATE_PIPE_PLUGIN:
+      case DROP_PIPE_PLUGIN:
+      case PIPE_ON_LEADER_CHANGE:
+      case PIPE_ON_DATANODE_REGISTER:
+      case PIPE_ON_DATANODE_REMOVE:
       default:
         return new AsyncTSStatusRPCHandler(
             requestType,

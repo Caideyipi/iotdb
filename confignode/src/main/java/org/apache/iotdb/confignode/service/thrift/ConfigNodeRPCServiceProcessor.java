@@ -155,6 +155,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowTrailReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTrailResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowVariablesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSpaceQuotaResp;
+import org.apache.iotdb.confignode.rpc.thrift.TSyncPipeMetaResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TThrottleQuotaResp;
 import org.apache.iotdb.confignode.rpc.thrift.TUnsetSchemaTemplateReq;
@@ -716,6 +717,12 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   @Override
   public TGetJarInListResp getPipePluginJar(TGetJarInListReq req) throws TException {
     return configManager.getPipePluginJar(req);
+  }
+
+  @Override
+  public TSyncPipeMetaResp syncPipeMeta() throws TException {
+    // TODO: wait for PipeMeta and send all
+    return null;
   }
 
   @Override

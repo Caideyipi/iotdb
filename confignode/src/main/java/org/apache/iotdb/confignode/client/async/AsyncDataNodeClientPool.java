@@ -56,6 +56,8 @@ import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListReq;
 import org.apache.iotdb.mpp.rpc.thrift.TInactiveTriggerInstanceReq;
 import org.apache.iotdb.mpp.rpc.thrift.TInvalidateMatchedSchemaCacheReq;
 import org.apache.iotdb.mpp.rpc.thrift.TOperatePipeOnDataNodeReq;
+import org.apache.iotdb.mpp.rpc.thrift.TPipeOnDataNodeRegisterReq;
+import org.apache.iotdb.mpp.rpc.thrift.TPipeOnLeaderChangeReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionLeaderChangeReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionRouteReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRollbackSchemaBlackListReq;
@@ -316,6 +318,23 @@ public class AsyncDataNodeClientPool {
         case ROLLBACK_OPERATE_PIPE:
           client.operatePipeOnDataNodeForRollback(
               (TOperatePipeOnDataNodeReq) clientHandler.getRequest(requestId),
+              (AsyncTSStatusRPCHandler)
+                  clientHandler.createAsyncRPCHandler(requestId, targetDataNode));
+          break;
+        case PIPE_ON_LEADER_CHANGE:
+          client.notifyPipeOnLeaderChange(
+              (TPipeOnLeaderChangeReq) clientHandler.getRequest(requestId),
+              (AsyncTSStatusRPCHandler)
+                  clientHandler.createAsyncRPCHandler(requestId, targetDataNode));
+          break;
+        case PIPE_ON_DATANODE_REGISTER:
+          client.notifyPipeOnDataNodeRegister(
+              (TPipeOnDataNodeRegisterReq) clientHandler.getRequest(requestId),
+              (AsyncTSStatusRPCHandler)
+                  clientHandler.createAsyncRPCHandler(requestId, targetDataNode));
+          break;
+        case PIPE_ON_DATANODE_REMOVE:
+          client.notifyPipeOnDataNodeRemove(
               (AsyncTSStatusRPCHandler)
                   clientHandler.createAsyncRPCHandler(requestId, targetDataNode));
           break;

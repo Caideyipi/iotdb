@@ -19,7 +19,9 @@
 
 package org.apache.iotdb.db.pipe.agent.runtime;
 
+import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.db.pipe.task.callable.PipeSubtask;
+import org.apache.iotdb.rpc.TSStatusCode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +30,29 @@ public class PipeRuntimeAgent {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PipeRuntimeAgent.class);
 
+  private static final HeartbeatAgent HEARTBEAT_AGENT = new HeartbeatAgent();
+
+  private static final MetaSyncFetcher META_SYNC_FETCHER = new MetaSyncFetcher();
+
   public void report(PipeSubtask subtask) {
     // TODO: terminate the task by the given taskID
     LOGGER.warn(
         "Failed to execute task {} after many retries, last failed cause by {}",
         subtask.getTaskID(),
         subtask.getLastFailedCause());
+  }
+
+  public static HeartbeatAgent getHeartbeatAgent() {
+    return HEARTBEAT_AGENT;
+  }
+
+  public static MetaSyncFetcher getMetaSyncFetcher() {
+    return META_SYNC_FETCHER;
+  }
+
+  public TSStatus onLeaderChange() {
+    // TODO: implement the leader change logic
+    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
   }
 
   /////////////////////////  Singleton Instance Holder  /////////////////////////

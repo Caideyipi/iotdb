@@ -17,7 +17,9 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.pipe.agent.runtime;
+package org.apache.iotdb.confignode.manager.pipe;
 
-/** HeartbeatScheduler is used to schedule the heartbeat of the pipe. */
-public class HeartbeatScheduler {}
+public class MetaSyncListener {
+  // TODO: Wait for PipeTaskMeta
+  public MetaSyncListener() {}
+}

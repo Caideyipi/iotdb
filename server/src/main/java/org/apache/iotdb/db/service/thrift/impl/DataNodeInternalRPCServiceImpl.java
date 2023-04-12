@@ -106,6 +106,7 @@ import org.apache.iotdb.db.mpp.plan.statement.component.WhereCondition;
 import org.apache.iotdb.db.mpp.plan.statement.crud.QueryStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.DeleteTimeSeriesStatement;
 import org.apache.iotdb.db.pipe.agent.PipeAgent;
+import org.apache.iotdb.db.pipe.agent.runtime.PipeRuntimeAgent;
 import org.apache.iotdb.db.query.control.SessionManager;
 import org.apache.iotdb.db.query.control.clientsession.IClientSession;
 import org.apache.iotdb.db.query.control.clientsession.InternalClientSession;
@@ -163,6 +164,8 @@ import org.apache.iotdb.mpp.rpc.thrift.TLoadResp;
 import org.apache.iotdb.mpp.rpc.thrift.TLoadSample;
 import org.apache.iotdb.mpp.rpc.thrift.TMaintainPeerReq;
 import org.apache.iotdb.mpp.rpc.thrift.TOperatePipeOnDataNodeReq;
+import org.apache.iotdb.mpp.rpc.thrift.TPipeOnDataNodeRegisterReq;
+import org.apache.iotdb.mpp.rpc.thrift.TPipeOnLeaderChangeReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionLeaderChangeReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionRouteReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRollbackSchemaBlackListReq;
@@ -236,6 +239,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   private final DataNodeThrottleQuotaManager throttleQuotaManager =
       DataNodeThrottleQuotaManager.getInstance();
+
+  private final PipeRuntimeAgent pipeRuntimeAgent = PipeAgent.runtime();
 
   public DataNodeInternalRPCServiceImpl() {
     super();
@@ -916,6 +921,21 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   @Override
   public TSStatus setThrottleQuota(TSetThrottleQuotaReq req) throws TException {
     return throttleQuotaManager.setThrottleQuota(req);
+  }
+
+  @Override
+  public TSStatus notifyPipeOnLeaderChange(TPipeOnLeaderChangeReq req) throws TException {
+    return pipeRuntimeAgent.onLeaderChange();
+  }
+
+  @Override
+  public TSStatus notifyPipeOnDataNodeRegister(TPipeOnDataNodeRegisterReq req) throws TException {
+    return null;
+  }
+
+  @Override
+  public TSStatus notifyPipeOnDataNodeRemove() throws TException {
+    return null;
   }
 
   private PathPatternTree filterPathPatternTree(PathPatternTree patternTree, String storageGroup) {

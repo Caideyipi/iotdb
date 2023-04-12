@@ -71,6 +71,11 @@ public enum DataNodeRequestType {
   OPERATE_PIPE,
   ROLLBACK_OPERATE_PIPE,
 
+  /** Pipe Runtime */
+  PIPE_ON_LEADER_CHANGE,
+  PIPE_ON_DATANODE_REGISTER,
+  PIPE_ON_DATANODE_REMOVE,
+
   /** CQ */
   EXECUTE_CQ,
 

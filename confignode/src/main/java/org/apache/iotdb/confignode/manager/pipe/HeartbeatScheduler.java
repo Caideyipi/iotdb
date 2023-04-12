@@ -17,6 +17,8 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.pipe.agent.runtime;
+package org.apache.iotdb.confignode.manager.pipe;
 
-public class MetaSyncScheduler {}
+public class HeartbeatScheduler {
+  // TODO: implement the logic to add pipe heartbeat collection to datanode heartbeat
+}

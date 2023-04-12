@@ -450,6 +450,22 @@ struct TRecordModelMetricsReq {
   5: required list<double> values
 }
 
+struct TPipeTaskHeartbeat {
+  // TODO: Wait for consensusIndex
+  1: required binary consensusIndex
+  2: required list<string> messages
+}
+
+struct TPipeOnLeaderChangeReq {
+  1: required common.TConsensusGroupId regionGroup
+  2: required i32 oldLeader
+  3: required i32 newLeader
+}
+
+struct TPipeOnDataNodeRegisterReq {
+  1: required list<binary> pipeMetas
+}
+
 service IDataNodeRPCService {
 
   // -----------------------------------For Data Node-----------------------------------------------
@@ -760,20 +776,35 @@ service IDataNodeRPCService {
   */
   common.TSStatus executeCQ(TExecuteCQ req)
 
-  /**
+ /**
   * Delete model training metrics on DataNode
   */
   common.TSStatus deleteModelMetrics(TDeleteModelMetricsReq req)
 
-  /**
-   * Set space quota
-   **/
+ /**
+  * Set space quota
+  */
   common.TSStatus setSpaceQuota(common.TSetSpaceQuotaReq req)
 
-  /**
-   * Set throttle quota
-   **/
+ /**
+  * Set throttle quota
+  */
   common.TSStatus setThrottleQuota(common.TSetThrottleQuotaReq req)
+
+ /**
+  * Notify pipes on dataNodes when a dataRegion's leader changed
+  */
+  common.TSStatus notifyPipeOnLeaderChange(TPipeOnLeaderChangeReq req)
+
+ /**
+  * Notify the pipes on the new dataNode to activate
+  */
+  common.TSStatus notifyPipeOnDataNodeRegister(TPipeOnDataNodeRegisterReq req)
+
+ /**
+  * Notify pipes on the removing dataNode to shutdown
+  */
+  common.TSStatus notifyPipeOnDataNodeRemove()
 }
 
 service MPPDataExchangeService {
