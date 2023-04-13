@@ -58,8 +58,6 @@ ddlStatement
     | getRegionId | getTimeSlotList | getSeriesSlotList | migrateRegion
     // ML Model
     | createModel | dropModel | showModels | showTrails
-    // Quota
-    | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
     ;
 
 dmlStatement
@@ -316,26 +314,6 @@ showFunctions
     : SHOW FUNCTIONS
     ;
 
-// Quota =========================================================================================
-// Show Space Quota
-showSpaceQuota
-    : SHOW SPACE QUOTA (prefixPath (COMMA prefixPath)*)?
-    ;
-
-// Set Space Quota
-setSpaceQuota
-    : SET SPACE QUOTA attributePair (COMMA attributePair)* ON prefixPath (COMMA prefixPath)*
-    ;
-
-// Set Throttle Quota
-setThrottleQuota
-    : SET THROTTLE QUOTA attributePair (COMMA attributePair)* ON userName=identifier
-    ;
-
-// Show Throttle Quota
-showThrottleQuota
-    : SHOW THROTTLE QUOTA (userName=identifier)?
-    ;
 
 // Trigger =========================================================================================
 // ---- Create Trigger
@@ -468,6 +446,7 @@ getSeriesSlotList
 migrateRegion
     : MIGRATE REGION regionId=INTEGER_LITERAL FROM fromId=INTEGER_LITERAL TO toId=INTEGER_LITERAL
     ;
+
 
 // Pipe Plugin =========================================================================================
 // Create Pipe Plugin
@@ -1024,8 +1003,8 @@ wildcard
 
 constant
     : dateExpression
-    | (MINUS|PLUS|DIV)? realLiteral
-    | (MINUS|PLUS|DIV)? INTEGER_LITERAL
+    | (MINUS|PLUS)? realLiteral
+    | (MINUS|PLUS)? INTEGER_LITERAL
     | STRING_LITERAL
     | BOOLEAN_LITERAL
     | NULL_LITERAL

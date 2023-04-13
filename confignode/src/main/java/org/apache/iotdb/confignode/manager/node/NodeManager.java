@@ -52,7 +52,6 @@ import org.apache.iotdb.confignode.consensus.response.datanode.ConfigurationResp
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeConfigurationResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeToStatusResp;
-import org.apache.iotdb.confignode.manager.ClusterQuotaManager;
 import org.apache.iotdb.confignode.manager.ClusterSchemaManager;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.IManager;
@@ -731,11 +730,6 @@ public class NodeManager {
 
     /* Update heartbeat counter */
     heartbeatCounter.getAndUpdate((x) -> (x + 1) % 10);
-    if (!getClusterQuotaManager().hasSpaceQuotaLimit()) {
-      heartbeatReq.setSchemaRegionIds(getClusterQuotaManager().getSchemaRegionIds());
-      heartbeatReq.setDataRegionIds(getClusterQuotaManager().getDataRegionIds());
-      heartbeatReq.setSpaceQuotaUsage(getClusterQuotaManager().getSpaceQuotaUsage());
-    }
     return heartbeatReq;
   }
 
@@ -756,11 +750,7 @@ public class NodeManager {
                       dataNodeInfo.getLocation().getDataNodeId(),
                       empty -> new DataNodeHeartbeatCache()),
               getPartitionManager().getRegionGroupCacheMap(),
-              getLoadManager().getRouteBalancer(),
-              getClusterQuotaManager().getDeviceNum(),
-              getClusterQuotaManager().getTimeSeriesNum(),
-              getClusterQuotaManager().getRegionDisk());
-      getClusterQuotaManager().updateSpaceQuotaUsage();
+              getLoadManager().getRouteBalancer());
       AsyncDataNodeHeartbeatClientPool.getInstance()
           .getDataNodeHeartBeat(
               dataNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
@@ -999,9 +989,5 @@ public class NodeManager {
 
   private UDFManager getUDFManager() {
     return configManager.getUDFManager();
-  }
-
-  private ClusterQuotaManager getClusterQuotaManager() {
-    return configManager.getClusterQuotaManager();
   }
 }

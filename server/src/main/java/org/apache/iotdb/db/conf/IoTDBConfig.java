@@ -1073,16 +1073,6 @@ public class IoTDBConfig {
   /** The maximum number of threads that can be used to execute subtasks in PipeSubtaskExecutor */
   private int pipeMaxThreadNum = 5;
 
-  /** multi-tenancy */
-  private boolean quotaEnable = false;
-
-  /**
-   * 1. FixedIntervalRateLimiter : With this limiter resources will be refilled only after a fixed
-   * interval of time. 2. AverageIntervalRateLimiter : This limiter will refill resources at every
-   * TimeUnit/resources interval.
-   */
-  private String RateLimiterType = "FixedIntervalRateLimiter";
-
   IoTDBConfig() {}
 
   public float getUdfMemoryBudgetInMB() {
@@ -3736,21 +3726,5 @@ public class IoTDBConfig {
 
   public int getPipeSubtaskExecutorMaxThreadNum() {
     return pipeMaxThreadNum;
-  }
-
-  public boolean isQuotaEnable() {
-    return quotaEnable;
-  }
-
-  public void setQuotaEnable(boolean quotaEnable) {
-    this.quotaEnable = quotaEnable;
-  }
-
-  public String getRateLimiterType() {
-    return RateLimiterType;
-  }
-
-  public void setRateLimiterType(String rateLimiterType) {
-    RateLimiterType = rateLimiterType;
   }
 }

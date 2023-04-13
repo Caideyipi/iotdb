@@ -22,7 +22,6 @@ package org.apache.iotdb.db.mpp.plan.analyze;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.db.metadata.template.Template;
-import org.apache.iotdb.db.mpp.common.MPPQueryContext;
 import org.apache.iotdb.db.mpp.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.mpp.common.schematree.ISchemaTree;
 import org.apache.iotdb.db.mpp.common.schematree.node.SchemaEntityNode;
@@ -44,18 +43,16 @@ import java.util.Map;
 public class FakeSchemaFetcherImpl implements ISchemaFetcher {
 
   private final ClusterSchemaTree schemaTree = new ClusterSchemaTree(generateSchemaTree());
-  private MPPQueryContext context;
 
   @Override
-  public ClusterSchemaTree fetchSchema(PathPatternTree patternTree, MPPQueryContext context) {
-    this.context = context;
+  public ClusterSchemaTree fetchSchema(PathPatternTree patternTree) {
     schemaTree.setDatabases(Collections.singleton("root.sg"));
     return schemaTree;
   }
 
   @Override
   public ISchemaTree fetchSchemaWithTags(PathPatternTree patternTree) {
-    return fetchSchema(patternTree, context);
+    return fetchSchema(patternTree);
   }
 
   @Override

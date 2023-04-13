@@ -26,7 +26,6 @@ import org.apache.iotdb.db.metadata.cache.DataNodeSchemaCache;
 import org.apache.iotdb.db.metadata.template.ClusterTemplateManager;
 import org.apache.iotdb.db.metadata.template.ITemplateManager;
 import org.apache.iotdb.db.metadata.template.Template;
-import org.apache.iotdb.db.mpp.common.MPPQueryContext;
 import org.apache.iotdb.db.mpp.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.mpp.common.schematree.DeviceSchemaInfo;
 import org.apache.iotdb.db.mpp.common.schematree.ISchemaTree;
@@ -55,7 +54,6 @@ public class ClusterSchemaFetcher implements ISchemaFetcher {
   private final Coordinator coordinator = Coordinator.getInstance();
   private final DataNodeSchemaCache schemaCache = DataNodeSchemaCache.getInstance();
   private final ITemplateManager templateManager = ClusterTemplateManager.getInstance();
-  MPPQueryContext context = null;
 
   private final AutoCreateSchemaExecutor autoCreateSchemaExecutor =
       new AutoCreateSchemaExecutor(
@@ -80,7 +78,7 @@ public class ClusterSchemaFetcher implements ISchemaFetcher {
               coordinator.execute(
                   statement,
                   queryId,
-                  context == null ? null : context.getSession(),
+                  null,
                   "",
                   ClusterPartitionFetcher.getInstance(),
                   this,
@@ -100,8 +98,7 @@ public class ClusterSchemaFetcher implements ISchemaFetcher {
   private ClusterSchemaFetcher() {}
 
   @Override
-  public ClusterSchemaTree fetchSchema(PathPatternTree patternTree, MPPQueryContext context) {
-    this.context = context;
+  public ClusterSchemaTree fetchSchema(PathPatternTree patternTree) {
     patternTree.constructTree();
     List<PartialPath> pathPatternList = patternTree.getAllPathPatterns();
     List<PartialPath> fullPathList = new ArrayList<>();

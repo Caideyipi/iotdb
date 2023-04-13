@@ -41,8 +41,7 @@ public class ExpressionAnalyzerTest {
 
   @Test
   public void testRemoveWildcardInFilter() throws IllegalPathException {
-    ISchemaTree fakeSchemaTree =
-        new FakeSchemaFetcherImpl().fetchSchema(new PathPatternTree(), null);
+    ISchemaTree fakeSchemaTree = new FakeSchemaFetcherImpl().fetchSchema(new PathPatternTree());
     List<PartialPath> prefixPaths = Arrays.asList(path("root.sg.d1"), path("root.sg.d2"));
 
     assertEquals(

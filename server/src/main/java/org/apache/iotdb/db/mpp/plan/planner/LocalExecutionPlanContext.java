@@ -122,16 +122,14 @@ public class LocalExecutionPlanContext {
     this.pipelineDriverFactories = new ArrayList<>();
   }
 
-  public void addPipelineDriverFactory(
-      Operator operation, DriverContext driverContext, long estimatedMemorySize) {
+  public void addPipelineDriverFactory(Operator operation, DriverContext driverContext) {
     driverContext
         .getOperatorContexts()
         .forEach(
             operatorContext ->
                 operatorContext.setMaxRunTime(
                     driverContext.getTimeSliceAllocator().getMaxRunTime(operatorContext)));
-    pipelineDriverFactories.add(
-        new PipelineDriverFactory(operation, driverContext, estimatedMemorySize));
+    pipelineDriverFactories.add(new PipelineDriverFactory(operation, driverContext));
   }
 
   public LocalExecutionPlanContext createSubContext() {

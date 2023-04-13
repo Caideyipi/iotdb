@@ -19,8 +19,6 @@
 package org.apache.iotdb.db.mpp.execution.fragment;
 
 import org.apache.iotdb.db.mpp.common.FragmentInstanceId;
-import org.apache.iotdb.db.mpp.exception.CpuNotEnoughException;
-import org.apache.iotdb.db.mpp.exception.MemoryNotEnoughException;
 import org.apache.iotdb.db.mpp.execution.driver.IDriver;
 import org.apache.iotdb.db.mpp.execution.exchange.MPPDataExchangeService;
 import org.apache.iotdb.db.mpp.execution.exchange.sink.ISink;
@@ -60,13 +58,12 @@ public class FragmentInstanceExecution {
       ISink sinkHandle,
       FragmentInstanceStateMachine stateMachine,
       CounterStat failedInstances,
-      long timeOut)
-      throws CpuNotEnoughException, MemoryNotEnoughException {
+      long timeOut) {
     FragmentInstanceExecution execution =
         new FragmentInstanceExecution(instanceId, context, drivers, sinkHandle, stateMachine);
     execution.initialize(failedInstances, scheduler);
     LOGGER.debug("timeout is {}ms.", timeOut);
-    scheduler.submitDrivers(instanceId.getQueryId(), drivers, timeOut, context.getSessionInfo());
+    scheduler.submitDrivers(instanceId.getQueryId(), drivers, timeOut);
     return execution;
   }
 

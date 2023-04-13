@@ -65,9 +65,9 @@ public class LocalExecutionPlanner {
     Operator root = plan.accept(new OperatorTreeGenerator(), context);
 
     // check whether current free memory is enough to execute current query
-    long estimatedMemorySize = checkMemory(root, instanceContext.getStateMachine());
+    checkMemory(root, instanceContext.getStateMachine());
 
-    context.addPipelineDriverFactory(root, context.getDriverContext(), estimatedMemorySize);
+    context.addPipelineDriverFactory(root, context.getDriverContext());
 
     instanceContext.setSourcePaths(collectSourcePaths(context));
 
@@ -88,7 +88,7 @@ public class LocalExecutionPlanner {
     // check whether current free memory is enough to execute current query
     checkMemory(root, instanceContext.getStateMachine());
 
-    context.addPipelineDriverFactory(root, context.getDriverContext(), 0);
+    context.addPipelineDriverFactory(root, context.getDriverContext());
 
     // set maxBytes one SourceHandle can reserve after visiting the whole tree
     context.setMaxBytesOneHandleCanReserve();
@@ -96,13 +96,12 @@ public class LocalExecutionPlanner {
     return context.getPipelineDriverFactories();
   }
 
-  private long checkMemory(Operator root, FragmentInstanceStateMachine stateMachine)
+  private void checkMemory(Operator root, FragmentInstanceStateMachine stateMachine)
       throws MemoryNotEnoughException {
 
     // if it is disabled, just return
-    if (!IoTDBDescriptor.getInstance().getConfig().isEnableQueryMemoryEstimation()
-        && !IoTDBDescriptor.getInstance().getConfig().isQuotaEnable()) {
-      return 0;
+    if (!IoTDBDescriptor.getInstance().getConfig().isEnableQueryMemoryEstimation()) {
+      return;
     }
 
     long estimatedMemorySize = root.calculateMaxPeekMemory();
@@ -142,7 +141,6 @@ public class LocalExecutionPlanner {
             }
           }
         });
-    return estimatedMemorySize;
   }
 
   private List<PartialPath> collectSourcePaths(LocalExecutionPlanContext context) {

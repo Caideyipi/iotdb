@@ -64,8 +64,6 @@ import org.apache.iotdb.db.mpp.plan.statement.metadata.template.SetSchemaTemplat
 import org.apache.iotdb.db.mpp.plan.statement.metadata.template.UnsetSchemaTemplateStatement;
 import org.apache.iotdb.db.query.control.SessionManager;
 import org.apache.iotdb.db.query.control.clientsession.IClientSession;
-import org.apache.iotdb.db.quotas.DataNodeThrottleQuotaManager;
-import org.apache.iotdb.db.quotas.OperationQuota;
 import org.apache.iotdb.db.service.basic.BasicOpenSessionResp;
 import org.apache.iotdb.db.sync.SyncService;
 import org.apache.iotdb.db.utils.QueryDataSetUtils;
@@ -194,8 +192,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     long queryId = Long.MIN_VALUE;
     String statement = req.getStatement();
     IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
-    // quota
-    OperationQuota quota = null;
     if (!SESSION_MANAGER.checkLogin(clientSession)) {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
@@ -216,9 +212,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return RpcUtils.getTSExecuteStatementResp(status);
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
       statementType = s.getType();
       if (enableAuditLog) {
         AuditLogger.log(statement, s);
@@ -249,7 +242,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           resp.setStatus(result.status);
           finished = setResult.apply(resp, queryExecution, req.fetchSize);
           resp.setMoreData(!finished);
-          quota.addReadResult(resp.getQueryResult());
         } else {
           finished = true;
           resp = RpcUtils.getTSExecuteStatementResp(result.status);
@@ -273,9 +265,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         COORDINATOR.cleanupQueryExecution(queryId);
       }
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
@@ -284,7 +273,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     boolean finished = false;
     long queryId = Long.MIN_VALUE;
     IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
-    OperationQuota quota = null;
     if (!SESSION_MANAGER.checkLogin(clientSession)) {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
@@ -297,10 +285,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return RpcUtils.getTSExecuteStatementResp(status);
       }
-
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
       if (enableAuditLog) {
         AuditLogger.log(String.format("execute Raw Data Query: %s", req), s);
@@ -330,7 +314,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           resp.setStatus(result.status);
           finished = setResult.apply(resp, queryExecution, req.fetchSize);
           resp.setMoreData(!finished);
-          quota.addReadResult(resp.getQueryResult());
         } else {
           resp = RpcUtils.getTSExecuteStatementResp(result.status);
         }
@@ -350,9 +333,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         COORDINATOR.cleanupQueryExecution(queryId);
       }
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
@@ -361,7 +341,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     boolean finished = false;
     long queryId = Long.MIN_VALUE;
     IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
-    OperationQuota quota = null;
     if (!SESSION_MANAGER.checkLogin(clientSession)) {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
@@ -373,10 +352,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return RpcUtils.getTSExecuteStatementResp(status);
       }
-
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
       if (enableAuditLog) {
         AuditLogger.log(String.format("Last Data Query: %s", req), s);
@@ -406,7 +381,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           resp.setStatus(result.status);
           finished = setResult.apply(resp, queryExecution, req.fetchSize);
           resp.setMoreData(!finished);
-          quota.addReadResult(resp.getQueryResult());
         } else {
           resp = RpcUtils.getTSExecuteStatementResp(result.status);
         }
@@ -427,9 +401,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         COORDINATOR.cleanupQueryExecution(queryId);
       }
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
@@ -438,7 +409,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     boolean finished = false;
     long queryId = Long.MIN_VALUE;
     IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
-    OperationQuota quota = null;
     if (!SESSION_MANAGER.checkLogin(clientSession)) {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
@@ -450,10 +420,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return RpcUtils.getTSExecuteStatementResp(status);
       }
-
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
       // create and cache dataset
@@ -480,7 +446,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           resp.setStatus(result.status);
           finished = setResult.apply(resp, queryExecution, req.fetchSize);
           resp.setMoreData(!finished);
-          quota.addReadResult(resp.getQueryResult());
         } else {
           resp = RpcUtils.getTSExecuteStatementResp(result.status);
         }
@@ -501,9 +466,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         COORDINATOR.cleanupQueryExecution(queryId);
       }
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
@@ -983,7 +945,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         String statement = req.getStatements().get(i);
         long t2 = System.currentTimeMillis();
         StatementType type = null;
-        OperationQuota quota = null;
         try {
           Statement s = StatementGenerator.createStatement(statement, clientSession.getZoneId());
           if (s == null) {
@@ -995,10 +956,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
             return status;
           }
-
-          quota =
-              DataNodeThrottleQuotaManager.getInstance()
-                  .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
           if (enableAuditLog) {
             AuditLogger.log(statement, s);
@@ -1029,9 +986,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         } finally {
           addStatementExecutionLatency(
               OperationType.EXECUTE_STATEMENT, type, System.currentTimeMillis() - t2);
-          if (quota != null) {
-            quota.close();
-          }
         }
       }
     } finally {
@@ -1110,7 +1064,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
   @Override
   public TSStatus insertRecords(TSInsertRecordsReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1143,10 +1096,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return status;
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
-
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
@@ -1170,16 +1119,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           StatementType.BATCH_INSERT_ROWS,
           System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
   @Override
   public TSStatus insertRecordsOfOneDevice(TSInsertRecordsOfOneDeviceReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1212,10 +1157,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return status;
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
-
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
@@ -1239,16 +1180,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           StatementType.BATCH_INSERT_ONE_DEVICE,
           System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
   @Override
   public TSStatus insertStringRecordsOfOneDevice(TSInsertStringRecordsOfOneDeviceReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1280,10 +1217,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return status;
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
-
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
@@ -1310,16 +1243,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           StatementType.BATCH_INSERT_ONE_DEVICE,
           System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
   @Override
   public TSStatus insertRecord(TSInsertRecordReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1349,10 +1278,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return status;
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
-
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
@@ -1374,16 +1299,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       addStatementExecutionLatency(
           OperationType.INSERT_RECORD, StatementType.INSERT, System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
   @Override
   public TSStatus insertTablets(TSInsertTabletsReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1405,10 +1326,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return status;
       }
-
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
 
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
@@ -1433,16 +1350,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           StatementType.MULTI_BATCH_INSERT,
           System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
   @Override
   public TSStatus insertTablet(TSInsertTabletReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1463,10 +1376,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return status;
       }
-
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
 
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
@@ -1489,16 +1398,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       addStatementExecutionLatency(
           OperationType.INSERT_TABLET, StatementType.BATCH_INSERT, System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
   @Override
   public TSStatus insertStringRecords(TSInsertStringRecordsReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1530,10 +1435,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return status;
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
-
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
           COORDINATOR.execute(
@@ -1556,9 +1457,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           StatementType.BATCH_INSERT_ROWS,
           System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 
@@ -1770,7 +1668,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
   private TSQueryTemplateResp executeTemplateQueryStatement(
       Statement statement, TSQueryTemplateReq req, TSQueryTemplateResp resp) {
     long startTime = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       // permission check
@@ -1779,10 +1676,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         resp.setStatus(status);
         return resp;
       }
-
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
 
       if (enableAuditLog) {
         AuditLogger.log(String.format("execute Query: %s", statement), statement);
@@ -2059,7 +1952,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
   @Override
   public TSStatus insertStringRecord(TSInsertStringRecordReq req) {
     long t1 = System.currentTimeMillis();
-    OperationQuota quota = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -2085,10 +1977,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return status;
       }
 
-      quota =
-          DataNodeThrottleQuotaManager.getInstance()
-              .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
-
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
@@ -2112,9 +2000,6 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           StatementType.INSERT,
           System.currentTimeMillis() - t1);
       SESSION_MANAGER.updateIdleTime();
-      if (quota != null) {
-        quota.close();
-      }
     }
   }
 

@@ -151,7 +151,6 @@ keyWords
     | QUERIES
     | QUERY
     | QUERYID
-    | QUOTA
     | RANGE
     | READONLY
     | REGEXP
@@ -176,7 +175,6 @@ keyWords
     | SHOW
     | SLIMIT
     | SOFFSET
-    | SPACE
     | STORAGE
     | START
     | STARTTIME
@@ -190,7 +188,6 @@ keyWords
     | TASK
     | TEMPLATE
     | THEN
-    | THROTTLE
     | TIMEOUT
     | TIMESERIES
     | TIMESLOTID
