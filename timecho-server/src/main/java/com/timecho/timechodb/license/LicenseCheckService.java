@@ -46,7 +46,7 @@ public class LicenseCheckService implements Runnable, IService {
 
   @Override
   public void start() throws StartupException {
-    ScheduledExecutorUtil.safelyScheduleAtFixedRate(executor, this, 0, 5, TimeUnit.HOURS);
+    ScheduledExecutorUtil.safelyScheduleAtFixedRate(executor, this, 0, 1, TimeUnit.DAYS);
     logger.info("license check service start successfully");
   }
 
@@ -67,7 +67,6 @@ public class LicenseCheckService implements Runnable, IService {
 
   @Override
   public void run() {
-    logger.warn("license check start..");
     CommonConfig config = CommonDescriptor.getInstance().getConfig();
     LicenseManager licenseManager = LicenseManager.getInstance();
     try {
@@ -85,14 +84,13 @@ public class LicenseCheckService implements Runnable, IService {
       }
       int dateSub = DateUtil.timeSub(today, expireDate);
       if (dateSub < 15) {
-        logger.info("License expires in {} days,please reauthorize as soon as possible", dateSub);
+        logger.error("License expires in {} days,please reauthorize as soon as possible", dateSub);
       }
 
       // write time to file
       licenseManager.write(
           Base64.encodeBase64String(licenseManager.getLastDate().getBytes()),
           LicenseManager.EXPIRE_FILE_PATH);
-      logger.warn("The license is valid. The license expires at,{}", expireDate);
     } catch (LicenseException e) {
       config.setNodeStatus(NodeStatus.ReadOnly);
       logger.error("license file not found,system status set to READ_ONLY");
