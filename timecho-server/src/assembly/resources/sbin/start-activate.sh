@@ -102,12 +102,6 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "Notice: in some systems, DataNode must run in sudo mode to write data. The process may fail."
 fi
 
-#checkAllVariables is in iotdb-common.sh
-checkAllVariables
-
-#checkDataNodePortUsages is in iotdb-common.sh
-checkDataNodePortUsages
-
 CLASSPATH=""
 for f in "${IOTDB_HOME}"/lib/*.jar; do
   CLASSPATH=${CLASSPATH}":"$f
