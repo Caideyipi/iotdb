@@ -71,6 +71,7 @@ public enum ThreadName {
   PIPE_PROCESSOR_EXECUTOR_POOL("Pipe-Processor-Executor-Pool"),
   PIPE_CONNECTOR_EXECUTOR_POOL("Pipe-Connector-Executor-Pool"),
   PIPE_SUBTASK_CALLBACK_EXECUTOR_POOL("Pipe-SubTask-Callback-Executor-Pool"),
+  PIPE_META_SYNC_EXECUTOR_POOL("Pipe-Meta-Sync-Executor-Pool"),
   ;
 
   private final String name;

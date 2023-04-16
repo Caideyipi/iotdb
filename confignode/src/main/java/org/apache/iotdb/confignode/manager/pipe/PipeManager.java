@@ -31,12 +31,19 @@ public class PipeManager {
 
   private final PipePluginCoordinator pipePluginCoordinator;
 
+  private final PipeRuntimeCoordinator pipeRuntimeCoordinator;
+
   public PipeManager(ConfigManager configManager, PipeInfo pipeInfo) {
     this.pipePluginCoordinator =
         new PipePluginCoordinator(configManager, pipeInfo.getPipePluginInfo());
+    this.pipeRuntimeCoordinator = new PipeRuntimeCoordinator(configManager);
   }
 
   public PipePluginCoordinator getPipePluginCoordinator() {
     return pipePluginCoordinator;
+  }
+
+  public PipeRuntimeCoordinator getPipeRuntimeCoordinator() {
+    return pipeRuntimeCoordinator;
   }
 }

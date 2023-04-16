@@ -20,25 +20,72 @@
 package org.apache.iotdb.confignode.manager.pipe;
 
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupId;
+import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.confignode.client.DataNodeRequestType;
+import org.apache.iotdb.confignode.client.async.AsyncDataNodeClientPool;
+import org.apache.iotdb.confignode.client.async.handlers.AsyncClientHandler;
+import org.apache.iotdb.confignode.client.sync.SyncDataNodeClientPool;
+import org.apache.iotdb.confignode.manager.ConfigManager;
+import org.apache.iotdb.mpp.rpc.thrift.TPipeOnDataNodeRegisterReq;
+import org.apache.iotdb.mpp.rpc.thrift.TPipeOnLeaderChangeReq;
+import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+
 public class PipeRuntimeCoordinator {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(PipeRuntimeCoordinator.class);
+
   private final HeartbeatScheduler heartbeatScheduler = new HeartbeatScheduler();
   private final MetaSyncListener metaSyncListener = new MetaSyncListener();
 
-  public PipeRuntimeCoordinator() {}
+  private final ConfigManager configManager;
 
-  public TSStatus onLeaderChange(TConsensusGroupId regionGroupId, int oldLeader, int newLeader) {
-    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+  public PipeRuntimeCoordinator(ConfigManager configManager) {
+    this.configManager = configManager;
   }
 
-  public TSStatus onDataNodeRegister(TEndPoint registerEndPoint) {
-    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+  public HeartbeatScheduler getHeartbeatScheduler() {
+    return heartbeatScheduler;
   }
 
-  public TSStatus onDataNodeRemove(TEndPoint removeEndPoint) {
-    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+  public MetaSyncListener getMetaSyncListener() {
+    return metaSyncListener;
+  }
+
+  public void onLeaderChange(TConsensusGroupId regionGroupId, int oldLeader, int newLeader) {
+    final Map<Integer, TDataNodeLocation> dataNodeLocationMap =
+        configManager.getNodeManager().getRegisteredDataNodeLocations();
+    final TPipeOnLeaderChangeReq request =
+        new TPipeOnLeaderChangeReq(regionGroupId, oldLeader, newLeader);
+
+    final AsyncClientHandler<TPipeOnLeaderChangeReq, TSStatus> clientHandler =
+        new AsyncClientHandler<>(
+            DataNodeRequestType.PIPE_ON_LEADER_CHANGE, request, dataNodeLocationMap);
+    AsyncDataNodeClientPool.getInstance().sendAsyncRequestToDataNodeWithRetry(clientHandler);
+    if (RpcUtils.squashResponseStatusList(clientHandler.getResponseList()).getCode()
+        != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      LOGGER.warn("Execute pipeOnLeaderChange failed, req: {}", request);
+    }
+  }
+
+  public void onDataNodeRegister(TEndPoint registerEndPoint) {
+    TPipeOnDataNodeRegisterReq req = new TPipeOnDataNodeRegisterReq();
+    // TODO: set pipeMetas
+    SyncDataNodeClientPool.getInstance()
+        .sendSyncRequestToDataNodeWithRetry(
+            registerEndPoint, req, DataNodeRequestType.PIPE_ON_DATANODE_REGISTER);
+  }
+
+  public void onDataNodeRemove(TEndPoint removeEndPoint) {
+    SyncDataNodeClientPool.getInstance()
+        .sendSyncRequestToDataNodeWithRetry(
+            removeEndPoint, null, DataNodeRequestType.PIPE_ON_DATANODE_REMOVE);
   }
 }

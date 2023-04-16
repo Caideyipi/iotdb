@@ -529,6 +529,12 @@ public class IoTDBDescriptor {
 
     conf.setIpWhiteList(properties.getProperty("ip_white_list", conf.getIpWhiteList()));
 
+    conf.setPipeSyncInterval(
+        Integer.parseInt(
+            properties
+                .getProperty("pipe_sync_interval", Integer.toString(conf.getPipeSyncInterval()))
+                .trim()));
+
     conf.setFlushThreadCount(
         Integer.parseInt(
             properties.getProperty(
@@ -1502,6 +1508,12 @@ public class IoTDBDescriptor {
                       Integer.toString(conf.getMaxNumberOfSyncFileRetry()))
                   .trim()));
       conf.setIpWhiteList(properties.getProperty("ip_white_list", conf.getIpWhiteList()));
+
+      conf.setPipeSyncInterval(
+          Integer.parseInt(
+              properties
+                  .getProperty("pipe_sync_interval", Integer.toString(conf.getPipeSyncInterval()))
+                  .trim()));
 
       // update enable query memory estimation for memory control
       conf.setEnableQueryMemoryEstimation(

@@ -219,8 +219,6 @@ public class AsyncClientHandler<Q, R> {
       case CREATE_PIPE_PLUGIN:
       case DROP_PIPE_PLUGIN:
       case PIPE_ON_LEADER_CHANGE:
-      case PIPE_ON_DATANODE_REGISTER:
-      case PIPE_ON_DATANODE_REMOVE:
       default:
         return new AsyncTSStatusRPCHandler(
             requestType,

@@ -548,6 +548,9 @@ public class IoTDBConfig {
   /** The maximum number of retries when the sender fails to synchronize files to the receiver. */
   private int maxNumberOfSyncFileRetry = 5;
 
+  /** The interval seconds for the pipe sync thread to synchronize from the leader ConfigNode. */
+  private int pipeSyncInterval = 10;
+
   /**
    * Set the language version when loading file including error information, default value is "EN"
    */
@@ -1619,6 +1622,14 @@ public class IoTDBConfig {
 
   public void setMaxNumberOfSyncFileRetry(int maxNumberOfSyncFileRetry) {
     this.maxNumberOfSyncFileRetry = maxNumberOfSyncFileRetry;
+  }
+
+  public int getPipeSyncInterval() {
+    return pipeSyncInterval;
+  }
+
+  public void setPipeSyncInterval(int pipeSyncInterval) {
+    this.pipeSyncInterval = pipeSyncInterval;
   }
 
   String getLanguageVersion() {

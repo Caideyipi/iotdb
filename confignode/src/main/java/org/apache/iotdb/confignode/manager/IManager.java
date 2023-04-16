@@ -106,6 +106,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowPipeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTrailReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTrailResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowVariablesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TSyncPipeMetaResp;
 import org.apache.iotdb.confignode.rpc.thrift.TUnsetSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TUpdateModelInfoReq;
 import org.apache.iotdb.confignode.rpc.thrift.TUpdateModelStateReq;
@@ -446,6 +447,9 @@ public interface IManager {
 
   /** Get pipe plugin jar */
   TGetJarInListResp getPipePluginJar(TGetJarInListReq req);
+
+  /** Synchronize pipeMetas */
+  TSyncPipeMetaResp syncPipeMeta();
 
   /** Merge on all DataNodes */
   TSStatus merge();

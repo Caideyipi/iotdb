@@ -19,7 +19,13 @@
 
 package org.apache.iotdb.confignode.manager.pipe;
 
+import org.apache.iotdb.confignode.rpc.thrift.TSyncPipeMetaResp;
+
 public class MetaSyncListener {
-  // TODO: Wait for PipeTaskMeta
   public MetaSyncListener() {}
+
+  public TSyncPipeMetaResp syncPipeMeta() {
+    // TODO: Wait for PipeMeta
+    return new TSyncPipeMetaResp();
+  }
 }

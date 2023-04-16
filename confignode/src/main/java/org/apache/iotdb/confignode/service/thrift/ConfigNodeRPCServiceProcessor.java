@@ -721,8 +721,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TSyncPipeMetaResp syncPipeMeta() throws TException {
-    // TODO: wait for PipeMeta and send all
-    return null;
+    return configManager.syncPipeMeta();
   }
 
   @Override

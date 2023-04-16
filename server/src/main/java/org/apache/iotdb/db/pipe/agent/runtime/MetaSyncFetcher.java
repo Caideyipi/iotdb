@@ -19,4 +19,74 @@
 
 package org.apache.iotdb.db.pipe.agent.runtime;
 
-public class MetaSyncFetcher {}
+import org.apache.iotdb.commons.client.IClientManager;
+import org.apache.iotdb.commons.client.exception.ClientManagerException;
+import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
+import org.apache.iotdb.commons.concurrent.ThreadName;
+import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
+import org.apache.iotdb.commons.consensus.ConfigRegionId;
+import org.apache.iotdb.confignode.rpc.thrift.TSyncPipeMetaResp;
+import org.apache.iotdb.db.client.ConfigNodeClient;
+import org.apache.iotdb.db.client.ConfigNodeClientManager;
+import org.apache.iotdb.db.client.ConfigNodeInfo;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.rpc.TSStatusCode;
+
+import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class MetaSyncFetcher {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(MetaSyncFetcher.class);
+
+  private final IClientManager<ConfigRegionId, ConfigNodeClient> configNodeClientManager =
+      ConfigNodeClientManager.getInstance();
+
+  private Future<?> currentHeartbeatFuture;
+  private final ScheduledExecutorService heartBeatExecutor =
+      IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
+          ThreadName.PIPE_META_SYNC_EXECUTOR_POOL.getName());
+
+  /** Execute the metaSync service */
+  public void executeMetaSync() {
+    try (ConfigNodeClient client =
+        configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      final TSyncPipeMetaResp syncPipeMetaResp = client.syncPipeMeta();
+      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != syncPipeMetaResp.getStatus().getCode()) {
+        LOGGER.warn("[{}] Failed to sync pipe meta.", syncPipeMetaResp.getStatus());
+      } else {
+        // TODO: update the pipeMeta on the DataNode
+      }
+    } catch (ClientManagerException | TException e) {
+      LOGGER.warn("MetaSync service failed because {}.", e.getMessage());
+    }
+  }
+
+  /** Start the metaSync service */
+  public void startMetaSyncService() {
+    if (currentHeartbeatFuture == null) {
+      currentHeartbeatFuture =
+          ScheduledExecutorUtil.safelyScheduleWithFixedDelay(
+              heartBeatExecutor,
+              this::executeMetaSync,
+              0,
+              IoTDBDescriptor.getInstance().getConfig().getPipeSyncInterval(),
+              TimeUnit.SECONDS);
+      LOGGER.info("MetaSync service is started successfully.");
+    }
+  }
+
+  /** Stop the metaSync service */
+  public void stopMetaSyncService() {
+    if (currentHeartbeatFuture != null) {
+      currentHeartbeatFuture.cancel(false);
+      currentHeartbeatFuture = null;
+      LOGGER.info("MetaSync service is stopped successfully.");
+    }
+  }
+}
