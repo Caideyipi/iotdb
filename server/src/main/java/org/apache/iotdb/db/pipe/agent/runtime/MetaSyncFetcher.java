@@ -52,10 +52,15 @@ public class MetaSyncFetcher {
       IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
           ThreadName.PIPE_META_SYNC_EXECUTOR_POOL.getName());
 
+  private ConfigNodeClient client;
+
   /** Execute the metaSync service */
   public void executeMetaSync() {
-    try (ConfigNodeClient client =
-        configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+    try {
+      // Borrow client each time in case previous borrow failed
+      if (client == null) {
+        client = configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID);
+      }
       final TSyncPipeMetaResp syncPipeMetaResp = client.syncPipeMeta();
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != syncPipeMetaResp.getStatus().getCode()) {
         LOGGER.warn("[{}] Failed to sync pipe meta.", syncPipeMetaResp.getStatus());
