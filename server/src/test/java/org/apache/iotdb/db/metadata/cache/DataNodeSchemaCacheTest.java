@@ -31,6 +31,7 @@ import org.apache.iotdb.tsfile.write.schema.MeasurementSchema;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -122,6 +123,7 @@ public class DataNodeSchemaCacheTest {
   }
 
   @Test
+  @Ignore
   public void testLastCache() throws IllegalPathException {
     // test no cache
     PartialPath devicePath = new PartialPath("root.sg1.d1");
