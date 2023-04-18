@@ -36,14 +36,12 @@ import org.apache.iotdb.commons.consensus.DataRegionId;
 import org.apache.iotdb.commons.consensus.SchemaRegionId;
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.exception.MetadataException;
-import org.apache.iotdb.commons.exception.sync.PipeException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.pipe.plugin.meta.PipePluginMeta;
 import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.commons.service.metric.enums.Metric;
 import org.apache.iotdb.commons.service.metric.enums.Tag;
-import org.apache.iotdb.commons.sync.pipe.PipeInfo;
 import org.apache.iotdb.commons.sync.pipe.SyncOperation;
 import org.apache.iotdb.commons.trigger.TriggerInformation;
 import org.apache.iotdb.commons.udf.UDFInformation;
@@ -109,7 +107,6 @@ import org.apache.iotdb.db.query.control.clientsession.IClientSession;
 import org.apache.iotdb.db.query.control.clientsession.InternalClientSession;
 import org.apache.iotdb.db.service.DataNode;
 import org.apache.iotdb.db.service.RegionMigrateService;
-import org.apache.iotdb.db.sync.SyncService;
 import org.apache.iotdb.db.trigger.executor.TriggerExecutor;
 import org.apache.iotdb.db.trigger.executor.TriggerFireResult;
 import org.apache.iotdb.db.trigger.service.TriggerManagementService;
@@ -734,13 +731,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   @Override
   public TSStatus createPipeOnDataNode(TCreatePipeOnDataNodeReq req) {
-    try {
-      PipeInfo pipeInfo = PipeInfo.deserializePipeInfo(req.pipeInfo);
-      SyncService.getInstance().addPipe(pipeInfo);
-      return RpcUtils.SUCCESS_STATUS;
-    } catch (PipeException e) {
-      return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
-    }
+    throw new NotImplementedException("TODO: createPipeOnDataNode");
   }
 
   @Override
@@ -748,42 +739,16 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     try {
       switch (SyncOperation.values()[req.getOperation()]) {
         case START_PIPE:
-          SyncService.getInstance().startPipe(req.getPipeName());
-          break;
         case STOP_PIPE:
-          SyncService.getInstance().stopPipe(req.getPipeName());
-          break;
         case DROP_PIPE:
-          SyncService.getInstance().dropPipe(req.getPipeName());
-          break;
+          throw new NotImplementedException("TODO: operatePipeOnDataNode");
         default:
           return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
               .setMessage("Unsupported operation.");
       }
-      return RpcUtils.SUCCESS_STATUS;
-    } catch (PipeException e) {
+    } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
     }
-  }
-
-  @Override
-  public TSStatus operatePipeOnDataNodeForRollback(TOperatePipeOnDataNodeReq req) {
-    // Operate PIPE on DataNode for rollback, createTime in req is required.
-    switch (SyncOperation.values()[req.getOperation()]) {
-      case START_PIPE:
-        SyncService.getInstance().startPipe(req.getPipeName(), req.getCreateTime());
-        break;
-      case STOP_PIPE:
-        SyncService.getInstance().stopPipe(req.getPipeName(), req.getCreateTime());
-        break;
-      case DROP_PIPE:
-        SyncService.getInstance().dropPipe(req.getPipeName(), req.getCreateTime());
-        break;
-      default:
-        return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage("Unsupported operation.");
-    }
-    return RpcUtils.SUCCESS_STATUS;
   }
 
   @Override
