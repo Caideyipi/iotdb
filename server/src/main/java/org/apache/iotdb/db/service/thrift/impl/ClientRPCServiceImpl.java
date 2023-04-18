@@ -198,6 +198,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
     long startTime = System.currentTimeMillis();
     StatementType statementType = null;
+    Throwable t = null;
     try {
       Statement s = StatementGenerator.createStatement(statement, clientSession.getZoneId());
 
@@ -250,8 +251,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
     } catch (Exception e) {
       finished = true;
+      t = e;
       return RpcUtils.getTSExecuteStatementResp(
           onQueryException(e, "\"" + statement + "\". " + OperationType.EXECUTE_STATEMENT));
+    } catch (Error error) {
+      t = error;
+      throw error;
     } finally {
       COORDINATOR.recordExecutionTime(queryId, System.currentTimeMillis() - startTime);
       if (finished) {
@@ -262,7 +267,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               statementType,
               executionTime > 0 ? executionTime : System.currentTimeMillis() - startTime);
         }
-        COORDINATOR.cleanupQueryExecution(queryId);
+        COORDINATOR.cleanupQueryExecution(queryId, t);
       }
       SESSION_MANAGER.updateIdleTime();
     }
@@ -277,6 +282,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
     long startTime = System.currentTimeMillis();
+    Throwable t = null;
     try {
       Statement s = StatementGenerator.createStatement(req, clientSession.getZoneId());
 
@@ -321,8 +327,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
     } catch (Exception e) {
       finished = true;
+      t = e;
       return RpcUtils.getTSExecuteStatementResp(
           onQueryException(e, "\"" + req + "\". " + OperationType.EXECUTE_RAW_DATA_QUERY));
+    } catch (Error error) {
+      t = error;
+      throw error;
     } finally {
       COORDINATOR.recordExecutionTime(queryId, System.currentTimeMillis() - startTime);
       if (finished) {
@@ -330,7 +340,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
             OperationType.EXECUTE_RAW_DATA_QUERY,
             StatementType.QUERY,
             COORDINATOR.getTotalExecutionTime(queryId));
-        COORDINATOR.cleanupQueryExecution(queryId);
+        COORDINATOR.cleanupQueryExecution(queryId, t);
       }
       SESSION_MANAGER.updateIdleTime();
     }
@@ -345,6 +355,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
     long startTime = System.currentTimeMillis();
+    Throwable t = null;
     try {
       Statement s = StatementGenerator.createStatement(req, clientSession.getZoneId());
       // permission check
@@ -389,8 +400,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
     } catch (Exception e) {
       finished = true;
+      t = e;
       return RpcUtils.getTSExecuteStatementResp(
           onQueryException(e, "\"" + req + "\". " + OperationType.EXECUTE_LAST_DATA_QUERY));
+    } catch (Error error) {
+      t = error;
+      throw error;
     } finally {
       COORDINATOR.recordExecutionTime(queryId, System.currentTimeMillis() - startTime);
       if (finished) {
@@ -398,7 +413,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
             OperationType.EXECUTE_LAST_DATA_QUERY,
             StatementType.QUERY,
             COORDINATOR.getTotalExecutionTime(queryId));
-        COORDINATOR.cleanupQueryExecution(queryId);
+        COORDINATOR.cleanupQueryExecution(queryId, t);
       }
       SESSION_MANAGER.updateIdleTime();
     }
@@ -413,6 +428,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       return RpcUtils.getTSExecuteStatementResp(getNotLoggedInStatus());
     }
     long startTime = System.currentTimeMillis();
+    Throwable t = null;
     try {
       Statement s = StatementGenerator.createStatement(req, clientSession.getZoneId());
       // permission check
@@ -454,8 +470,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
     } catch (Exception e) {
       finished = true;
+      t = e;
       return RpcUtils.getTSExecuteStatementResp(
           onQueryException(e, "\"" + req + "\". " + OperationType.EXECUTE_LAST_DATA_QUERY));
+    } catch (Error error) {
+      t = error;
+      throw error;
     } finally {
       COORDINATOR.recordExecutionTime(queryId, System.currentTimeMillis() - startTime);
       if (finished) {
@@ -463,7 +483,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
             OperationType.EXECUTE_LAST_DATA_QUERY,
             StatementType.QUERY,
             COORDINATOR.getTotalExecutionTime(queryId));
-        COORDINATOR.cleanupQueryExecution(queryId);
+        COORDINATOR.cleanupQueryExecution(queryId, t);
       }
       SESSION_MANAGER.updateIdleTime();
     }
@@ -504,6 +524,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     long startTime = System.currentTimeMillis();
     boolean finished = false;
     StatementType statementType = null;
+    Throwable t = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -534,7 +555,11 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
     } catch (Exception e) {
       finished = true;
+      t = e;
       return RpcUtils.getTSFetchResultsResp(onQueryException(e, OperationType.FETCH_RESULTS));
+    } catch (Error error) {
+      t = error;
+      throw error;
     } finally {
       COORDINATOR.recordExecutionTime(req.queryId, System.currentTimeMillis() - startTime);
       if (finished) {
@@ -544,7 +569,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               statementType,
               COORDINATOR.getTotalExecutionTime(req.queryId));
         }
-        COORDINATOR.cleanupQueryExecution(req.queryId);
+        COORDINATOR.cleanupQueryExecution(req.queryId, t);
       }
       SESSION_MANAGER.updateIdleTime();
     }
@@ -1015,6 +1040,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     boolean finished = false;
     long startTime = System.currentTimeMillis();
     StatementType statementType = null;
+    Throwable t = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
       if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -1045,7 +1071,11 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
     } catch (Exception e) {
       finished = true;
+      t = e;
       return RpcUtils.getTSFetchResultsResp(onQueryException(e, OperationType.FETCH_RESULTS));
+    } catch (Error error) {
+      t = error;
+      throw error;
     } finally {
       COORDINATOR.recordExecutionTime(req.queryId, System.currentTimeMillis() - startTime);
       if (finished) {
@@ -1055,7 +1085,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               statementType,
               COORDINATOR.getTotalExecutionTime(req.queryId));
         }
-        COORDINATOR.cleanupQueryExecution(req.queryId);
+        COORDINATOR.cleanupQueryExecution(req.queryId, t);
       }
       SESSION_MANAGER.updateIdleTime();
     }
