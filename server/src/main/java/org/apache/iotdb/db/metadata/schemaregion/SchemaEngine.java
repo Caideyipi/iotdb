@@ -253,16 +253,14 @@ public class SchemaEngine {
       PartialPath storageGroup, SchemaRegionId schemaRegionId) throws MetadataException {
     ISchemaRegion schemaRegion = schemaRegionMap.get(schemaRegionId);
     if (schemaRegion != null) {
-      if (schemaRegion.getStorageGroupFullPath().equals(storageGroup.getFullPath())) {
+      if (schemaRegion.getDatabaseFullPath().equals(storageGroup.getFullPath())) {
         return;
       } else {
         throw new MetadataException(
             String.format(
                 "SchemaRegion [%s] is duplicated between [%s] and [%s], "
                     + "and the former one has been recovered.",
-                schemaRegionId,
-                schemaRegion.getStorageGroupFullPath(),
-                storageGroup.getFullPath()));
+                schemaRegionId, schemaRegion.getDatabaseFullPath(), storageGroup.getFullPath()));
       }
     }
     schemaRegionMap.put(
@@ -316,7 +314,7 @@ public class SchemaEngine {
     schemaRegionMap.remove(schemaRegionId);
 
     // check whether the sg dir is empty
-    File sgDir = new File(config.getSchemaDir(), schemaRegion.getStorageGroupFullPath());
+    File sgDir = new File(config.getSchemaDir(), schemaRegion.getDatabaseFullPath());
     File[] regionDirList =
         sgDir.listFiles(
             (dir, name) -> {

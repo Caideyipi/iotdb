@@ -127,7 +127,7 @@ public interface IConfigTaskExecutor {
       ShowNodesInSchemaTemplateStatement showNodesInSchemaTemplateStatement);
 
   SettableFuture<ConfigTaskResult> setSchemaTemplate(
-      SetSchemaTemplateStatement setSchemaTemplateStatement);
+      String queryId, SetSchemaTemplateStatement setSchemaTemplateStatement);
 
   SettableFuture<ConfigTaskResult> showPathSetTemplate(
       ShowPathSetTemplateStatement showPathSetTemplateStatement);

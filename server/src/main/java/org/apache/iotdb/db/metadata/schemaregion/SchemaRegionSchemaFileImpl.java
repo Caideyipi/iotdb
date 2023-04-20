@@ -435,7 +435,7 @@ public class SchemaRegionSchemaFileImpl implements ISchemaRegion {
   // region Interfaces for schema region Info query and operation
 
   @Override
-  public String getStorageGroupFullPath() {
+  public String getDatabaseFullPath() {
     return storageGroupFullPath;
   }
 
