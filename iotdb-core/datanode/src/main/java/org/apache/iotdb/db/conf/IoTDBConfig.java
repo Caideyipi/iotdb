@@ -1091,7 +1091,7 @@ public class IoTDBConfig {
   /** initialized as empty, updated based on the latest `systemDir` during querying */
   private String[] pipeReceiverFileDirs = new String[0];
 
-  /** multi-tenancy */
+  /** Resource control */
   private boolean quotaEnable = false;
 
   /**
