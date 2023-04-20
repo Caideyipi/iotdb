@@ -58,6 +58,7 @@ import org.apache.iotdb.db.consensus.SchemaRegionConsensusImpl;
 import org.apache.iotdb.db.engine.StorageEngine;
 import org.apache.iotdb.db.engine.settle.SettleRequestHandler;
 import org.apache.iotdb.db.exception.StorageEngineException;
+import org.apache.iotdb.db.metadata.cache.DataNodeDevicePathCache;
 import org.apache.iotdb.db.metadata.cache.DataNodeSchemaCache;
 import org.apache.iotdb.db.metadata.query.info.ITimeSeriesSchemaInfo;
 import org.apache.iotdb.db.metadata.query.reader.ISchemaReader;
@@ -1587,6 +1588,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     // TODO what need to clean?
     ClusterPartitionFetcher.getInstance().invalidAllCache();
     DataNodeSchemaCache.getInstance().cleanUp();
+    DataNodeDevicePathCache.getInstance().cleanUp();
     return status;
   }
 
