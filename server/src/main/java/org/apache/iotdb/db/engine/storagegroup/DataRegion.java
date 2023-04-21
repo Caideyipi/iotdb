@@ -69,6 +69,7 @@ import org.apache.iotdb.db.exception.WriteProcessRejectException;
 import org.apache.iotdb.db.exception.query.OutOfTTLException;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.metadata.cache.DataNodeSchemaCache;
+import org.apache.iotdb.db.metadata.cache.DataNodeTemplateSchemaCache;
 import org.apache.iotdb.db.metadata.idtable.IDTable;
 import org.apache.iotdb.db.metadata.idtable.IDTableManager;
 import org.apache.iotdb.db.mpp.metric.QueryMetricsManager;
@@ -1889,6 +1890,7 @@ public class DataRegion implements IDataRegionForQuery {
       // delete Last cache record if necessary
       // todo implement more precise process
       DataNodeSchemaCache.getInstance().invalidateAll();
+      DataNodeTemplateSchemaCache.getInstance().invalidateCache();
 
       // write log to impacted working TsFileProcessors
       List<WALFlushListener> walListeners =
@@ -2298,6 +2300,7 @@ public class DataRegion implements IDataRegionForQuery {
       return;
     }
     DataNodeSchemaCache.getInstance().invalidateAll();
+    DataNodeTemplateSchemaCache.getInstance().invalidateCache();
   }
 
   /**
