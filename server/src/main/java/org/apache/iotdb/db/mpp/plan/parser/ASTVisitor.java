@@ -33,6 +33,7 @@ import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.constant.SqlConstant;
 import org.apache.iotdb.db.exception.sql.SemanticException;
+import org.apache.iotdb.db.metadata.template.TemplateAlterOperationType;
 import org.apache.iotdb.db.mpp.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.db.mpp.execution.operator.window.WindowType;
 import org.apache.iotdb.db.mpp.plan.analyze.ExpressionAnalyzer;
@@ -146,6 +147,7 @@ import org.apache.iotdb.db.mpp.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.model.ShowModelsStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.model.ShowTrailsStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.template.ActivateTemplateStatement;
+import org.apache.iotdb.db.mpp.plan.statement.metadata.template.AlterSchemaTemplateStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.template.CreateSchemaTemplateStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.template.DeactivateTemplateStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.template.DropSchemaTemplateStatement;
@@ -3007,6 +3009,31 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
         encodingsList,
         compressorsList,
         ctx.ALIGNED() != null);
+  }
+
+  @Override
+  public Statement visitAlterSchemaTemplate(IoTDBSqlParser.AlterSchemaTemplateContext ctx) {
+    String name = parseIdentifier(ctx.templateName.getText());
+    List<String> measurements = new ArrayList<>();
+    List<TSDataType> dataTypes = new ArrayList<>();
+    List<TSEncoding> encodings = new ArrayList<>();
+    List<CompressionType> compressors = new ArrayList<>();
+
+    for (IoTDBSqlParser.TemplateMeasurementClauseContext templateClauseContext :
+        ctx.templateMeasurementClause()) {
+      measurements.add(
+          parseNodeNameWithoutWildCard(templateClauseContext.nodeNameWithoutWildcard()));
+      parseAttributeClause(
+          templateClauseContext.attributeClauses(), dataTypes, encodings, compressors);
+    }
+
+    return new AlterSchemaTemplateStatement(
+        name,
+        measurements,
+        dataTypes,
+        encodings,
+        compressors,
+        TemplateAlterOperationType.EXTEND_TEMPLATE);
   }
 
   void parseAttributeClause(
