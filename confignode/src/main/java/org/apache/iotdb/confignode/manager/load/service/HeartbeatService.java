@@ -126,11 +126,6 @@ public class HeartbeatService {
 
     /* Update heartbeat counter */
     heartbeatCounter.getAndUpdate(x -> (x + 1) % 10);
-    if (!configManager.getClusterQuotaManager().hasSpaceQuotaLimit()) {
-      heartbeatReq.setSchemaRegionIds(configManager.getClusterQuotaManager().getSchemaRegionIds());
-      heartbeatReq.setDataRegionIds(configManager.getClusterQuotaManager().getDataRegionIds());
-      heartbeatReq.setSpaceQuotaUsage(configManager.getClusterQuotaManager().getSpaceQuotaUsage());
-    }
     return heartbeatReq;
   }
 
@@ -171,11 +166,7 @@ public class HeartbeatService {
           new DataNodeHeartbeatHandler(
               dataNodeInfo.getLocation().getDataNodeId(),
               loadCache,
-              configManager.getLoadManager().getRouteBalancer(),
-              configManager.getClusterQuotaManager().getDeviceNum(),
-              configManager.getClusterQuotaManager().getTimeSeriesNum(),
-              configManager.getClusterQuotaManager().getRegionDisk());
-      configManager.getClusterQuotaManager().updateSpaceQuotaUsage();
+              configManager.getLoadManager().getRouteBalancer());
       AsyncDataNodeHeartbeatClientPool.getInstance()
           .getDataNodeHeartBeat(
               dataNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);

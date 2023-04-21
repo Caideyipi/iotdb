@@ -28,8 +28,6 @@ import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.apache.thrift.async.AsyncMethodCallback;
 
-import java.util.Map;
-
 public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatResp> {
 
   private final int nodeId;
@@ -37,13 +35,7 @@ public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatR
   private final LoadCache loadCache;
   private final RouteBalancer routeBalancer;
 
-  public DataNodeHeartbeatHandler(
-      int nodeId,
-      LoadCache loadCache,
-      RouteBalancer routeBalancer,
-      Map<Integer, Long> deviceNum,
-      Map<Integer, Long> timeSeriesNum,
-      Map<Integer, Long> regionDisk) {
+  public DataNodeHeartbeatHandler(int nodeId, LoadCache loadCache, RouteBalancer routeBalancer) {
 
     this.nodeId = nodeId;
     this.loadCache = loadCache;
