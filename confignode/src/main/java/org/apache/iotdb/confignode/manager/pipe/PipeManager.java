@@ -22,14 +22,11 @@ package org.apache.iotdb.confignode.manager.pipe;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.persistence.pipe.PipeInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PipeManager {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(PipeManager.class);
-
   private final PipePluginCoordinator pipePluginCoordinator;
+
+  private final PipeTaskCoordinator pipeTaskCoordinator;
 
   private final PipeRuntimeCoordinator pipeRuntimeCoordinator;
 
@@ -37,13 +34,19 @@ public class PipeManager {
     this.pipePluginCoordinator =
         new PipePluginCoordinator(configManager, pipeInfo.getPipePluginInfo());
     this.pipeRuntimeCoordinator = new PipeRuntimeCoordinator(configManager);
+    this.pipeTaskCoordinator = new PipeTaskCoordinator(configManager, pipeInfo.getPipeTaskInfo());
   }
 
   public PipePluginCoordinator getPipePluginCoordinator() {
     return pipePluginCoordinator;
   }
 
+
   public PipeRuntimeCoordinator getPipeRuntimeCoordinator() {
     return pipeRuntimeCoordinator;
+  }
+
+  public PipeTaskCoordinator getPipeTaskCoordinator() {
+    return pipeTaskCoordinator;
   }
 }
