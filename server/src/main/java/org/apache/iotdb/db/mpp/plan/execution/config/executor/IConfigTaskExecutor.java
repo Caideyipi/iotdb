@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TFlushReq;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.db.mpp.plan.execution.config.ConfigTaskResult;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CountDatabaseStatement;
+import org.apache.iotdb.db.mpp.plan.statement.metadata.CountTimeSlotListStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CreateContinuousQueryStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CreateFunctionStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CreatePipePluginStatement;
@@ -171,6 +172,9 @@ public interface IConfigTaskExecutor {
 
   SettableFuture<ConfigTaskResult> getTimeSlotList(
       GetTimeSlotListStatement getTimeSlotListStatement);
+
+  SettableFuture<ConfigTaskResult> countTimeSlotList(
+      CountTimeSlotListStatement countTimeSlotListStatement);
 
   SettableFuture<ConfigTaskResult> migrateRegion(MigrateRegionStatement migrateRegionStatement);
 

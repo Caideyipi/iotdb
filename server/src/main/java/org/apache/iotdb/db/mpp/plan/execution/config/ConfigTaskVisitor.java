@@ -20,6 +20,7 @@
 package org.apache.iotdb.db.mpp.plan.execution.config;
 
 import org.apache.iotdb.db.mpp.plan.execution.config.metadata.CountDatabaseTask;
+import org.apache.iotdb.db.mpp.plan.execution.config.metadata.CountTimeSlotListTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.metadata.CreateContinuousQueryTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.metadata.CreateFunctionTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.metadata.CreatePipePluginTask;
@@ -81,6 +82,7 @@ import org.apache.iotdb.db.mpp.plan.statement.Statement;
 import org.apache.iotdb.db.mpp.plan.statement.StatementNode;
 import org.apache.iotdb.db.mpp.plan.statement.StatementVisitor;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CountDatabaseStatement;
+import org.apache.iotdb.db.mpp.plan.statement.metadata.CountTimeSlotListStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CreateContinuousQueryStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CreateFunctionStatement;
 import org.apache.iotdb.db.mpp.plan.statement.metadata.CreatePipePluginStatement;
@@ -437,6 +439,11 @@ public class ConfigTaskVisitor
   public IConfigTask visitGetTimeSlotList(
       GetTimeSlotListStatement getTimeSlotListStatement, TaskContext context) {
     return new GetTimeSlotListTask(getTimeSlotListStatement);
+  }
+
+  public IConfigTask visitCountTimeSlotList(
+      CountTimeSlotListStatement countTimeSlotListStatement, TaskContext context) {
+    return new CountTimeSlotListTask(countTimeSlotListStatement);
   }
 
   @Override
