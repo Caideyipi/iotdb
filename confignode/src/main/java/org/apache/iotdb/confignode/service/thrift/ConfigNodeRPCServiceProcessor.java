@@ -30,6 +30,7 @@ import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.consensus.ConsensusGroupId;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.commons.utils.StatusUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
@@ -499,7 +500,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
               req.getPassword(),
               req.getNewPassword(),
               req.getPermissions(),
-              req.getNodeNameList());
+              AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getNodeNameList())));
     } catch (AuthException e) {
       LOGGER.error(e.getMessage());
     }
@@ -522,7 +523,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
               req.getPassword(),
               req.getNewPassword(),
               req.getPermissions(),
-              req.getNodeNameList());
+              AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getNodeNameList())));
     } catch (AuthException e) {
       LOGGER.error(e.getMessage());
     }
@@ -539,8 +540,9 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TPermissionInfoResp checkUserPrivileges(TCheckUserPrivilegesReq req) {
-    return configManager.checkUserPrivileges(
-        req.getUsername(), req.getPaths(), req.getPermission());
+    List<PartialPath> partialPaths =
+        AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getPaths()));
+    return configManager.checkUserPrivileges(req.getUsername(), partialPaths, req.getPermission());
   }
 
   @Override
