@@ -378,9 +378,4 @@ public class ClusterSchemaFetcher implements ISchemaFetcher {
 
     return indexOfMissingMeasurements;
   }
-
-  @Override
-  public void invalidAllCache() {
-    schemaCache.invalidateAll();
-  }
 }
