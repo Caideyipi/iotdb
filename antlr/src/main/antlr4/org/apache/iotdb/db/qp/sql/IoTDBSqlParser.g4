@@ -602,6 +602,7 @@ orderByClause
 
 orderByAttributeClause
     : sortKey (DESC | ASC)?
+    | expression (DESC | ASC)? (NULLS (FIRST|LAST))?
     ;
 
 sortKey
