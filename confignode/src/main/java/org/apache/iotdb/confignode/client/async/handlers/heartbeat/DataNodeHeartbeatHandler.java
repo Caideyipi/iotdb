@@ -19,7 +19,6 @@
 package org.apache.iotdb.confignode.client.async.handlers.heartbeat;
 
 import org.apache.iotdb.commons.cluster.RegionStatus;
-import org.apache.iotdb.confignode.manager.load.balancer.RouteBalancer;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionHeartbeatSample;
@@ -33,13 +32,10 @@ public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatR
   private final int nodeId;
 
   private final LoadCache loadCache;
-  private final RouteBalancer routeBalancer;
 
-  public DataNodeHeartbeatHandler(int nodeId, LoadCache loadCache, RouteBalancer routeBalancer) {
-
+  public DataNodeHeartbeatHandler(int nodeId, LoadCache loadCache) {
     this.nodeId = nodeId;
     this.loadCache = loadCache;
-    this.routeBalancer = routeBalancer;
   }
 
   @Override
@@ -66,7 +62,7 @@ public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatR
 
               if (isLeader) {
                 // Update leaderCache
-                routeBalancer.cacheLeaderSample(
+                loadCache.cacheLeaderSample(
                     regionGroupId, new Pair<>(heartbeatResp.getHeartbeatTimestamp(), nodeId));
               }
             });

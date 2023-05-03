@@ -746,7 +746,7 @@ public class ConfigManager implements IManager {
           partitionManager.getNodePathsPartition(getNodePathsPartitionPlan);
       TSchemaNodeManagementResp result =
           resp.convertToRpcSchemaNodeManagementPartitionResp(
-              getLoadManager().getLatestRegionRouteMap());
+              getLoadManager().getRegionPriorityMap());
 
       LOGGER.info(
           "getNodePathsPartition receive devicePaths: {}, level: {}, return TSchemaNodeManagementResp: {}",
@@ -1320,7 +1320,7 @@ public class ConfigManager implements IManager {
 
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       resp.setTimestamp(System.currentTimeMillis());
-      resp.setRegionRouteMap(getLoadManager().getLatestRegionRouteMap());
+      resp.setRegionRouteMap(getLoadManager().getRegionPriorityMap());
     }
 
     return resp;

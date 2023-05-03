@@ -163,10 +163,7 @@ public class HeartbeatService {
     // Send heartbeat requests
     for (TDataNodeConfiguration dataNodeInfo : registeredDataNodes) {
       DataNodeHeartbeatHandler handler =
-          new DataNodeHeartbeatHandler(
-              dataNodeInfo.getLocation().getDataNodeId(),
-              loadCache,
-              configManager.getLoadManager().getRouteBalancer());
+          new DataNodeHeartbeatHandler(dataNodeInfo.getLocation().getDataNodeId(), loadCache);
       AsyncDataNodeHeartbeatClientPool.getInstance()
           .getDataNodeHeartBeat(
               dataNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
