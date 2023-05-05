@@ -21,6 +21,7 @@ package org.apache.iotdb.db.metadata.cache;
 
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.mpp.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.mpp.common.schematree.ISchemaTree;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
@@ -31,7 +32,6 @@ import org.apache.iotdb.tsfile.write.schema.MeasurementSchema;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -42,9 +42,14 @@ import java.util.stream.Collectors;
 public class DataNodeSchemaCacheTest {
   DataNodeSchemaCache dataNodeSchemaCache;
   private Map<String, String> s1TagMap;
+  private boolean lastCacheEnabledDefaultValue;
 
   @Before
   public void setUp() throws Exception {
+    lastCacheEnabledDefaultValue = IoTDBDescriptor.getInstance().getConfig().isLastCacheEnabled();
+    if (!lastCacheEnabledDefaultValue) {
+      IoTDBDescriptor.getInstance().getConfig().setEnableLastCache(true);
+    }
     dataNodeSchemaCache = DataNodeSchemaCache.getInstance();
     s1TagMap = new HashMap<>();
     s1TagMap.put("k1", "v1");
@@ -52,6 +57,7 @@ public class DataNodeSchemaCacheTest {
 
   @After
   public void tearDown() throws Exception {
+    IoTDBDescriptor.getInstance().getConfig().setEnableLastCache(lastCacheEnabledDefaultValue);
     dataNodeSchemaCache.cleanUp();
   }
 
@@ -123,7 +129,6 @@ public class DataNodeSchemaCacheTest {
   }
 
   @Test
-  @Ignore
   public void testLastCache() throws IllegalPathException {
     // test no cache
     PartialPath devicePath = new PartialPath("root.sg1.d1");
