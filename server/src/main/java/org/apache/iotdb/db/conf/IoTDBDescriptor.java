@@ -1050,6 +1050,16 @@ public class IoTDBDescriptor {
     conf.setTimePartitionInterval(
         DateTimeUtils.convertMilliTimeWithPrecision(
             conf.getTimePartitionInterval(), conf.getTimestampPrecision()));
+
+    // the buffer for sort operator to calculate
+    conf.setSortBufferSize(
+        Long.parseLong(
+            properties
+                .getProperty("sort_buffer_size_in_bytes", Long.toString(conf.getSortBufferSize()))
+                .trim()));
+
+    // tmp filePath for sort operator
+    conf.setSortTmpDir(properties.getProperty("sort_tmp_dir", conf.getSortTmpDir()));
   }
 
   private void loadAuthorCache(Properties properties) {
