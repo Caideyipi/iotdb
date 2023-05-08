@@ -102,7 +102,7 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "Notice: in some systems, DataNode must run in sudo mode to write data. The process may fail."
 fi
 
-checkEnvVariables
+checkAllVariables
 
 CLASSPATH=""
 for f in "${IOTDB_HOME}"/lib/*.jar; do
