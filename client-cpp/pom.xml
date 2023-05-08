@@ -51,7 +51,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>iotdb-thrift-commons</artifactId>
             <version>${project.version}</version>
         </dependency>

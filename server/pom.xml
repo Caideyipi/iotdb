@@ -39,7 +39,7 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>service-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -49,7 +49,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>${project.version}</version>
             <exclusions>
@@ -76,7 +76,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>influxdb-thrift</artifactId>
             <version>${project.version}</version>
         </dependency>

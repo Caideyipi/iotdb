@@ -27,7 +27,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.timecho.timechodb</groupId>
+    <groupId>com.timecho.iotdb</groupId>
     <artifactId>session-parent</artifactId>
     <name>IoTDB Session</name>
     <properties>
@@ -72,7 +72,7 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>service-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -87,7 +87,7 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>isession-parent</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>

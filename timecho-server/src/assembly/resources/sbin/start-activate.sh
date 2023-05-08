@@ -109,7 +109,7 @@ for f in "${IOTDB_HOME}"/lib/*.jar; do
   CLASSPATH=${CLASSPATH}":"$f
 done
 
-classname=com.timecho.timechodb.Activate
+classname=com.timecho.iotdb.Activate
 
 
 if [ "x$SHOW_VERSION" != "x" ]; then
@@ -146,7 +146,7 @@ fi
 
 PARAMS="-s $PARAMS"
 
-classname=com.timecho.timechodb.Activate
+classname=com.timecho.iotdb.Activate
 
 launch_service()
 {

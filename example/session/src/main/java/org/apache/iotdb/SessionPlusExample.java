@@ -33,7 +33,7 @@ import org.apache.iotdb.tsfile.utils.BitMap;
 import org.apache.iotdb.tsfile.write.record.Tablet;
 import org.apache.iotdb.tsfile.write.schema.MeasurementSchema;
 
-import com.timecho.timechodb.session.Session;
+import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
 
 import java.io.IOException;

@@ -47,7 +47,7 @@
             <version>2.8.2</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>session-parent</artifactId>
             <version>${project.version}</version>
         </dependency>

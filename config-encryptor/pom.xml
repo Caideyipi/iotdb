@@ -7,7 +7,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.timecho.timechodb</groupId>
+    <groupId>com.timecho.iotdb</groupId>
     <artifactId>config-encryptor</artifactId>
     <dependencies>
         <dependency>
@@ -33,7 +33,7 @@
                             <appendAssemblyId>false</appendAssemblyId>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.timecho.timechodb.encryptor.EncryptedPropertiesGenerator</mainClass>
+                                    <mainClass>com.timecho.iotdb.encryptor.EncryptedPropertiesGenerator</mainClass>
                                     <addClasspath>true</addClasspath>
                                     <classpathPrefix>lib/</classpathPrefix>
                                 </manifest>

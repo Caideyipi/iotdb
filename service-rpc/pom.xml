@@ -27,7 +27,7 @@
         <version>1.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <groupId>com.timecho.timechodb</groupId>
+    <groupId>com.timecho.iotdb</groupId>
     <artifactId>service-rpc</artifactId>
     <name>Service-rpc</name>
     <description>RPC framework for client and server.</description>
@@ -38,7 +38,7 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>${project.version}</version>
             <!-- we want to reduce the size of JDBC -->
@@ -50,12 +50,12 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>timechodb-thrift</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>influxdb-thrift</artifactId>
             <version>${project.version}</version>
         </dependency>

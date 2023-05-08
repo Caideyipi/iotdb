@@ -35,12 +35,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>session-parent</artifactId>
             <version>${project.version}</version>
         </dependency>

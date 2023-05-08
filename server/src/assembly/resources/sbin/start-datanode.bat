@@ -195,7 +195,7 @@ if %occupied%==1 (
 
 @setlocal ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS
 set CONF_PARAMS=-s
-if NOT DEFINED MAIN_CLASS set MAIN_CLASS=com.timecho.timechodb.DataNode
+if NOT DEFINED MAIN_CLASS set MAIN_CLASS=com.timecho.iotdb.DataNode
 if NOT DEFINED JAVA_HOME goto :err
 
 @REM -----------------------------------------------------------------------------

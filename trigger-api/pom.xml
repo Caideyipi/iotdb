@@ -59,7 +59,7 @@
     </profiles>
     <dependencies>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>1.2.0-SNAPSHOT</version>
             <exclusions>

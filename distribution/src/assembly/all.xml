@@ -20,12 +20,12 @@
 
 -->
 <assembly>
-    <id>all-bin</id>
+    <id>bin</id>
     <formats>
         <format>dir</format>
         <format>zip</format>
     </formats>
-    <baseDirectory>timecho-timechodb-${project.version}-all-bin</baseDirectory>
+    <baseDirectory>iotdb-enterprise-${project.version}-bin</baseDirectory>
     <dependencySets>
         <dependencySet>
             <includes>

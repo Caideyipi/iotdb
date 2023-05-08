@@ -31,7 +31,7 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>${project.version}</version>
         </dependency>

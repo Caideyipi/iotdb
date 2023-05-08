@@ -26,17 +26,17 @@
         <version>1.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.timecho.timechodb</groupId>
+    <groupId>com.timecho.iotdb</groupId>
     <artifactId>timecho-session</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>session-parent</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.timecho.timechodb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-isession</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>

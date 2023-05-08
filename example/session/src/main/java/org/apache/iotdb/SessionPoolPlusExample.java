@@ -24,7 +24,7 @@ import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 
-import com.timecho.timechodb.session.pool.SessionPool;
+import com.timecho.iotdb.session.pool.SessionPool;
 import org.apache.thrift.TException;
 
 import java.util.ArrayList;
