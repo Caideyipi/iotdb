@@ -162,4 +162,6 @@ public enum StatementType {
   SHOW_PIPES,
 
   BATCH_ACTIVATE_TEMPLATE,
+
+  CREATE_LOGICAL_VIEW,
 }

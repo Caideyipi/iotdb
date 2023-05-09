@@ -61,6 +61,8 @@ ddlStatement
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
     // ML Model
     | createModel | dropModel | showModels | showTrails
+    // View
+    | createLogicalView
     ;
 
 dmlStatement
@@ -507,6 +509,26 @@ showModels
 // ---- Show Trails
 showTrails
     : SHOW TRAILS modelId=identifier
+    ;
+
+// Create Logical View
+createLogicalView
+    : CREATE VIEW viewTargetPaths AS viewSourcePaths
+    ;
+
+viewSuffixPaths
+    : nodeNameWithoutWildcard (DOT nodeNameWithoutWildcard)*
+    ;
+
+viewTargetPaths
+    : fullPath (COMMA fullPath)*
+    | prefixPath LR_BRACKET viewSuffixPaths (COMMA viewSuffixPaths)* RR_BRACKET
+    ;
+
+viewSourcePaths
+    : fullPath (COMMA fullPath)*
+    | prefixPath LR_BRACKET viewSuffixPaths (COMMA viewSuffixPaths)* RR_BRACKET
+    | selectClause fromClause
     ;
 
 /**

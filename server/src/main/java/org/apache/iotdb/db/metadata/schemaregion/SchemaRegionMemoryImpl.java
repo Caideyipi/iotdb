@@ -58,6 +58,7 @@ import org.apache.iotdb.db.metadata.plan.schemaregion.write.IAutoCreateDeviceMNo
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IChangeAliasPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IChangeTagOffsetPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.ICreateAlignedTimeSeriesPlan;
+import org.apache.iotdb.db.metadata.plan.schemaregion.write.ICreateLogicalViewPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.ICreateTimeSeriesPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IDeactivateTemplatePlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IDeleteTimeSeriesPlan;
@@ -72,6 +73,7 @@ import org.apache.iotdb.db.metadata.query.reader.ISchemaReader;
 import org.apache.iotdb.db.metadata.rescon.MemSchemaRegionStatistics;
 import org.apache.iotdb.db.metadata.tag.TagManager;
 import org.apache.iotdb.db.metadata.template.Template;
+import org.apache.iotdb.db.metadata.view.viewExpression.ViewExpression;
 import org.apache.iotdb.db.utils.SchemaUtils;
 import org.apache.iotdb.external.api.ISeriesNumerMonitor;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
@@ -776,6 +778,44 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
         }
       }
     }
+  }
+
+  @Override
+  public void createLogicalView(ICreateLogicalViewPlan plan) throws MetadataException {
+    if (!regionStatistics.isAllowToCreateNewSeries()) {
+      throw new SeriesOverflowException();
+    }
+
+    try {
+      List<PartialPath> pathList = plan.getViewPathList();
+      Map<PartialPath, ViewExpression> viewPathToSourceMap =
+          plan.getViewPathToSourceExpressionMap();
+      for (PartialPath path : pathList) {
+        try {
+          if (seriesNumberMonitor != null && !seriesNumberMonitor.addTimeSeries(1)) {
+            throw new SeriesNumberOverflowException();
+          }
+
+          // create one logical view
+          IMeasurementMNode<IMemMNode> leafMNode;
+          leafMNode = mtree.createLogicalView(path, viewPathToSourceMap.get(path));
+        } catch (Throwable t) {
+          if (seriesNumberMonitor != null) {
+            seriesNumberMonitor.deleteTimeSeries(1);
+          }
+          throw t;
+        }
+      }
+      // write log
+      if (!isRecovering) {
+        writeToMLog(plan);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    // update statistics
+    regionStatistics.addTimeseries(1L);
+    // TODO: CRTODO: shall we update id table?
   }
 
   private void deleteSingleTimeseriesInBlackList(PartialPath path)

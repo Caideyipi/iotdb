@@ -61,6 +61,7 @@ import org.apache.iotdb.db.metadata.plan.schemaregion.write.IAutoCreateDeviceMNo
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IChangeAliasPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IChangeTagOffsetPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.ICreateAlignedTimeSeriesPlan;
+import org.apache.iotdb.db.metadata.plan.schemaregion.write.ICreateLogicalViewPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.ICreateTimeSeriesPlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IDeactivateTemplatePlan;
 import org.apache.iotdb.db.metadata.plan.schemaregion.write.IDeleteTimeSeriesPlan;
@@ -886,6 +887,12 @@ public class SchemaRegionSchemaFileImpl implements ISchemaRegion {
         }
       }
     }
+  }
+
+  @Override
+  public void createLogicalView(ICreateLogicalViewPlan createLogicalViewPlan)
+      throws MetadataException {
+    throw new UnsupportedOperationException("createLogicalView is unsupported.");
   }
 
   private void deleteSingleTimeseriesInBlackList(PartialPath path)
