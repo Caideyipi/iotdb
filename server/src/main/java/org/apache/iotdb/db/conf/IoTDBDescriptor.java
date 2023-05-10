@@ -1066,6 +1066,10 @@ public class IoTDBDescriptor {
             properties.getProperty("quota_enable", String.valueOf(conf.isQuotaEnable()))));
 
     conf.setRateLimiterType(properties.getProperty("rate_limiter_type", conf.getRateLimiterType()));
+
+    conf.setDataNodeSchemaCacheEvictionPolicy(
+        properties.getProperty(
+            "datanode_schema_cache_eviction_policy", conf.getDataNodeSchemaCacheEvictionPolicy()));
   }
 
   private void loadAuthorCache(Properties properties) {
