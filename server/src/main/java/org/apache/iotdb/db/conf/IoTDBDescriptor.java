@@ -39,6 +39,7 @@ import org.apache.iotdb.db.engine.compaction.selector.constant.CrossCompactionSe
 import org.apache.iotdb.db.engine.compaction.selector.constant.InnerSequenceCompactionSelector;
 import org.apache.iotdb.db.engine.compaction.selector.constant.InnerUnsequenceCompactionSelector;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
+import org.apache.iotdb.db.metadata.rescon.DataNodeSchemaQuotaManager;
 import org.apache.iotdb.db.rescon.SystemInfo;
 import org.apache.iotdb.db.service.metrics.IoTDBInternalLocalReporter;
 import org.apache.iotdb.db.utils.DateTimeUtils;
@@ -189,7 +190,17 @@ public class IoTDBDescriptor {
   }
 
   public void loadProperties(Properties properties) {
-
+    conf.setClusterSchemaLimitLevel(
+        properties
+            .getProperty("cluster_schema_limit_level", conf.getClusterSchemaLimitLevel())
+            .trim());
+    conf.setClusterSchemaLimitThreshold(
+        Long.parseLong(
+            properties
+                .getProperty(
+                    "cluster_schema_limit_threshold",
+                    Long.toString(conf.getClusterSchemaLimitThreshold()))
+                .trim()));
     conf.setClusterName(
         properties.getProperty(IoTDBConstant.CLUSTER_NAME, conf.getClusterName()).trim());
 
@@ -1051,6 +1062,10 @@ public class IoTDBDescriptor {
         DateTimeUtils.convertMilliTimeWithPrecision(
             conf.getTimePartitionInterval(), conf.getTimestampPrecision()));
 
+    conf.setQuotaEnable(
+        Boolean.parseBoolean(
+            properties.getProperty("quota_enable", String.valueOf(conf.isQuotaEnable()))));
+
     // the buffer for sort operator to calculate
     conf.setSortBufferSize(
         Long.parseLong(
@@ -1548,6 +1563,20 @@ public class IoTDBDescriptor {
           Boolean.parseBoolean(
               properties.getProperty(
                   "enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
+
+      // update schema quota configuration
+      conf.setClusterSchemaLimitLevel(
+          properties
+              .getProperty("cluster_schema_limit_level", conf.getClusterSchemaLimitLevel())
+              .trim());
+      conf.setClusterSchemaLimitThreshold(
+          Long.parseLong(
+              properties
+                  .getProperty(
+                      "cluster_schema_limit_threshold",
+                      Long.toString(conf.getClusterSchemaLimitThreshold()))
+                  .trim()));
+      DataNodeSchemaQuotaManager.getInstance().updateConfiguration();
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }

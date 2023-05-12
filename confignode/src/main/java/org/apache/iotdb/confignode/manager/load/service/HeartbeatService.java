@@ -123,9 +123,15 @@ public class HeartbeatService {
     heartbeatReq.setNeedJudgeLeader(true);
     // We sample DataNode's load in every 10 heartbeat loop
     heartbeatReq.setNeedSamplingLoad(heartbeatCounter.get() % 10 == 0);
+    heartbeatReq.setSchemaQuotaCount(configManager.getClusterSchemaManager().getSchemaQuotaCount());
 
     /* Update heartbeat counter */
     heartbeatCounter.getAndUpdate(x -> (x + 1) % 10);
+    if (!configManager.getClusterQuotaManager().hasSpaceQuotaLimit()) {
+      heartbeatReq.setSchemaRegionIds(configManager.getClusterQuotaManager().getSchemaRegionIds());
+      heartbeatReq.setDataRegionIds(configManager.getClusterQuotaManager().getDataRegionIds());
+      heartbeatReq.setSpaceQuotaUsage(configManager.getClusterQuotaManager().getSpaceQuotaUsage());
+    }
     return heartbeatReq;
   }
 
@@ -163,7 +169,14 @@ public class HeartbeatService {
     // Send heartbeat requests
     for (TDataNodeConfiguration dataNodeInfo : registeredDataNodes) {
       DataNodeHeartbeatHandler handler =
-          new DataNodeHeartbeatHandler(dataNodeInfo.getLocation().getDataNodeId(), loadCache);
+          new DataNodeHeartbeatHandler(
+              dataNodeInfo.getLocation().getDataNodeId(),
+              loadCache,
+              configManager.getClusterQuotaManager().getDeviceNum(),
+              configManager.getClusterQuotaManager().getTimeSeriesNum(),
+              configManager.getClusterQuotaManager().getRegionDisk(),
+              configManager.getClusterSchemaManager()::updateSchemaQuota);
+      configManager.getClusterQuotaManager().updateSpaceQuotaUsage();
       AsyncDataNodeHeartbeatClientPool.getInstance()
           .getDataNodeHeartBeat(
               dataNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);

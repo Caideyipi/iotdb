@@ -27,15 +27,35 @@ import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.apache.thrift.async.AsyncMethodCallback;
 
+import java.util.Map;
+import java.util.function.Consumer;
+
 public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatResp> {
 
   private final int nodeId;
 
   private final LoadCache loadCache;
 
-  public DataNodeHeartbeatHandler(int nodeId, LoadCache loadCache) {
+  private final Map<Integer, Long> deviceNum;
+  private final Map<Integer, Long> timeSeriesNum;
+  private final Map<Integer, Long> regionDisk;
+
+  private final Consumer<Map<Integer, Long>> schemaQuotaRespProcess;
+
+  public DataNodeHeartbeatHandler(
+      int nodeId,
+      LoadCache loadCache,
+      Map<Integer, Long> deviceNum,
+      Map<Integer, Long> timeSeriesNum,
+      Map<Integer, Long> regionDisk,
+      Consumer<Map<Integer, Long>> schemaQuotaRespProcess) {
+
     this.nodeId = nodeId;
     this.loadCache = loadCache;
+    this.deviceNum = deviceNum;
+    this.timeSeriesNum = timeSeriesNum;
+    this.regionDisk = regionDisk;
+    this.schemaQuotaRespProcess = schemaQuotaRespProcess;
   }
 
   @Override
@@ -66,6 +86,26 @@ public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatR
                     regionGroupId, new Pair<>(heartbeatResp.getHeartbeatTimestamp(), nodeId));
               }
             });
+
+    if (heartbeatResp.getRegionDeviceNumMap() != null) {
+      deviceNum.putAll(heartbeatResp.getRegionDeviceNumMap());
+    }
+    if (heartbeatResp.getRegionTimeSeriesNumMap() != null) {
+      timeSeriesNum.putAll(heartbeatResp.getRegionTimeSeriesNumMap());
+    }
+    if (heartbeatResp.getRegionDisk() != null) {
+      regionDisk.putAll(heartbeatResp.getRegionDisk());
+    }
+    if (heartbeatResp.getSchemaLimitLevel() != null) {
+      switch (heartbeatResp.getSchemaLimitLevel()) {
+        case DEVICE:
+          schemaQuotaRespProcess.accept(heartbeatResp.getRegionDeviceNumMap());
+          break;
+        case TIMESERIES:
+          schemaQuotaRespProcess.accept(heartbeatResp.getRegionTimeSeriesNumMap());
+          break;
+      }
+    }
   }
 
   @Override
