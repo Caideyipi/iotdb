@@ -530,6 +530,10 @@ QUERYID
     : Q U E R Y I D
     ;
 
+QUOTA
+    : Q U O T A
+    ;
+
 RANGE
     : R A N G E
     ;
@@ -634,6 +638,10 @@ SOFFSET
     : S O F F S E T
     ;
 
+SPACE
+    : S P A C E
+    ;
+
 STORAGE
     : S T O R A G E
     ;
@@ -684,6 +692,10 @@ TEMPLATE
 
 TEMPLATES
     : T E M P L A T E S
+    ;
+
+THROTTLE
+    : T H R O T T L E
     ;
 
 TIME

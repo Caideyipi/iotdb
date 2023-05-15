@@ -245,7 +245,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       if (queryStatement.isGroupByTag()) {
         schemaTree = schemaFetcher.fetchSchemaWithTags(patternTree);
       } else {
-        schemaTree = schemaFetcher.fetchSchema(patternTree);
+        schemaTree = schemaFetcher.fetchSchema(patternTree, context);
       }
       QueryMetricsManager.getInstance()
           .recordPlanCost(SCHEMA_FETCHER, System.nanoTime() - startTime);
@@ -1688,7 +1688,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
     // fetch schema of target paths
     long startTime = System.nanoTime();
-    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree);
+    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree, null);
     QueryMetricsManager.getInstance().recordPlanCost(SCHEMA_FETCHER, System.nanoTime() - startTime);
     deviceViewIntoPathDescriptor.bindType(targetSchemaTree);
 
@@ -1741,7 +1741,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
     // fetch schema of target paths
     long startTime = System.nanoTime();
-    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree);
+    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree, null);
     QueryMetricsManager.getInstance().recordPlanCost(SCHEMA_FETCHER, System.nanoTime() - startTime);
     intoPathDescriptor.bindType(targetSchemaTree);
 
@@ -2456,6 +2456,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     PathPatternTree patternTree = new PathPatternTree();
     patternTree.appendPathPattern(showTimeSeriesStatement.getPathPattern());
     SchemaPartition schemaPartitionInfo = partitionFetcher.getSchemaPartition(patternTree);
+    ISchemaTree schemaTree = schemaFetcher.fetchSchema(patternTree, context);
     analysis.setSchemaPartitionInfo(schemaPartitionInfo);
 
     Map<Integer, Template> templateMap =
@@ -2466,7 +2467,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       patternTree.constructTree();
       // request schema fetch API
       logger.debug("[StartFetchSchema]");
-      ISchemaTree schemaTree = schemaFetcher.fetchSchema(patternTree);
+      schemaTree = schemaFetcher.fetchSchema(patternTree, context);
       logger.debug("[EndFetchSchema]]");
 
       analyzeLastSource(
@@ -2694,7 +2695,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       patternTree.appendPathPattern(pathPattern);
     }
 
-    ISchemaTree schemaTree = schemaFetcher.fetchSchema(patternTree);
+    ISchemaTree schemaTree = schemaFetcher.fetchSchema(patternTree, context);
     analysis.setSchemaTree(schemaTree);
 
     Map<String, List<DataPartitionQueryParam>> sgNameToQueryParamsMap = new HashMap<>();

@@ -1060,6 +1060,12 @@ public class IoTDBDescriptor {
 
     // tmp filePath for sort operator
     conf.setSortTmpDir(properties.getProperty("sort_tmp_dir", conf.getSortTmpDir()));
+
+    conf.setQuotaEnable(
+        Boolean.parseBoolean(
+            properties.getProperty("quota_enable", String.valueOf(conf.isQuotaEnable()))));
+
+    conf.setRateLimiterType(properties.getProperty("rate_limiter_type", conf.getRateLimiterType()));
   }
 
   private void loadAuthorCache(Properties properties) {

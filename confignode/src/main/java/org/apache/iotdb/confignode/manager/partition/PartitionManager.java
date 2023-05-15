@@ -1138,6 +1138,15 @@ public class PartitionManager {
     return getReplicaSets(database, matchedRegionGroups);
   }
 
+  public void getSchemaRegionIds(
+      List<String> databases, Map<String, List<Integer>> schemaRegionIds) {
+    partitionInfo.getSchemaRegionIds(databases, schemaRegionIds);
+  }
+
+  public void getDataRegionIds(List<String> databases, Map<String, List<Integer>> dataRegionIds) {
+    partitionInfo.getDataRegionIds(databases, dataRegionIds);
+  }
+
   public ScheduledExecutorService getRegionMaintainer() {
     return regionMaintainer;
   }

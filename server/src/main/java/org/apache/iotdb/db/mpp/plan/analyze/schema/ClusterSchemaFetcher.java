@@ -80,7 +80,7 @@ public class ClusterSchemaFetcher implements ISchemaFetcher {
               coordinator.execute(
                   statement,
                   queryId,
-                  null,
+                  context == null ? null : context.getSession(),
                   "",
                   ClusterPartitionFetcher.getInstance(),
                   this,
@@ -106,7 +106,8 @@ public class ClusterSchemaFetcher implements ISchemaFetcher {
   private ClusterSchemaFetcher() {}
 
   @Override
-  public ClusterSchemaTree fetchSchema(PathPatternTree patternTree) {
+  public ClusterSchemaTree fetchSchema(PathPatternTree patternTree, MPPQueryContext context) {
+    this.context = context;
     patternTree.constructTree();
     List<PartialPath> pathPatternList = patternTree.getAllPathPatterns();
     List<PartialPath> fullPathList = new ArrayList<>();

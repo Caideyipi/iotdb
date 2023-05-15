@@ -75,6 +75,10 @@ import org.apache.iotdb.db.mpp.plan.execution.config.sys.pipe.DropPipeTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.sys.pipe.ShowPipeTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.sys.pipe.StartPipeTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.sys.pipe.StopPipeTask;
+import org.apache.iotdb.db.mpp.plan.execution.config.sys.quota.SetSpaceQuotaTask;
+import org.apache.iotdb.db.mpp.plan.execution.config.sys.quota.SetThrottleQuotaTask;
+import org.apache.iotdb.db.mpp.plan.execution.config.sys.quota.ShowSpaceQuotaTask;
+import org.apache.iotdb.db.mpp.plan.execution.config.sys.quota.ShowThrottleQuotaTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.sys.sync.CreatePipeSinkTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.sys.sync.DropPipeSinkTask;
 import org.apache.iotdb.db.mpp.plan.execution.config.sys.sync.ShowPipeSinkTask;
@@ -136,6 +140,10 @@ import org.apache.iotdb.db.mpp.plan.statement.sys.pipe.DropPipeStatement;
 import org.apache.iotdb.db.mpp.plan.statement.sys.pipe.ShowPipeStatement;
 import org.apache.iotdb.db.mpp.plan.statement.sys.pipe.StartPipeStatement;
 import org.apache.iotdb.db.mpp.plan.statement.sys.pipe.StopPipeStatement;
+import org.apache.iotdb.db.mpp.plan.statement.sys.quota.SetSpaceQuotaStatement;
+import org.apache.iotdb.db.mpp.plan.statement.sys.quota.SetThrottleQuotaStatement;
+import org.apache.iotdb.db.mpp.plan.statement.sys.quota.ShowSpaceQuotaStatement;
+import org.apache.iotdb.db.mpp.plan.statement.sys.quota.ShowThrottleQuotaStatement;
 import org.apache.iotdb.db.mpp.plan.statement.sys.sync.CreatePipeSinkStatement;
 import org.apache.iotdb.db.mpp.plan.statement.sys.sync.DropPipeSinkStatement;
 import org.apache.iotdb.db.mpp.plan.statement.sys.sync.ShowPipeSinkStatement;
@@ -469,6 +477,30 @@ public class ConfigTaskVisitor
   public IConfigTask visitShowContinuousQueries(
       ShowContinuousQueriesStatement showContinuousQueriesStatement, TaskContext context) {
     return new ShowContinuousQueriesTask();
+  }
+
+  @Override
+  public IConfigTask visitSetSpaceQuota(
+      SetSpaceQuotaStatement setSpaceQuotaStatement, TaskContext context) {
+    return new SetSpaceQuotaTask(setSpaceQuotaStatement);
+  }
+
+  @Override
+  public IConfigTask visitShowSpaceQuota(
+      ShowSpaceQuotaStatement showSpaceQuotaStatement, TaskContext context) {
+    return new ShowSpaceQuotaTask(showSpaceQuotaStatement);
+  }
+
+  @Override
+  public IConfigTask visitSetThrottleQuota(
+      SetThrottleQuotaStatement setThrottleQuotaStatement, TaskContext context) {
+    return new SetThrottleQuotaTask(setThrottleQuotaStatement);
+  }
+
+  @Override
+  public IConfigTask visitShowThrottleQuota(
+      ShowThrottleQuotaStatement showThrottleQuotaStatement, TaskContext context) {
+    return new ShowThrottleQuotaTask(showThrottleQuotaStatement);
   }
 
   /** ML Model Management */
