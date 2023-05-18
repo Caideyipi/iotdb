@@ -505,7 +505,7 @@ public class TsFileSplitByPartitionTool implements AutoCloseable {
     }
     tsFileResource.setMinPlanIndex(minPlanIndex);
     tsFileResource.setMaxPlanIndex(maxPlanIndex);
-    tsFileResource.setStatus(TsFileResourceStatus.NORMAL);
+    tsFileResource.setStatus(TsFileResourceStatus.CLOSED);
     tsFileResource.serialize();
     return tsFileResource;
   }

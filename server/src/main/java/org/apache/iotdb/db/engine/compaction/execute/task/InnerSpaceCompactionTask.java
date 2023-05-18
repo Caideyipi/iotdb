@@ -239,7 +239,7 @@ public class InnerSpaceCompactionTask extends AbstractCompactionTask {
               .addFile(targetTsFileResource.getTsFile().length(), sequence);
 
           // set target resource to CLOSED, so that it can be selected to compact
-          targetTsFileResource.setStatus(TsFileResourceStatus.NORMAL);
+          targetTsFileResource.setStatus(TsFileResourceStatus.CLOSED);
         } else {
           // target resource is empty after compaction, then delete it
           targetTsFileResource.remove();
@@ -400,7 +400,7 @@ public class InnerSpaceCompactionTask extends AbstractCompactionTask {
 
   @Override
   public void resetCompactionCandidateStatusForAllSourceFiles() {
-    selectedTsFileResourceList.forEach(x -> x.setStatus(TsFileResourceStatus.NORMAL));
+    selectedTsFileResourceList.forEach(x -> x.setStatus(TsFileResourceStatus.CLOSED));
   }
 
   /**
@@ -418,7 +418,7 @@ public class InnerSpaceCompactionTask extends AbstractCompactionTask {
       }
       try {
         if (!resource.isDeleted()) {
-          selectedTsFileResourceList.get(i).setStatus(TsFileResourceStatus.NORMAL);
+          selectedTsFileResourceList.get(i).setStatus(TsFileResourceStatus.CLOSED);
         }
       } catch (Throwable e) {
         LOGGER.error("Exception occurs when resetting resource status", e);

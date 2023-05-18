@@ -20,8 +20,7 @@ package org.apache.iotdb.db.engine.storagegroup;
 
 public enum TsFileResourceStatus {
   UNCLOSED,
-  /** The resource in status NORMAL, COMPACTION_CANDIDATE, COMPACTING, DELETED is all CLOSED. */
-  NORMAL,
+  CLOSED,
   COMPACTION_CANDIDATE,
   COMPACTING,
   DELETED

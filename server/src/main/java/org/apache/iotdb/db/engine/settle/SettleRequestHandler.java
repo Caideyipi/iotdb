@@ -229,7 +229,7 @@ public class SettleRequestHandler {
       for (TsFileResource tsFileResource : allTsFileResourceList) {
         File tsFile = tsFileResource.getTsFile();
         if (tsFileNames.contains(tsFile.getName())) {
-          if (tsFileResource.getStatus() != TsFileResourceStatus.NORMAL) {
+          if (tsFileResource.getStatus() != TsFileResourceStatus.CLOSED) {
             return RpcUtils.getStatus(
                 TSStatusCode.ILLEGAL_PARAMETER,
                 "The TsFile is not valid: " + tsFile.getAbsolutePath());

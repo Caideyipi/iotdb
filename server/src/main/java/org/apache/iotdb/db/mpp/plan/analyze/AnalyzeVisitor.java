@@ -2272,7 +2272,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         resource.deserialize();
       }
 
-      resource.setStatus(TsFileResourceStatus.NORMAL);
+      resource.setStatus(TsFileResourceStatus.CLOSED);
       return resource;
     }
   }

@@ -279,7 +279,7 @@ public class TsFileSplitTool {
     }
     tsFileResource.setMinPlanIndex(minPlanIndex);
     tsFileResource.setMaxPlanIndex(maxPlanIndex);
-    tsFileResource.setStatus(TsFileResourceStatus.NORMAL);
+    tsFileResource.setStatus(TsFileResourceStatus.CLOSED);
     tsFileResource.serialize();
 
     return tsFileResource;

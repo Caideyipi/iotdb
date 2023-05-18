@@ -67,7 +67,7 @@ public class TsFileAndModSettleTool {
     for (Map.Entry<String, Integer> entry : getInstance().recoverSettleFileMap.entrySet()) {
       String path = entry.getKey();
       TsFileResource resource = new TsFileResource(new File(path));
-      resource.setStatus(TsFileResourceStatus.NORMAL);
+      resource.setStatus(TsFileResourceStatus.CLOSED);
       oldTsFileResources.put(resource.getTsFile().getName(), resource);
     }
     List<File> tsFiles = checkArgs(args);
@@ -75,7 +75,7 @@ public class TsFileAndModSettleTool {
       if (!oldTsFileResources.containsKey(file.getName())) {
         if (new File(file + TsFileResource.RESOURCE_SUFFIX).exists()) {
           TsFileResource resource = new TsFileResource(file);
-          resource.setStatus(TsFileResourceStatus.NORMAL);
+          resource.setStatus(TsFileResourceStatus.CLOSED);
           oldTsFileResources.put(file.getName(), resource);
         }
       }
@@ -335,7 +335,7 @@ public class TsFileAndModSettleTool {
 
         // move .resource File
         newTsFileResource.setFile(fsFactory.getFile(oldTsFile.getParent(), newTsFile.getName()));
-        newTsFileResource.setStatus(TsFileResourceStatus.NORMAL);
+        newTsFileResource.setStatus(TsFileResourceStatus.CLOSED);
         try {
           newTsFileResource.serialize();
         } catch (IOException e) {
