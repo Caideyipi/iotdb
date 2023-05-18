@@ -23,7 +23,9 @@ import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.utils.StatusUtils;
+import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.mpp.plan.analyze.Analysis;
+import org.apache.iotdb.db.mpp.plan.analyze.schema.ISchemaValidation;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNode;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNodeId;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNodeType;
@@ -45,8 +47,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public class InsertRowsOfOneDeviceNode extends InsertNode {
+public class InsertRowsOfOneDeviceNode extends InsertNode implements BatchInsertNode {
 
   /**
    * Suppose there is an InsertRowsOfOneDeviceNode, which contains 5 InsertRowNodes,
@@ -139,6 +142,11 @@ public class InsertRowsOfOneDeviceNode extends InsertNode {
   @Override
   public List<String> getOutputColumnNames() {
     return null;
+  }
+
+  @Override
+  protected boolean checkAndCastDataType(int columnIndex, TSDataType dataType) {
+    return false;
   }
 
   @Override
@@ -284,12 +292,34 @@ public class InsertRowsOfOneDeviceNode extends InsertNode {
   }
 
   @Override
+  public List<ISchemaValidation> getSchemaValidationList() {
+    return insertRowNodeList.stream()
+        .map(InsertRowNode::getSchemaValidation)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public void updateAfterSchemaValidation() throws QueryProcessException {
+    for (InsertRowNode insertRowNode : insertRowNodeList) {
+      insertRowNode.updateAfterSchemaValidation();
+      if (!this.hasFailedMeasurements() && insertRowNode.hasFailedMeasurements()) {
+        this.failedMeasurementIndex2Info = insertRowNode.failedMeasurementIndex2Info;
+      }
+    }
+  }
+
+  @Override
   public <R, C> R accept(PlanVisitor<R, C> visitor, C context) {
     return visitor.visitInsertRowsOfOneDevice(this, context);
   }
 
   @Override
   public long getMinTime() {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public Object getFirstValueOfIndex(int index) {
     throw new NotImplementedException();
   }
 }

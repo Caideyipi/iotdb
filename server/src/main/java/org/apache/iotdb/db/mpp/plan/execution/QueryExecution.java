@@ -202,7 +202,7 @@ public class QueryExecution implements IQueryExecution {
     if (skipExecute()) {
       logger.debug("[SkipExecute]");
       if (context.getQueryType() == QueryType.WRITE && analysis.isFailed()) {
-        stateMachine.transitionToFailed(analysis.getFailStatus());
+        stateMachine.transitionToFailed(new RuntimeException(analysis.getFailMessage()));
       } else {
         constructResultForMemorySource();
         stateMachine.transitionToRunning();
@@ -224,14 +224,6 @@ public class QueryExecution implements IQueryExecution {
     }
     PERFORMANCE_OVERVIEW_METRICS.recordPlanCost(System.nanoTime() - startTime);
     schedule();
-
-    // set partial insert error message
-    // When some columns in one insert failed, other column will continue executing insertion.
-    // The error message should be return to client, therefore we need to set it after the insertion
-    // of other column finished.
-    if (context.getQueryType() == QueryType.WRITE && analysis.isFailed()) {
-      stateMachine.transitionToFailed(analysis.getFailStatus());
-    }
   }
 
   private void checkTimeOutForQuery() {

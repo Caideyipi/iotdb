@@ -22,7 +22,6 @@ package org.apache.iotdb.db.mpp.plan.analyze;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
-import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.common.rpc.thrift.TSchemaNode;
 import org.apache.iotdb.commons.partition.DataPartition;
 import org.apache.iotdb.commons.partition.SchemaPartition;
@@ -81,10 +80,9 @@ public class Analysis {
 
   private boolean finishQueryAfterAnalyze;
 
-  // potential fail status when finishQueryAfterAnalyze is true. If failStatus is NULL, means no
+  // potential fail message when finishQueryAfterAnalyze is true. If failMessage is NULL, means no
   // fail.
-
-  private TSStatus failStatus;
+  private String failMessage;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Query Analysis (used in ALIGN BY TIME)
@@ -409,15 +407,15 @@ public class Analysis {
   }
 
   public boolean isFailed() {
-    return failStatus != null;
+    return failMessage != null;
   }
 
-  public TSStatus getFailStatus() {
-    return this.failStatus;
+  public String getFailMessage() {
+    return failMessage;
   }
 
-  public void setFailStatus(TSStatus status) {
-    this.failStatus = status;
+  public void setFailMessage(String failMessage) {
+    this.failMessage = failMessage;
   }
 
   public void setDeviceViewInputIndexesMap(Map<String, List<Integer>> deviceViewInputIndexesMap) {

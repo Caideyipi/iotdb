@@ -286,7 +286,7 @@ public class UnsealedTsFileRecoverPerformerTest {
             time,
             new Integer[] {1},
             false);
-    insertRowNode.markFailedMeasurement(0);
+    insertRowNode.markFailedMeasurement(0, new Exception());
 
     // generate InsertTabletNode with null
     time = 5;
@@ -297,12 +297,11 @@ public class UnsealedTsFileRecoverPerformerTest {
             false,
             new String[] {"s1"},
             new TSDataType[] {TSDataType.INT64},
-            null,
             new long[] {time},
             null,
             new Integer[] {1},
             1);
-    insertTabletNode.markFailedMeasurement(0);
+    insertTabletNode.markFailedMeasurement(0, new Exception());
 
     int fakeMemTableId = 1;
     WALEntry walEntry1 = new WALInfoEntry(fakeMemTableId++, insertRowNode);

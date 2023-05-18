@@ -23,10 +23,8 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.mpp.common.schematree.ISchemaTree;
-import org.apache.iotdb.db.mpp.plan.statement.crud.InsertBaseStatement;
-import org.apache.iotdb.db.mpp.plan.statement.crud.InsertMultiTabletsStatement;
-import org.apache.iotdb.db.mpp.plan.statement.crud.InsertRowsOfOneDeviceStatement;
-import org.apache.iotdb.db.mpp.plan.statement.crud.InsertRowsStatement;
+import org.apache.iotdb.db.mpp.plan.planner.plan.node.write.BatchInsertNode;
+import org.apache.iotdb.db.mpp.plan.planner.plan.node.write.InsertNode;
 import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSEncoding;
@@ -35,31 +33,30 @@ import java.util.List;
 
 public class SchemaValidator {
 
-  public static void validate(ISchemaFetcher schemaFetcher, InsertBaseStatement insertStatement) {
+  private static final ISchemaFetcher SCHEMA_FETCHER = ClusterSchemaFetcher.getInstance();
+
+  public static void validate(InsertNode insertNode) {
     try {
-      if (insertStatement instanceof InsertRowsStatement
-          || insertStatement instanceof InsertMultiTabletsStatement
-          || insertStatement instanceof InsertRowsOfOneDeviceStatement) {
-        schemaFetcher.fetchAndComputeSchemaWithAutoCreate(
-            insertStatement.getSchemaValidationList());
+      if (insertNode instanceof BatchInsertNode) {
+        SCHEMA_FETCHER.fetchAndComputeSchemaWithAutoCreate(
+            ((BatchInsertNode) insertNode).getSchemaValidationList());
       } else {
-        schemaFetcher.fetchAndComputeSchemaWithAutoCreate(insertStatement.getSchemaValidation());
+        SCHEMA_FETCHER.fetchAndComputeSchemaWithAutoCreate(insertNode.getSchemaValidation());
       }
-      insertStatement.updateAfterSchemaValidation();
+      insertNode.updateAfterSchemaValidation();
     } catch (QueryProcessException e) {
-      throw new SemanticException(e.getMessage());
+      throw new SemanticException(e);
     }
   }
 
   public static ISchemaTree validate(
-      ISchemaFetcher schemaFetcher,
       List<PartialPath> devicePaths,
       List<String[]> measurements,
       List<TSDataType[]> dataTypes,
       List<TSEncoding[]> encodings,
       List<CompressionType[]> compressionTypes,
       List<Boolean> isAlignedList) {
-    return schemaFetcher.fetchSchemaListWithAutoCreate(
+    return SCHEMA_FETCHER.fetchSchemaListWithAutoCreate(
         devicePaths, measurements, dataTypes, encodings, compressionTypes, isAlignedList);
   }
 }

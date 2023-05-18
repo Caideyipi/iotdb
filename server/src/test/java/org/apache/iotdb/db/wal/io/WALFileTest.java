@@ -236,6 +236,18 @@ public class WALFileTest {
       }
       bitMaps[i].mark(i % times.length);
     }
+
+    InsertTabletNode insertTabletNode =
+        new InsertTabletNode(
+            new PlanNodeId(""),
+            new PartialPath(devicePath),
+            false,
+            new String[] {"s1", "s2", "s3", "s4", "s5", "s6"},
+            dataTypes,
+            times,
+            bitMaps,
+            columns,
+            times.length);
     MeasurementSchema[] schemas =
         new MeasurementSchema[] {
           new MeasurementSchema("s1", dataTypes[0]),
@@ -245,18 +257,9 @@ public class WALFileTest {
           new MeasurementSchema("s5", dataTypes[4]),
           new MeasurementSchema("s6", dataTypes[5]),
         };
+    insertTabletNode.setMeasurementSchemas(schemas);
 
-    return new InsertTabletNode(
-        new PlanNodeId(""),
-        new PartialPath(devicePath),
-        false,
-        new String[] {"s1", "s2", "s3", "s4", "s5", "s6"},
-        dataTypes,
-        schemas,
-        times,
-        bitMaps,
-        columns,
-        times.length);
+    return insertTabletNode;
   }
 
   public static DeleteDataNode getDeleteDataNode(String devicePath) throws IllegalPathException {

@@ -23,12 +23,19 @@ import org.apache.iotdb.common.rpc.thrift.TTimePartitionSlot;
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.utils.TestOnly;
+import org.apache.iotdb.db.exception.metadata.AlignedTimeseriesException;
+import org.apache.iotdb.db.exception.metadata.DataTypeMismatchException;
+import org.apache.iotdb.db.exception.metadata.PathNotExistException;
+import org.apache.iotdb.db.exception.sql.SemanticException;
+import org.apache.iotdb.db.mpp.common.schematree.IMeasurementSchemaInfo;
 import org.apache.iotdb.db.mpp.plan.analyze.Analysis;
+import org.apache.iotdb.db.mpp.plan.analyze.schema.ISchemaValidation;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNode;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNodeId;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNodeType;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanVisitor;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.WritePlanNode;
+import org.apache.iotdb.db.utils.CommonUtils;
 import org.apache.iotdb.db.utils.QueryDataSetUtils;
 import org.apache.iotdb.db.utils.TimePartitionUtils;
 import org.apache.iotdb.db.wal.buffer.IWALByteBufferView;
@@ -36,7 +43,9 @@ import org.apache.iotdb.db.wal.buffer.WALEntryValue;
 import org.apache.iotdb.db.wal.utils.WALWriteUtils;
 import org.apache.iotdb.tsfile.exception.NotImplementedException;
 import org.apache.iotdb.tsfile.exception.write.UnSupportedDataTypeException;
+import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
+import org.apache.iotdb.tsfile.file.metadata.enums.TSEncoding;
 import org.apache.iotdb.tsfile.read.TimeValuePair;
 import org.apache.iotdb.tsfile.utils.Binary;
 import org.apache.iotdb.tsfile.utils.BitMap;
@@ -44,6 +53,9 @@ import org.apache.iotdb.tsfile.utils.BytesUtils;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 import org.apache.iotdb.tsfile.utils.TsPrimitiveType;
 import org.apache.iotdb.tsfile.write.schema.MeasurementSchema;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -57,7 +69,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class InsertTabletNode extends InsertNode implements WALEntryValue {
+public class InsertTabletNode extends InsertNode implements WALEntryValue, ISchemaValidation {
+
+  private static final Logger logger = LoggerFactory.getLogger(InsertTabletNode.class);
 
   private static final String DATATYPE_UNSUPPORTED = "Data type %s is not supported.";
 
@@ -83,7 +97,6 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
     super(id);
   }
 
-  @TestOnly
   public InsertTabletNode(
       PlanNodeId id,
       PartialPath devicePath,
@@ -95,25 +108,6 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
       Object[] columns,
       int rowCount) {
     super(id, devicePath, isAligned, measurements, dataTypes);
-    this.times = times;
-    this.bitMaps = bitMaps;
-    this.columns = columns;
-    this.rowCount = rowCount;
-  }
-
-  public InsertTabletNode(
-      PlanNodeId id,
-      PartialPath devicePath,
-      boolean isAligned,
-      String[] measurements,
-      TSDataType[] dataTypes,
-      MeasurementSchema[] measurementSchemas,
-      long[] times,
-      BitMap[] bitMaps,
-      Object[] columns,
-      int rowCount) {
-    super(id, devicePath, isAligned, measurements, dataTypes);
-    this.measurementSchemas = measurementSchemas;
     this.times = times;
     this.bitMaps = bitMaps;
     this.columns = columns;
@@ -181,6 +175,23 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
   @Override
   public List<String> getOutputColumnNames() {
     return null;
+  }
+
+  @Override
+  protected boolean checkAndCastDataType(int columnIndex, TSDataType dataType) {
+    if (CommonUtils.checkCanCastType(dataTypes[columnIndex], dataType)) {
+      logger.warn(
+          "Inserting to {}.{} : Cast from {} to {}",
+          devicePath,
+          measurements[columnIndex],
+          dataTypes[columnIndex],
+          dataType);
+      columns[columnIndex] =
+          CommonUtils.castArray(dataTypes[columnIndex], dataType, columns[columnIndex]);
+      dataTypes[columnIndex] = dataType;
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -276,7 +287,6 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
                 isAligned,
                 measurements,
                 dataTypes,
-                measurementSchemas,
                 subTimes,
                 bitMaps,
                 values,
@@ -347,10 +357,19 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
   }
 
   @Override
-  public void markFailedMeasurement(int index) {
+  public void markFailedMeasurement(int index, Exception cause) {
     if (measurements[index] == null) {
       return;
     }
+
+    if (failedMeasurementIndex2Info == null) {
+      failedMeasurementIndex2Info = new HashMap<>();
+    }
+
+    FailedMeasurementInfo failedMeasurementInfo =
+        new FailedMeasurementInfo(measurements[index], dataTypes[index], columns[index], cause);
+    failedMeasurementIndex2Info.putIfAbsent(index, failedMeasurementInfo);
+
     measurements[index] = null;
     dataTypes[index] = null;
     columns[index] = null;
@@ -359,6 +378,41 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
   @Override
   public long getMinTime() {
     return times[0];
+  }
+
+  @Override
+  public Object getFirstValueOfIndex(int index) {
+    Object value;
+    switch (dataTypes[index]) {
+      case INT32:
+        int[] intValues = (int[]) columns[index];
+        value = intValues[0];
+        break;
+      case INT64:
+        long[] longValues = (long[]) columns[index];
+        value = longValues[0];
+        break;
+      case FLOAT:
+        float[] floatValues = (float[]) columns[index];
+        value = floatValues[0];
+        break;
+      case DOUBLE:
+        double[] doubleValues = (double[]) columns[index];
+        value = doubleValues[0];
+        break;
+      case BOOLEAN:
+        boolean[] boolValues = (boolean[]) columns[index];
+        value = boolValues[0];
+        break;
+      case TEXT:
+        Binary[] binaryValues = (Binary[]) columns[index];
+        value = binaryValues[0];
+        break;
+      default:
+        throw new UnSupportedDataTypeException(
+            String.format(DATATYPE_UNSUPPORTED, dataTypes[index]));
+    }
+    return value;
   }
 
   @Override
@@ -1067,5 +1121,50 @@ public class InsertTabletNode extends InsertNode implements WALEntryValue {
             String.format(DATATYPE_UNSUPPORTED, dataTypes[measurementIndex]));
     }
     return new TimeValuePair(times[lastIdx], value);
+  }
+
+  @Override
+  public TSEncoding getEncoding(int index) {
+    return null;
+  }
+
+  @Override
+  public CompressionType getCompressionType(int index) {
+    return null;
+  }
+
+  @Override
+  public void validateDeviceSchema(boolean isAligned) {
+    if (this.isAligned != isAligned) {
+      throw new SemanticException(
+          new AlignedTimeseriesException(
+              String.format(
+                  "timeseries under this device are%s aligned, " + "please use %s interface",
+                  isAligned ? "" : " not", isAligned ? "aligned" : "non-aligned"),
+              devicePath.getFullPath()));
+    }
+  }
+
+  @Override
+  public ISchemaValidation getSchemaValidation() {
+    return this;
+  }
+
+  @Override
+  public void validateMeasurementSchema(int index, IMeasurementSchemaInfo measurementSchemaInfo) {
+    if (measurementSchemas == null) {
+      measurementSchemas = new MeasurementSchema[measurements.length];
+    }
+    if (measurementSchemaInfo == null) {
+      measurementSchemas[index] = null;
+    } else {
+      measurementSchemas[index] = measurementSchemaInfo.getSchemaAsMeasurementSchema();
+    }
+
+    try {
+      selfCheckDataTypes(index);
+    } catch (DataTypeMismatchException | PathNotExistException e) {
+      throw new SemanticException(e);
+    }
   }
 }

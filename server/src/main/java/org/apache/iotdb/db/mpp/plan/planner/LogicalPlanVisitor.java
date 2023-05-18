@@ -445,38 +445,30 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
   public PlanNode visitInsertTablet(
       InsertTabletStatement insertTabletStatement, MPPQueryContext context) {
     // convert insert statement to insert node
-    InsertTabletNode insertNode =
-        new InsertTabletNode(
-            context.getQueryId().genPlanNodeId(),
-            insertTabletStatement.getDevicePath(),
-            insertTabletStatement.isAligned(),
-            insertTabletStatement.getMeasurements(),
-            insertTabletStatement.getDataTypes(),
-            insertTabletStatement.getMeasurementSchemas(),
-            insertTabletStatement.getTimes(),
-            insertTabletStatement.getBitMaps(),
-            insertTabletStatement.getColumns(),
-            insertTabletStatement.getRowCount());
-    insertNode.setFailedMeasurementNumber(insertTabletStatement.getFailedMeasurementNumber());
-    return insertNode;
+    return new InsertTabletNode(
+        context.getQueryId().genPlanNodeId(),
+        insertTabletStatement.getDevicePath(),
+        insertTabletStatement.isAligned(),
+        insertTabletStatement.getMeasurements(),
+        insertTabletStatement.getDataTypes(),
+        insertTabletStatement.getTimes(),
+        insertTabletStatement.getBitMaps(),
+        insertTabletStatement.getColumns(),
+        insertTabletStatement.getRowCount());
   }
 
   @Override
   public PlanNode visitInsertRow(InsertRowStatement insertRowStatement, MPPQueryContext context) {
     // convert insert statement to insert node
-    InsertRowNode insertNode =
-        new InsertRowNode(
-            context.getQueryId().genPlanNodeId(),
-            insertRowStatement.getDevicePath(),
-            insertRowStatement.isAligned(),
-            insertRowStatement.getMeasurements(),
-            insertRowStatement.getDataTypes(),
-            insertRowStatement.getMeasurementSchemas(),
-            insertRowStatement.getTime(),
-            insertRowStatement.getValues(),
-            insertRowStatement.isNeedInferType());
-    insertNode.setFailedMeasurementNumber(insertRowStatement.getFailedMeasurementNumber());
-    return insertNode;
+    return new InsertRowNode(
+        context.getQueryId().genPlanNodeId(),
+        insertRowStatement.getDevicePath(),
+        insertRowStatement.isAligned(),
+        insertRowStatement.getMeasurements(),
+        insertRowStatement.getDataTypes(),
+        insertRowStatement.getTime(),
+        insertRowStatement.getValues(),
+        insertRowStatement.isNeedInferType());
   }
 
   @Override
@@ -637,19 +629,17 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
     for (int i = 0; i < insertRowsStatement.getInsertRowStatementList().size(); i++) {
       InsertRowStatement insertRowStatement =
           insertRowsStatement.getInsertRowStatementList().get(i);
-      InsertRowNode insertRowNode =
+      insertRowsNode.addOneInsertRowNode(
           new InsertRowNode(
               insertRowsNode.getPlanNodeId(),
               insertRowStatement.getDevicePath(),
               insertRowStatement.isAligned(),
               insertRowStatement.getMeasurements(),
               insertRowStatement.getDataTypes(),
-              insertRowStatement.getMeasurementSchemas(),
               insertRowStatement.getTime(),
               insertRowStatement.getValues(),
-              insertRowStatement.isNeedInferType());
-      insertRowNode.setFailedMeasurementNumber(insertRowStatement.getFailedMeasurementNumber());
-      insertRowsNode.addOneInsertRowNode(insertRowNode, i);
+              insertRowStatement.isNeedInferType()),
+          i);
     }
     return insertRowsNode;
   }
@@ -663,21 +653,18 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
     for (int i = 0; i < insertMultiTabletsStatement.getInsertTabletStatementList().size(); i++) {
       InsertTabletStatement insertTabletStatement =
           insertMultiTabletsStatement.getInsertTabletStatementList().get(i);
-      InsertTabletNode insertTabletNode =
+      insertMultiTabletsNode.addInsertTabletNode(
           new InsertTabletNode(
               insertMultiTabletsNode.getPlanNodeId(),
               insertTabletStatement.getDevicePath(),
               insertTabletStatement.isAligned(),
               insertTabletStatement.getMeasurements(),
               insertTabletStatement.getDataTypes(),
-              insertTabletStatement.getMeasurementSchemas(),
               insertTabletStatement.getTimes(),
               insertTabletStatement.getBitMaps(),
               insertTabletStatement.getColumns(),
-              insertTabletStatement.getRowCount());
-      insertTabletNode.setFailedMeasurementNumber(
-          insertTabletStatement.getFailedMeasurementNumber());
-      insertMultiTabletsNode.addInsertTabletNode(insertTabletNode, i);
+              insertTabletStatement.getRowCount()),
+          i);
     }
     return insertMultiTabletsNode;
   }
@@ -694,19 +681,16 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
     for (int i = 0; i < insertRowsOfOneDeviceStatement.getInsertRowStatementList().size(); i++) {
       InsertRowStatement insertRowStatement =
           insertRowsOfOneDeviceStatement.getInsertRowStatementList().get(i);
-      InsertRowNode insertRowNode =
+      insertRowNodeList.add(
           new InsertRowNode(
               insertRowsOfOneDeviceNode.getPlanNodeId(),
               insertRowStatement.getDevicePath(),
               insertRowStatement.isAligned(),
               insertRowStatement.getMeasurements(),
               insertRowStatement.getDataTypes(),
-              insertRowStatement.getMeasurementSchemas(),
               insertRowStatement.getTime(),
               insertRowStatement.getValues(),
-              insertRowStatement.isNeedInferType());
-      insertRowNode.setFailedMeasurementNumber(insertRowStatement.getFailedMeasurementNumber());
-      insertRowNodeList.add(insertRowNode);
+              insertRowStatement.isNeedInferType()));
       insertRowNodeIndexList.add(i);
     }
 
