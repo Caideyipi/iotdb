@@ -188,7 +188,7 @@ public class CrossSpaceCompactionCandidate {
 
   public static class TsFileResourceCandidate {
     public TsFileResource resource;
-    public boolean selected;
+    protected boolean selected;
     public boolean isValidCandidate;
     private Map<String, DeviceInfo> deviceInfoMap;
 

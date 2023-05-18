@@ -157,14 +157,12 @@ public class RewriteCrossSpaceCompactionSelector implements ICrossSpaceSelector 
 
       if (!split.hasOverlap) {
         LOGGER.info("Unseq file {} does not overlap with any seq files.", unseqFile);
-        TsFileResourceCandidate latestSealedSeqFile =
+        TsFileResource latestSealedSeqFile =
             getLatestSealedSeqFile(candidate.getSeqFileCandidates());
         if (latestSealedSeqFile == null) {
           break;
         }
-        if (!latestSealedSeqFile.selected) {
-          targetSeqFiles.add(latestSealedSeqFile.resource);
-        }
+        targetSeqFiles.add(latestSealedSeqFile);
       }
 
       long memoryCost =
@@ -184,7 +182,7 @@ public class RewriteCrossSpaceCompactionSelector implements ICrossSpaceSelector 
     return taskResource;
   }
 
-  private TsFileResourceCandidate getLatestSealedSeqFile(
+  private TsFileResource getLatestSealedSeqFile(
       List<TsFileResourceCandidate> seqResourceCandidateList) {
     for (int i = seqResourceCandidateList.size() - 1; i >= 0; i--) {
       TsFileResourceCandidate seqResourceCandidate = seqResourceCandidateList.get(i);
@@ -195,7 +193,7 @@ public class RewriteCrossSpaceCompactionSelector implements ICrossSpaceSelector 
           LOGGER.info(
               "Select one valid seq file {} for unseq file to compact with.",
               seqResourceCandidate.resource);
-          return seqResourceCandidate;
+          return seqResourceCandidate.resource;
         }
         break;
       }
@@ -222,24 +220,16 @@ public class RewriteCrossSpaceCompactionSelector implements ICrossSpaceSelector 
         && unseqFileName.getInnerCompactionCnt() < config.getMinCrossCompactionUnseqFileLevel()) {
       return false;
     }
-
-    long totalFileSize = unseqFile.getTsFileSize();
-    for (TsFileResource f : seqFiles) {
-      if (f.getTsFileSize() >= config.getTargetCompactionFileSize()) {
-        // to avoid serious write amplification caused by cross space compaction, we restrict that
-        // seq files are no longer be compacted when the size reaches the threshold.
-        return false;
-      }
-      totalFileSize += f.getTsFileSize();
-    }
-
     // currently, we must allow at least one unseqFile be selected to handle the situation that
     // an unseqFile has huge time range but few data points.
     // IMPORTANT: this logic is opposite to previous level control
     if (taskResource.getUnseqFiles().isEmpty()) {
       return true;
     }
-
+    long totalFileSize = unseqFile.getTsFileSize();
+    for (TsFileResource f : seqFiles) {
+      totalFileSize += f.getTsFileSize();
+    }
     if (taskResource.getTotalFileNums() + 1 + seqFiles.size() <= maxCrossCompactionFileNum
         && taskResource.getTotalFileSize() + totalFileSize <= maxCrossCompactionFileSize
         && taskResource.getTotalMemoryCost() + memoryCost < memoryBudget) {
