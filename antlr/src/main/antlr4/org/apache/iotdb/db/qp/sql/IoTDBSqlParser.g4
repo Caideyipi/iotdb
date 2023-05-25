@@ -61,10 +61,10 @@ ddlStatement
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
     // ML Model
     | createModel | dropModel | showModels | showTrails
-    // View
-    | createLogicalView
     // Quota
     | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
+    // View
+    | createLogicalView | dropLogicalView
     ;
 
 dmlStatement
@@ -561,6 +561,10 @@ showTrails
 // Create Logical View
 createLogicalView
     : CREATE VIEW viewTargetPaths AS viewSourcePaths
+    ;
+
+dropLogicalView
+    : (DELETE | DROP) VIEW prefixPath (COMMA prefixPath)*
     ;
 
 viewSuffixPaths
