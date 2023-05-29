@@ -9,7 +9,7 @@
       "pluginName": "Prometheus"
     }
   ],
-  "__elements": {},
+  "__elements": [],
   "__requires": [
     {
       "type": "panel",
@@ -21,7 +21,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "9.3.6"
+      "version": "8.4.2"
     },
     {
       "type": "panel",
@@ -75,6 +75,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
+  "iteration": 1685285539092,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -82,7 +83,7 @@
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "Ar7cRMx4z"
+        "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
         "h": 1,
@@ -93,10 +94,304 @@
       "id": 57,
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+          "description": "The number of cluster Databases",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 0,
+            "y": 1
+          },
+          "id": 79,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "database_num{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Database Count",
+          "type": "stat"
+        },
+        {
+          "description": "The number of cluster DataRegions",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 5,
+            "y": 1
+          },
+          "id": 85,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "sum(region_num{type=\"DataRegion\", instance=~\"$instance\"}) by (type) ",
+              "interval": "",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "DataRegion Count",
+          "type": "stat"
+        },
+        {
+          "description": "The number of cluster SchemaRegions",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 10,
+            "y": 1
+          },
+          "id": 83,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "sum(region_num{type=\"SchemaRegion\", instance=~\"$instance\"}) by(type)",
+              "interval": "",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "SchemaRegion Count",
+          "type": "stat"
+        },
+        {
+          "description": "The system memory of current ConfigNode",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 15,
+            "y": 1
+          },
+          "id": 71,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"}",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "System Memory",
+          "type": "stat"
+        },
+        {
+          "description": "The swap memory of current ConfigNode",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 4,
+            "x": 20,
+            "y": 1
+          },
+          "id": 75,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "8.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "sys_total_swap_space_size{instance=~\"$instance\", name=\"system\"}",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Swap Memory",
+          "type": "stat"
+        },
+        {
           "description": "The current status of cluster ConfigNodes",
           "fieldConfig": {
             "defaults": {
@@ -239,7 +534,7 @@
             "h": 6,
             "w": 4,
             "x": 0,
-            "y": 1
+            "y": 7
           },
           "id": 59,
           "options": {
@@ -272,339 +567,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "node_num{instance=\"$instance\", type=\"ConfigNode\"}",
+              "expr": "node_num{instance=~\"$instance\", type=\"ConfigNode\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "ConfigNode Current Status",
+          "title": "ConfigNodes",
           "type": "piechart"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The number of cluster Databases",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 4,
-            "y": 1
-          },
-          "id": 79,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "builder",
-              "exemplar": true,
-              "expr": "database_num{instance=\"$instance\"}",
-              "interval": "",
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Database Count",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The number of cluster DataRegions",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 8,
-            "y": 1
-          },
-          "id": 85,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "builder",
-              "exemplar": true,
-              "expr": "sum by (type) (region_num{type=\"DataRegion\", instance=\"$instance\"})",
-              "interval": "",
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "DataRegion Count",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The number of cluster SchemaRegions",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 12,
-            "y": 1
-          },
-          "id": 83,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "builder",
-              "exemplar": true,
-              "expr": "sum by(type) (region_num{type=\"SchemaRegion\", instance=\"$instance\"})",
-              "interval": "",
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "SchemaRegion Count",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The CPU Core of current ConfigNode",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "Core(s)"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 16,
-            "y": 1
-          },
-          "id": 69,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sys_cpu_cores{instance=\"$instance\", name=\"system\"}",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "CPU Core",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The total disk space of current ConfigNode",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 20,
-            "y": 1
-          },
-          "id": 77,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "builder",
-              "exemplar": true,
-              "expr": "sys_disk_total_space{instance=\"$instance\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Total Disk Space",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The current status of cluster DataNodes",
           "fieldConfig": {
             "defaults": {
@@ -686,7 +659,7 @@
           "gridPos": {
             "h": 6,
             "w": 4,
-            "x": 0,
+            "x": 4,
             "y": 7
           },
           "id": 65,
@@ -720,136 +693,18 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "node_num{instance=\"$instance\", type=\"DataNode\"}",
+              "expr": "node_num{instance=~\"$instance\", type=\"DataNode\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataNode Current Status",
+          "title": "DataNodes",
           "type": "piechart"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "Bar of current ConfigNode",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "max": 1,
-              "min": 0,
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "#EAB839",
-                    "value": 80
-                  },
-                  {
-                    "color": "red",
-                    "value": 90
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 4,
-            "y": 7
-          },
-          "id": 73,
-          "options": {
-            "displayMode": "lcd",
-            "minVizHeight": 10,
-            "minVizWidth": 0,
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showUnfilled": true
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "process_cpu_load{instance=~\"$instance\"} / 100",
-              "hide": false,
-              "legendFormat": "cpu load",
-              "range": true,
-              "refId": "C"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "1- sys_disk_free_space{instance=\"$instance\"} / sys_disk_total_space{instance=\"$instance\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "disk",
-              "range": true,
-              "refId": "D"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "1 - process_free_mem{instance=\"$instance\"} / process_total_mem{instance=\"$instance\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "process memory",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "1 - sys_free_physical_memory_size{instance=\"$instance\", name=\"system\"} / sys_total_physical_memory_size{instance=\"$instance\", name=\"system\"}",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "system memory",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "type": "bargauge"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The current status of cluster DataRegions",
+          "description": "The current status of cluster SchemaRegions",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -933,7 +788,7 @@
             "x": 8,
             "y": 7
           },
-          "id": 93,
+          "id": 87,
           "options": {
             "legend": {
               "displayMode": "table",
@@ -956,7 +811,6 @@
               "sort": "none"
             }
           },
-          "pluginVersion": "9.3.6",
           "targets": [
             {
               "datasource": {
@@ -965,22 +819,18 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num{type=\"DataRegion\", instance=\"$instance\"}",
+              "expr": "region_num{type=\"SchemaRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataRegion Current Status",
+          "title": "SchemaRegion Current Status",
           "type": "piechart"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The current status of cluster SchemaRegions",
+          "description": "The current status of cluster DataRegions",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1064,7 +914,7 @@
             "x": 12,
             "y": 7
           },
-          "id": 87,
+          "id": 93,
           "options": {
             "legend": {
               "displayMode": "table",
@@ -1087,6 +937,7 @@
               "sort": "none"
             }
           },
+          "pluginVersion": "9.3.6",
           "targets": [
             {
               "datasource": {
@@ -1095,52 +946,58 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num{type=\"SchemaRegion\", instance=\"$instance\"}",
+              "expr": "region_num{type=\"DataRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "SchemaRegion Current Status",
+          "title": "DataRegion Current Status",
           "type": "piechart"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The system memory of current ConfigNode",
+          "description": "Bar of current ConfigNode",
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "thresholds"
               },
               "mappings": [],
+              "max": 1,
+              "min": 0,
               "thresholds": {
-                "mode": "absolute",
+                "mode": "percentage",
                 "steps": [
                   {
                     "color": "green"
+                  },
+                  {
+                    "color": "#EAB839",
+                    "value": 80
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
                   }
                 ]
               },
-              "unit": "bytes"
+              "unit": "percentunit"
             },
             "overrides": []
           },
           "gridPos": {
             "h": 6,
-            "w": 4,
+            "w": 8,
             "x": 16,
             "y": 7
           },
-          "id": 71,
+          "id": 73,
           "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
+            "displayMode": "lcd",
+            "minVizHeight": 10,
+            "minVizWidth": 0,
+            "orientation": "horizontal",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -1148,7 +1005,7 @@
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showUnfilled": true
           },
           "pluginVersion": "8.4.2",
           "targets": [
@@ -1158,96 +1015,79 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sys_total_physical_memory_size{instance=\"$instance\", name=\"system\"}",
-              "legendFormat": "{{name}}",
+              "exemplar": false,
+              "expr": "1 - sys_free_physical_memory_size{instance=~\"$instance\", name=\"system\"} / sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"}",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "System Memory",
               "range": true,
               "refId": "A"
-            }
-          ],
-          "title": "System Memory",
-          "type": "stat"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "The swap memory of current ConfigNode",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
             },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 6,
-            "w": 4,
-            "x": 20,
-            "y": 7
-          },
-          "id": 75,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
             {
               "datasource": {
                 "type": "prometheus",
                 "uid": "${DS_PROMETHEUS}"
               },
-              "editorMode": "builder",
-              "expr": "sys_total_swap_space_size{instance=\"$instance\", name=\"system\"}",
-              "legendFormat": "{{name}}",
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "1 - sys_disk_free_space{instance=~\"$instance\"} / sys_disk_total_space{instance=~\"$instance\"}",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Disk",
               "range": true,
-              "refId": "A"
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "(sum(process_total_mem{instance=~\"$instance\"}) - sum(process_free_mem{instance=~\"$instance\"})) / sum(sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Process Memory",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "process_cpu_load{instance=~\"$instance\"} / 100",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Cpu Load",
+              "range": true,
+              "refId": "C"
             }
           ],
-          "title": "Swap Memory",
-          "type": "stat"
+          "title": "System Overview",
+          "type": "bargauge"
         }
       ],
+      "repeat": "instance",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "Ar7cRMx4z"
+            "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A"
         }
       ],
-      "title": "Overview",
+      "title": "Node Overview $instance",
       "type": "row"
     },
     {
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "Ar7cRMx4z"
+        "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
         "h": 1,
@@ -1258,10 +1098,6 @@
       "id": 49,
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of cluster ConfigNodes",
           "fieldConfig": {
             "defaults": {
@@ -1312,7 +1148,7 @@
             "h": 6,
             "w": 7,
             "x": 0,
-            "y": 14
+            "y": 2
           },
           "id": 55,
           "options": {
@@ -1330,6 +1166,8 @@
             }
           },
           "pluginVersion": "8.4.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -1338,21 +1176,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "sum(node_num{instance=\"$instance\"}) by(type) ",
+              "expr": "sum(node_num{instance=~\"$instance\"}) by(type) ",
               "interval": "",
               "legendFormat": "{{type}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Node Count",
+          "title": "Node Count $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The status history of cluster ConfigNodes",
           "fieldConfig": {
             "defaults": {
@@ -1464,7 +1298,7 @@
             "h": 6,
             "w": 9,
             "x": 7,
-            "y": 14
+            "y": 2
           },
           "id": 61,
           "options": {
@@ -1481,6 +1315,8 @@
               "sort": "desc"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -1489,21 +1325,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "node_num{type=\"ConfigNode\", instance=\"$instance\"}",
+              "expr": "node_num{type=\"ConfigNode\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "ConfigNode Status History",
+          "title": "ConfigNode Status $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The status history of cluster DataNodes",
           "fieldConfig": {
             "defaults": {
@@ -1615,7 +1447,7 @@
             "h": 6,
             "w": 8,
             "x": 16,
-            "y": 14
+            "y": 2
           },
           "id": 67,
           "options": {
@@ -1632,6 +1464,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -1640,21 +1474,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "node_num{type=\"DataNode\", instance=\"$instance\"}",
+              "expr": "node_num{type=\"DataNode\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataNode Status History",
+          "title": "DataNode Status $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of SchemaRegions in each DataNode",
           "fieldConfig": {
             "defaults": {
@@ -1705,7 +1535,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 20
+            "y": 8
           },
           "id": 97,
           "options": {
@@ -1722,6 +1552,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -1730,21 +1562,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num_in_data_node{type=\"SchemaRegion\", instance=\"$instance\"}",
+              "expr": "region_num_in_data_node{type=\"SchemaRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "SchemaRegion Distribution",
+          "title": "SchemaRegion Distribution $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of SchemaRegionGroup leadere in each DataNodes",
           "fieldConfig": {
             "defaults": {
@@ -1795,7 +1623,7 @@
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 20
+            "y": 8
           },
           "id": 95,
           "options": {
@@ -1812,6 +1640,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -1820,21 +1650,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_group_leader_num_in_data_node{type=\"SchemaRegion\", instance=\"$instance\"}",
+              "expr": "region_group_leader_num_in_data_node{type=\"SchemaRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "SchemaRegionGroup Leader Distribution",
+          "title": "SchemaRegionGroup Leader Distribution $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of DataRegions in each DataNode",
           "fieldConfig": {
             "defaults": {
@@ -1885,7 +1711,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 26
+            "y": 14
           },
           "id": 99,
           "options": {
@@ -1902,6 +1728,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -1910,21 +1738,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num_in_data_node{type=\"DataRegion\", instance=\"$instance\"}",
+              "expr": "region_num_in_data_node{type=\"DataRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataRegion Distribution",
+          "title": "DataRegion Distribution $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of DataRegionGroup leaders in each DataNode",
           "fieldConfig": {
             "defaults": {
@@ -1975,7 +1799,7 @@
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 26
+            "y": 14
           },
           "id": 101,
           "options": {
@@ -1992,6 +1816,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2000,14 +1826,14 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num_in_data_node{type=\"DataRegion\", instance=\"$instance\"}",
+              "expr": "region_num_in_data_node{type=\"DataRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataRegionGroup Leader Distribution",
+          "title": "DataRegionGroup Leader Distribution $instance",
           "type": "timeseries"
         }
       ],
@@ -2015,7 +1841,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "Ar7cRMx4z"
+            "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A"
         }
@@ -2027,7 +1853,7 @@
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "Ar7cRMx4z"
+        "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
         "h": 1,
@@ -2038,10 +1864,6 @@
       "id": 53,
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of SchemaRegionGroups in each Database",
           "fieldConfig": {
             "defaults": {
@@ -2109,6 +1931,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2117,21 +1941,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_group_num_in_database{type=\"SchemaRegion\", instance=\"$instance\"}",
+              "expr": "region_group_num_in_database{type=\"SchemaRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "SchemaRegionGroup Count",
+          "title": "SchemaRegionGroup Count $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of DataRegionGroups in each DataNode",
           "fieldConfig": {
             "defaults": {
@@ -2199,6 +2019,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2207,21 +2029,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_group_num_in_database{type=\"DataRegion\", instance=\"$instance\"}",
+              "expr": "region_group_num_in_database{type=\"DataRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataRegionGroup Count",
+          "title": "DataRegionGroup Count $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The number of SeriesSlots in each Database",
           "fieldConfig": {
             "defaults": {
@@ -2257,6 +2075,7 @@
                 }
               },
               "mappings": [],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -2289,6 +2108,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2297,48 +2118,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "series_slot_num_in_database{instance=\"$instance\"}",
+              "expr": "series_slot_num_in_database{instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "SeriesSlot Count",
+          "title": "SeriesSlot Count $instance",
           "type": "timeseries"
-        }
-      ],
-      "targets": [
+        },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Ar7cRMx4z"
-          },
-          "refId": "A"
-        }
-      ],
-      "title": "Database",
-      "type": "row"
-    },
-    {
-      "collapsed": true,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Ar7cRMx4z"
-      },
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 3
-      },
-      "id": 81,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The status history of cluster DataRegions",
           "fieldConfig": {
             "defaults": {
@@ -2374,6 +2164,7 @@
                 }
               },
               "mappings": [],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -2450,7 +2241,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 4
+            "y": 9
           },
           "id": 91,
           "options": {
@@ -2467,6 +2258,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2475,21 +2268,17 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num{type=\"DataRegion\", instance=\"$instance\"}",
+              "expr": "region_num{type=\"DataRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "DataRegion Status History",
+          "title": "DataRegion Status $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "description": "The status history of cluster SchemaRegions",
           "fieldConfig": {
             "defaults": {
@@ -2525,6 +2314,7 @@
                 }
               },
               "mappings": [],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -2605,7 +2395,7 @@
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 4
+            "y": 9
           },
           "id": 89,
           "options": {
@@ -2622,6 +2412,8 @@
               "sort": "none"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2630,14 +2422,14 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num{type=\"SchemaRegion\", instance=\"$instance\"}",
+              "expr": "region_num{type=\"SchemaRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{status}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "SchemaRegion Status History",
+          "title": "SchemaRegion Status $instance",
           "type": "timeseries"
         }
       ],
@@ -2645,41 +2437,35 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "Ar7cRMx4z"
+            "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A"
         }
       ],
-      "title": "Region",
+      "title": "Partition Table",
       "type": "row"
     },
     {
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
-        "uid": "Ar7cRMx4z"
+        "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 3
       },
       "id": 109,
       "panels": [
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -2729,12 +2515,12 @@
                   "type": "special"
                 }
               ],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2747,10 +2533,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
+            "h": 8,
             "w": 12,
             "x": 0,
-            "y": 5
+            "y": 4
           },
           "id": 111,
           "options": {
@@ -2767,6 +2553,8 @@
               "sort": "desc"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2774,7 +2562,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_log_worker_appendEntryLatency_seconds_sum{instance=\"$instance\"}[1m])/rate(ConfigRegion_ratis_log_worker_appendEntryLatency_seconds_count{instance=\"$instance\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_log_worker_appendEntryLatency_seconds_sum{instance=~\"$instance\"}[1m])/rate(ConfigRegion_ratis_log_worker_appendEntryLatency_seconds_count{instance=~\"$instance\"}[1m])",
               "interval": "",
               "legendFormat": "appendEntryLatency",
               "refId": "A"
@@ -2785,7 +2573,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_server_follower_append_entry_latency_seconds_sum{instance=\"$instance\"}[1m])/rate(ConfigRegion_ratis_server_follower_append_entry_latency_seconds_count{instance=\"$instance\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_server_follower_append_entry_latency_seconds_sum{instance=~\"$instance\"}[1m])/rate(ConfigRegion_ratis_server_follower_append_entry_latency_seconds_count{instance=~\"$instance\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "followerAppendEntryLatency",
@@ -2797,7 +2585,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_sum{instance=\"$instance\", stage=\"writeStateMachine\"}[1m]) / rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=\"$instance\", stage=\"writeStateMachine\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_sum{instance=~\"$instance\", stage=\"writeStateMachine\"}[1m]) / rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=~\"$instance\", stage=\"writeStateMachine\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "writeStateMachine",
@@ -2809,29 +2597,23 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_server_clientWriteRequest_seconds_sum{instance=\"$instance\"}[1m])/rate(ConfigRegion_ratis_server_clientWriteRequest_seconds_count{instance=\"$instance\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_server_clientWriteRequest_seconds_sum{instance=~\"$instance\"}[1m])/rate(ConfigRegion_ratis_server_clientWriteRequest_seconds_count{instance=~\"$instance\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "clientWriteRequest",
               "refId": "D"
             }
           ],
-          "title": "Ratis Stage Time",
+          "title": "Ratis Stage Time $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -2881,12 +2663,12 @@
                   "type": "special"
                 }
               ],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2899,10 +2681,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
+            "h": 8,
             "w": 12,
             "x": 12,
-            "y": 5
+            "y": 4
           },
           "id": 112,
           "options": {
@@ -2919,6 +2701,8 @@
               "sort": "desc"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -2926,7 +2710,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_log_worker_queueingDelay_seconds_sum{instance=\"$instance\"}[1m]) / rate(ConfigRegion_ratis_log_worker_queueingDelay_seconds_count{instance=\"$instance\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_log_worker_queueingDelay_seconds_sum{instance=~\"$instance\"}[1m]) / rate(ConfigRegion_ratis_log_worker_queueingDelay_seconds_count{instance=~\"$instance\"}[1m])",
               "interval": "",
               "legendFormat": "queueingDelay",
               "refId": "A"
@@ -2937,7 +2721,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_log_worker_enqueuedTime_seconds_sum{instance=\"$instance\"}[1m]) / rate(ConfigRegion_ratis_log_worker_enqueuedTime_seconds_count{instance=\"$instance\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_log_worker_enqueuedTime_seconds_sum{instance=~\"$instance\"}[1m]) / rate(ConfigRegion_ratis_log_worker_enqueuedTime_seconds_count{instance=~\"$instance\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "enqueuedTime",
@@ -2949,7 +2733,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_log_worker_writelogExecutionTime_seconds_sum {instance=\"$instance\"}[1m]) / rate(ConfigRegion_ratis_log_worker_writelogExecutionTime_seconds_count{instance=\"$instance\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_log_worker_writelogExecutionTime_seconds_sum {instance=~\"$instance\"}[1m]) / rate(ConfigRegion_ratis_log_worker_writelogExecutionTime_seconds_count{instance=~\"$instance\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "writelogExecutionTime",
@@ -2968,22 +2752,16 @@
               "refId": "D"
             }
           ],
-          "title": "Write Log Entry",
+          "title": "Write Log Entry $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -3033,12 +2811,12 @@
                   "type": "special"
                 }
               ],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3048,38 +2826,13 @@
               },
               "unit": "s"
             },
-            "overrides": [
-              {
-                "__systemRef": "hideSeriesFrom",
-                "matcher": {
-                  "id": "byNames",
-                  "options": {
-                    "mode": "exclude",
-                    "names": [
-                      "writeLocally"
-                    ],
-                    "prefix": "All except:",
-                    "readOnly": true
-                  }
-                },
-                "properties": [
-                  {
-                    "id": "custom.hideFrom",
-                    "value": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": true
-                    }
-                  }
-                ]
-              }
-            ]
+            "overrides": []
           },
           "gridPos": {
-            "h": 9,
+            "h": 8,
             "w": 8,
             "x": 0,
-            "y": 14
+            "y": 12
           },
           "id": 113,
           "options": {
@@ -3096,6 +2849,8 @@
               "sort": "desc"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -3103,7 +2858,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_sum{instance=\"$instance\", stage=\"writeLocally\"}[1m]) / rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=\"$instance\", stage=\"writeLocally\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_sum{instance=~\"$instance\", stage=\"writeLocally\"}[1m]) / rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=~\"$instance\", stage=\"writeLocally\"}[1m])",
               "interval": "",
               "legendFormat": "{{stage}}",
               "refId": "A"
@@ -3114,29 +2869,23 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_sum{instance=\"$instance\", stage=\"writeRemotely\"}[1m]) / rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=\"$instance\", stage=\"writeRemotely\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_sum{instance=~\"$instance\", stage=\"writeRemotely\"}[1m]) / rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=~\"$instance\", stage=\"writeRemotely\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "{{stage}}",
               "refId": "B"
             }
           ],
-          "title": "Remote / Local Write Time",
+          "title": "Remote / Local Write Time $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -3186,12 +2935,12 @@
                   "type": "special"
                 }
               ],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3204,10 +2953,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
+            "h": 8,
             "w": 8,
             "x": 8,
-            "y": 14
+            "y": 12
           },
           "id": 114,
           "options": {
@@ -3224,6 +2973,8 @@
               "sort": "desc"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -3231,7 +2982,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=\"$instance\", stage=\"writeLocally\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=~\"$instance\", stage=\"writeLocally\"}[1m])",
               "interval": "",
               "legendFormat": "{{stage}}",
               "refId": "A"
@@ -3242,29 +2993,23 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=\"$instance\", stage=\"writeRemotely\"}[1m])",
+              "expr": "rate(ConfigRegion_ratis_consensus_write_seconds_count{instance=~\"$instance\", stage=\"writeRemotely\"}[1m])",
               "hide": false,
               "interval": "",
               "legendFormat": "{{stage}}",
               "refId": "B"
             }
           ],
-          "title": "Remote / Local Write QPS",
+          "title": "Remote / Local Write QPS $instance",
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -3314,12 +3059,12 @@
                   "type": "special"
                 }
               ],
+              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -3332,10 +3077,10 @@
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
+            "h": 8,
             "w": 8,
             "x": 16,
-            "y": 14
+            "y": 12
           },
           "id": 115,
           "options": {
@@ -3352,6 +3097,8 @@
               "sort": "desc"
             }
           },
+          "repeat": "instance",
+          "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
@@ -3359,7 +3106,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "ConfigRegion_ratis_log_worker_closedSegmentsSizeInBytes {instance=\"$instance\"}",
+              "expr": "ConfigRegion_ratis_log_worker_closedSegmentsSizeInBytes{instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "closedSegmentsSizeInBytes",
               "refId": "A"
@@ -3370,14 +3117,14 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "ConfigRegion_ratis_log_worker_openSegmentSizeInBytes {instance=\"$instance\"}",
+              "expr": "ConfigRegion_ratis_log_worker_openSegmentSizeInBytes{instance=~\"$instance\"}",
               "hide": false,
               "interval": "",
               "legendFormat": "openSegmentSizeInBytes",
               "refId": "B"
             }
           ],
-          "title": "RatisConsensus Memory",
+          "title": "RatisConsensus Memory $instance",
           "type": "timeseries"
         }
       ],
@@ -3385,1494 +3132,80 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "Ar7cRMx4z"
+            "uid": "${DS_PROMETHEUS}"
           },
           "refId": "A"
         }
       ],
-      "title": "ConfigRegion Ratis Consensus",
-      "type": "row"
-    },
-    {
-      "collapsed": true,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "Ar7cRMx4z"
-      },
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 5
-      },
-      "id": 13,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "axisSoftMax": 0,
-                "axisSoftMin": 0,
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "percent"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 5
-          },
-          "id": 15,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_cpu_load{instance=\"$instance\",name=\"system\"}",
-              "interval": "",
-              "legendFormat": "System CPU Load",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "process_cpu_load{instance=\"$instance\",name=\"process\"}",
-              "hide": false,
-              "legendFormat": "Process CPU Load",
-              "range": true,
-              "refId": "B"
-            }
-          ],
-          "title": "CPU Load",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "axisSoftMax": 0,
-                "axisSoftMin": 0,
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "ns"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 5
-          },
-          "id": 16,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "sum(rate(process_cpu_time{instance=\"$instance\",name=\"process\"}[1m]))*60",
-              "hide": false,
-              "legendFormat": "Process CPU Time",
-              "range": true,
-              "refId": "B"
-            }
-          ],
-          "title": "CPU Time Per Minute",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "warn"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "orange",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "trace"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "purple",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "error"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "red",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 5
-          },
-          "id": 25,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sum(rate(logback_events_total{instance=~\"${instance}\"}[1m])) by (level) * 60",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "{{level}}",
-              "range": true,
-              "refId": "C"
-            }
-          ],
-          "title": "Log Number Per Minute",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 13
-          },
-          "id": 17,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_total_physical_memory_size{instance=\"$instance\", name=\"system\"}-sys_free_physical_memory_size{instance=\"$instance\", name=\"system\"}",
-              "interval": "",
-              "legendFormat": "Used physical memory",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_total_physical_memory_size{instance=\"$instance\", name=\"system\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Total physical memory",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "sys_committed_vm_size{instance=\"$instance\"}",
-              "hide": false,
-              "legendFormat": "Committed vm size",
-              "range": true,
-              "refId": "C"
-            }
-          ],
-          "title": "System Memory",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Total Swap Size"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "green",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Used Swap Size"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "yellow",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 13
-          },
-          "id": 18,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_total_swap_space_size{instance=\"$instance\", name=\"system\"} - sys_free_swap_space_size{instance=\"$instance\", name=\"system\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Used Swap Size",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "sys_total_swap_space_size{instance=\"$instance\", name=\"system\"}",
-              "hide": false,
-              "legendFormat": "Total Swap Size",
-              "range": true,
-              "refId": "C"
-            }
-          ],
-          "title": "System Swap Size",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 13
-          },
-          "id": 19,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "process_max_mem{instance=~\"${instance}\"}",
-              "legendFormat": "Max Memory",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "process_total_mem{instance=~\"${instance}\"}",
-              "hide": false,
-              "legendFormat": "Total Memory",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "expr": "process_total_mem{instance=~\"${instance}\"} - process_free_mem{instance=~\"${instance}\"}",
-              "hide": false,
-              "legendFormat": "Used Memory",
-              "range": true,
-              "refId": "C"
-            }
-          ],
-          "title": "Process Memory",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 21
-          },
-          "id": 20,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sum(rate(jvm_gc_pause_seconds_count{instance=~\"$instance\", action=\"end of minor GC\"}[1m]))*60",
-              "interval": "",
-              "legendFormat": "Young GC number",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "sum(rate(jvm_gc_pause_seconds_count{instance=~\"$instance\", action=\"end of major GC\"}[1m]))*60",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Full GC number",
-              "refId": "B"
-            }
-          ],
-          "title": "The Number Of GC Per Minute",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 21
-          },
-          "id": 21,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "sum(rate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", action=\"end of minor GC\"}[1m]))*60",
-              "interval": "",
-              "legendFormat": "The time of young GC",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "sum(rate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", action=\"end of major GC\"}[1m]))*60",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "The time of full GC",
-              "refId": "B"
-            }
-          ],
-          "title": "The Time Consumed Of GC Per Minute",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 21
-          },
-          "id": 22,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "jvm_threads_live_threads{instance=~\"$instance\"}",
-              "interval": "",
-              "legendFormat": "Total Number",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "jvm_threads_states_threads{instance=~\"$instance\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "{{state}}",
-              "refId": "B"
-            }
-          ],
-          "title": "The Number Of Java Thread",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 29
-          },
-          "id": 23,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "sum(jvm_memory_max_bytes{instance=~\"$instance\",area=\"heap\"})",
-              "interval": "",
-              "legendFormat": "Maximum heap memory",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sum(jvm_memory_used_bytes{instance=~\"$instance\",area=\"heap\"})",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Used heap memory",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "jvm_memory_used_bytes{instance=~\"$instance\",area=\"heap\",id=\"PS Old Gen\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Old area",
-              "refId": "C"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "jvm_memory_used_bytes{instance=~\"$instance\",area=\"heap\",id=\"PS Eden Space\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Eden area",
-              "refId": "D"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "jvm_memory_used_bytes{instance=~\"$instance\",area=\"heap\",id=\"PS Survivor Space\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Survivor area",
-              "refId": "E"
-            }
-          ],
-          "title": "Heap Memory",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 29
-          },
-          "id": 24,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sum(jvm_buffer_memory_used_bytes{instance=~\"$instance\"})",
-              "interval": "",
-              "legendFormat": "off-heap memory",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Off Heap Memory",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineStyle": {
-                  "fill": "solid"
-                },
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 29
-          },
-          "id": 27,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "jvm_classes_unloaded_classes{instance=~\"$instance\"}",
-              "interval": "",
-              "legendFormat": "Unloaded Number",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "jvm_classes_loaded_classes{instance=~\"$instance\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Loaded Number",
-              "range": true,
-              "refId": "B"
-            }
-          ],
-          "title": "The  Number Of Class",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "ms"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 37
-          },
-          "id": 26,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sum(rate(jvm_compilation_time_ms{instance=~\"${instance}\"}[1m]))*60",
-              "interval": "",
-              "legendFormat": "compiler",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "The Time Consumed of Compilation Per Minute",
-          "type": "timeseries"
-        }
-      ],
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Ar7cRMx4z"
-          },
-          "refId": "A"
-        }
-      ],
-      "title": "System",
+      "title": "Consensus",
       "type": "row"
     }
   ],
-  "refresh": false,
-  "schemaVersion": 37,
+  "refresh": "30s",
+  "schemaVersion": 35,
   "style": "dark",
   "tags": [
-    "Apache-IoTDB",
-    "ConfigNode",
-    "v1.0"
+    "Apache IoTDB",
+    "v1.1"
   ],
   "templating": {
     "list": [
       {
         "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(job)",
+        "definition": "label_values(cluster)",
         "hide": 0,
         "includeAll": false,
         "multi": false,
-        "name": "job",
+        "name": "cluster",
         "options": [],
         "query": {
-          "query": "label_values(job)",
+          "query": "label_values(cluster)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
+        "sort": 1,
+        "type": "query",
+        "datasource": "${DS_PROMETHEUS}"
       },
       {
         "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(up{job=~\"$job\"},instance)",
-        "hide": 0,
+        "definition": "label_values({cluster=~\"$cluster\"}, nodeType)",
+        "hide": 2,
         "includeAll": false,
         "multi": false,
+        "name": "nodeType",
+        "options": [],
+        "query": {
+          "query": "label_values({cluster=~\"$cluster\"}, nodeType)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": ".*CONFIGNODE.*",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query",
+        "datasource": "${DS_PROMETHEUS}"
+      },
+      {
+        "current": {},
+        "definition": "label_values({cluster=~\"$cluster\",nodeType=~\"$nodeType\"},instance)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
         "name": "instance",
         "options": [],
         "query": {
-          "query": "label_values(up{job=~\"$job\"},instance)",
+          "query": "label_values({cluster=~\"$cluster\",nodeType=~\"$nodeType\"},instance)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
+        "sort": 3,
+        "type": "query",
+        "datasource": "${DS_PROMETHEUS}"
       }
     ]
   },
@@ -4892,7 +3225,7 @@
   },
   "timezone": "browser",
   "title": "Apache IoTDB ConfigNode Dashboard",
-  "uid": "4WkTYkx4z",
-  "version": 2,
+  "uid": "4WkTYkx4y",
+  "version": 69,
   "weekStart": ""
 }
