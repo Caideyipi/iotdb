@@ -46,6 +46,7 @@ public class ObjectStorageConfig {
 
   public void setOsType(ObjectStorageType osType) {
     this.osType = osType;
+    OSProviderConfig oldConfig = this.providerConfig;
     switch (osType) {
       case AWS_S3:
         this.providerConfig = new AWSS3Config();
@@ -53,6 +54,10 @@ public class ObjectStorageConfig {
       default:
         this.providerConfig = new TestConfig();
     }
+    setEndpoint(oldConfig.getEndpoint());
+    setBucketName(oldConfig.getBucketName());
+    setAccessKeyId(oldConfig.getAccessKeyId());
+    setAccessKeySecret(oldConfig.getAccessKeySecret());
   }
 
   public OSProviderConfig getProviderConfig() {
