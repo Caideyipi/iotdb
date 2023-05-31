@@ -39,7 +39,7 @@ public class PipeHardlinkFileDirStartupCleaner {
    * PipeConfig.PIPE_TSFILE_DIR_NAME directory.
    */
   public static void clean() {
-    for (String dataDir : IoTDBDescriptor.getInstance().getConfig().getDataDirs()) {
+    for (String dataDir : IoTDBDescriptor.getInstance().getConfig().getLocalDataDirs()) {
       for (File file :
           FileUtils.listFilesAndDirs(
               new File(dataDir), DirectoryFileFilter.INSTANCE, DirectoryFileFilter.INSTANCE)) {

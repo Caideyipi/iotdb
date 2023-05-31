@@ -69,6 +69,7 @@ import org.apache.iotdb.tsfile.exception.write.PageException;
 import org.apache.iotdb.tsfile.utils.FilePathUtils;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
+import com.timecho.iotdb.os.cache.CacheRecoverTask;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -272,6 +273,15 @@ public class StorageEngine implements IService {
             };
         futures.add(cachedThreadPool.submit(recoverDataRegionTask));
       }
+    }
+    // submit object storage cache recover task
+    if (config.isEnableObjectStorage()) {
+      futures.add(
+          cachedThreadPool.submit(
+              () -> {
+                new CacheRecoverTask().run();
+                return null;
+              }));
     }
   }
 

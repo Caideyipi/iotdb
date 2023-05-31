@@ -166,11 +166,11 @@ public class TSFileConfig implements Serializable {
 
   private String hdfsTsFileOutput = "org.apache.iotdb.hadoop.fileSystem.HDFSOutput";
 
-  private String objectStorageFile = "org.apache.iotdb.os.fileSystem.OSFile";
+  private String objectStorageFile = "com.timecho.iotdb.os.fileSystem.OSFile";
 
-  private String objectStorageTsFileInput = "org.apache.iotdb.os.fileSystem.OSTsFileInput";
+  private String objectStorageTsFileInput = "com.timecho.iotdb.os.fileSystem.OSTsFileInput";
 
-  private String objectStorageTsFileOutput = "org.apache.iotdb.os.fileSystem.OSTsFileOutput";
+  private String objectStorageTsFileOutput = "com.timecho.iotdb.os.fileSystem.OSTsFileOutput";
 
   /** customizedProperties, this should be empty by default. */
   private Properties customizedProperties = new Properties();

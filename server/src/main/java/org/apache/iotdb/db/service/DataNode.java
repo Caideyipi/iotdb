@@ -65,6 +65,7 @@ import org.apache.iotdb.db.engine.StorageEngine;
 import org.apache.iotdb.db.engine.cache.CacheHitRatioMonitor;
 import org.apache.iotdb.db.engine.compaction.schedule.CompactionTaskManager;
 import org.apache.iotdb.db.engine.flush.FlushManager;
+import org.apache.iotdb.db.engine.migration.MigrationTaskManager;
 import org.apache.iotdb.db.metadata.schemaregion.SchemaEngine;
 import org.apache.iotdb.db.metadata.template.ClusterTemplateManager;
 import org.apache.iotdb.db.mpp.execution.exchange.MPPDataExchangeService;
@@ -84,8 +85,10 @@ import org.apache.iotdb.db.wal.utils.WALMode;
 import org.apache.iotdb.metrics.config.MetricConfigDescriptor;
 import org.apache.iotdb.metrics.utils.InternalReporterType;
 import org.apache.iotdb.rpc.TSStatusCode;
+import org.apache.iotdb.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.iotdb.udf.api.exception.UDFManagementException;
 
+import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,6 +174,7 @@ public class DataNode implements DataNodeMBean {
       // TierManager need DataNodeId to do some operations so the reset method need to be invoked
       // after DataNode adding
       TierManager.getInstance().resetFolders();
+      configOSStorage(config.getDataNodeId());
       // Active DataNode
       active();
 
@@ -406,6 +410,10 @@ public class DataNode implements DataNodeMBean {
     }
   }
 
+  private void configOSStorage(int dataNodeID) {
+    FSFactoryProducer.setFileInputFactory(new HybridFileInputFactoryDecorator(dataNodeID));
+  }
+
   private void sendRestartRequestToConfigNode() throws StartupException {
     logger.info("Sending restart request to ConfigNode-leader...");
 
@@ -543,6 +551,8 @@ public class DataNode implements DataNodeMBean {
     registerManager.register(RegionMigrateService.getInstance());
 
     registerManager.register(CompactionTaskManager.getInstance());
+
+    registerManager.register(MigrationTaskManager.getInstance());
 
     registerManager.register(PipeAgent.runtime());
   }

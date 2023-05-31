@@ -76,6 +76,7 @@ public enum ServiceType {
   PIPE_PLUGIN_CLASSLOADER_MANAGER_SERVICE(
       "Pipe Plugin Classloader Manager Service", "PipePluginClassLoader"),
   PIPE_RUNTIME_AGENT("Pipe Runtime Agent", "PipeRuntimeAgent"),
+  MIGRATION_SERVICE("Migration Manager", "Migration Manager"),
   MLNode_RPC_SERVICE("Rpc Service for MLNode", "MLNodeRPCService");
   private final String name;
   private final String jmxName;

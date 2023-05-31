@@ -314,7 +314,7 @@ public class AbstractCompactionTest {
                 pageSize);
       }
       // add resource
-      TsFileResource resource = new TsFileResource(file);
+      TsFileResource resource = new TsFileResource(file, TsFileResourceStatus.NORMAL);
       int deviceStartindex = isAlign ? TsFileGeneratorUtils.getAlignDeviceOffset() : 0;
       for (int j = 0; j < deviceIndexes.size(); j++) {
         resource.updateStartTime(
@@ -344,7 +344,7 @@ public class AbstractCompactionTest {
   private void addResource(
       File file, int deviceNum, long startTime, long endTime, boolean isAlign, boolean isSeq)
       throws IOException {
-    TsFileResource resource = new TsFileResource(file);
+    TsFileResource resource = new TsFileResource(file, TsFileResourceStatus.NORMAL);
     int deviceStartindex = isAlign ? TsFileGeneratorUtils.getAlignDeviceOffset() : 0;
 
     for (int i = deviceStartindex; i < deviceStartindex + deviceNum; i++) {

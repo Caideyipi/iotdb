@@ -79,6 +79,7 @@
         </mailingList>
     </mailingLists>
     <modules>
+        <module>object-storage</module>
         <module>tsfile</module>
         <module>antlr</module>
         <module>iotdb-protocol/thrift</module>

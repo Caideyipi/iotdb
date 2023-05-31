@@ -28,6 +28,7 @@ import org.apache.iotdb.db.engine.modification.ModificationFile;
 import org.apache.iotdb.db.engine.storagegroup.TsFileNameGenerator;
 import org.apache.iotdb.db.engine.storagegroup.TsFileNameGenerator.TsFileName;
 import org.apache.iotdb.db.engine.storagegroup.TsFileResource;
+import org.apache.iotdb.db.engine.storagegroup.TsFileResourceStatus;
 import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
 import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
@@ -92,7 +93,8 @@ public class CompactionFileGeneratorUtils {
                       + 0
                       + IoTDBConstant.FILE_NAME_SEPARATOR
                       + 0
-                      + ".tsfile")));
+                      + ".tsfile")),
+          TsFileResourceStatus.NORMAL);
     } else {
       return new TsFileResource(
           new File(
@@ -104,7 +106,8 @@ public class CompactionFileGeneratorUtils {
                       + 0
                       + IoTDBConstant.FILE_NAME_SEPARATOR
                       + 0
-                      + ".tsfile")));
+                      + ".tsfile")),
+          TsFileResourceStatus.NORMAL);
     }
   }
 
@@ -131,7 +134,8 @@ public class CompactionFileGeneratorUtils {
                           + 0
                           + IoTDBConstant.FILE_NAME_SEPARATOR
                           + 0
-                          + ".tsfile")));
+                          + ".tsfile")),
+          TsFileResourceStatus.NORMAL);
     } else {
       return new TsFileResource(
           new File(
@@ -153,7 +157,8 @@ public class CompactionFileGeneratorUtils {
                           + 0
                           + IoTDBConstant.FILE_NAME_SEPARATOR
                           + 0
-                          + ".tsfile")));
+                          + ".tsfile")),
+          TsFileResourceStatus.NORMAL);
     }
   }
 

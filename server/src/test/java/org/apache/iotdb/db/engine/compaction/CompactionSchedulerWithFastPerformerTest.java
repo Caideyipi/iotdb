@@ -36,6 +36,7 @@ import org.apache.iotdb.db.engine.compaction.utils.CompactionConfigRestorer;
 import org.apache.iotdb.db.engine.compaction.utils.CompactionFileGeneratorUtils;
 import org.apache.iotdb.db.engine.storagegroup.TsFileManager;
 import org.apache.iotdb.db.engine.storagegroup.TsFileResource;
+import org.apache.iotdb.db.engine.storagegroup.TsFileResourceStatus;
 import org.apache.iotdb.db.exception.StorageEngineException;
 import org.apache.iotdb.db.rescon.SystemInfo;
 import org.apache.iotdb.db.utils.EnvironmentUtils;
@@ -1745,7 +1746,8 @@ public class CompactionSchedulerWithFastPerformerTest {
                                 + 1
                                 + IoTDBConstant.FILE_NAME_SEPARATOR
                                 + 0
-                                + ".tsfile")));
+                                + ".tsfile")),
+                TsFileResourceStatus.NORMAL);
         CompactionFileGeneratorUtils.writeTsFile(
             fullPath, chunkPagePointsNum, 100 * i + 100, tsFileResource);
         tsFileManager.add(tsFileResource, true);
@@ -1776,7 +1778,8 @@ public class CompactionSchedulerWithFastPerformerTest {
                               + 0
                               + IoTDBConstant.FILE_NAME_SEPARATOR
                               + 0
-                              + ".tsfile")));
+                              + ".tsfile")),
+              TsFileResourceStatus.NORMAL);
       CompactionFileGeneratorUtils.writeTsFile(
           fullPath, chunkPagePointsNum, 100 * 10 + 100, tsFileResource);
       tsFileManager.add(tsFileResource, true);
