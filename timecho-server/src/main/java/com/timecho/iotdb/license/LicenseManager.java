@@ -77,10 +77,6 @@ public class LicenseManager implements LicenseVerifier {
     }
   }
 
-  public long getMaxAllowedTimeSeriesNumber() {
-    return this.licenseContent.getMaxAllowedTimeSeriesNumber();
-  }
-
   public long getMaxInputFrequence() {
     return this.licenseContent.getMaxInputFrequence();
   }

@@ -26,7 +26,6 @@ public class LicenseContent {
   private String mainBoard;
   private String expireDate;
   private String startDate;
-  private long maxAllowedTimeSeriesNumber;
   private long maxInputFrequence;
 
   private String version;
@@ -61,14 +60,6 @@ public class LicenseContent {
 
   public void setExpireDate(String expireDate) {
     this.expireDate = expireDate;
-  }
-
-  public long getMaxAllowedTimeSeriesNumber() {
-    return maxAllowedTimeSeriesNumber;
-  }
-
-  public void setMaxAllowedTimeSeriesNumber(long maxAllowedTimeSeriesNumber) {
-    this.maxAllowedTimeSeriesNumber = maxAllowedTimeSeriesNumber;
   }
 
   public long getMaxInputFrequence() {
