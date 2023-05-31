@@ -73,8 +73,8 @@ public class OSInputStreamTest {
 
   @Before
   public void setUp() throws Exception {
-    prevCachePageSize = config.getCachePageSize();
-    config.setCachePageSize(cachePageSize);
+    prevCachePageSize = config.getCachePageSizeInByte();
+    config.setCachePageSizeInByte(cachePageSize);
     prevCacheDirs = config.getCacheDirs();
     config.setCacheDirs(new String[] {cacheDir.getPath()});
     cacheDir.mkdirs();
@@ -83,7 +83,7 @@ public class OSInputStreamTest {
 
   @After
   public void tearDown() throws Exception {
-    config.setCachePageSize(prevCachePageSize);
+    config.setCachePageSizeInByte(prevCachePageSize);
     config.setCacheDirs(prevCacheDirs);
     FileUtils.deleteDirectory(cacheDir);
   }

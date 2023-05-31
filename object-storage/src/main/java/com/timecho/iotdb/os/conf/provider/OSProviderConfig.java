@@ -19,10 +19,10 @@
 package com.timecho.iotdb.os.conf.provider;
 
 public abstract class OSProviderConfig {
-  protected String endpoint;
+  protected String endpoint = "yourEndpoint";
   protected String bucketName = "iotdb_data";
-  protected String accessKeyId;
-  protected String accessKeySecret;
+  protected String accessKeyId = "yourAccessKey";
+  protected String accessKeySecret = "yourAccessSecret";
 
   public String getEndpoint() {
     return endpoint;

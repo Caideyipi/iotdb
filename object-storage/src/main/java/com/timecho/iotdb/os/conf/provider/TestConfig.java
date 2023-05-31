@@ -21,7 +21,7 @@ package com.timecho.iotdb.os.conf.provider;
 import java.io.File;
 
 public class TestConfig extends OSProviderConfig {
-  private String testDir = "data" + File.separator + "test_s3";
+  private String testDir = "data" + File.separator + "object_storage_test";
 
   public String getTestDir() {
     return testDir;

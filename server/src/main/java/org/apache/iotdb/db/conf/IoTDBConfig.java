@@ -1143,8 +1143,8 @@ public class IoTDBConfig {
 
   private double[] spaceMoveThresholds = {0.15};
 
-  /** Enable hdfs or not */
-  private boolean enableObjectStorage = true;
+  /** Enable object storage or not */
+  private boolean enableObjectStorage = false;
 
   /** Config for object storage */
   private ObjectStorageConfig osConfig = ObjectStorageDescriptor.getInstance().getConfig();
@@ -1287,22 +1287,13 @@ public class IoTDBConfig {
   private void formulateDataDirs(String[][] tierDataDirs) {
     for (int i = 0; i < tierDataDirs.length; i++) {
       for (int j = 0; j < tierDataDirs[i].length; j++) {
-        if (tierDataDirs[i][j].equals(OBJECT_STORAGE_DIR)) {
+        if (tierDataDirs[i][j].equals(OBJECT_STORAGE_DIR)
+            || FSUtils.getFSType(tierDataDirs[i][j]) == FSType.OBJECT_STORAGE) {
           // Notice: dataNodeId hasn't been initialized
+          enableObjectStorage = true;
           tierDataDirs[i][j] = FSUtils.getOSDefaultPath(getObjectStorageBucket(), dataNodeId);
-        }
-        switch (FSUtils.getFSType(tierDataDirs[i][j])) {
-          case HDFS:
-            tierDataDirs[i][j] = getHdfsDir() + File.separatorChar + tierDataDirs[i][j];
-            break;
-          case LOCAL:
-            tierDataDirs[i][j] = addDataHomeDir(tierDataDirs[i][j]);
-            break;
-          case OBJECT_STORAGE:
-            tierDataDirs[i][j] = FSUtils.getOSDefaultPath(getObjectStorageBucket(), dataNodeId);
-            break;
-          default:
-            break;
+        } else {
+          tierDataDirs[i][j] = addDataHomeDir(tierDataDirs[i][j]);
         }
       }
     }
@@ -2467,10 +2458,6 @@ public class IoTDBConfig {
 
   public boolean isEnableHDFS() {
     return enableHDFS;
-  }
-
-  public void setEnableHDFS(boolean enableHDFS) {
-    this.enableHDFS = enableHDFS;
   }
 
   String getCoreSitePath() {
@@ -3986,15 +3973,11 @@ public class IoTDBConfig {
     return enableObjectStorage;
   }
 
-  public void setEnableObjectStorage(boolean enableObjectStorage) {
-    this.enableObjectStorage = enableObjectStorage;
-  }
-
-  public String getObjectStorageName() {
+  public String getObjectStorageType() {
     return osConfig.getOsType().name();
   }
 
-  public void setObjectStorageName(String objectStorageName) {
+  public void setObjectStorageType(String objectStorageName) {
     osConfig.setOsType(ObjectStorageType.valueOf(objectStorageName));
   }
 
@@ -4035,22 +4018,25 @@ public class IoTDBConfig {
   }
 
   public void setCacheDirs(String[] cacheDirs) {
+    for (int i = 0; i < cacheDirs.length; ++i) {
+      cacheDirs[i] = addDataHomeDir(cacheDirs[i]);
+    }
     osConfig.setCacheDirs(cacheDirs);
   }
 
-  public long getCacheMaxDiskUsage() {
-    return osConfig.getCacheMaxDiskUsage();
+  public long getCacheMaxDiskUsageInMb() {
+    return osConfig.getCacheMaxDiskUsageInByte() / 1024 / 1024;
   }
 
-  public void setCacheMaxDiskUsage(long cacheMaxDiskUsage) {
-    osConfig.setCacheMaxDiskUsage(cacheMaxDiskUsage);
+  public void setCacheMaxDiskUsageInMb(long cacheMaxDiskUsageInMb) {
+    osConfig.setCacheMaxDiskUsageInByte(cacheMaxDiskUsageInMb * 1024 * 1024);
   }
 
-  public int getCachePageSize() {
-    return osConfig.getCachePageSize();
+  public int getCachePageSizeInKb() {
+    return osConfig.getCachePageSizeInByte() / 1024;
   }
 
-  public void setCachePageSize(int cachePageSize) {
-    osConfig.setCachePageSize(cachePageSize);
+  public void setCachePageSizeInKb(int cachePageSizeInKb) {
+    osConfig.setCachePageSizeInByte(cachePageSizeInKb * 1024);
   }
 }

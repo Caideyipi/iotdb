@@ -102,18 +102,25 @@ public class TierManager {
             }
             break;
           case OBJECT_STORAGE:
-            if (!config.isEnableObjectStorage()) {
+            if (i != tierDirs.length - 1 || tierDirs.length == 1) {
+              File defaultDataDir =
+                  new File(
+                      IoTDBConstant.DEFAULT_BASE_DIR
+                          + File.separator
+                          + IoTDBConstant.DATA_FOLDER_NAME);
               logger.error(
-                  "Cannot configure object storage directory when enable_object_storage is false, use default data dir instead.");
+                  "Object Storage can only exist on the last tier and have local dirs in the front tiers, use default data dir {} instaed.",
+                  defaultDataDir);
+              try {
+                tierDirs[i][j] = defaultDataDir.getCanonicalPath();
+              } catch (IOException e) {
+                logger.error("Fail to get canonical path of data dir {}", tierDirs[i][j], e);
+              }
+            } else {
+              // reset datanode id
               tierDirs[i][j] =
-                  IoTDBConstant.DEFAULT_BASE_DIR + File.separator + IoTDBConstant.DATA_FOLDER_NAME;
+                  FSUtils.getOSDefaultPath(config.getObjectStorageBucket(), config.getDataNodeId());
             }
-            if (i != tierDirs.length - 1) {
-              logger.error("Object Storage can only exist on the last tier.");
-            }
-            // reset datanode id
-            tierDirs[i][j] =
-                FSUtils.getOSDefaultPath(config.getObjectStorageBucket(), config.getDataNodeId());
             break;
           case HDFS:
           default:
@@ -121,6 +128,7 @@ public class TierManager {
         }
       }
     }
+    config.setTierDataDirs(tierDirs);
 
     for (int tierLevel = 0; tierLevel < tierDirs.length; ++tierLevel) {
       List<String> seqDirs =

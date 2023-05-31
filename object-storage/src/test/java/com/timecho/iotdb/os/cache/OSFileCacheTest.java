@@ -74,8 +74,8 @@ public class OSFileCacheTest {
 
   @Before
   public void setUp() throws Exception {
-    prevCachePageSize = config.getCachePageSize();
-    config.setCachePageSize(100);
+    prevCachePageSize = config.getCachePageSizeInByte();
+    config.setCachePageSizeInByte(100);
     prevCacheDirs = config.getCacheDirs();
     config.setCacheDirs(new String[] {cacheDir.getPath()});
     cacheDir.mkdirs();
@@ -84,7 +84,7 @@ public class OSFileCacheTest {
 
   @After
   public void tearDown() throws Exception {
-    config.setCachePageSize(prevCachePageSize);
+    config.setCachePageSizeInByte(prevCachePageSize);
     config.setCacheDirs(prevCacheDirs);
     FileUtils.deleteDirectory(cacheDir);
   }

@@ -67,7 +67,7 @@ public class OSFileChannel implements Closeable {
     if (position >= size()) {
       throw new IOException("EOF");
     }
-    long startPosition = position - position % config.getCachePageSize();
+    long startPosition = position - position % config.getCachePageSizeInByte();
     return new OSFileCacheKey(osFile, startPosition);
   }
 

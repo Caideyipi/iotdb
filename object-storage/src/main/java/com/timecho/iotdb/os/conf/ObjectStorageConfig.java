@@ -26,17 +26,17 @@ import com.timecho.iotdb.os.utils.ObjectStorageType;
 import java.io.File;
 
 public class ObjectStorageConfig {
-  private ObjectStorageType osType = ObjectStorageType.TEST;
+  private ObjectStorageType osType = ObjectStorageType.AWS_S3;
 
-  private OSProviderConfig providerConfig = new TestConfig();
+  private OSProviderConfig providerConfig = new AWSS3Config();
 
   private String[] cacheDirs = {
     "data" + File.separator + "datanode" + File.separator + "data" + File.separator + "cache"
   };
 
-  private long cacheMaxDiskUsage = 50 * 1024 * 1024L;
+  private long cacheMaxDiskUsageInByte = 50 * 1024 * 1024 * 1024L;
 
-  private int cachePageSize = 10 * 1024 * 1024;
+  private int cachePageSizeInByte = 20 * 1024 * 1024;
 
   ObjectStorageConfig() {}
 
@@ -99,19 +99,19 @@ public class ObjectStorageConfig {
     this.cacheDirs = cacheDirs;
   }
 
-  public long getCacheMaxDiskUsage() {
-    return cacheMaxDiskUsage;
+  public long getCacheMaxDiskUsageInByte() {
+    return cacheMaxDiskUsageInByte;
   }
 
-  public void setCacheMaxDiskUsage(long cacheMaxDiskUsage) {
-    this.cacheMaxDiskUsage = cacheMaxDiskUsage;
+  public void setCacheMaxDiskUsageInByte(long cacheMaxDiskUsageInByte) {
+    this.cacheMaxDiskUsageInByte = cacheMaxDiskUsageInByte;
   }
 
-  public int getCachePageSize() {
-    return cachePageSize;
+  public int getCachePageSizeInByte() {
+    return cachePageSizeInByte;
   }
 
-  public void setCachePageSize(int cachePageSize) {
-    this.cachePageSize = cachePageSize;
+  public void setCachePageSizeInByte(int cachePageSizeInByte) {
+    this.cachePageSizeInByte = cachePageSizeInByte;
   }
 }

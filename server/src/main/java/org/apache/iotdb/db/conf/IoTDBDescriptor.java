@@ -361,6 +361,7 @@ public class IoTDBDescriptor {
 
     conf.setQueryDir(
         FilePathUtils.regularizePath(conf.getSystemDir() + IoTDBConstant.QUERY_FOLDER_NAME));
+
     String[] defaultTierDirs = new String[conf.getTierDataDirs().length];
     for (int i = 0; i < defaultTierDirs.length; ++i) {
       defaultTierDirs[i] = String.join(",", conf.getTierDataDirs()[i]);
@@ -765,9 +766,6 @@ public class IoTDBDescriptor {
 
     conf.setTsFileStorageFs(
         properties.getProperty("tsfile_storage_fs", conf.getTsFileStorageFs().toString()));
-    conf.setEnableHDFS(
-        Boolean.parseBoolean(
-            properties.getProperty("enable_hdfs", String.valueOf(conf.isEnableHDFS()))));
     conf.setCoreSitePath(properties.getProperty("core_site_path", conf.getCoreSitePath()));
     conf.setHdfsSitePath(properties.getProperty("hdfs_site_path", conf.getHdfsSitePath()));
     conf.setHdfsIp(properties.getProperty("hdfs_ip", conf.getRawHDFSIp()).split(","));
@@ -965,9 +963,8 @@ public class IoTDBDescriptor {
     // At the same time, set TSFileConfig
     List<FSType> fsTypes = new ArrayList<>();
     fsTypes.add(FSType.LOCAL);
-    if (Boolean.parseBoolean(
-        properties.getProperty(
-            "enable_object_storage", String.valueOf(conf.isEnableObjectStorage())))) {
+    // set these config after tiered data dirs are set
+    if (conf.isEnableObjectStorage()) {
       fsTypes.add(FSType.OBJECT_STORAGE);
       TSFileDescriptor.getInstance()
           .getConfig()
@@ -979,8 +976,7 @@ public class IoTDBDescriptor {
           .getConfig()
           .setObjectStorageTsFileOutput("com.timecho.iotdb.os.fileSystem.OSTsFileOutput");
     }
-    if (Boolean.parseBoolean(
-        properties.getProperty("enable_hdfs", String.valueOf(conf.isEnableHDFS())))) {
+    if (conf.isEnableHDFS()) {
       fsTypes.add(FSType.HDFS);
     }
     TSFileDescriptor.getInstance().getConfig().setTSFileStorageFs(fsTypes.toArray(new FSType[0]));
@@ -1088,6 +1084,9 @@ public class IoTDBDescriptor {
     // object storage
     loadObjectStorageProps(properties);
 
+    // check tier config
+    checkTierConfig();
+
     // load enterprise properties
     loadEnterpriseProps(properties);
 
@@ -1164,10 +1163,17 @@ public class IoTDBDescriptor {
   }
 
   private void loadMigrationProps(Properties properties) {
-    conf.setMigrateThreadCount(
+    int migrationThreadCount =
         Integer.parseInt(
             properties.getProperty(
-                "migrate_thread_count", String.valueOf(conf.getMigrateThreadCount()))));
+                "migrate_thread_count", String.valueOf(conf.getMigrateThreadCount())));
+    if (migrationThreadCount <= 0) {
+      migrationThreadCount = conf.getMigrateThreadCount();
+      logger.warn(
+          "migrate_thread_count cannot be less than 0, iotdb will use default value {}.",
+          migrationThreadCount);
+    }
+    conf.setMigrateThreadCount(migrationThreadCount);
 
     String[] moveThresholdsStr = new String[conf.getSpaceMoveThresholds().length];
     for (int i = 0; i < moveThresholdsStr.length; ++i) {
@@ -1182,20 +1188,19 @@ public class IoTDBDescriptor {
     double[] moveThresholds = new double[moveThresholdsStr.length];
     for (int i = 0; i < moveThresholds.length; ++i) {
       moveThresholds[i] = Double.parseDouble(moveThresholdsStr[i]);
-      if (moveThresholds[i] < 0) {
+      if (moveThresholds[i] <= 0 || moveThresholds[i] >= 1) {
         moveThresholds[i] = 0.15;
+        logger.warn(
+            "It's meaningless to set dn_default_space_move_thresholds out of range (0.0, 1.0), iotdb will use default value {}.",
+            moveThresholds[i]);
       }
     }
     conf.setSpaceMoveThresholds(moveThresholds);
   }
 
   private void loadObjectStorageProps(Properties properties) {
-    conf.setEnableObjectStorage(
-        Boolean.parseBoolean(
-            properties.getProperty(
-                "enable_object_storage", String.valueOf(conf.isEnableObjectStorage()))));
-    conf.setObjectStorageName(
-        properties.getProperty("object_storage_name", conf.getObjectStorageName()));
+    conf.setObjectStorageType(
+        properties.getProperty("object_storage_type", conf.getObjectStorageType()));
     conf.setObjectStorageBucket(
         properties.getProperty("object_storage_bucket", conf.getObjectStorageBucket()));
     conf.setObjectStorageEndpoint(
@@ -1205,19 +1210,63 @@ public class IoTDBDescriptor {
     conf.setObjectStorageAccessSecret(
         properties.getProperty(
             "object_storage_access_secret", conf.getObjectStorageAccessSecret()));
-    conf.setCacheDirs(
+
+    String[] cacheDirs =
         properties
             .getProperty("remote_tsfile_cache_dirs", String.join(",", conf.getCacheDirs()))
-            .split(","));
-    conf.setCachePageSize(
+            .split(",");
+    cacheDirs =
+        Arrays.stream(cacheDirs)
+            .filter(dir -> dir != null && !dir.equals(""))
+            .map(String::trim)
+            .toArray(String[]::new);
+    conf.setCacheDirs(cacheDirs);
+
+    int cachePageSizeInKb =
         Integer.parseInt(
             properties.getProperty(
-                "remote_tsfile_cache_page_size_in_kb", String.valueOf(conf.getCachePageSize()))));
-    conf.setCacheMaxDiskUsage(
+                "remote_tsfile_cache_page_size_in_kb",
+                String.valueOf(conf.getCachePageSizeInKb())));
+    if (cachePageSizeInKb <= 0) {
+      cachePageSizeInKb = conf.getCachePageSizeInKb();
+      logger.warn(
+          "remote_tsfile_cache_page_size_in_kb cannot be less than 0, iotdb will use default value {}.",
+          cachePageSizeInKb);
+    }
+    conf.setCachePageSizeInKb(cachePageSizeInKb);
+
+    long cacheMaxDiskUsageInMb =
         Long.parseLong(
             properties.getProperty(
                 "remote_tsfile_cache_max_disk_usage_in_mb",
-                String.valueOf(conf.getCacheMaxDiskUsage()))));
+                String.valueOf(conf.getCacheMaxDiskUsageInMb())));
+    if (cacheMaxDiskUsageInMb <= 0) {
+      cacheMaxDiskUsageInMb = conf.getCacheMaxDiskUsageInMb();
+      logger.warn(
+          "remote_tsfile_cache_max_disk_usage_in_mb cannot be less than 0, iotdb will use default value {}.",
+          cacheMaxDiskUsageInMb);
+    }
+    conf.setCacheMaxDiskUsageInMb(cacheMaxDiskUsageInMb);
+  }
+
+  private void checkTierConfig() {
+    int tierNum = conf.getTierDataDirs().length;
+    if (conf.getSpaceMoveThresholds().length != tierNum) {
+      double[] moveThresholds = new double[tierNum];
+      Arrays.fill(moveThresholds, 0.15);
+      conf.setSpaceMoveThresholds(moveThresholds);
+      logger.warn(
+          "dn_default_space_move_thresholds should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
+          Arrays.toString(moveThresholds));
+    }
+    if (commonDescriptor.getConfig().getTierTTLInMs().length != tierNum) {
+      long[] tierTTLs = new long[tierNum];
+      Arrays.fill(tierTTLs, Long.MAX_VALUE);
+      commonDescriptor.getConfig().setTierTTLInMs(tierTTLs);
+      logger.warn(
+          "default_ttl_in_ms should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
+          Arrays.toString(tierTTLs));
+    }
   }
 
   private void loadWALProps(Properties properties) {
@@ -1589,10 +1638,18 @@ public class IoTDBDescriptor {
   }
 
   private String[][] parseDataDirs(String dataDirs) {
-    String[] tiers = dataDirs.split(IoTDBConstant.TIER_SEPARATOR);
+    String[] tiers =
+        Arrays.stream(dataDirs.split(IoTDBConstant.TIER_SEPARATOR))
+            .filter(dir -> dir != null && !dir.equals(""))
+            .map(String::trim)
+            .toArray(String[]::new);
     String[][] tierDataDirs = new String[tiers.length][];
     for (int i = 0; i < tiers.length; ++i) {
-      tierDataDirs[i] = tiers[i].split(",");
+      tierDataDirs[i] =
+          Arrays.stream(tiers[i].split(","))
+              .filter(dir -> dir != null && !dir.equals(""))
+              .map(String::trim)
+              .toArray(String[]::new);
     }
     return tierDataDirs;
   }

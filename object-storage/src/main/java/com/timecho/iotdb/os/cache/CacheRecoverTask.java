@@ -62,7 +62,7 @@ public class CacheRecoverTask implements Runnable {
             OSFileCacheKey key = OSFileCacheKey.deserialize(in);
             int metaSize = key.serializeSize();
             int dataSize = (int) cacheFile.length() - metaSize;
-            if (dataSize != config.getCachePageSize()) {
+            if (dataSize != config.getCachePageSizeInByte()) {
               logger.debug(
                   "Cache file {}'s data size doesn't match the cache page size, so delete it.",
                   cacheFile);

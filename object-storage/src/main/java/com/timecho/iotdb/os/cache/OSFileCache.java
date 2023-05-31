@@ -50,7 +50,7 @@ public class OSFileCache {
     connector = ObjectStorageType.getConnector(osType);
     remotePos2LocalCacheFile =
         Caffeine.newBuilder()
-            .maximumWeight(config.getCacheMaxDiskUsage())
+            .maximumWeight(config.getCacheMaxDiskUsageInByte())
             .weigher((Weigher<OSFileCacheKey, OSFileCacheValue>) (key, value) -> value.getLength())
             .removalListener(
                 (key, value, cause) -> {
@@ -86,7 +86,7 @@ public class OSFileCache {
     public @Nullable OSFileCacheValue load(@NonNull OSFileCacheKey key) throws Exception {
       byte[] data =
           connector.getRemoteObject(
-              key.getFile().toOSURI(), key.getStartPosition(), config.getCachePageSize());
+              key.getFile().toOSURI(), key.getStartPosition(), config.getCachePageSizeInByte());
       return cacheFileManager.persist(key, data);
     }
   }
