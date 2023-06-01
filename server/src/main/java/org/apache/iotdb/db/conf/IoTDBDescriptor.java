@@ -1090,10 +1090,6 @@ public class IoTDBDescriptor {
     // load enterprise properties
     loadEnterpriseProps(properties);
 
-    conf.setTimePartitionInterval(
-        DateTimeUtils.convertMilliTimeWithPrecision(
-            conf.getTimePartitionInterval(), conf.getTimestampPrecision()));
-
     conf.setQuotaEnable(
         Boolean.parseBoolean(
             properties.getProperty("quota_enable", String.valueOf(conf.isQuotaEnable()))));
