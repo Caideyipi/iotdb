@@ -69,7 +69,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1685285562446,
+  "iteration": 1685949613751,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -107,7 +107,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
         "x": 0,
         "y": 1
@@ -167,7 +167,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
         "x": 3,
         "y": 1
@@ -227,7 +227,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
         "x": 6,
         "y": 1
@@ -298,7 +298,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 6,
         "x": 9,
         "y": 1
@@ -320,19 +320,6 @@
       },
       "pluginVersion": "8.4.2",
       "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "1 - sum(sys_free_physical_memory_size{cluster=~\"$cluster\", nodeType=~\"$nodeType\", name=\"system\"}) / sum(sys_total_physical_memory_size{cluster=~\"$cluster\", nodeType=~\"$nodeType\", name=\"system\"})",
-          "interval": "",
-          "legendFormat": "Average OS Memory Usage",
-          "range": true,
-          "refId": "A"
-        },
         {
           "datasource": {
             "type": "prometheus",
@@ -414,7 +401,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 6,
         "w": 9,
         "x": 15,
         "y": 1
@@ -475,10 +462,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
         "x": 0,
-        "y": 5
+        "y": 4
       },
       "id": 205,
       "options": {
@@ -535,10 +522,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
         "x": 3,
-        "y": 5
+        "y": 4
       },
       "id": 206,
       "options": {
@@ -595,10 +582,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 3,
         "x": 6,
-        "y": 5
+        "y": 4
       },
       "id": 207,
       "options": {
@@ -666,9 +653,9 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 6,
+        "w": 8,
         "x": 0,
-        "y": 9
+        "y": 7
       },
       "id": 209,
       "options": {
@@ -737,80 +724,9 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 6,
-        "x": 6,
-        "y": 9
-      },
-      "id": 254,
-      "options": {
-        "displayMode": "lcd",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true
-      },
-      "pluginVersion": "8.4.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "1 - sys_disk_free_space{cluster=~\"$cluster\", nodeType=\"$nodeType\"} / sys_disk_total_space{cluster=~\"$cluster\", nodeType=\"$nodeType\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{instance}}",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "DataNode Disk Usage",
-      "type": "bargauge"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "percentage",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 80
-              },
-              {
-                "color": "red",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 12,
-        "y": 9
+        "w": 8,
+        "x": 8,
+        "y": 7
       },
       "id": 255,
       "options": {
@@ -879,11 +795,11 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 6,
-        "x": 18,
-        "y": 9
+        "w": 8,
+        "x": 16,
+        "y": 7
       },
-      "id": 256,
+      "id": 254,
       "options": {
         "displayMode": "lcd",
         "minVizHeight": 10,
@@ -907,14 +823,15 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "1 - sys_free_physical_memory_size{cluster=~\"$cluster\", nodeType=\"$nodeType\"} / sys_total_physical_memory_size{cluster=~\"$cluster\", nodeType=\"$nodeType\"}",
+          "expr": "1 - sys_disk_free_space{cluster=~\"$cluster\", nodeType=\"$nodeType\"} / sys_disk_total_space{cluster=~\"$cluster\", nodeType=\"$nodeType\"}",
+          "hide": false,
           "interval": "",
           "legendFormat": "{{instance}}",
           "range": true,
-          "refId": "A"
+          "refId": "C"
         }
       ],
-      "title": "OS Memory Usage",
+      "title": "DataNode Disk Usage",
       "type": "bargauge"
     },
     {
@@ -927,7 +844,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 13
       },
       "id": 30,
       "panels": [
@@ -1174,19 +1091,6 @@
               "legendFormat": "CPU Load",
               "range": true,
               "refId": "D"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "1 - sys_free_physical_memory_size{instance=~\"$instance\", name=\"system\"} / sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"}",
-              "interval": "",
-              "legendFormat": "OS Memory Usage",
-              "range": true,
-              "refId": "A"
             },
             {
               "datasource": {
@@ -1509,7 +1413,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 14
       },
       "id": 32,
       "panels": [
@@ -4014,7 +3918,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 15
       },
       "id": 34,
       "panels": [
@@ -5229,6 +5133,6 @@
   "timezone": "browser",
   "title": "Apache IoTDB Performance Overview Dashboard",
   "uid": "ZRfEph04y",
-  "version": 135,
+  "version": 147,
   "weekStart": ""
 }
