@@ -39,7 +39,7 @@ public class RemoteMigrationTask extends MigrationTask {
   public void migrate() {
     // dest tsfile may exist if the last same migration task hasn't completed when the system
     // shutdown.
-    filesShouldDelete.addAll(Arrays.asList(destTsFile, destResourceFile));
+    filesShouldDelete.addAll(Arrays.asList(destTsFile, destResourceFile, destModsFile));
     cleanup();
 
     // copy TsFile and resource file
@@ -49,7 +49,7 @@ public class RemoteMigrationTask extends MigrationTask {
       migrateFile(srcResourceFile, destResourceFile);
     } catch (Exception e) {
       if (!tsFileResource.isDeleted()) {
-        logger.error("Fail to copy TsFile from local {} to remote {}", srcFile, srcResourceFile, e);
+        logger.error("Fail to copy TsFile from local {} to remote {}", srcFile, destTsFile, e);
       }
       cleanup();
       return;

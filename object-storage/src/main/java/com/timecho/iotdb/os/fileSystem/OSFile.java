@@ -211,8 +211,7 @@ public class OSFile extends File {
     try {
       return connector.createNewEmptyObject(osUri);
     } catch (ObjectStorageException e) {
-      logger.error("Fail to create new object {}.", osUri, e);
-      return false;
+      throw new IOException(e);
     }
   }
 
@@ -428,27 +427,27 @@ public class OSFile extends File {
     }
   }
 
-  public void putFile(File localFile) {
+  public void putFile(File localFile) throws IOException {
     try {
       connector.putLocalFile(osUri, localFile);
     } catch (ObjectStorageException e) {
-      logger.error("Fail to put local file {} to the object storage {}.", localFile, osUri, e);
+      throw new IOException(e);
     }
   }
 
-  public void copyTo(File destFile) {
+  public void copyTo(File destFile) throws IOException {
     try {
       connector.copyObject(osUri, ((OSFile) destFile).toOSURI());
     } catch (ObjectStorageException e) {
-      logger.error("Fail to copy file {} to {}.", osUri, destFile, e);
+      throw new IOException(e);
     }
   }
 
-  public void deleteObjectsByPrefix() {
+  public void deleteObjectsByPrefix() throws IOException {
     try {
       connector.deleteObjectsByPrefix(osUri);
     } catch (ObjectStorageException e) {
-      logger.error("Fail to delete objects by prefix {}.", osUri, e);
+      throw new IOException(e);
     }
   }
 
