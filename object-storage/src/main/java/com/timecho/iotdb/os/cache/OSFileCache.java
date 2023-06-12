@@ -50,6 +50,7 @@ public class OSFileCache {
     connector = ObjectStorageType.getConnector(osType);
     remotePos2LocalCacheFile =
         Caffeine.newBuilder()
+            .recordStats()
             .maximumWeight(config.getCacheMaxDiskUsageInByte())
             .weigher((Weigher<OSFileCacheKey, OSFileCacheValue>) (key, value) -> value.getLength())
             .removalListener(
@@ -71,14 +72,20 @@ public class OSFileCache {
     return value;
   }
 
-  /** This method is used by the recover procedure */
+  OSFileCacheValue getIfPresent(OSFileCacheKey key) {
+    return remotePos2LocalCacheFile.getIfPresent(key);
+  }
+
   void put(OSFileCacheKey key, OSFileCacheValue value) {
     remotePos2LocalCacheFile.put(key, value);
   }
 
-  // test only
-  void setConnector(ObjectStorageConnector connector) {
-    this.connector = connector;
+  void clear() {
+    remotePos2LocalCacheFile.invalidateAll();
+  }
+
+  public double getHitRate() {
+    return remotePos2LocalCacheFile.stats().hitRate() * 100;
   }
 
   class OSFileCacheLoader implements CacheLoader<OSFileCacheKey, OSFileCacheValue> {

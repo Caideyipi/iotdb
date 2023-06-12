@@ -33,10 +33,13 @@ public class LocalMigrationTask extends MigrationTask {
   protected LocalMigrationTask(MigrationCause cause, TsFileResource tsFile, String targetDir)
       throws IOException {
     super(cause, tsFile, targetDir);
+    toLocal = true;
   }
 
   @Override
   public void migrate() {
+    long migratedFileSize = 0;
+
     // dest tsfile may exist if the last same migration task hasn't completed when the system
     // shutdown.
     filesShouldDelete.addAll(Arrays.asList(destTsFile, destResourceFile, destModsFile));
@@ -46,7 +49,9 @@ public class LocalMigrationTask extends MigrationTask {
     tsFileResource.readLock();
     try {
       destTsFile.getParentFile().mkdirs();
+      migratedFileSize += srcFile.length();
       migrateFile(srcFile, destTsFile);
+      migratedFileSize += srcResourceFile.length();
       migrateFile(srcResourceFile, destResourceFile);
     } catch (Exception e) {
       if (!tsFileResource.isDeleted()) {
@@ -58,12 +63,16 @@ public class LocalMigrationTask extends MigrationTask {
       tsFileResource.readUnlock();
     }
 
+    long waitLockStartTime = System.nanoTime();
     // close mods file and replace TsFile path
     tsFileResource.writeLock();
     try {
+      MIGRATION_METRICS.recordMigrationWaitLockTime(
+          destTierLevel, toLocal, System.nanoTime() - waitLockStartTime);
       tsFileResource.resetModFile();
       // migrate MOD file only when it exists
       if (srcModsFile.exists()) {
+        migratedFileSize += srcModsFile.length();
         migrateFile(srcModsFile, destModsFile);
       }
       tsFileResource.setFile(destTsFile);
@@ -84,5 +93,7 @@ public class LocalMigrationTask extends MigrationTask {
     filesShouldDelete.clear();
     filesShouldDelete.addAll(Arrays.asList(srcFile, srcResourceFile, srcModsFile));
     cleanup();
+
+    MIGRATION_METRICS.recordMigrationFileSize(destTierLevel, toLocal, migratedFileSize);
   }
 }

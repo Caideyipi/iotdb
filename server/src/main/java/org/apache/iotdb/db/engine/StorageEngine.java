@@ -31,6 +31,7 @@ import org.apache.iotdb.commons.exception.ShutdownException;
 import org.apache.iotdb.commons.file.SystemFileFactory;
 import org.apache.iotdb.commons.service.IService;
 import org.apache.iotdb.commons.service.ServiceType;
+import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.consensus.ConsensusFactory;
 import org.apache.iotdb.db.conf.IoTDBConfig;
@@ -56,6 +57,7 @@ import org.apache.iotdb.db.mpp.plan.planner.plan.node.PlanNode;
 import org.apache.iotdb.db.mpp.plan.planner.plan.node.load.LoadTsFilePieceNode;
 import org.apache.iotdb.db.mpp.plan.scheduler.load.LoadTsFileScheduler;
 import org.apache.iotdb.db.rescon.SystemInfo;
+import org.apache.iotdb.db.service.metrics.ObjectStorageMetrics;
 import org.apache.iotdb.db.service.metrics.WritingMetrics;
 import org.apache.iotdb.db.sync.SyncService;
 import org.apache.iotdb.db.utils.ThreadUtils;
@@ -280,6 +282,8 @@ public class StorageEngine implements IService {
           cachedThreadPool.submit(
               () -> {
                 new CacheRecoverTask().run();
+                // object storage metrics
+                MetricService.getInstance().addMetricSet(new ObjectStorageMetrics());
                 return null;
               }));
     }

@@ -22,6 +22,8 @@ package com.timecho.iotdb.os.cache;
 import java.io.File;
 
 public class OSFileCacheValue {
+  private static final CacheFileManager fileManager = CacheFileManager.getInstance();
+
   /** local cache file */
   private File cacheFile;
   // 如果每个块用一个文件来存储，则该值一直为 0
@@ -103,7 +105,7 @@ public class OSFileCacheValue {
   public synchronized void setShouldDelete() {
     this.shouldDelete = true;
     if (readCnt == 0) {
-      cacheFile.delete();
+      fileManager.delete(this);
     }
   }
 
@@ -127,7 +129,7 @@ public class OSFileCacheValue {
   public synchronized void readUnlock() {
     this.readCnt--;
     if (shouldDelete && readCnt == 0) {
-      cacheFile.delete();
+      fileManager.delete(this);
     }
   }
 }

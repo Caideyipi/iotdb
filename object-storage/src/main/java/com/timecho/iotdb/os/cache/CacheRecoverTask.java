@@ -34,10 +34,12 @@ public class CacheRecoverTask implements Runnable {
   private static final ObjectStorageConfig config =
       ObjectStorageDescriptor.getInstance().getConfig();
   private static final OSFileCache cache = OSFileCache.getInstance();
+  private static final CacheFileManager cacheFileManager = CacheFileManager.getInstance();
 
   @Override
   public void run() {
     long maxCacheFileId = 0;
+    long totalSize = 0;
     for (String cacheDir : config.getCacheDirs()) {
       File cacheDirFile = new File(cacheDir);
       if (!cacheDirFile.exists()) {
@@ -72,6 +74,7 @@ public class CacheRecoverTask implements Runnable {
             OSFileCacheValue value =
                 new OSFileCacheValue(cacheFile, 0, metaSize, dataSize, key.getStartPosition());
             cache.put(key, value);
+            totalSize += value.getLength();
           }
           // update max cache file id
           String cacheFileIdStr = cacheFileName.substring(0, cacheFileName.indexOf('.'));
@@ -84,5 +87,7 @@ public class CacheRecoverTask implements Runnable {
         }
       }
     }
+    cacheFileManager.setCacheFileId(maxCacheFileId);
+    cacheFileManager.setTotalCacheFileSize(totalSize);
   }
 }

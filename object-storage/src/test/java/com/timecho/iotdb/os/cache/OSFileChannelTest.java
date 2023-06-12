@@ -84,7 +84,8 @@ public class OSFileChannelTest {
     prevCacheDirs = config.getCacheDirs();
     config.setCacheDirs(new String[] {cacheDir.getPath()});
     cacheDir.mkdirs();
-    CacheFileManager.getInstance().setCacheFileId(0);
+    OSFileCache.getInstance().clear();
+    CacheFileManager.getInstance().clear();
   }
 
   @After
@@ -92,6 +93,8 @@ public class OSFileChannelTest {
     config.setCachePageSizeInByte(prevCachePageSize);
     config.setCacheDirs(prevCacheDirs);
     FileUtils.deleteDirectory(cacheDir);
+    OSFileCache.getInstance().clear();
+    CacheFileManager.getInstance().clear();
   }
 
   private void prepareOSFile(int size) throws ObjectStorageException {

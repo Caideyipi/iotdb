@@ -26,6 +26,7 @@ import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.commons.service.IService;
 import org.apache.iotdb.commons.service.ServiceType;
+import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.conf.directories.TierManager;
@@ -33,6 +34,7 @@ import org.apache.iotdb.db.engine.StorageEngine;
 import org.apache.iotdb.db.engine.storagegroup.DataRegion;
 import org.apache.iotdb.db.engine.storagegroup.TsFileResource;
 import org.apache.iotdb.db.engine.storagegroup.TsFileResourceStatus;
+import org.apache.iotdb.db.service.metrics.MigrationMetrics;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 
 import org.slf4j.Logger;
@@ -68,6 +70,9 @@ public class MigrationTaskManager implements IService {
       logger.info("tiered storage status: disable");
       return;
     }
+    // metrics
+    MetricService.getInstance().addMetricSet(MigrationMetrics.getInstance());
+    // threads and tasks
     scheduler =
         IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
             ThreadName.MIGRATION_SCHEDULER.getName());

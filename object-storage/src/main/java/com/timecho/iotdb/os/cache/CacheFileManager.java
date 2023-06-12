@@ -38,7 +38,10 @@ public class CacheFileManager {
   private static final Logger logger = LoggerFactory.getLogger(CacheFileManager.class);
   private static final ObjectStorageConfig config =
       ObjectStorageDescriptor.getInstance().getConfig();
+  /** incremental id of next cache file */
   private final AtomicLong cacheFileId = new AtomicLong(0);
+  /** disk usage of all cache files */
+  private final AtomicLong totalCacheFileSize = new AtomicLong(0);
 
   private CacheFileManager() {
     for (String cacheDir : config.getCacheDirs()) {
@@ -50,7 +53,7 @@ public class CacheFileManager {
   }
 
   private long getNextCacheFileId() {
-    return cacheFileId.getAndIncrement();
+    return cacheFileId.incrementAndGet();
   }
 
   private File getTmpCacheFile(long id) {
@@ -91,16 +94,41 @@ public class CacheFileManager {
     // rename tmp file to cache file
     File cacheFile = getCacheFile(cacheFileId);
     if (tmpCacheFile.renameTo(cacheFile)) {
-      return new OSFileCacheValue(
-          cacheFile, 0, key.serializeSize(), data.length, key.getStartPosition());
+      OSFileCacheValue value =
+          new OSFileCacheValue(
+              cacheFile, 0, key.serializeSize(), data.length, key.getStartPosition());
+      totalCacheFileSize.addAndGet(value.getLength());
+      return value;
     } else {
+      tmpCacheFile.delete();
       return null;
     }
   }
 
-  /** This method is used by the recover procedure */
+  public boolean delete(OSFileCacheValue value) {
+    totalCacheFileSize.addAndGet(-value.getLength());
+    return value.getCacheFile().delete();
+  }
+
   void setCacheFileId(long startId) {
     cacheFileId.set(startId);
+  }
+
+  long getCacheFileId() {
+    return cacheFileId.get();
+  }
+
+  void setTotalCacheFileSize(long initSize) {
+    totalCacheFileSize.set(initSize);
+  }
+
+  public long getTotalCacheFileSize() {
+    return totalCacheFileSize.get();
+  }
+
+  void clear() {
+    cacheFileId.set(0);
+    totalCacheFileSize.set(0);
   }
 
   public static CacheFileManager getInstance() {

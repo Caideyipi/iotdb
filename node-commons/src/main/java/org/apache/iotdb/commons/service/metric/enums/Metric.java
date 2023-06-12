@@ -58,6 +58,12 @@ public enum Metric {
   WAL_COST("wal_cost"),
   FLUSH_COST("flush_cost"),
   FLUSH_SUB_TASK_COST("flush_sub_task_cost"),
+  // migration related
+  MIGRATION_TASK_CAUSE("migration_task_cause"),
+  MIGRATION_TASK_SIZE("migration_task_size"),
+  MIGRATION_TASK_COST("migration_task_cost"),
+  // object storage related
+  OBJECT_STORAGE_CACHE("object_storage_cache"),
   // compaction related
   DATA_WRITTEN("data_written"),
   DATA_READ("data_read"),

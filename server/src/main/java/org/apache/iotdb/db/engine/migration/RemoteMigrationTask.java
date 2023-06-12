@@ -33,10 +33,13 @@ public class RemoteMigrationTask extends MigrationTask {
   protected RemoteMigrationTask(MigrationCause cause, TsFileResource tsFile, String targetDir)
       throws IOException {
     super(cause, tsFile, targetDir);
+    toLocal = false;
   }
 
   @Override
   public void migrate() {
+    long migratedFileSize = 0;
+
     // dest tsfile may exist if the last same migration task hasn't completed when the system
     // shutdown.
     filesShouldDelete.addAll(Arrays.asList(destTsFile, destResourceFile, destModsFile));
@@ -45,7 +48,9 @@ public class RemoteMigrationTask extends MigrationTask {
     // copy TsFile and resource file
     tsFileResource.readLock();
     try {
+      migratedFileSize += srcFile.length();
       migrateFile(srcFile, destTsFile);
+      migratedFileSize += srcResourceFile.length();
       migrateFile(srcResourceFile, destResourceFile);
     } catch (Exception e) {
       if (!tsFileResource.isDeleted()) {
@@ -57,9 +62,12 @@ public class RemoteMigrationTask extends MigrationTask {
       tsFileResource.readUnlock();
     }
 
+    long waitLockStartTime = System.nanoTime();
     // clear src files
     tsFileResource.writeLock();
     try {
+      MIGRATION_METRICS.recordMigrationWaitLockTime(
+          destTierLevel, toLocal, System.nanoTime() - waitLockStartTime);
       filesShouldDelete.clear();
       filesShouldDelete.add(srcFile);
       cleanup();
@@ -72,5 +80,7 @@ public class RemoteMigrationTask extends MigrationTask {
     } finally {
       tsFileResource.writeUnlock();
     }
+
+    MIGRATION_METRICS.recordMigrationFileSize(destTierLevel, toLocal, migratedFileSize);
   }
 }

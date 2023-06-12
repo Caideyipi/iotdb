@@ -21,9 +21,13 @@ package org.apache.iotdb.db.engine.migration;
 import org.apache.iotdb.db.engine.modification.ModificationFile;
 import org.apache.iotdb.db.engine.storagegroup.TsFileResource;
 import org.apache.iotdb.db.engine.storagegroup.TsFileResourceStatus;
+import org.apache.iotdb.db.service.metrics.MigrationMetrics;
 import org.apache.iotdb.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.iotdb.tsfile.fileSystem.fsFactory.FSFactory;
 import org.apache.iotdb.tsfile.utils.FSUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,10 +35,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class MigrationTask implements Runnable {
+  private static final Logger logger = LoggerFactory.getLogger(MigrationTask.class);
   protected static final FSFactory fsFactory = FSFactoryProducer.getFSFactory();
+  protected static final MigrationMetrics MIGRATION_METRICS = MigrationMetrics.getInstance();
 
+  protected boolean toLocal;
   protected final MigrationCause cause;
   protected final TsFileResource tsFileResource;
+  protected final int destTierLevel;
+
   protected final String targetDir;
   protected final File srcFile;
   protected final File destTsFile;
@@ -49,6 +58,7 @@ public abstract class MigrationTask implements Runnable {
       throws IOException {
     this.cause = cause;
     this.tsFileResource = tsFileResource;
+    this.destTierLevel = tsFileResource.getTierLevel() + 1;
     this.targetDir = targetDir;
     this.srcFile = tsFileResource.getTsFile();
     this.destTsFile = fsFactory.getFile(targetDir, getDestTsFilePath(srcFile));
@@ -79,7 +89,10 @@ public abstract class MigrationTask implements Runnable {
 
   @Override
   public void run() {
+    long taskStartTime = System.nanoTime();
+
     try {
+      MIGRATION_METRICS.recordMigrationCause(cause);
       migrate();
     } finally {
       // try to set the final status to NORMAL to avoid migrate failure
@@ -87,12 +100,25 @@ public abstract class MigrationTask implements Runnable {
       tsFileResource.setStatus(TsFileResourceStatus.NORMAL);
       MigrationTaskManager.getInstance().decreaseMigrationTasksNum();
     }
+
+    long taskTimeCost = System.nanoTime() - taskStartTime;
+    MIGRATION_METRICS.recordMigrationTotalTime(destTierLevel, toLocal, taskTimeCost);
+    logger.debug(
+        "Successfully migrate local TsFile {} to the {} {}, this migration operation is caused by {} and costs {}ms.",
+        srcFile,
+        toLocal ? "local" : "remote",
+        destTsFile,
+        cause,
+        taskTimeCost);
   }
 
   public abstract void migrate();
 
   protected void migrateFile(File src, File dest) throws IOException {
+    long copyStartTime = System.nanoTime();
     fsFactory.copyFile(src, dest);
+    MIGRATION_METRICS.recordMigrationFileCopyTime(
+        destTierLevel, toLocal, System.nanoTime() - copyStartTime);
     filesShouldDelete.add(dest);
   }
 
