@@ -75,12 +75,12 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1685949629855,
+  "iteration": 1686532327990,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "collapsed": true,
+      "collapsed": false,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -92,271 +92,7 @@
         "y": 0
       },
       "id": 1,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 0,
-            "y": 1
-          },
-          "id": 2,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "quantity{instance=~\"$instance\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "The Number Of Entity",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "min": 0,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 8,
-            "y": 1
-          },
-          "id": 3,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "rate(quantity_total{instance=~\"$instance\"}[1m])",
-              "interval": "1m",
-              "legendFormat": "write point per second",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Write Point Per Second",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 4,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 1
-          },
-          "id": 4,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "mem{instance=~\"$instance\", name!=\"IoTConsensus\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Database Used Memory",
-          "type": "timeseries"
-        }
-      ],
+      "panels": [],
       "repeat": "instance",
       "targets": [
         {
@@ -371,6 +107,272 @@
       "type": "row"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "quantity{instance=~\"$instance\"}",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "The Number Of Entity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "rate(quantity_total{instance=~\"$instance\"}[1m])",
+          "interval": "1m",
+          "legendFormat": "write point per second",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Write Point Per Second",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 4,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "mem{instance=~\"$instance\", name!=\"IoTConsensus\"}",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Database Used Memory",
+      "type": "timeseries"
+    },
+    {
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
@@ -380,7 +382,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 1
+        "y": 9
       },
       "id": 5,
       "panels": [
@@ -1013,7 +1015,7 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1022,10 +1024,1079 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 10
       },
       "id": 14,
-      "panels": [],
+      "panels": [
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 3
+          },
+          "id": 327,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "right"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "file_count{instance=~\"$instance\", name!=\"open_file_handlers\"}",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(file_count{instance=~\"$instance\", name!=\"open_file_handlers\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "all",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(file_count{instance=~\"$instance\", name=~\"seq|unseq\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "tsfile",
+              "refId": "C"
+            }
+          ],
+          "title": "File Count $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 3
+          },
+          "id": 329,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "right"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "file_size{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(file_size{instance=~\"$instance\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "all",
+              "refId": "B"
+            }
+          ],
+          "title": "File Size $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 11
+          },
+          "id": 331,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "table",
+              "placement": "right"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "file_level_size{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{type}}-level-{{level}}",
+              "refId": "A"
+            }
+          ],
+          "title": "TsFile Total Size In Each Level $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 11
+          },
+          "id": 333,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "file_level_count{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{type}}-level-{{level}}",
+              "refId": "A"
+            }
+          ],
+          "title": "TsFile Count In Each Level $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 11
+          },
+          "id": 335,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "table",
+              "placement": "right"
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "file_level_size{instance=~\"$instance\"} / file_level_count{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{type}}-level-{{level}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Avg TsFile Size In Each Level $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 5,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 15,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "queue{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{name}}-{{status}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Task Number $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 5,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "id": 16,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "rate(cost_task_seconds_sum{instance=~\"$instance\"}[1m])/rate(cost_task_seconds_count{instance=~\"$instance\"}[1m])",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "The Time Consumed of Task $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 5,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "KBs"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 27
+          },
+          "id": 17,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(rate(data_written_total{instance=~\"$instance\"}[1m]))",
+              "interval": "",
+              "legendFormat": "Write",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(rate(data_read_total{instance=~\"$instance\"}[1m]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Read",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Compaction Read And Write Per Second $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 5,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 27
+          },
+          "id": 19,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(rate(compaction_task_count{instance=~\"$instance\", name = \"inner_seq\"}[1m]))*60",
+              "interval": "",
+              "legendFormat": "sequence",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(rate(compaction_task_count{instance=~\"$instance\", name = \"inner_unseq\"}[1m]))*60",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "unsequence",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(rate(compaction_task_count{instance=~\"$instance\", name = \"cross\"}[1m]))*60",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "cross",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Compaction Number Per Minute $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 35
+          },
+          "id": 169,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(compacted_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
+              "interval": "",
+              "legendFormat": "Compacted Chunk Num Per Min",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(deserialized_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Deserialized Chunk Num Per Min",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(directly_flush_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Directly Flush Chunk Num Per Min",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(merged_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Merged Chunk Num Per Min",
+              "refId": "D"
+            }
+          ],
+          "title": "Compaction Process Chunk Status $instance",
+          "type": "timeseries"
+        },
+        {
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 35
+          },
+          "id": 171,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(rate(compacted_point_num_total{instance=~\"$instance\"}[1m]))*60",
+              "interval": "",
+              "legendFormat": "Compacted Point Num Per Min",
+              "refId": "A"
+            }
+          ],
+          "title": "Compacted Point Num Per Minute $instance",
+          "type": "timeseries"
+        }
+      ],
       "targets": [
         {
           "datasource": {
@@ -1039,1085 +2110,6 @@
       "type": "row"
     },
     {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 3
-      },
-      "id": 327,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean"
-          ],
-          "displayMode": "table",
-          "placement": "right"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "file_count{instance=~\"$instance\", name!=\"open_file_handlers\"}",
-          "interval": "",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(file_count{instance=~\"$instance\", name!=\"open_file_handlers\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "all",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(file_count{instance=~\"$instance\", name=~\"seq|unseq\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "tsfile",
-          "refId": "C"
-        }
-      ],
-      "title": "File Count $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 3
-      },
-      "id": 329,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean"
-          ],
-          "displayMode": "table",
-          "placement": "right"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "file_size{instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "{{name}}",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(file_size{instance=~\"$instance\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "all",
-          "refId": "B"
-        }
-      ],
-      "title": "File Size $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 11
-      },
-      "id": 331,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "file_level_size{instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "{{type}}-level-{{level}}",
-          "refId": "A"
-        }
-      ],
-      "title": "TsFile Total Size In Each Level $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 11
-      },
-      "id": 333,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "file_level_count{instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "{{type}}-level-{{level}}",
-          "refId": "A"
-        }
-      ],
-      "title": "TsFile Count In Each Level $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 11
-      },
-      "id": 335,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "file_level_size{instance=~\"$instance\"} / file_level_count{instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "{{type}}-level-{{level}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Avg TsFile Size In Each Level $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 5,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 19
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "queue{instance=~\"$instance\"}",
-          "interval": "",
-          "legendFormat": "{{name}}-{{status}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Task Number $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 5,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 19
-      },
-      "id": 16,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "rate(cost_task_seconds_sum{instance=~\"$instance\"}[1m])/rate(cost_task_seconds_count{instance=~\"$instance\"}[1m])",
-          "interval": "",
-          "legendFormat": "{{name}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "The Time Consumed of Task $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 5,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "KBs"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 27
-      },
-      "id": 17,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(data_written_total{instance=~\"$instance\"}[1m]))",
-          "interval": "",
-          "legendFormat": "Write",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(data_read_total{instance=~\"$instance\"}[1m]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Read",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Compaction Read And Write Per Second $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 5,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 27
-      },
-      "id": 19,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(compaction_task_count{instance=~\"$instance\", name = \"inner_seq\"}[1m]))*60",
-          "interval": "",
-          "legendFormat": "sequence",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(compaction_task_count{instance=~\"$instance\", name = \"inner_unseq\"}[1m]))*60",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "unsequence",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(compaction_task_count{instance=~\"$instance\", name = \"cross\"}[1m]))*60",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "cross",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "Compaction Number Per Minute $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 35
-      },
-      "id": 169,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(rate(compacted_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
-          "interval": "",
-          "legendFormat": "Compacted Chunk Num Per Min",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(rate(deserialized_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Deserialized Chunk Num Per Min",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(rate(directly_flush_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Directly Flush Chunk Num Per Min",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(rate(merged_chunk_num_total{instance=~\"$instance\"}[1m]))*60",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Merged Chunk Num Per Min",
-          "refId": "D"
-        }
-      ],
-      "title": "Compaction Process Chunk Status $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 35
-      },
-      "id": 171,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "exemplar": true,
-          "expr": "sum(rate(compacted_point_num_total{instance=~\"$instance\"}[1m]))*60",
-          "interval": "",
-          "legendFormat": "Compacted Point Num Per Min",
-          "refId": "A"
-        }
-      ],
-      "title": "Compacted Point Num Per Minute $instance",
-      "type": "timeseries"
-    },
-    {
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
@@ -2127,7 +2119,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 11
       },
       "id": 231,
       "panels": [
@@ -3322,10 +3314,6 @@
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3404,7 +3392,9 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "builder",
+              "exemplar": true,
               "expr": "data_region_mem_cost{instance=~\"$instance\"}",
+              "interval": "",
               "legendFormat": "{{region}}",
               "range": true,
               "refId": "A"
@@ -3415,11 +3405,25 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "code",
-              "expr": "sum(data_region_mem_cost)",
+              "exemplar": true,
+              "expr": "sum(data_region_mem_cost{instance=~\"$instance\"})",
               "hide": false,
-              "legendFormat": "Total",
+              "interval": "",
+              "legendFormat": "Total(instance)",
               "range": true,
               "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "exemplar": true,
+              "expr": "sum(data_region_mem_cost{cluster=~\"$cluster\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Total(cluster)",
+              "refId": "C"
             }
           ],
           "title": "Data Region Mem Cost $instance",
@@ -3794,10 +3798,6 @@
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3876,7 +3876,9 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "builder",
-              "expr": "performance_overview_schedule_detail_seconds{stage=~\"wal\", instance=~\"$instance\"}",
+              "exemplar": true,
+              "expr": "performance_overview_engine_detail_seconds{stage=~\"wal\", instance=~\"$instance\"}",
+              "interval": "",
               "legendFormat": "write_to_{{stage}}-P{{quantile}}",
               "range": true,
               "refId": "A"
@@ -4070,10 +4072,6 @@
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -4152,7 +4150,9 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "editorMode": "builder",
-              "expr": "performance_overview_schedule_detail_seconds{stage=~\"memtable\", instance=~\"$instance\"}",
+              "exemplar": true,
+              "expr": "performance_overview_engine_detail_seconds{stage=~\"memtable\", instance=~\"$instance\"}",
+              "interval": "",
               "legendFormat": "write_to_{{stage}}-P{{quantile}}",
               "range": true,
               "refId": "A"
@@ -4578,7 +4578,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 12
       },
       "id": 197,
       "panels": [
@@ -5448,7 +5448,7 @@
                 "uid": "${DS_PROMETHEUS}"
               },
               "exemplar": true,
-              "expr": "sum(rate(cache_total{instance=~\"$instance\", type=\"hit\"}[1m])) by (name)  / sum(rate(cache_total{instance=~\"$instance\", type=\"all\"}[1m])) by (name)",
+              "expr": "sum(rate(cache{instance=~\"$instance\", type=\"hit\"}[1m])) by (name)  / sum(rate(cache{instance=~\"$instance\", type=\"all\"}[1m])) by (name)",
               "format": "time_series",
               "interval": "",
               "legendFormat": "{{name}}",
@@ -6753,7 +6753,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 13
       },
       "id": 58,
       "panels": [
@@ -6810,7 +6810,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 6
           },
@@ -6898,8 +6898,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 6
           },
           "id": 60,
@@ -6982,8 +6982,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 6
           },
           "id": 61,
@@ -7015,90 +7015,6 @@
             }
           ],
           "title": "The time consumed of query plan stages(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 6
-          },
-          "id": 62,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "query_plan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{stage}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of query plan stages(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -7154,7 +7070,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 14
           },
@@ -7242,8 +7158,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 14
           },
           "id": 81,
@@ -7326,8 +7242,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 14
           },
           "id": 64,
@@ -7359,90 +7275,6 @@
             }
           ],
           "title": "The time consumed of plan dispatch stages(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 14
-          },
-          "id": 65,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "dispatcher_seconds{instance=~\"${instance}\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{stage}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of plan dispatch stages(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -7498,7 +7330,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 22
           },
@@ -7586,8 +7418,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 22
           },
           "id": 66,
@@ -7670,8 +7502,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 22
           },
           "id": 67,
@@ -7703,90 +7535,6 @@
             }
           ],
           "title": "The time consumed of query execution stages(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 22
-          },
-          "id": 68,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "asc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "query_execution_seconds{instance=~\"${instance}\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{stage}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of query execution stages(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -7842,7 +7590,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 30
           },
@@ -7930,8 +7678,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 30
           },
           "id": 69,
@@ -8014,8 +7762,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 30
           },
           "id": 70,
@@ -8047,90 +7795,6 @@
             }
           ],
           "title": "The time consumed of operator execution(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 30
-          },
-          "id": 71,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "operator_execution_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of operator execution(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -8186,7 +7850,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 38
           },
@@ -8274,8 +7938,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 38
           },
           "id": 84,
@@ -8358,8 +8022,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 38
           },
           "id": 73,
@@ -8391,90 +8055,6 @@
             }
           ],
           "title": "The time consumed of query aggregation(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 38
-          },
-          "id": 74,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "aggregation_seconds{instance=~\"${instance}\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of query aggregation(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -8530,7 +8110,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 46
           },
@@ -8619,8 +8199,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 46
           },
           "id": 132,
@@ -8704,8 +8284,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 46
           },
           "id": 133,
@@ -8738,92 +8318,6 @@
             }
           ],
           "title": "The time consumed of query scan(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 46
-          },
-          "id": 134,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "sum(rate(series_scan_cost_seconds{instance=~\"$instance\", quantile=\"0.999\"}[1m])) by (stage)",
-              "format": "time_series",
-              "interval": "",
-              "legendFormat": "{{stage}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of query scan(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -8879,7 +8373,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 54
           },
@@ -8967,8 +8461,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 54
           },
           "id": 128,
@@ -9051,8 +8545,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 54
           },
           "id": 129,
@@ -9084,90 +8578,6 @@
             }
           ],
           "title": "The usage of query resource(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 54
-          },
-          "id": 130,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "query_resource{instance=~\"${instance}\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The usage of query resource(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -9223,7 +8633,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 62
           },
@@ -9311,8 +8721,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 62
           },
           "id": 136,
@@ -9395,8 +8805,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 62
           },
           "id": 137,
@@ -9428,90 +8838,6 @@
             }
           ],
           "title": "The time consumed  of query data exchange(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 62
-          },
-          "id": 138,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "sum(rate(data_exchange_cost_seconds{instance=~\"$instance\", quantile=\"0.999\"}[1m])) by (operation)",
-              "interval": "",
-              "legendFormat": "{{operation}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed  of query data exchange(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -9824,7 +9150,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 78
           },
@@ -9913,8 +9239,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 78
           },
           "id": 164,
@@ -9998,8 +9324,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 78
           },
           "id": 165,
@@ -10033,91 +9359,6 @@
           ],
           "title": "The time consumed of query schedule time(99%) $instance",
           "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 5,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 78
-          },
-          "id": 166,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "driver_scheduler_seconds{instance=~\"$instance\", quantile=\"0.999\"}",
-              "format": "time_series",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of query schedule time(99.9%) $instance",
-          "type": "timeseries"
         }
       ],
       "targets": [
@@ -10142,7 +9383,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 14
       },
       "id": 100,
       "panels": [
@@ -10199,7 +9440,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 7
           },
@@ -10287,8 +9528,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 7
           },
           "id": 85,
@@ -10371,8 +9612,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 7
           },
           "id": 77,
@@ -10404,90 +9645,6 @@
             }
           ],
           "title": "The time consumed of load timeseries metadata(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 7
-          },
-          "id": 78,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"load_timeseries_metadata\"}",
-              "interval": "",
-              "legendFormat": "{{type}}_{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of load timeseries metadata(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -10543,7 +9700,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 15
           },
@@ -10631,8 +9788,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 15
           },
           "id": 87,
@@ -10715,8 +9872,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 15
           },
           "id": 88,
@@ -10748,90 +9905,6 @@
             }
           ],
           "title": "The time consumed of read timeseries metadata(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 15
-          },
-          "id": 89,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"read_timeseries_metadata\"}",
-              "interval": "",
-              "legendFormat": "{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of read timeseries metadata(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -10887,7 +9960,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 23
           },
@@ -10975,8 +10048,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 23
           },
           "id": 91,
@@ -11059,8 +10132,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 23
           },
           "id": 92,
@@ -11092,90 +10165,6 @@
             }
           ],
           "title": "The time consumed of timeseries metadata modification(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 23
-          },
-          "id": 93,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"timeseries_metadata_modification\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of timeseries metadata modification(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -11231,7 +10220,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 31
           },
@@ -11319,8 +10308,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 31
           },
           "id": 95,
@@ -11403,8 +10392,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 31
           },
           "id": 96,
@@ -11436,90 +10425,6 @@
             }
           ],
           "title": "The time consumed of load chunk metadata list(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 31
-          },
-          "id": 97,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"load_chunk_metadata_list\"}",
-              "interval": "",
-              "legendFormat": "{{type}}_{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of load chunk metadata list(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -11575,7 +10480,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 39
           },
@@ -11664,8 +10569,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 39
           },
           "id": 101,
@@ -11749,8 +10654,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 39
           },
           "id": 102,
@@ -11782,91 +10687,6 @@
             }
           ],
           "title": "The time consumed of chunk metadata modification(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 39
-          },
-          "id": 103,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"chunk_metadata_modification\"}",
-              "interval": "",
-              "legendFormat": "{{type}}-{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of chunk metadata modification(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -11922,7 +10742,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 47
           },
@@ -12011,8 +10831,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 47
           },
           "id": 105,
@@ -12096,8 +10916,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 47
           },
           "id": 106,
@@ -12129,91 +10949,6 @@
             }
           ],
           "title": "The time consumed of chunk metadata filter(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 47
-          },
-          "id": 107,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"chunk_metadata_filter\"}",
-              "interval": "",
-              "legendFormat": "{{type}}-{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of chunk metadata filter(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -12269,7 +11004,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 55
           },
@@ -12358,8 +11093,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 55
           },
           "id": 109,
@@ -12443,8 +11178,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 55
           },
           "id": 110,
@@ -12476,91 +11211,6 @@
             }
           ],
           "title": "The time consumed of construct chunk reader(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 55
-          },
-          "id": 111,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"construct_chunk_reader\"}",
-              "interval": "",
-              "legendFormat": "{{type}}-{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of construct chunk reader(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -12616,7 +11266,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 63
           },
@@ -12705,8 +11355,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 63
           },
           "id": 113,
@@ -12790,8 +11440,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 63
           },
           "id": 114,
@@ -12823,91 +11473,6 @@
             }
           ],
           "title": "The time consumed of read chunk(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 63
-          },
-          "id": 115,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"read_chunk\"}",
-              "interval": "",
-              "legendFormat": "{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of read chunk(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -12963,7 +11528,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 71
           },
@@ -13052,8 +11617,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 71
           },
           "id": 117,
@@ -13137,8 +11702,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 71
           },
           "id": 118,
@@ -13170,91 +11735,6 @@
             }
           ],
           "title": "The time consumed of init chunk reader(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 71
-          },
-          "id": 119,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"init_chunk_reader\"}",
-              "interval": "",
-              "legendFormat": "{{type}}-{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of init chunk reader(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -13310,7 +11790,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 79
           },
@@ -13399,8 +11879,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 79
           },
           "id": 121,
@@ -13484,8 +11964,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 79
           },
           "id": 122,
@@ -13517,91 +11997,6 @@
             }
           ],
           "title": "The time consumed of build tsblock from page reader(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 79
-          },
-          "id": 123,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"build_tsblock_from_page_reader\"}",
-              "interval": "",
-              "legendFormat": "{{type}}-{{from}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of build tsblock from page reader(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -13657,7 +12052,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 87
           },
@@ -13746,8 +12141,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 87
           },
           "id": 125,
@@ -13831,8 +12226,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 87
           },
           "id": 126,
@@ -13865,91 +12260,6 @@
           ],
           "title": "The time consumed of build tsblock from merge reader(99%) $instance",
           "type": "timeseries"
-        },
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 87
-          },
-          "id": 127,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "series_scan_cost_seconds{instance=~\"${instance}\", quantile=\"0.999\", stage=\"build_tsblock_from_merge_reader\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of build tsblock from merge reader(99.9%) $instance",
-          "type": "timeseries"
         }
       ],
       "targets": [
@@ -13974,7 +12284,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 15
       },
       "id": 142,
       "panels": [
@@ -14031,7 +12341,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 8
           },
@@ -14119,8 +12429,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 8
           },
           "id": 144,
@@ -14203,8 +12513,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 8
           },
           "id": 145,
@@ -14236,90 +12546,6 @@
             }
           ],
           "title": "The  time consumed of source handle get tsblock(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 8
-          },
-          "id": 146,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "data_exchange_cost_seconds{instance=~\"$instance\", operation=\"source_handle_get_tsblock\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The  time consumed of source handle get tsblock(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -14375,7 +12601,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 16
           },
@@ -14463,8 +12689,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 16
           },
           "id": 148,
@@ -14547,8 +12773,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 16
           },
           "id": 149,
@@ -14580,90 +12806,6 @@
             }
           ],
           "title": "The time consumed of source handle deserialize tsblock(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 16
-          },
-          "id": 150,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "data_exchange_cost_seconds{instance=~\"$instance\", operation=\"source_handle_deserialize_tsblock\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed of source handle deserialize tsblock(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -14719,7 +12861,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 24
           },
@@ -14807,8 +12949,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 24
           },
           "id": 152,
@@ -14891,8 +13033,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 24
           },
           "id": 153,
@@ -14924,90 +13066,6 @@
             }
           ],
           "title": "The time consumed  of sink handle send tsblock(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 24
-          },
-          "id": 154,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "data_exchange_cost_seconds{instance=~\"$instance\", operation=\"sink_handle_send_tsblock\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed  of sink handle send tsblock(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -15063,7 +13121,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 32
           },
@@ -15151,8 +13209,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 32
           },
           "id": 156,
@@ -15235,8 +13293,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 32
           },
           "id": 157,
@@ -15268,90 +13326,6 @@
             }
           ],
           "title": "The time consumed  of on acknowledge data block event task(99%) $instance",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 32
-          },
-          "id": 158,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "data_exchange_cost_seconds{instance=~\"$instance\", operation=\"on_acknowledge_data_block_event_task\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed  of on acknowledge data block event task(99.9%) $instance",
           "type": "timeseries"
         },
         {
@@ -15407,7 +13381,7 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 8,
             "x": 0,
             "y": 40
           },
@@ -15495,8 +13469,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 6,
+            "w": 8,
+            "x": 8,
             "y": 40
           },
           "id": 160,
@@ -15579,8 +13553,8 @@
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 12,
+            "w": 8,
+            "x": 16,
             "y": 40
           },
           "id": 161,
@@ -15613,90 +13587,6 @@
           ],
           "title": "The time consumed  of get data block task(99%) $instance",
           "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 40
-          },
-          "id": 162,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "repeat": "instance",
-          "repeatDirection": "v",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "exemplar": true,
-              "expr": "data_exchange_cost_seconds{instance=~\"$instance\", operation=\"get_data_block_task\", quantile=\"0.999\"}",
-              "interval": "",
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "The time consumed  of get data block task(99.9%) $instance",
-          "type": "timeseries"
         }
       ],
       "targets": [
@@ -15717,7 +13607,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 16
       },
       "id": 318,
       "panels": [
@@ -16317,7 +14207,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 17
       },
       "id": 20,
       "panels": [
@@ -16372,7 +14262,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 9
+            "y": 10
           },
           "id": 21,
           "options": {
@@ -16490,7 +14380,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 9
+            "y": 10
           },
           "id": 22,
           "options": {
@@ -16581,7 +14471,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 9
+            "y": 10
           },
           "id": 23,
           "options": {
@@ -16687,7 +14577,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 17
+            "y": 18
           },
           "id": 24,
           "options": {
@@ -16804,7 +14694,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 17
+            "y": 18
           },
           "id": 25,
           "options": {
@@ -16916,7 +14806,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 17
+            "y": 18
           },
           "id": 26,
           "options": {
@@ -17006,7 +14896,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 25
+            "y": 26
           },
           "id": 27,
           "options": {
@@ -17096,7 +14986,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 25
+            "y": 26
           },
           "id": 175,
           "options": {
@@ -17182,7 +15072,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 25
+            "y": 26
           },
           "id": 29,
           "options": {
@@ -17273,7 +15163,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 33
+            "y": 34
           },
           "id": 30,
           "options": {
@@ -17366,7 +15256,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 33
+            "y": 34
           },
           "id": 31,
           "options": {
@@ -17460,7 +15350,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 33
+            "y": 34
           },
           "id": 32,
           "options": {
@@ -17553,7 +15443,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 41
+            "y": 42
           },
           "id": 28,
           "options": {
@@ -17643,7 +15533,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 41
+            "y": 42
           },
           "id": 173,
           "options": {
@@ -17701,7 +15591,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 18
       },
       "id": 283,
       "panels": [
@@ -18076,7 +15966,7 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 29
+            "y": 20
           },
           "id": 291,
           "options": {
@@ -18200,7 +16090,7 @@
             "h": 9,
             "w": 8,
             "x": 8,
-            "y": 29
+            "y": 20
           },
           "id": 292,
           "options": {
@@ -18303,7 +16193,7 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 29
+            "y": 20
           },
           "id": 290,
           "options": {
@@ -18373,7 +16263,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 19
       },
       "id": 294,
       "panels": [
@@ -18453,7 +16343,7 @@
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 11
+            "y": 12
           },
           "id": 295,
           "options": {
@@ -18601,7 +16491,7 @@
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 11
+            "y": 12
           },
           "id": 296,
           "options": {
@@ -18748,7 +16638,7 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 20
+            "y": 21
           },
           "id": 297,
           "options": {
@@ -18872,7 +16762,7 @@
             "h": 9,
             "w": 8,
             "x": 8,
-            "y": 20
+            "y": 21
           },
           "id": 300,
           "options": {
@@ -18975,7 +16865,7 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 20
+            "y": 21
           },
           "id": 299,
           "options": {
@@ -19039,12 +16929,16 @@
   "style": "dark",
   "tags": [
     "Apache IoTDB",
-    "v1.1"
+    "v1.2"
   ],
   "templating": {
     "list": [
       {
         "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
         "definition": "label_values(cluster)",
         "hide": 0,
         "includeAll": false,
@@ -19059,11 +16953,14 @@
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
-        "type": "query",
-        "datasource": "${DS_PROMETHEUS}"
+        "type": "query"
       },
       {
         "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
         "definition": "label_values({cluster=~\"$cluster\"},nodeType)",
         "hide": 2,
         "includeAll": false,
@@ -19078,11 +16975,14 @@
         "regex": ".*DATANODE.*",
         "skipUrlSync": false,
         "sort": 0,
-        "type": "query",
-        "datasource": "${DS_PROMETHEUS}"
+        "type": "query"
       },
       {
         "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
         "definition": "label_values({cluster=~\"$cluster\",nodeType=~\"$nodeType\"},instance)",
         "hide": 0,
         "includeAll": false,
@@ -19097,8 +16997,7 @@
         "regex": "",
         "skipUrlSync": false,
         "sort": 3,
-        "type": "query",
-        "datasource": "${DS_PROMETHEUS}"
+        "type": "query"
       }
     ]
   },
@@ -19119,6 +17018,6 @@
   "timezone": "browser",
   "title": "Apache IoTDB DataNode Dashboard",
   "uid": "TbEVYRw7B",
-  "version": 241,
+  "version": 267,
   "weekStart": ""
 }

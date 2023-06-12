@@ -75,7 +75,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1685949635446,
+  "iteration": 1686532336186,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -1093,7 +1093,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 5
       },
       "id": 49,
       "panels": [
@@ -1859,7 +1859,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 3
+        "y": 6
       },
       "id": 53,
       "panels": [
@@ -2455,7 +2455,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 4
+        "y": 7
       },
       "id": 109,
       "panels": [
@@ -3146,7 +3146,7 @@
   "style": "dark",
   "tags": [
     "Apache IoTDB",
-    "v1.1"
+    "v1.2"
   ],
   "templating": {
     "list": [
@@ -3226,6 +3226,6 @@
   "timezone": "browser",
   "title": "Apache IoTDB ConfigNode Dashboard",
   "uid": "4WkTYkx4y",
-  "version": 69,
+  "version": 70,
   "weekStart": ""
 }
