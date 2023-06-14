@@ -18,27 +18,7 @@
  */
 package com.timecho.iotdb.os.utils;
 
-import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
-import com.timecho.iotdb.os.io.ObjectStorageConnector;
-import com.timecho.iotdb.os.io.aws.S3ObjectStorageConnector;
-import com.timecho.iotdb.os.io.test.TestObjectStorageConnector;
-
 public enum ObjectStorageType {
   TEST,
-  AWS_S3;
-
-  public static ObjectStorageConnector getConnector(ObjectStorageType type) {
-    switch (type) {
-      case AWS_S3:
-        return new S3ObjectStorageConnector();
-      case TEST:
-        return new TestObjectStorageConnector();
-      default:
-        return null;
-    }
-  }
-
-  public static ObjectStorageConnector getConnector() {
-    return getConnector(ObjectStorageDescriptor.getInstance().getConfig().getOsType());
-  }
+  AWS_S3,
 }

@@ -34,7 +34,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -53,7 +52,7 @@ import java.io.InputStream;
 import java.util.stream.Collectors;
 
 public class S3ObjectStorageConnector implements ObjectStorageConnector {
-  private static final String RANGE_FORMAT = "%d-%d";
+  private static final String RANGE_FORMAT = "bytes=%d-%d";
   private final AWSS3Config s3config =
       (AWSS3Config) ObjectStorageDescriptor.getInstance().getConfig().getProviderConfig();
   private final S3Client s3Client =
@@ -108,8 +107,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
     try {
       DeleteObjectRequest req =
           DeleteObjectRequest.builder().bucket(osUri.getBucket()).key(osUri.getKey()).build();
-      DeleteObjectResponse resp = s3Client.deleteObject(req);
-      return resp.deleteMarker();
+      s3Client.deleteObject(req);
+      return true;
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
     }
@@ -132,8 +131,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
               .bucket(fromOSUri.getBucket())
               .key(fromOSUri.getKey())
               .build();
-      DeleteObjectResponse resp = s3Client.deleteObject(deleteReq);
-      return resp.deleteMarker();
+      s3Client.deleteObject(deleteReq);
+      return true;
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
     }
@@ -185,7 +184,7 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
               .build();
       ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(req);
       return resp.asByteArray();
-    } catch (S3Exception e) {
+    } catch (Exception e) {
       throw new ObjectStorageException(e);
     }
   }
@@ -218,6 +217,10 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
 
       do {
         listRes = s3Client.listObjectsV2(listReq);
+        if (listRes.contents().size() == 0) {
+          break;
+        }
+
         Delete del =
             Delete.builder()
                 .objects(
@@ -226,7 +229,7 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
                         .collect(Collectors.toList()))
                 .build();
         DeleteObjectsRequest deleteObjectsRequest =
-            DeleteObjectsRequest.builder().delete(del).build();
+            DeleteObjectsRequest.builder().bucket(prefixUri.getBucket()).delete(del).build();
         s3Client.deleteObjects(deleteObjectsRequest);
 
         listReq =
@@ -241,6 +244,7 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
     }
   }
 
+  @Override
   public void close() {
     s3Client.close();
   }

@@ -187,7 +187,7 @@ public class RemoteMigrationTaskTest {
   }
 
   @Test
-  @PrepareForTest(ObjectStorageType.class)
+  @PrepareForTest(ObjectStorageConnector.class)
   public void testMigrateWithCopyErrors() throws Exception {
     String fileName = TsFileNameGenerator.generateNewTsFileName(0, 0, 0, 0);
     // create source files
@@ -209,8 +209,8 @@ public class RemoteMigrationTaskTest {
     PowerMockito.doThrow(new ObjectStorageException())
         .when(mockConnector)
         .putLocalFile(Mockito.any(), Mockito.any());
-    PowerMockito.mockStatic(ObjectStorageType.class);
-    PowerMockito.when(ObjectStorageType.getConnector(ObjectStorageType.TEST))
+    PowerMockito.mockStatic(ObjectStorageConnector.class);
+    PowerMockito.when(ObjectStorageConnector.getConnector(ObjectStorageType.TEST))
         .thenReturn(mockConnector);
     // migrate
     TsFileResource tsfile = new TsFileResource(srcFile);

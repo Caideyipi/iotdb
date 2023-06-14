@@ -138,4 +138,7 @@ public class TestObjectStorageConnector implements ObjectStorageConnector {
 
   @Override
   public void copyObject(OSURI srcUri, OSURI destUri) throws ObjectStorageException {}
+
+  @Override
+  public void close() {}
 }

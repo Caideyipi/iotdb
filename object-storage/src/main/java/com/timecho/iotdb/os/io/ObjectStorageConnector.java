@@ -19,13 +19,42 @@
 
 package com.timecho.iotdb.os.io;
 
+import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.exception.ObjectStorageException;
 import com.timecho.iotdb.os.fileSystem.OSURI;
+import com.timecho.iotdb.os.io.aws.S3ObjectStorageConnector;
+import com.timecho.iotdb.os.io.test.TestObjectStorageConnector;
+import com.timecho.iotdb.os.utils.ObjectStorageType;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public interface ObjectStorageConnector {
+  Map<ObjectStorageType, ObjectStorageConnector> cachedConnector = new ConcurrentHashMap<>();
+
+  static ObjectStorageConnector getConnector(ObjectStorageType type) {
+    switch (type) {
+      case AWS_S3:
+        return cachedConnector.computeIfAbsent(type, k -> new S3ObjectStorageConnector());
+      case TEST:
+        return cachedConnector.computeIfAbsent(type, k -> new TestObjectStorageConnector());
+      default:
+        return null;
+    }
+  }
+
+  static ObjectStorageConnector getConnector() {
+    return getConnector(ObjectStorageDescriptor.getInstance().getConfig().getOsType());
+  }
+
+  static void closeAll() {
+    for (ObjectStorageConnector connector : cachedConnector.values()) {
+      connector.close();
+    }
+  }
+
   boolean doesObjectExist(OSURI osUri) throws ObjectStorageException;
 
   IMetaData getMetaData(OSURI osUri) throws ObjectStorageException;
@@ -47,4 +76,6 @@ public interface ObjectStorageConnector {
   void copyObject(OSURI srcUri, OSURI destUri) throws ObjectStorageException;
 
   void deleteObjectsByPrefix(OSURI prefixUri) throws ObjectStorageException;
+
+  void close();
 }

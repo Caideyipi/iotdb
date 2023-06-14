@@ -47,7 +47,7 @@ public class OSFileCache {
   private final LoadingCache<OSFileCacheKey, OSFileCacheValue> remotePos2LocalCacheFile;
 
   OSFileCache(ObjectStorageType osType) {
-    connector = ObjectStorageType.getConnector(osType);
+    connector = ObjectStorageConnector.getConnector(osType);
     remotePos2LocalCacheFile =
         Caffeine.newBuilder()
             .recordStats()

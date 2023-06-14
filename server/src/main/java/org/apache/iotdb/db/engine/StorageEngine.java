@@ -72,6 +72,7 @@ import org.apache.iotdb.tsfile.utils.FilePathUtils;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
 import com.timecho.iotdb.os.cache.CacheRecoverTask;
+import com.timecho.iotdb.os.io.ObjectStorageConnector;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -420,6 +421,9 @@ public class StorageEngine implements IService {
       cachedThreadPool.shutdownNow();
     }
     dataRegionMap.clear();
+    if (config.isEnableObjectStorage()) {
+      ObjectStorageConnector.closeAll();
+    }
   }
 
   @Override
