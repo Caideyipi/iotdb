@@ -53,6 +53,7 @@ public interface ObjectStorageConnector {
     for (ObjectStorageConnector connector : cachedConnector.values()) {
       connector.close();
     }
+    cachedConnector.clear();
   }
 
   boolean doesObjectExist(OSURI osUri) throws ObjectStorageException;

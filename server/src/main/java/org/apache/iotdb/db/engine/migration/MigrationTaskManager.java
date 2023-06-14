@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -107,42 +108,50 @@ public class MigrationTaskManager implements IService {
     }
 
     private void schedule() {
-      // submit migration tasks
+      if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT) {
+        return;
+      }
+      // sort all tsfiles by priority
+      List<TsFileResource> tsfiles = new ArrayList<>();
       for (DataRegion dataRegion : StorageEngine.getInstance().getAllDataRegions()) {
-        List<TsFileResource> tsfiles = dataRegion.getSequenceFileList();
+        tsfiles.addAll(dataRegion.getSequenceFileList());
         tsfiles.addAll(dataRegion.getUnSequenceFileList());
         tsfiles.sort(this::compareMigrationPriority);
-        for (TsFileResource tsfile : tsfiles) {
-          try {
-            int currentTier = tsfile.getTierLevel();
-            int nextTier = currentTier + 1;
-            // only migrate closed TsFiles not in the last tier
-            if (tsfile.getStatus() != TsFileResourceStatus.NORMAL
-                || nextTier == iotdbConfig.getTierDataDirs().length) {
-              continue;
-            }
-            // check tier ttl and disk space
-            long tierTTL =
-                DateTimeUtils.convertMilliTimeWithPrecision(
-                    System.currentTimeMillis() - commonConfig.getTierTTLInMs()[currentTier],
-                    iotdbConfig.getTimestampPrecision());
-            if (!tsfile.stillLives(tierTTL)) {
-              trySubmitMigrationTask(
-                  currentTier,
-                  MigrationCause.TTL,
-                  tsfile,
-                  tierManager.getNextFolderForTsFile(nextTier, tsfile.isSeq()));
-            } else if (needMigrationTiers.contains(currentTier)) {
-              trySubmitMigrationTask(
-                  currentTier,
-                  MigrationCause.DISK_SPACE,
-                  tsfile,
-                  tierManager.getNextFolderForTsFile(nextTier, tsfile.isSeq()));
-            }
-          } catch (Exception e) {
-            logger.error(
-                "An error occurred when check and try to migrate TsFileResource {}", tsfile, e);
+      }
+      // submit migration tasks
+      for (TsFileResource tsfile : tsfiles) {
+        if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT) {
+          break;
+        }
+        try {
+          int currentTier = tsfile.getTierLevel();
+          int nextTier = currentTier + 1;
+          // only migrate closed TsFiles not in the last tier
+          if (tsfile.getStatus() != TsFileResourceStatus.NORMAL
+              || nextTier == iotdbConfig.getTierDataDirs().length) {
+            continue;
           }
+          // check tier ttl and disk space
+          long tierTTL =
+              DateTimeUtils.convertMilliTimeWithPrecision(
+                  System.currentTimeMillis() - commonConfig.getTierTTLInMs()[currentTier],
+                  iotdbConfig.getTimestampPrecision());
+          if (!tsfile.stillLives(tierTTL)) {
+            trySubmitMigrationTask(
+                currentTier,
+                MigrationCause.TTL,
+                tsfile,
+                tierManager.getNextFolderForTsFile(nextTier, tsfile.isSeq()));
+          } else if (needMigrationTiers.contains(currentTier)) {
+            trySubmitMigrationTask(
+                currentTier,
+                MigrationCause.DISK_SPACE,
+                tsfile,
+                tierManager.getNextFolderForTsFile(nextTier, tsfile.isSeq()));
+          }
+        } catch (Exception e) {
+          logger.error(
+              "An error occurred when check and try to migrate TsFileResource {}", tsfile, e);
         }
       }
     }
@@ -150,8 +159,7 @@ public class MigrationTaskManager implements IService {
     private void trySubmitMigrationTask(
         int tierLevel, MigrationCause cause, TsFileResource sourceTsFile, String targetDir)
         throws IOException {
-      if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT
-          || !sourceTsFile.setStatus(TsFileResourceStatus.MIGRATING)) {
+      if (!sourceTsFile.setStatus(TsFileResourceStatus.MIGRATING)) {
         return;
       }
       migrationTasksNum.incrementAndGet();
@@ -167,8 +175,12 @@ public class MigrationTaskManager implements IService {
     }
 
     private int compareMigrationPriority(TsFileResource f1, TsFileResource f2) {
+      // lower tier first
+      int res = Integer.compare(f1.getTierLevel(), f2.getTierLevel());
       // old time partitions first
-      int res = Long.compare(f1.getTimePartition(), f2.getTimePartition());
+      if (res == 0) {
+        res = Long.compare(f1.getTimePartition(), f2.getTimePartition());
+      }
       // sequence files in one partition
       if (res == 0) {
         if (f1.isSeq() && !f2.isSeq()) {
