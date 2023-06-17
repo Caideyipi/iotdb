@@ -76,7 +76,6 @@ import org.apache.iotdb.db.service.metrics.DataNodeMetricsHelper;
 import org.apache.iotdb.db.service.metrics.IoTDBInternalLocalReporter;
 import org.apache.iotdb.db.service.thrift.impl.ClientRPCServiceImpl;
 import org.apache.iotdb.db.service.thrift.impl.DataNodeRegionManager;
-import org.apache.iotdb.db.sync.SyncService;
 import org.apache.iotdb.db.trigger.executor.TriggerExecutor;
 import org.apache.iotdb.db.trigger.service.TriggerInformationUpdater;
 import org.apache.iotdb.db.trigger.service.TriggerManagementService;
@@ -544,7 +543,6 @@ public class DataNode implements DataNodeMBean {
     // must init after SchemaEngine and StorageEngine prepared well
     DataNodeRegionManager.getInstance().init();
 
-    registerManager.register(SyncService.getInstance());
     registerManager.register(UpgradeSevice.getINSTANCE());
 
     // start region migrate service
