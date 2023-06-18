@@ -135,7 +135,7 @@ public class MigrationTaskManager implements IService {
           long tierTTL =
               DateTimeUtils.convertMilliTimeWithPrecision(
                   System.currentTimeMillis() - commonConfig.getTierTTLInMs()[currentTier],
-                  iotdbConfig.getTimestampPrecision());
+                  commonConfig.getTimestampPrecision());
           if (!tsfile.stillLives(tierTTL)) {
             trySubmitMigrationTask(
                 currentTier,
