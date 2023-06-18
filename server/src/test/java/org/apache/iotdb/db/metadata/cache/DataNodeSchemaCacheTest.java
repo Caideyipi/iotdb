@@ -19,9 +19,9 @@
 
 package org.apache.iotdb.db.metadata.cache;
 
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.path.PartialPath;
-import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.mpp.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.mpp.common.schematree.ISchemaTree;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
@@ -46,9 +46,9 @@ public class DataNodeSchemaCacheTest {
 
   @Before
   public void setUp() throws Exception {
-    lastCacheEnabledDefaultValue = IoTDBDescriptor.getInstance().getConfig().isLastCacheEnabled();
+    lastCacheEnabledDefaultValue = CommonDescriptor.getInstance().getConfig().isLastCacheEnable();
     if (!lastCacheEnabledDefaultValue) {
-      IoTDBDescriptor.getInstance().getConfig().setEnableLastCache(true);
+      CommonDescriptor.getInstance().getConfig().setLastCacheEnable(true);
     }
     dataNodeSchemaCache = DataNodeSchemaCache.getInstance();
     s1TagMap = new HashMap<>();
@@ -57,7 +57,7 @@ public class DataNodeSchemaCacheTest {
 
   @After
   public void tearDown() throws Exception {
-    IoTDBDescriptor.getInstance().getConfig().setEnableLastCache(lastCacheEnabledDefaultValue);
+    CommonDescriptor.getInstance().getConfig().setLastCacheEnable(lastCacheEnabledDefaultValue);
     dataNodeSchemaCache.cleanUp();
   }
 
