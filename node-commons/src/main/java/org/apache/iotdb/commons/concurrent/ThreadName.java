@@ -307,7 +307,6 @@ public enum ThreadName {
           DataNodeThreadModule.IOT_CONSENSUS,
           DataNodeThreadModule.RATIS_CONSENSUS,
           DataNodeThreadModule.COMPUTE,
-          DataNodeThreadModule.SYNC,
           DataNodeThreadModule.JVM,
           DataNodeThreadModule.METRICS,
           DataNodeThreadModule.OTHER
