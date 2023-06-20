@@ -91,13 +91,19 @@ public class MigrationTaskManager implements IService {
   private class MigrationScheduleTask implements Runnable {
     private final long[] tierDiskTotalSpace = tierManager.getTierDiskTotalSpace();
     private final long[] tierDiskUsableSpace = tierManager.getTierDiskUsableSpace();
+    /** Tiers need migrating data to the next tier */
     private final Set<Integer> needMigrationTiers = new HashSet<>();
+    /** Tiers are disk-full, cannot migrate data to these tiers */
+    private final Set<Integer> spaceWarningTiers = new HashSet<>();
 
     public MigrationScheduleTask() {
       for (int i = 0; i < tierManager.getTiersNum(); i++) {
-        double usage = tierDiskUsableSpace[i] * 1.0 / tierDiskTotalSpace[i];
-        if (usage <= iotdbConfig.getSpaceMoveThresholds()[i]) {
+        double usable = tierDiskUsableSpace[i] * 1.0 / tierDiskTotalSpace[i];
+        if (usable <= iotdbConfig.getSpaceMoveThresholds()[i]) {
           needMigrationTiers.add(i);
+        }
+        if (usable <= commonConfig.getDiskSpaceWarningThreshold()) {
+          spaceWarningTiers.add(i);
         }
       }
     }
@@ -126,9 +132,10 @@ public class MigrationTaskManager implements IService {
         try {
           int currentTier = tsfile.getTierLevel();
           int nextTier = currentTier + 1;
-          // only migrate closed TsFiles not in the last tier
+          // only migrate closed TsFiles not in the last tier or space-full tiers
           if (tsfile.getStatus() != TsFileResourceStatus.NORMAL
-              || nextTier == iotdbConfig.getTierDataDirs().length) {
+              || nextTier == iotdbConfig.getTierDataDirs().length
+              || spaceWarningTiers.contains(nextTier)) {
             continue;
           }
           // check tier ttl and disk space
@@ -167,8 +174,8 @@ public class MigrationTaskManager implements IService {
       workers.submit(task);
       tierDiskUsableSpace[tierLevel] -= sourceTsFile.getTsFileSize();
       if (needMigrationTiers.contains(tierLevel)) {
-        double usage = tierDiskUsableSpace[tierLevel] * 1.0 / tierDiskTotalSpace[tierLevel];
-        if (usage > iotdbConfig.getSpaceMoveThresholds()[tierLevel] + MOVE_THRESHOLD_SAFE_LIMIT) {
+        double usable = tierDiskUsableSpace[tierLevel] * 1.0 / tierDiskTotalSpace[tierLevel];
+        if (usable > iotdbConfig.getSpaceMoveThresholds()[tierLevel] + MOVE_THRESHOLD_SAFE_LIMIT) {
           needMigrationTiers.remove(tierLevel);
         }
       }
