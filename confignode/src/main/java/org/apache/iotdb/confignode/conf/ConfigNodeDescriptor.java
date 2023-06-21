@@ -28,6 +28,7 @@ import org.apache.iotdb.confignode.manager.load.balancer.RegionBalancer;
 import org.apache.iotdb.confignode.manager.load.balancer.router.leader.ILeaderBalancer;
 import org.apache.iotdb.confignode.manager.load.balancer.router.priority.IPriorityBalancer;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupExtensionPolicy;
+import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.metrics.config.MetricConfigDescriptor;
 import org.apache.iotdb.metrics.utils.NodeType;
 
@@ -146,7 +147,8 @@ public class ConfigNodeDescriptor {
         MetricConfigDescriptor.getInstance().loadProps(commonProperties);
         MetricConfigDescriptor.getInstance()
             .getMetricConfig()
-            .updateRpcInstance(conf.getClusterName(), NodeType.CONFIGNODE);
+            .updateRpcInstance(
+                conf.getClusterName(), NodeType.CONFIGNODE, IoTDBConfig.SYSTEM_DATABASE);
       }
     } else {
       LOGGER.warn(
