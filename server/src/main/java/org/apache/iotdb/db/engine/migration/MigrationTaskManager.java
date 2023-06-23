@@ -49,6 +49,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class MigrationTaskManager implements IService {
   private static final Logger logger = LoggerFactory.getLogger(MigrationTaskManager.class);
@@ -122,8 +123,16 @@ public class MigrationTaskManager implements IService {
       for (DataRegion dataRegion : StorageEngine.getInstance().getAllDataRegions()) {
         tsfiles.addAll(dataRegion.getSequenceFileList());
         tsfiles.addAll(dataRegion.getUnSequenceFileList());
-        tsfiles.sort(this::compareMigrationPriority);
       }
+      // only migrate closed TsFiles not in the last tier
+      tsfiles =
+          tsfiles.stream()
+              .filter(
+                  f ->
+                      f.getStatus() == TsFileResourceStatus.NORMAL
+                          && f.getTierLevel() + 1 < iotdbConfig.getTierDataDirs().length)
+              .sorted(this::compareMigrationPriority)
+              .collect(Collectors.toList());
       // submit migration tasks
       for (TsFileResource tsfile : tsfiles) {
         if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT) {
@@ -132,10 +141,8 @@ public class MigrationTaskManager implements IService {
         try {
           int currentTier = tsfile.getTierLevel();
           int nextTier = currentTier + 1;
-          // only migrate closed TsFiles not in the last tier or space-full tiers
-          if (tsfile.getStatus() != TsFileResourceStatus.NORMAL
-              || nextTier == iotdbConfig.getTierDataDirs().length
-              || spaceWarningTiers.contains(nextTier)) {
+          // skip migration when next tier is full
+          if (spaceWarningTiers.contains(nextTier)) {
             continue;
           }
           // check tier ttl and disk space
