@@ -5,10 +5,10 @@ import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.fileSystem.OSFile;
 import com.timecho.iotdb.os.fileSystem.OSURI;
 import com.timecho.iotdb.os.utils.ObjectStorageType;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.util.Arrays;

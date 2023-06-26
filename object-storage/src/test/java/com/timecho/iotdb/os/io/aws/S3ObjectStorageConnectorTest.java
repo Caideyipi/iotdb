@@ -5,11 +5,11 @@ import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.conf.provider.AWSS3Config;
 import com.timecho.iotdb.os.fileSystem.OSURI;
 import com.timecho.iotdb.os.utils.ObjectStorageType;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
