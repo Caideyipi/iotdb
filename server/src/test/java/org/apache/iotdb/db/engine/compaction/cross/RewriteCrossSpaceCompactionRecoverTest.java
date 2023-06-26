@@ -165,7 +165,7 @@ public class RewriteCrossSpaceCompactionRecoverTest extends AbstractCompactionTe
     // Target files may not exist
     for (int i = 0; i < targetResources.size(); i++) {
       if (i < 2) {
-        targetResources.get(i).removeResourceFile();
+        targetResources.get(i).removeResourceFile(false);
       } else {
         targetResources.get(i).remove();
       }
@@ -573,7 +573,7 @@ public class RewriteCrossSpaceCompactionRecoverTest extends AbstractCompactionTe
     // Target files may not exist
     for (int i = 0; i < targetResources.size(); i++) {
       if (i < 2) {
-        targetResources.get(i).removeResourceFile();
+        targetResources.get(i).removeResourceFile(false);
       } else {
         targetResources.get(i).remove();
       }

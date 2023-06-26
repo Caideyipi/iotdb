@@ -885,7 +885,7 @@ public class DataRegion implements IDataRegionForQuery {
           workUnsequenceTsFileProcessors.put(timePartitionId, tsFileProcessor);
         }
         tsFileResource.setProcessor(tsFileProcessor);
-        tsFileResource.removeResourceFile();
+        tsFileResource.removeResourceFile(false);
         tsFileProcessor.setTimeRangeId(timePartitionId);
         writer.makeMetadataVisible();
         if (enableMemControl) {

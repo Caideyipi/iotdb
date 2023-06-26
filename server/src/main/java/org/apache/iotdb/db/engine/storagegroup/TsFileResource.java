@@ -47,6 +47,7 @@ import org.apache.iotdb.tsfile.file.metadata.ITimeSeriesMetadata;
 import org.apache.iotdb.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.iotdb.tsfile.fileSystem.fsFactory.FSFactory;
 import org.apache.iotdb.tsfile.read.filter.basic.Filter;
+import org.apache.iotdb.tsfile.utils.FSUtils;
 import org.apache.iotdb.tsfile.utils.FilePathUtils;
 import org.apache.iotdb.tsfile.utils.Pair;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
@@ -614,15 +615,19 @@ public class TsFileResource {
    */
   public boolean remove() {
     forceMarkDeleted();
+    boolean onRemote;
     try {
-      fsFactory.deleteIfExists(file);
+      onRemote = !fsFactory.deleteIfExists(file) && CONFIG.isEnableObjectStorage();
+      if (onRemote) {
+        fsFactory.deleteIfExists(getOSFile(file));
+      }
       fsFactory.deleteIfExists(
           new File(file.getAbsolutePath() + TsFileIOWriter.CHUNK_METADATA_TEMP_FILE_SUFFIX));
     } catch (IOException e) {
       LOGGER.error("TsFile {} cannot be deleted: {}", file, e.getMessage());
       return false;
     }
-    if (!removeResourceFile()) {
+    if (!removeResourceFile(onRemote)) {
       return false;
     }
     try {
@@ -634,15 +639,26 @@ public class TsFileResource {
     return true;
   }
 
-  public boolean removeResourceFile() {
+  public boolean removeResourceFile(boolean onRemote) {
     try {
-      fsFactory.deleteIfExists(fsFactory.getFile(file.getPath() + RESOURCE_SUFFIX));
+      File file2Delete = fsFactory.getFile(file.getPath() + RESOURCE_SUFFIX);
+      fsFactory.deleteIfExists(file2Delete);
+      if (onRemote) {
+        fsFactory.deleteIfExists(getOSFile(file2Delete));
+      }
       fsFactory.deleteIfExists(fsFactory.getFile(file.getPath() + RESOURCE_SUFFIX + TEMP_SUFFIX));
     } catch (IOException e) {
       LOGGER.error("TsFileResource {} cannot be deleted: {}", file, e.getMessage());
       return false;
     }
     return true;
+  }
+
+  private File getOSFile(File file) throws IOException {
+    return fsFactory.getFile(
+        FSUtils.parseLocalTsFile2OSFile(
+                file, CONFIG.getObjectStorageBucket(), CONFIG.getDataNodeId())
+            .getPath());
   }
 
   void moveTo(File targetDir) throws IOException {
@@ -693,7 +709,9 @@ public class TsFileResource {
   }
 
   public boolean onRemote() {
-    return !isDeleted() && !file.exists();
+    return (CONFIG.isEnableObjectStorage() || CONFIG.isEnableHDFS())
+        && !isDeleted()
+        && !file.exists();
   }
 
   private boolean compareAndSetStatus(
@@ -729,6 +747,8 @@ public class TsFileResource {
         return false;
       case DELETED:
         return compareAndSetStatus(TsFileResourceStatus.NORMAL, TsFileResourceStatus.DELETED)
+            || compareAndSetStatus(
+                TsFileResourceStatus.NORMAL_ON_REMOTE, TsFileResourceStatus.DELETED)
             || compareAndSetStatus(
                 TsFileResourceStatus.COMPACTION_CANDIDATE, TsFileResourceStatus.DELETED);
       case COMPACTING:
