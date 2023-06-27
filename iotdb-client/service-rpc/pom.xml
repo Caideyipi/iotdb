@@ -55,11 +55,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.timecho.iotdb</groupId>
-            <artifactId>influxdb-thrift</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.xerial.snappy</groupId>
             <artifactId>snappy-java</artifactId>
         </dependency>
