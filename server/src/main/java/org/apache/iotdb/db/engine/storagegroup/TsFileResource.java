@@ -451,7 +451,15 @@ public class TsFileResource {
       if (tsFileSize == -1) {
         synchronized (this) {
           if (tsFileSize == -1) {
-            tsFileSize = file.length();
+            try {
+              tsFileSize = onRemote() ? getOSFile(file).length() : file.length();
+            } catch (IOException e) {
+              LOGGER.error(
+                  "cannot get remote file of {}. Use 0 as its default length. Exception {}",
+                  file,
+                  e);
+              tsFileSize = 0;
+            }
           }
         }
       }
