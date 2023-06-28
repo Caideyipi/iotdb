@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.FILE_NAME_SEPARATOR;
@@ -100,8 +101,10 @@ public class TsFileResource {
   /** time index */
   public ITimeIndex timeIndex;
 
+  @SuppressWarnings("squid:S3077")
   private volatile ModificationFile modFile;
 
+  @SuppressWarnings("squid:S3077")
   private volatile ModificationFile compactionModFile;
 
   protected AtomicReference<TsFileResourceStatus> atomicStatus =
@@ -135,7 +138,7 @@ public class TsFileResource {
 
   private long ramSize;
 
-  private volatile int tierLevel = 0;
+  private AtomicInteger tierLevel;
 
   private volatile long tsFileSize = -1L;
 
@@ -192,7 +195,7 @@ public class TsFileResource {
     this.isSeq = FilePathUtils.isSequence(this.file.getAbsolutePath());
     // This method is invoked when DataNode recovers, so the tierLevel should be calculated when
     // restarting
-    this.tierLevel = TierManager.getInstance().getFileTierLevel(file);
+    this.tierLevel = new AtomicInteger(TierManager.getInstance().getFileTierLevel(file));
     if (onRemote()) {
       this.setAtomicStatus(TsFileResourceStatus.NORMAL_ON_REMOTE);
     }
@@ -213,7 +216,7 @@ public class TsFileResource {
     this.isSeq = processor.isSequence();
     // this method is invoked when a new TsFile is created and a newly created TsFile's the
     // tierLevel is 0 by default
-    this.tierLevel = 0;
+    this.tierLevel = new AtomicInteger(0);
   }
 
   /** unsealed TsFile, for read */
@@ -386,6 +389,7 @@ public class TsFileResource {
     return pathToReadOnlyMemChunkMap.get(seriesPath);
   }
 
+  @SuppressWarnings("squid:S2886")
   public ModificationFile getModFile() {
     if (modFile == null) {
       synchronized (this) {
@@ -430,11 +434,11 @@ public class TsFileResource {
   }
 
   public void increaseTierLevel() {
-    this.tierLevel++;
+    this.tierLevel.addAndGet(1);
   }
 
   public int getTierLevel() {
-    return tierLevel;
+    return tierLevel.get();
   }
 
   public long getTsFileSize() {
