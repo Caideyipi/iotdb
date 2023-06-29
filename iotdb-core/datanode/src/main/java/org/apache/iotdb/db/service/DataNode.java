@@ -541,8 +541,6 @@ public class DataNode implements DataNodeMBean {
     // must init after SchemaEngine and StorageEngine prepared well
     DataNodeRegionManager.getInstance().init();
 
-    registerManager.register(UpgradeSevice.getINSTANCE());
-
     // start region migrate service
     registerManager.register(RegionMigrateService.getInstance());
 
