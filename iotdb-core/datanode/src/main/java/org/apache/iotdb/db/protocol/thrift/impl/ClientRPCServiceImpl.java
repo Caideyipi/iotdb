@@ -155,10 +155,12 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
   private static final SessionManager SESSION_MANAGER = SessionManager.getInstance();
 
+  public static final String ERROR_CODE = "error code: ";
+
   private static final TSProtocolVersion CURRENT_RPC_VERSION =
       TSProtocolVersion.IOTDB_SERVICE_PROTOCOL_V3;
 
-  private static final boolean enableAuditLog = config.isEnableAuditLog();
+  private static final boolean ENABLE_AUDIT_LOG = config.isEnableAuditLog();
 
   private final IPartitionFetcher partitionFetcher;
 
@@ -224,7 +226,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           DataNodeThrottleQuotaManager.getInstance()
               .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
       statementType = s.getType();
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(statement, s);
       }
 
@@ -315,7 +317,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           DataNodeThrottleQuotaManager.getInstance()
               .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("execute Raw Data Query: %s", req), s);
       }
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
@@ -331,7 +333,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               req.getTimeout());
 
       if (result.status.code != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        throw new RuntimeException("error code: " + result.status);
+        throw new RuntimeException(ERROR_CODE + result.status);
       }
 
       IQueryExecution queryExecution = COORDINATOR.getQueryExecution(queryId);
@@ -403,7 +405,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           DataNodeThrottleQuotaManager.getInstance()
               .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("Last Data Query: %s", req), s);
       }
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
@@ -419,7 +421,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               req.getTimeout());
 
       if (result.status.code != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        throw new RuntimeException("error code: " + result.status);
+        throw new RuntimeException(ERROR_CODE + result.status);
       }
 
       IQueryExecution queryExecution = COORDINATOR.getQueryExecution(queryId);
@@ -506,7 +508,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               req.getTimeout());
 
       if (result.status.code != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        throw new RuntimeException("error code: " + result.status);
+        throw new RuntimeException(ERROR_CODE + result.status);
       }
 
       IQueryExecution queryExecution = COORDINATOR.getQueryExecution(queryId);
@@ -755,9 +757,8 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
 
       // Step 1: Create SetStorageGroupStatement
-      DatabaseSchemaStatement statement =
-          (DatabaseSchemaStatement) StatementGenerator.createStatement(storageGroup);
-      if (enableAuditLog) {
+      DatabaseSchemaStatement statement = StatementGenerator.createStatement(storageGroup);
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("create database %s", storageGroup), statement);
       }
       // permission check
@@ -798,7 +799,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       req.setMeasurementAlias(PathUtils.checkAndReturnSingleMeasurement(req.getMeasurementAlias()));
       // Step 1: transfer from TSCreateTimeseriesReq to Statement
       CreateTimeSeriesStatement statement = StatementGenerator.createStatement(req);
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("create timeseries %s", req.getPath()), statement);
       }
       // permission check
@@ -845,7 +846,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       // Step 1: transfer from CreateAlignedTimeSeriesReq to Statement
       CreateAlignedTimeSeriesStatement statement = StatementGenerator.createStatement(req);
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "create aligned timeseries %s.%s", req.getPrefixPath(), req.getMeasurements()),
@@ -893,7 +894,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       // Step 1: transfer from CreateMultiTimeSeriesReq to Statement
       CreateMultiTimeSeriesStatement statement = StatementGenerator.createStatement(req);
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "create %s timeseries, the first is %s",
@@ -979,7 +980,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 1: transfer from DeleteStorageGroupsReq to Statement
       DeleteDatabaseStatement statement = StatementGenerator.createStatement(storageGroups);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("delete databases: %s", storageGroups), statement);
       }
 
@@ -1054,7 +1055,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
               DataNodeThrottleQuotaManager.getInstance()
                   .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), s);
 
-          if (enableAuditLog) {
+          if (ENABLE_AUDIT_LOG) {
             AuditLogger.log(statement, s);
           }
 
@@ -1191,7 +1192,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
       }
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "insertRecords, first device %s, first time %s",
@@ -1258,7 +1259,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
       }
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "insertRecords, first device %s, first time %s",
@@ -1327,7 +1328,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
       }
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "insertRecords, first device %s, first time %s",
@@ -1396,7 +1397,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
       }
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "insertRecord, device %s, time %s", req.getPrefixPath(), req.getTimestamp()),
@@ -1574,7 +1575,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
       }
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "insertRecords, first device %s, first time %s",
@@ -1733,7 +1734,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 1: transfer from TSCreateSchemaTemplateReq to Statement
       CreateSchemaTemplateStatement statement = StatementGenerator.createStatement(req);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("create schema template %s", req.getName()), statement);
       }
       // permission check
@@ -1843,7 +1844,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           DataNodeThrottleQuotaManager.getInstance()
               .checkQuota(SESSION_MANAGER.getCurrSession().getUsername(), statement);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("execute Query: %s", statement), statement);
       }
       long queryId = SESSION_MANAGER.requestQueryId();
@@ -1911,7 +1912,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 1: transfer from TSCreateSchemaTemplateReq to Statement
       SetSchemaTemplateStatement statement = StatementGenerator.createStatement(req);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format("set schema template %s.%s", req.getTemplateName(), req.getPrefixPath()),
             statement);
@@ -1958,7 +1959,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 1: transfer from TSCreateSchemaTemplateReq to Statement
       UnsetSchemaTemplateStatement statement = StatementGenerator.createStatement(req);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "unset schema template %s from %s", req.getTemplateName(), req.getPrefixPath()),
@@ -2006,7 +2007,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 1: transfer from TSCreateSchemaTemplateReq to Statement
       DropSchemaTemplateStatement statement = StatementGenerator.createStatement(req);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(String.format("drop schema template %s", req.getTemplateName()), statement);
       }
 
@@ -2049,7 +2050,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       BatchActivateTemplateStatement statement =
           StatementGenerator.createBatchActivateTemplateStatement(req.getDevicePathList());
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format("batch activate schema template %s", req.getDevicePathList()), statement);
       }
@@ -2132,7 +2133,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       InsertRowStatement statement = StatementGenerator.createStatement(req);
 
-      if (enableAuditLog) {
+      if (ENABLE_AUDIT_LOG) {
         AuditLogger.log(
             String.format(
                 "insertStringRecord, device %s, time %s", req.getPrefixPath(), req.getTimestamp()),
