@@ -51,14 +51,18 @@ public class LicenseCheckService implements Runnable, IService {
   }
 
   public void stop() {
-    executor.shutdown();
+    executor.shutdownNow();
   }
 
   @Override
-  public void waitAndStop(long milliseconds) {}
+  public void waitAndStop(long milliseconds) {
+    executor.shutdownNow();
+  }
 
   @Override
-  public void shutdown(long milliseconds) throws ShutdownException {}
+  public void shutdown(long milliseconds) throws ShutdownException {
+    executor.shutdownNow();
+  }
 
   @Override
   public ServiceType getID() {
