@@ -22,6 +22,7 @@ package com.timecho.iotdb.os.io.aws;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.conf.provider.AWSS3Config;
 import com.timecho.iotdb.os.exception.ObjectStorageException;
+import com.timecho.iotdb.os.exception.S3ConnectionException;
 import com.timecho.iotdb.os.fileSystem.OSURI;
 import com.timecho.iotdb.os.io.IMetaData;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
@@ -53,6 +54,8 @@ import java.util.stream.Collectors;
 
 public class S3ObjectStorageConnector implements ObjectStorageConnector {
   private static final String RANGE_FORMAT = "bytes=%d-%d";
+  private static final String S3_CONNECTION_ERROR =
+      "cannot connect to S3 bucket. Please check the endpoint or credential";
   private final AWSS3Config s3config =
       (AWSS3Config) ObjectStorageDescriptor.getInstance().getConfig().getProviderConfig();
   private final S3Client s3Client =
@@ -75,6 +78,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return false;
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -87,6 +92,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return new S3MetaData(resp.contentLength(), resp.lastModified().toEpochMilli());
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -99,6 +106,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return true;
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -111,6 +120,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return true;
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -135,6 +146,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return true;
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -147,6 +160,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
           .toArray(OSURI[]::new);
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -158,6 +173,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return s3Client.getObject(req);
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -169,6 +186,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       s3Client.putObject(req, RequestBody.fromFile(lcoalFile));
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -186,6 +205,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       return resp.asByteArray();
     } catch (Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -202,6 +223,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       s3Client.copyObject(req);
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
@@ -241,6 +264,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
       } while (listRes.isTruncated());
     } catch (S3Exception e) {
       throw new ObjectStorageException(e);
+    } catch (Throwable t) {
+      throw new S3ConnectionException(S3_CONNECTION_ERROR);
     }
   }
 
