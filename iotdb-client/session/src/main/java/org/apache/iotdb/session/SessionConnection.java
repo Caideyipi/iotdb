@@ -890,7 +890,7 @@ public class SessionConnection {
   @SuppressWarnings({
     "squid:S3776"
   }) // ignore Cognitive Complexity of methods should not be too high
-  private boolean reconnect() {
+  public boolean reconnect() {
     boolean connectedSuccess = false;
     SecureRandom random = new SecureRandom();
     for (int i = 1; i <= SessionConfig.RETRY_NUM; i++) {
