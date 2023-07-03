@@ -124,7 +124,6 @@
         <module>timecho-session</module>
         <module>config-encryptor</module>
         <module>iotdb-api/pipe-api</module>
-        <module>iotdb-api/subscription-api</module>
     </modules>
     <!-- Properties Management -->
     <properties>
