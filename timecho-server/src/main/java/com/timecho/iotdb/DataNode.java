@@ -21,6 +21,7 @@ package com.timecho.iotdb;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
 import org.apache.iotdb.db.service.RPCService;
 import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
@@ -30,6 +31,7 @@ import com.timecho.iotdb.license.LicenseCheckService;
 import com.timecho.iotdb.license.LicenseException;
 import com.timecho.iotdb.license.LicenseManager;
 import com.timecho.iotdb.license.MachineCodeManager;
+import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +92,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
         IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
         TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
         TSFileDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
+        setUpEnterpriseEnvironment();
         new DataNodeServerCommandLineNew().doMain(args);
         logger.info("The license expires at {}", LicenseManager.getInstance().getExpireDate());
       } else {
@@ -123,6 +126,13 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
     }
     // init service protocols
     initProtocols();
+  }
+
+  private static void setUpEnterpriseEnvironment() {
+    // set up environment for schema region
+    MNodeFactoryLoader.getInstance()
+        .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
+    MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
   }
 
   private static class DataNodeNewHolder {
