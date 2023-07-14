@@ -28,7 +28,6 @@ import org.apache.iotdb.itbase.category.LocalStandaloneIT;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -45,7 +44,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Ignore
 @RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class})
 public class IoTDBCreateAndShowViewIT {
@@ -358,7 +356,7 @@ public class IoTDBCreateAndShowViewIT {
                 "root.view.cal_view.avg,root.view,DOUBLE,null,null,VIEW,(root.db.d01.s01 + root.db.d01.s02) / 2;",
                 "root.view.cal_view.multiple,root.view,DOUBLE,null,null,VIEW,root.db.d02.s01 * root.db.d02.s02;",
                 "root.view.cal_view.divide,root.view,DOUBLE,null,null,VIEW,root.db.d02.s01 / root.db.d02.s02;",
-                "root.view.cal_view.cast_view,root.view,TEXT,null,null,VIEW,cast(type=TEXT)(root.db.d01.s01);",
+                "root.view.cal_view.cast_view,root.view,TEXT,null,null,VIEW,cast(root.db.d01.s01, type=TEXT);",
                 "root.view.multi_view.all_in_one.d01_s01,root.view,INT32,null,null,VIEW,root.db.d01.s01;",
                 "root.view.multi_view.all_in_one.d01_s02,root.view,INT32,null,null,VIEW,root.db.d01.s02;",
                 "root.view.multi_view.all_in_one.d02_s01,root.view,INT32,null,null,VIEW,root.db.d02.s01;",

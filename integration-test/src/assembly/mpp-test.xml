@@ -31,6 +31,10 @@
             <directory>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/conf</directory>
         </fileSet>
         <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/timecho-server/src/main/resources</directory>
+            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+        <fileSet>
             <outputDirectory>conf</outputDirectory>
             <directory>${maven.multiModuleProjectDirectory}/iotdb-core/confignode/src/assembly/resources/conf</directory>
         </fileSet>
@@ -45,6 +49,15 @@
         <fileSet>
             <outputDirectory>sbin</outputDirectory>
             <directory>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin</directory>
+            <excludes>
+                <exclude>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin/start-datanode.sh</exclude>
+                <exclude>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin/start-datanode.bat</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>sbin</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/timecho-server/src/assembly/resources/sbin</directory>
             <fileMode>0755</fileMode>
         </fileSet>
         <fileSet>

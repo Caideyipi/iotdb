@@ -180,7 +180,7 @@ public class DataNodeWrapper extends AbstractNodeWrapper {
   }
 
   protected String mainClassName() {
-    return "org.apache.iotdb.db.service.DataNode";
+    return "org.apache.iotdb.db.HackTimechoServer";
   }
 
   public int getMppDataExchangePort() {
