@@ -41,6 +41,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 @RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class})
 public class IoTDBAlterViewIT {
@@ -79,7 +82,8 @@ public class IoTDBAlterViewIT {
       statement.execute("create timeseries root.db.d2.s3 with datatype=INT32");
 
       statement.execute(
-          "create view root(view.d1.s1, view.d1.s2, view.d1.s3, view.d2.s1, view.d2.s2, view.d2.s3) as root(db.d1.s1, db.d1.s2, db.d1.s3, db.d2.s1, db.d2.s2, db.d2.s3)");
+          "create view root(view.d1.s1, view.d1.s2, view.d1.s3, view.d2.s1, view.d2.s2, view.d2.s3) "
+              + "as root(db.d1.s1, db.d1.s2, db.d1.s3, db.d2.s1, db.d2.s2, db.d2.s3)");
 
       String[][] map =
           new String[][] {
@@ -99,7 +103,8 @@ public class IoTDBAlterViewIT {
       }
 
       statement.execute(
-          "alter view root(view.d1.s1, view.d1.s2, view.d1.s3, view.d2.s1, view.d2.s2, view.d2.s3) as root(db.d2.s2, db.d2.s3, db.d2.s1, db.d1.s2, db.d1.s3, db.d1.s1)");
+          "alter view root(view.d1.s1, view.d1.s2, view.d1.s3, view.d2.s1, view.d2.s2, view.d2.s3) "
+              + "as root(db.d2.s2, db.d2.s3, db.d2.s1, db.d1.s2, db.d1.s3, db.d1.s1)");
 
       map =
           new String[][] {
@@ -109,6 +114,60 @@ public class IoTDBAlterViewIT {
             new String[] {"root.view.d2.s1", "root.db.d1.s2"},
             new String[] {"root.view.d2.s2", "root.db.d1.s3"},
             new String[] {"root.view.d2.s3", "root.db.d1.s1"},
+          };
+      for (String[] strings : map) {
+        try (ResultSet resultSet =
+            statement.executeQuery(String.format("show view %s", strings[0]))) {
+          Assert.assertTrue(resultSet.next());
+          Assert.assertEquals(strings[1], resultSet.getString("Source"));
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testDeleteAndDropView() throws SQLException {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      statement.execute("create timeseries root.db.d1.s1 with datatype=INT32");
+      statement.execute("create timeseries root.db.d1.s2 with datatype=INT32");
+      statement.execute("create view root(view.d1.s1, view.d1.s2) as root(db.d1.s1, db.d1.s2)");
+      statement.execute(
+          "insert into root.view.d1(time, s1, s2) values (1, 1, 10), (2, 2, 20), (1689579454282, 3, 30)");
+      int[] result1 = new int[] {1, 2, 3};
+      int[] result2 = new int[] {10, 20, 30};
+      try (ResultSet resultSet = statement.executeQuery("select * from root.view.**")) {
+        int index = 0;
+        while (resultSet.next()) {
+          int s1 = resultSet.getInt("root.view.d1.s1");
+          int s2 = resultSet.getInt("root.view.d1.s2");
+          assertEquals(result1[index], s1);
+          assertEquals(result2[index], s2);
+          index++;
+        }
+        assertEquals(3, index);
+      }
+
+      statement.execute("delete from root.view.d1.s2");
+
+      int[] result = new int[] {1, 2, 3};
+      try (ResultSet resultSet = statement.executeQuery("select * from root.view.**")) {
+        int index = 0;
+        while (resultSet.next()) {
+          int s1 = resultSet.getInt("root.view.d1.s1");
+          String s2 = resultSet.getString("root.view.d1.s2");
+          assertEquals(result[index], s1);
+          assertNull(s2);
+          index++;
+        }
+        assertEquals(3, index);
+      }
+
+      statement.execute("drop view root.view.d1.s1");
+
+      String[][] map =
+          new String[][] {
+            new String[] {"root.view.d1.s2", "root.db.d1.s2"},
           };
       for (String[] strings : map) {
         try (ResultSet resultSet =
