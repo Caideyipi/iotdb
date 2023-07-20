@@ -21,7 +21,6 @@ package com.timecho.iotdb.os.cache;
 import com.timecho.iotdb.os.conf.ObjectStorageConfig;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.fileSystem.OSFile;
-import com.timecho.iotdb.os.fileSystem.OSTsFileInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +32,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
 public class OSFileChannel implements Closeable {
-  private static final Logger logger = LoggerFactory.getLogger(OSTsFileInput.class);
+  private static final Logger logger = LoggerFactory.getLogger(OSFileChannel.class);
   private static final ObjectStorageConfig config =
       ObjectStorageDescriptor.getInstance().getConfig();
   private final OSFileCache cache;
@@ -55,7 +54,7 @@ public class OSFileChannel implements Closeable {
     return new OSInputStream(channel);
   }
 
-  private void openNextCacheFile(int position) throws IOException {
+  private void openNextCacheFile(long position) throws IOException {
     // close prev cache file
     closeCurrentOSFileBlock();
     // open next cache file
@@ -63,7 +62,7 @@ public class OSFileChannel implements Closeable {
     currentOSFileBlock = new OSFileBlock(key);
   }
 
-  private OSFileCacheKey locateCacheFileFromPosition(int position) throws IOException {
+  private OSFileCacheKey locateCacheFileFromPosition(long position) throws IOException {
     if (position >= size()) {
       throw new IOException("EOF");
     }
@@ -93,7 +92,7 @@ public class OSFileChannel implements Closeable {
   }
 
   public synchronized int read(ByteBuffer dst, long position) throws IOException {
-    int currentPosition = (int) position;
+    long currentPosition = position;
     dst.mark();
     int dstLimit = dst.limit();
     // determiner the ead range
