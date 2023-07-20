@@ -26,6 +26,8 @@ import com.timecho.iotdb.os.exception.S3ConnectionException;
 import com.timecho.iotdb.os.fileSystem.OSURI;
 import com.timecho.iotdb.os.io.IMetaData;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -53,6 +55,8 @@ import java.io.InputStream;
 import java.util.stream.Collectors;
 
 public class S3ObjectStorageConnector implements ObjectStorageConnector {
+
+  private static final Logger logger = LoggerFactory.getLogger(S3ObjectStorageConnector.class);
   private static final String RANGE_FORMAT = "bytes=%d-%d";
   private static final String S3_CONNECTION_ERROR =
       "cannot connect to S3 bucket. Please check the endpoint or credential";
@@ -194,6 +198,9 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
   @Override
   public byte[] getRemoteObject(OSURI osUri, long position, int len) throws ObjectStorageException {
     String rangeStr = String.format(RANGE_FORMAT, position, position + len - 1);
+    if (logger.isDebugEnabled()) {
+      logger.debug(rangeStr);
+    }
     try {
       GetObjectRequest req =
           GetObjectRequest.builder()
@@ -203,7 +210,7 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
               .build();
       ResponseBytes<GetObjectResponse> resp = s3Client.getObjectAsBytes(req);
       return resp.asByteArray();
-    } catch (Exception e) {
+    } catch (Exception | Error e) {
       throw new ObjectStorageException(e);
     } catch (Throwable t) {
       throw new S3ConnectionException(S3_CONNECTION_ERROR);
