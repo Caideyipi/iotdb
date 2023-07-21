@@ -144,7 +144,7 @@ public class StorageEngine implements IService {
   private List<FlushListener> customFlushListeners = new ArrayList<>();
   private int recoverDataRegionNum = 0;
 
-  private LoadTsFileManager loadTsFileManager = new LoadTsFileManager();
+  private LoadTsFileManager loadTsFileManager;
 
   private StorageEngine() {}
 
@@ -799,7 +799,7 @@ public class StorageEngine implements IService {
     TSStatus status = new TSStatus();
 
     try {
-      loadTsFileManager.writeToDataRegion(getDataRegion(dataRegionId), pieceNode, uuid);
+      getLoadTsFileManager().writeToDataRegion(getDataRegion(dataRegionId), pieceNode, uuid);
     } catch (IOException e) {
       logger.error(
           String.format(
@@ -820,7 +820,7 @@ public class StorageEngine implements IService {
     try {
       switch (loadCommand) {
         case EXECUTE:
-          if (loadTsFileManager.loadAll(uuid)) {
+          if (getLoadTsFileManager().loadAll(uuid)) {
             status = RpcUtils.SUCCESS_STATUS;
           } else {
             status.setCode(TSStatusCode.LOAD_FILE_ERROR.getStatusCode());
@@ -831,7 +831,7 @@ public class StorageEngine implements IService {
           }
           break;
         case ROLLBACK:
-          if (loadTsFileManager.deleteAll(uuid)) {
+          if (getLoadTsFileManager().deleteAll(uuid)) {
             status = RpcUtils.SUCCESS_STATUS;
           } else {
             status.setCode(TSStatusCode.LOAD_FILE_ERROR.getStatusCode());
@@ -891,6 +891,17 @@ public class StorageEngine implements IService {
             dataRegionDisk.put(dataRegionId.getId(), dataRegion.countRegionDiskSize());
           }
         });
+  }
+
+  private LoadTsFileManager getLoadTsFileManager() {
+    if (loadTsFileManager == null) {
+      synchronized (LoadTsFileManager.class) {
+        if (loadTsFileManager == null) {
+          loadTsFileManager = new LoadTsFileManager();
+        }
+      }
+    }
+    return loadTsFileManager;
   }
 
   static class InstanceHolder {
