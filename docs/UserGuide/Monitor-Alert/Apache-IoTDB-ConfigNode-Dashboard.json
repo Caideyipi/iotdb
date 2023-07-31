@@ -75,7 +75,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1686532336186,
+  "iteration": 1690806537274,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -94,7 +94,7 @@
       "id": 57,
       "panels": [
         {
-          "description": "The number of cluster Databases",
+          "description": "$instance 节点的数据库数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -143,6 +143,7 @@
               "editorMode": "builder",
               "exemplar": true,
               "expr": "database_num{instance=~\"$instance\"}",
+              "instant": false,
               "interval": "",
               "legendFormat": "__auto",
               "range": true,
@@ -153,7 +154,7 @@
           "type": "stat"
         },
         {
-          "description": "The number of cluster DataRegions",
+          "description": "$instance 节点的 DataRegion 数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -212,7 +213,7 @@
           "type": "stat"
         },
         {
-          "description": "The number of cluster SchemaRegions",
+          "description": "$instance 节点的 SchemaRegion 数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -271,7 +272,7 @@
           "type": "stat"
         },
         {
-          "description": "The system memory of current ConfigNode",
+          "description": "$instance 节点的系统内存大小",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -331,7 +332,7 @@
           "type": "stat"
         },
         {
-          "description": "The swap memory of current ConfigNode",
+          "description": "$instance 节点的交换区内存大小",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -392,7 +393,7 @@
           "type": "stat"
         },
         {
-          "description": "The current status of cluster ConfigNodes",
+          "description": "$instance 节点所在集群的 ConfigNode 的运行状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -578,7 +579,7 @@
           "type": "piechart"
         },
         {
-          "description": "The current status of cluster DataNodes",
+          "description": "$instance 节点所在集群的 DataNode 情况",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -704,7 +705,7 @@
           "type": "piechart"
         },
         {
-          "description": "The current status of cluster SchemaRegions",
+          "description": "$instance 节点的 SchemaRegion 的状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -830,7 +831,7 @@
           "type": "piechart"
         },
         {
-          "description": "The current status of cluster DataRegions",
+          "description": "$instance 节点的 SchemaRegion 的状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -957,7 +958,7 @@
           "type": "piechart"
         },
         {
-          "description": "Bar of current ConfigNode",
+          "description": "$instance 节点的系统概述，包括系统内存、磁盘使用、进程内存以及CPU负载",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1030,20 +1031,6 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "1 - sys_disk_free_space{instance=~\"$instance\"} / sys_disk_total_space{instance=~\"$instance\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Disk",
-              "range": true,
-              "refId": "D"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
               "expr": "(sum(process_total_mem{instance=~\"$instance\"}) - sum(process_free_mem{instance=~\"$instance\"})) / sum(sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"})",
               "hide": false,
               "interval": "",
@@ -1058,10 +1045,24 @@
               },
               "editorMode": "code",
               "exemplar": true,
+              "expr": "1 - sys_disk_free_space{instance=~\"$instance\"} / sys_disk_total_space{instance=~\"$instance\"}",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Disk",
+              "range": true,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
               "expr": "process_cpu_load{instance=~\"$instance\"} / 100",
               "hide": false,
               "interval": "",
-              "legendFormat": "Cpu Load",
+              "legendFormat": "CPU Load",
               "range": true,
               "refId": "C"
             }
@@ -1093,12 +1094,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 6
       },
       "id": 49,
       "panels": [
         {
-          "description": "The number of cluster ConfigNodes",
+          "description": "$instance 节点所在集群的节点数量，包括 ConfigNode 和 DataNode",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1187,7 +1188,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The status history of cluster ConfigNodes",
+          "description": "$instance 节点所在集群的 ConfigNode 节点的状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1336,7 +1337,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The status history of cluster DataNodes",
+          "description": "$instance 节点所在集群的 DataNode 节点的状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1485,7 +1486,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The number of SchemaRegions in each DataNode",
+          "description": "$instance 节点所在集群的 SchemaRegion 的分布情况",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1545,7 +1546,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": false
             },
             "tooltip": {
               "mode": "single",
@@ -1573,7 +1576,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The number of SchemaRegionGroup leadere in each DataNodes",
+          "description": "$instance 节点所在集群的 SchemaRegionGroup 的 Leader 分布情况",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1661,7 +1664,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The number of DataRegions in each DataNode",
+          "description": "$instance 节点所在集群的 DataRegion 的分布情况",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1721,7 +1724,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "single",
@@ -1749,7 +1754,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The number of DataRegionGroup leaders in each DataNode",
+          "description": "$instance 节点所在集群的 DataRegionGroup 的 Leader 分布情况",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1826,7 +1831,7 @@
               },
               "editorMode": "builder",
               "exemplar": true,
-              "expr": "region_num_in_data_node{type=\"DataRegion\", instance=~\"$instance\"}",
+              "expr": "region_group_leader_num_in_data_node{type=\"DataRegion\", instance=~\"$instance\"}",
               "interval": "",
               "legendFormat": "{{name}}",
               "range": true,
@@ -1851,6 +1856,751 @@
     },
     {
       "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
+      "id": 142,
+      "panels": [
+        {
+          "description": "$instance 节点各线程池的活跃客户端数量",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "id": 133,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_num_active\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Active Client Num $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点各线程池的空闲客户端数量",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "id": 135,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_num_idle\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Idle Client Num $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点各线程池的借用客户端数量",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 44
+          },
+          "id": 134,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_borrowed_count\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Borrowed Client Count $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$ins$instance 节点各线程池的创建客户端数量",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 44
+          },
+          "id": 136,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_created_count\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Created Client Count $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点各线程池的销毁客户端数量",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 80
+          },
+          "id": 137,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_destroyed_count\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Destroyed Client Count $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点各线程池客户端的平均活跃时间",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 80
+          },
+          "id": 138,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_mean_active_time\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Client Mean Active Time $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点各线程池的客户端平均借用等待时间",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 116
+          },
+          "id": 139,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_mean_borrow_wait_time\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Client Mean Borrow Wait Time $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点各线程池的客户端平均空闲时间",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 116
+          },
+          "id": 140,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last *",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "client_manager{instance=~\"$instance\", name=\"client_manager_mean_idle_time\"}",
+              "interval": "",
+              "legendFormat": "{{type}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Client Mean Idle Time $instance",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Protocol",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1859,12 +2609,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 53,
       "panels": [
         {
-          "description": "The number of SchemaRegionGroups in each Database",
+          "description": "$instance 节点所在集群的 Database 的 SchemaRegionGroup 的数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1912,9 +2662,9 @@
           },
           "gridPos": {
             "h": 6,
-            "w": 8,
+            "w": 12,
             "x": 0,
-            "y": 3
+            "y": 4
           },
           "id": 105,
           "options": {
@@ -1952,7 +2702,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The number of DataRegionGroups in each DataNode",
+          "description": "$instance 节点所在集群的 Database 的 DataRegionGroup 的数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2000,9 +2750,9 @@
           },
           "gridPos": {
             "h": 6,
-            "w": 8,
-            "x": 8,
-            "y": 3
+            "w": 12,
+            "x": 12,
+            "y": 4
           },
           "id": 107,
           "options": {
@@ -2040,7 +2790,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The number of SeriesSlots in each Database",
+          "description": "$instance 节点所在集群的 Database 的 SeriesSlot 的数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2089,9 +2839,9 @@
           },
           "gridPos": {
             "h": 6,
-            "w": 8,
-            "x": 16,
-            "y": 3
+            "w": 12,
+            "x": 0,
+            "y": 10
           },
           "id": 103,
           "options": {
@@ -2129,7 +2879,96 @@
           "type": "timeseries"
         },
         {
-          "description": "The status history of cluster DataRegions",
+          "description": "$instance 节点所在集群的 Database 的 TimeSlot 的数量",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 4,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 10
+          },
+          "id": 132,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "builder",
+              "exemplar": true,
+              "expr": "time_slot_num_in_database{instance=~\"$instance\"}",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "TimeSlot Count $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点所在集群的 DataRegion 状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2241,7 +3080,7 @@
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 9
+            "y": 16
           },
           "id": 91,
           "options": {
@@ -2279,7 +3118,7 @@
           "type": "timeseries"
         },
         {
-          "description": "The status history of cluster SchemaRegions",
+          "description": "$instance 节点所在集群的 SchemaRegion 的状态",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2395,7 +3234,7 @@
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 9
+            "y": 16
           },
           "id": 89,
           "options": {
@@ -2455,11 +3294,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 7
+        "y": 9
       },
       "id": 109,
       "panels": [
         {
+          "description": "$instance 节点的 Ratis 各阶段耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2536,7 +3376,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 4
+            "y": 5
           },
           "id": 111,
           "options": {
@@ -2608,6 +3448,7 @@
           "type": "timeseries"
         },
         {
+          "description": "$instance 节点的 Ratis 写 Log 的耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2684,7 +3525,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 4
+            "y": 5
           },
           "id": 112,
           "options": {
@@ -2756,6 +3597,7 @@
           "type": "timeseries"
         },
         {
+          "description": "$instance 节点的 Ratis 的远程写入和本地写入的耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2832,7 +3674,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 12
+            "y": 13
           },
           "id": 113,
           "options": {
@@ -2880,6 +3722,7 @@
           "type": "timeseries"
         },
         {
+          "description": "$instance 节点 Ratis 的远程和本地写入的 QPS",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2956,7 +3799,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 12
+            "y": 13
           },
           "id": 114,
           "options": {
@@ -3004,6 +3847,7 @@
           "type": "timeseries"
         },
         {
+          "description": "$instance 节点 Ratis 共识协议的内存使用",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3080,7 +3924,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 12
+            "y": 13
           },
           "id": 115,
           "options": {
@@ -3141,7 +3985,7 @@
       "type": "row"
     }
   ],
-  "refresh": "30s",
+  "refresh": false,
   "schemaVersion": 35,
   "style": "dark",
   "tags": [
@@ -3162,7 +4006,7 @@
           "query": "label_values(cluster)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -3210,7 +4054,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -3226,6 +4070,6 @@
   "timezone": "browser",
   "title": "Apache IoTDB ConfigNode Dashboard",
   "uid": "4WkTYkx4y",
-  "version": 70,
+  "version": 129,
   "weekStart": ""
 }

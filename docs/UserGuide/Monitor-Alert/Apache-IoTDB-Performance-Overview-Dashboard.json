@@ -69,7 +69,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "iteration": 1686532320064,
+  "iteration": 1690806560213,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -87,6 +87,7 @@
       "type": "row"
     },
     {
+      "description": "集群机器 CPU 总核数",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -147,6 +148,7 @@
       "type": "stat"
     },
     {
+      "description": "集群机器磁盘总大小",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -207,6 +209,7 @@
       "type": "stat"
     },
     {
+      "description": "集群管理的时间序列总数（含副本），实际时间序列数需结合元数据副本数计算",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -267,48 +270,63 @@
       "type": "stat"
     },
     {
-      "description": "",
+      "description": "集群 ConfigNode 和 DataNode 节点数量",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "mappings": [],
-          "max": 1,
-          "min": 0,
           "thresholds": {
-            "mode": "percentage",
+            "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 80
-              },
-              {
-                "color": "red",
-                "value": 90
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "ConfigNode"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "C"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DataNode"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "D"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 6,
-        "w": 6,
+        "h": 3,
+        "w": 3,
         "x": 9,
         "y": 1
       },
-      "id": 208,
+      "id": 257,
       "options": {
-        "displayMode": "lcd",
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -316,7 +334,7 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "textMode": "value"
       },
       "pluginVersion": "8.4.2",
       "targets": [
@@ -327,13 +345,72 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "(sum(process_total_mem{cluster=~\"$cluster\", nodeType=~\"$nodeType\"}) - sum(process_free_mem{cluster=~\"$cluster\", nodeType=~\"$nodeType\"})) / sum(sys_total_physical_memory_size{cluster=~\"$cluster\", nodeType=~\"$nodeType\", name=\"system\"})",
+          "expr": "max(node_num{cluster=~\"$cluster\", nodeType=\"CONFIGNODE\", type=\"ConfigNode\"})",
+          "interval": "",
+          "legendFormat": "ConfigNode",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "exemplar": true,
+          "expr": "max(node_num{cluster=~\"$cluster\", nodeType=\"CONFIGNODE\", type=\"DataNode\"})",
           "hide": false,
           "interval": "",
-          "legendFormat": "Average DataNode Memory Usage",
-          "range": true,
+          "legendFormat": "DataNode",
           "refId": "B"
+        }
+      ],
+      "title": "Cluster",
+      "type": "stat"
+    },
+    {
+      "description": "集群启动至今的时长",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ns"
         },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 12,
+        "y": 1
+      },
+      "id": 256,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
         {
           "datasource": {
             "type": "prometheus",
@@ -341,18 +418,18 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "1- sum(sys_disk_free_space{cluster=~\"$cluster\", nodeType=~\"$nodeType\"}) / sum(sys_disk_total_space{cluster=~\"$cluster\", nodeType=~\"$nodeType\"})",
-          "hide": false,
+          "expr": "max(up_time{cluster=~\"$cluster\"})",
           "interval": "",
-          "legendFormat": "Average Disk Usage",
+          "legendFormat": "",
           "range": true,
-          "refId": "C"
+          "refId": "A"
         }
       ],
-      "title": "Cluster System Overview",
-      "type": "bargauge"
+      "title": "Up Time",
+      "type": "stat"
     },
     {
+      "description": "集群每秒写入总点数（含副本），实际写入总点数需结合数据副本数分析",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -396,12 +473,13 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "points/s"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 9,
         "w": 9,
         "x": 15,
         "y": 1
@@ -442,6 +520,7 @@
       "type": "timeseries"
     },
     {
+      "description": "集群机器系统内存总大小",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -502,6 +581,7 @@
       "type": "stat"
     },
     {
+      "description": "集群机器交换内存总大小",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -562,6 +642,7 @@
       "type": "stat"
     },
     {
+      "description": "集群管理文件总数量",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -622,11 +703,283 @@
       "type": "stat"
     },
     {
+      "description": "集群机器概述，包括平均 DataNode 节点内存占用率、平均机器磁盘使用率",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 9,
+        "y": 4
+      },
+      "id": 208,
+      "options": {
+        "displayMode": "lcd",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "(sum(process_total_mem{cluster=~\"$cluster\", nodeType=~\"$nodeType\"}) - sum(process_free_mem{cluster=~\"$cluster\", nodeType=~\"$nodeType\"})) / sum(sys_total_physical_memory_size{cluster=~\"$cluster\", nodeType=~\"$nodeType\", name=\"system\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Average DataNode Memory Usage",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "1- sum(sys_disk_free_space{cluster=~\"$cluster\", nodeType=~\"$nodeType\"}) / sum(sys_disk_total_space{cluster=~\"$cluster\", nodeType=~\"$nodeType\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Average Disk Usage",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Cluster System Overview",
+      "type": "bargauge"
+    },
+    {
+      "description": "集群管理的 Database 总数（含副本）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 7
+      },
+      "id": 259,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum(database_num{cluster=~\"$cluster\"})",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total DataBase",
+      "type": "stat"
+    },
+    {
+      "description": "集群管理的 DataRegion 总数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 7
+      },
+      "id": 278,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum(region_num{type=\"DataRegion\", cluster=~\"$cluster\"})",
+          "interval": "",
+          "legendFormat": "",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total DataRegion",
+      "type": "stat"
+    },
+    {
+      "description": "集群管理的 SchemaRegion 总数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 7
+      },
+      "id": 297,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum(region_num{type=\"SchemaRegion\", cluster=~\"$cluster\"})",
+          "interval": "",
+          "legendFormat": "",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total SchemaRegion",
+      "type": "stat"
+    },
+    {
+      "description": "集群各DataNode 节点的 CPU 使用率",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "{{instance}}",
           "mappings": [],
           "max": 1,
           "min": 0,
@@ -655,7 +1008,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 7
+        "y": 10
       },
       "id": 209,
       "options": {
@@ -683,6 +1036,7 @@
           "exemplar": true,
           "expr": "process_cpu_load{cluster=~\"$cluster\", nodeType=\"$nodeType\"}/100",
           "hide": false,
+          "instant": false,
           "interval": "",
           "legendFormat": "{{instance}}",
           "range": true,
@@ -690,14 +1044,25 @@
         }
       ],
       "title": "DataNode CPU Load",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.*):.*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
       "type": "bargauge"
     },
     {
+      "description": "集群各 DataNode 的内存使用率 ",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "displayName": "{{instance}}",
           "mappings": [],
           "max": 1,
           "min": 0,
@@ -726,7 +1091,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 7
+        "y": 10
       },
       "id": 255,
       "options": {
@@ -761,14 +1126,25 @@
         }
       ],
       "title": "DataNode Process Memory Usage",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.*):.*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
       "type": "bargauge"
     },
     {
+      "description": "集群各 DataNode 的磁盘使用率",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "displayName": "{{instance}}",
           "mappings": [],
           "max": 1,
           "min": 0,
@@ -797,7 +1173,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 7
+        "y": 10
       },
       "id": 254,
       "options": {
@@ -832,10 +1208,19 @@
         }
       ],
       "title": "DataNode Disk Usage",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.*):.*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
       "type": "bargauge"
     },
     {
-      "collapsed": true,
+      "collapsed": false,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -844,552 +1229,10 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 16
       },
       "id": 30,
-      "panels": [
-        {
-          "description": "",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "Core(s)"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 3,
-            "x": 0,
-            "y": 2
-          },
-          "id": 35,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_cpu_cores{instance=~\"$instance\", name=\"system\"}",
-              "interval": "",
-              "legendFormat": "$instance",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "CPU Core",
-          "type": "stat"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 3,
-            "x": 3,
-            "y": 2
-          },
-          "id": 38,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_disk_total_space{instance=~\"$instance\", name=\"system\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Disk Space",
-          "type": "stat"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 3,
-            "x": 6,
-            "y": 2
-          },
-          "id": 40,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "quantity{instance=~\"$instance\", name=\"timeSeries\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Timeseries",
-          "type": "stat"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "max": 1,
-              "min": 0,
-              "thresholds": {
-                "mode": "percentage",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "#EAB839",
-                    "value": 80
-                  },
-                  {
-                    "color": "red",
-                    "value": 90
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 9,
-            "y": 2
-          },
-          "id": 39,
-          "options": {
-            "displayMode": "lcd",
-            "minVizHeight": 10,
-            "minVizWidth": 0,
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showUnfilled": true
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "process_cpu_load{instance=~\"$instance\"} / 100",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "CPU Load",
-              "range": true,
-              "refId": "D"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "(sum(process_total_mem{instance=~\"$instance\"}) - sum(process_free_mem{instance=~\"$instance\"})) / sum(sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"})",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Process Memory Usage",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "1- sys_disk_free_space{instance=~\"$instance\"} / sys_disk_total_space{instance=~\"$instance\"}",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "Disk Usage",
-              "range": true,
-              "refId": "C"
-            }
-          ],
-          "title": "System Overview",
-          "type": "bargauge"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 20,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "min": 0,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 9,
-            "x": 15,
-            "y": 2
-          },
-          "id": 4,
-          "options": {
-            "legend": {
-              "calcs": [
-                "mean"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true,
-              "sortBy": "Last *",
-              "sortDesc": false
-            },
-            "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "rate(quantity_total{instance=~\"$instance\"}[1m])",
-              "interval": "",
-              "legendFormat": "$instance",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Write Point Per Second",
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 3,
-            "x": 0,
-            "y": 6
-          },
-          "id": 36,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "System Memory",
-          "type": "stat"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 3,
-            "x": 3,
-            "y": 6
-          },
-          "id": 37,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sys_total_swap_space_size{instance=~\"$instance\", name=\"system\"}",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Swap Memory",
-          "type": "stat"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 3,
-            "x": 6,
-            "y": 6
-          },
-          "id": 42,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.4.2",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${DS_PROMETHEUS}"
-              },
-              "editorMode": "code",
-              "exemplar": true,
-              "expr": "sum(file_count{instance=~\"$instance\", name!=\"open_file_handlers\"})",
-              "interval": "",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "File Number",
-          "type": "stat"
-        }
-      ],
+      "panels": [],
       "repeat": "instance",
       "targets": [
         {
@@ -1404,6 +1247,572 @@
       "type": "row"
     },
     {
+      "description": "$instance 节点所在机器的 CPU 核数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "Core(s)"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 17
+      },
+      "id": 35,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sys_cpu_cores{instance=~\"$instance\", name=\"system\"}",
+          "interval": "",
+          "legendFormat": "$instance",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Core",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.*):.*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "description": "$instance 节点所在机器的磁盘大小",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 17
+      },
+      "id": 38,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sys_disk_total_space{instance=~\"$instance\", name=\"system\"}",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Disk Space",
+      "type": "stat"
+    },
+    {
+      "description": "$instance 节点所在机器管理的时间序列数量（含副本）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 17
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "quantity{instance=~\"$instance\", name=\"timeSeries\"}",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Timeseries",
+      "type": "stat"
+    },
+    {
+      "description": "$instance 节点所在机器的系统概述，包括 CPU 负载、进程内存使用比率、磁盘使用比率",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 9,
+        "y": 17
+      },
+      "id": 39,
+      "options": {
+        "displayMode": "lcd",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "process_cpu_load{instance=~\"$instance\"} / 100",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "CPU Load",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "(sum(process_total_mem{instance=~\"$instance\"}) - sum(process_free_mem{instance=~\"$instance\"})) / sum(sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Process Memory Usage",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "1- sys_disk_free_space{instance=~\"$instance\"} / sys_disk_total_space{instance=~\"$instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Disk Usage",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "System Overview",
+      "type": "bargauge"
+    },
+    {
+      "description": "$instance 节点所在机器的每秒写入速度（含副本）",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "point(s)/s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 15,
+        "y": 17
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "rate(quantity_total{instance=~\"$instance\"}[1m])",
+          "interval": "",
+          "legendFormat": "$instance",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Write Point Per Second",
+      "type": "timeseries"
+    },
+    {
+      "description": "$instance 节点所在机器的系统内存大小",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 0,
+        "y": 20
+      },
+      "id": 36,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sys_total_physical_memory_size{instance=~\"$instance\", name=\"system\"}",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "System Memory",
+      "type": "stat"
+    },
+    {
+      "description": "$instance 节点所在机器的交换内存大小",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 20
+      },
+      "id": 37,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sys_total_swap_space_size{instance=~\"$instance\", name=\"system\"}",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Swap Memory",
+      "type": "stat"
+    },
+    {
+      "description": "$instance 节点管理的文件数",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 6,
+        "y": 20
+      },
+      "id": 42,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": true,
+          "expr": "sum(file_count{instance=~\"$instance\", name!=\"open_file_handlers\"})",
+          "interval": "",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "File Number",
+      "type": "stat"
+    },
+    {
       "collapsed": true,
       "datasource": {
         "type": "prometheus",
@@ -1413,12 +1822,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 65
       },
       "id": 32,
       "panels": [
         {
-          "description": "",
+          "description": "$instance 节点的 session 连接的总空闲时间和总忙碌时间",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1491,7 +1900,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 17
+            "y": 18
           },
           "id": 56,
           "options": {
@@ -1501,7 +1910,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -1542,6 +1953,7 @@
           "type": "timeseries"
         },
         {
+          "description": "$instance 节点的客户端连接情况，包括总连接数和活跃连接数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1596,7 +2008,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 17
+            "y": 18
           },
           "id": 54,
           "options": {
@@ -1605,7 +2017,9 @@
                 "mean"
               ],
               "displayMode": "table",
-              "placement": "right"
+              "placement": "right",
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -1647,7 +2061,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "description": "",
+          "description": "$instance 节点的各类型操作耗时，包括平均值和P99",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1699,7 +2113,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 25
+            "y": 26
           },
           "id": 22,
           "options": {
@@ -1709,7 +2123,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -1748,7 +2164,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点的各个 thrift 接口平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1821,7 +2237,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 25
+            "y": 26
           },
           "id": 50,
           "options": {
@@ -1831,7 +2247,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -1864,7 +2282,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "description": "",
+          "description": "$instance 节点的各个 thrift 接口的 P99 耗时数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1916,7 +2334,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 25
+            "y": 26
           },
           "id": 57,
           "options": {
@@ -1926,7 +2344,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -1957,6 +2377,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
+          "description": "$instance 节点的各项系统任务数量",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2008,7 +2429,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 33
+            "y": 34
           },
           "id": 11,
           "options": {
@@ -2018,7 +2439,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -2048,6 +2471,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
+          "description": "$instance 节点的各项系统任务的平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2120,7 +2544,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 33
+            "y": 34
           },
           "id": 51,
           "options": {
@@ -2130,7 +2554,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -2161,6 +2587,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
+          "description": "$instance 节点的各项系统任务的 P99 耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2212,7 +2639,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 33
+            "y": 34
           },
           "id": 13,
           "options": {
@@ -2222,7 +2649,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -2252,7 +2681,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "description": "",
+          "description": "$instance 节点的每秒操作数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2296,7 +2725,7 @@
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "ops"
             },
             "overrides": []
           },
@@ -2304,7 +2733,7 @@
             "h": 8,
             "w": 10,
             "x": 0,
-            "y": 41
+            "y": 42
           },
           "id": 21,
           "options": {
@@ -2315,7 +2744,7 @@
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "sortBy": "Last *",
+              "sortBy": "Mean",
               "sortDesc": true
             },
             "tooltip": {
@@ -2351,11 +2780,11 @@
               "refId": "A"
             }
           ],
-          "title": "OPS $instance",
+          "title": "Operation Per Second $instance",
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点主流程各阶段的每秒操作数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2399,7 +2828,7 @@
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "ops"
             },
             "overrides": []
           },
@@ -2407,7 +2836,7 @@
             "h": 8,
             "w": 7,
             "x": 10,
-            "y": 41
+            "y": 42
           },
           "id": 45,
           "options": {
@@ -2418,7 +2847,7 @@
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "sortBy": "Last *",
+              "sortBy": "Mean",
               "sortDesc": true
             },
             "tooltip": {
@@ -2444,11 +2873,11 @@
               "refId": "B"
             }
           ],
-          "title": "OPS Of Stage $instance",
+          "title": "Operation Per Second Of Stage $instance",
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 schedule 阶段各子阶段每秒操作数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2492,7 +2921,7 @@
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "ops"
             },
             "overrides": []
           },
@@ -2500,7 +2929,7 @@
             "h": 8,
             "w": 7,
             "x": 17,
-            "y": 41
+            "y": 42
           },
           "id": 27,
           "options": {
@@ -2511,7 +2940,7 @@
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "sortBy": "Last *",
+              "sortBy": "Mean",
               "sortDesc": true
             },
             "tooltip": {
@@ -2541,7 +2970,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 local schedule 各子阶段每秒操作数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2585,7 +3014,7 @@
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "ops"
             },
             "overrides": []
           },
@@ -2593,7 +3022,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 49
+            "y": 50
           },
           "id": 64,
           "options": {
@@ -2604,7 +3033,7 @@
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "sortBy": "Last *",
+              "sortBy": "Mean",
               "sortDesc": true
             },
             "tooltip": {
@@ -2634,7 +3063,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 storage 阶段各子阶段每秒操作数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2678,7 +3107,7 @@
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "ops"
             },
             "overrides": []
           },
@@ -2686,7 +3115,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 49
+            "y": 50
           },
           "id": 65,
           "options": {
@@ -2697,7 +3126,7 @@
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "sortBy": "Last *",
+              "sortBy": "Mean",
               "sortDesc": true
             },
             "tooltip": {
@@ -2739,7 +3168,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 engine 阶段各子阶段每秒操作数",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2791,7 +3220,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 49
+            "y": 50
           },
           "id": 66,
           "options": {
@@ -2802,7 +3231,7 @@
               "displayMode": "table",
               "placement": "right",
               "showLegend": true,
-              "sortBy": "Last *",
+              "sortBy": "Mean",
               "sortDesc": true
             },
             "tooltip": {
@@ -2832,7 +3261,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点主流程各阶段平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2905,7 +3334,7 @@
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 57
+            "y": 58
           },
           "id": 46,
           "options": {
@@ -2915,7 +3344,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -2944,7 +3375,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 schedule 阶段各子阶段平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3017,7 +3448,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 57
+            "y": 58
           },
           "id": 58,
           "options": {
@@ -3027,7 +3458,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3056,7 +3489,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 local schedule 阶段各子阶段平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3129,7 +3562,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 65
+            "y": 66
           },
           "id": 60,
           "options": {
@@ -3139,7 +3572,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3166,7 +3601,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 storage 阶段各子阶段平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3239,7 +3674,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 65
+            "y": 66
           },
           "id": 61,
           "options": {
@@ -3249,7 +3684,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3288,7 +3725,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点的 engine 阶段各子阶段平均耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3361,7 +3798,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 65
+            "y": 66
           },
           "id": 47,
           "options": {
@@ -3371,7 +3808,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3398,7 +3837,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点主流程各阶段 P99 耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3445,41 +3884,13 @@
               },
               "unit": "s"
             },
-            "overrides": [
-              {
-                "__systemRef": "hideSeriesFrom",
-                "matcher": {
-                  "id": "byNames",
-                  "options": {
-                    "mode": "exclude",
-                    "names": [
-                      "analyzer",
-                      "authority",
-                      "parser",
-                      "planner"
-                    ],
-                    "prefix": "All except:",
-                    "readOnly": true
-                  }
-                },
-                "properties": [
-                  {
-                    "id": "custom.hideFrom",
-                    "value": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": true
-                    }
-                  }
-                ]
-              }
-            ]
+            "overrides": []
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 73
+            "y": 74
           },
           "id": 24,
           "options": {
@@ -3489,7 +3900,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3518,7 +3931,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点的 schedule 阶段各子阶段 P99 耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3570,7 +3983,7 @@
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 73
+            "y": 74
           },
           "id": 28,
           "options": {
@@ -3580,7 +3993,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3609,7 +4024,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点的 local schedule 阶段各子阶段 P99 耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3661,7 +4076,7 @@
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 81
+            "y": 82
           },
           "id": 59,
           "options": {
@@ -3671,7 +4086,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3700,7 +4117,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 storage 阶段各子阶段 P99 耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3752,7 +4169,7 @@
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 81
+            "y": 82
           },
           "id": 62,
           "options": {
@@ -3762,7 +4179,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3805,7 +4224,7 @@
           "type": "timeseries"
         },
         {
-          "description": "",
+          "description": "$instance 节点 engine 阶段各子阶段的 P99 耗时",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -3857,7 +4276,7 @@
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 81
+            "y": 82
           },
           "id": 63,
           "options": {
@@ -3867,7 +4286,9 @@
               ],
               "displayMode": "table",
               "placement": "right",
-              "showLegend": true
+              "showLegend": true,
+              "sortBy": "Mean",
+              "sortDesc": true
             },
             "tooltip": {
               "mode": "multi",
@@ -3909,7 +4330,7 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -3918,10 +4339,1126 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 66
       },
       "id": 34,
-      "panels": [],
+      "panels": [
+        {
+          "description": "$instance 节点的 CPU 负载",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 19
+          },
+          "id": 15,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sys_cpu_load{instance=~\"$instance\",name=\"system\"}",
+              "interval": "",
+              "legendFormat": "System CPU Load",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "process_cpu_load{instance=~\"$instance\",name=\"process\"}",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Process CPU Load",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "CPU Load $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点的每分钟 CPU 时间，最大值和 CPU 核数相关",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 19
+          },
+          "id": 18,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(rate(process_cpu_time{instance=~\"$instance\", name=\"process\"}[1m]))*60",
+              "interval": "",
+              "legendFormat": "System CPU Load",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Time Per Minute $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "description": "$instance 节点的平均每分钟 GC 耗时，包括 YGC 和 FGC",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Young GC"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 19
+          },
+          "id": 17,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", action=\"end of minor GC\"}[1m]))*60",
+              "legendFormat": "Young GC",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", action=\"end of major GC\"}[1m]))*60",
+              "hide": false,
+              "legendFormat": "Full GC",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "GC Time Per Minute $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "description": "$instance 节点的堆内存使用情况",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 27
+          },
+          "id": 48,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(jvm_memory_max_bytes{instance=~\"$instance\",area=\"heap\"})",
+              "legendFormat": "Maximum heap memory",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(jvm_memory_used_bytes{instance=~\"$instance\",area=\"heap\"})",
+              "hide": false,
+              "legendFormat": "Used heap memory",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "jvm_memory_used_bytes{instance=~\"$instance\", area=\"heap\"}",
+              "hide": false,
+              "legendFormat": "{{id}}",
+              "range": true,
+              "refId": "D"
+            }
+          ],
+          "title": "Heap Memory $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "description": "$instance 节点的非堆内存使用情况",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 27
+          },
+          "id": 52,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(jvm_buffer_memory_used_bytes{instance=~\"$instance\"})",
+              "legendFormat": "off heap memory",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Off Heap Memory $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "description": "$instance 节点的 Java 线程数量情况",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 27
+          },
+          "id": 49,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "jvm_threads_live_threads{instance=~\"$instance\"}",
+              "legendFormat": "total",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "jvm_threads_states_threads{instance=~\"$instance\"}",
+              "hide": false,
+              "legendFormat": "{{state}}",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "The Number Of Java Thread $instance",
+          "type": "timeseries"
+        },
+        {
+          "description": "$instance 节点管理的文件数量情况",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "all"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "dark-green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "seq"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "unseq"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "wal"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 35
+          },
+          "id": 44,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "file_count{instance=~\"$instance\",name!=\"open_file_handlers\"}",
+              "interval": "",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum(file_count{instance=~\"$instance\", name!=\"open_file_handlers\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "all",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "File Count $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "description": "$instance 节点管理文件大小情况",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "bytes"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "all"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "dark-green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "seq"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "unseq"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "wal"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 35
+          },
+          "id": 16,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "file_size{instance=~\"$instance\"}",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(file_size{instance=~\"$instance\"})",
+              "hide": false,
+              "legendFormat": "all",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "File Size $instance",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "description": "$instance 节点的每分钟不同类型日志情况",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "error"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "warn"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "info"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "debug"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "trace"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "purple",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 35
+          },
+          "id": 20,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "9.3.2",
+          "repeat": "instance",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(logback_events_total{instance=~\"${instance}\"}[1m])) by (level) * 60",
+              "legendFormat": "{{level}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Log Number Per Minute $instance",
+          "type": "timeseries"
+        }
+      ],
       "targets": [
         {
           "datasource": {
@@ -3933,1126 +5470,9 @@
       ],
       "title": "System",
       "type": "row"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 21
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sys_cpu_load{instance=~\"$instance\",name=\"system\"}",
-          "interval": "",
-          "legendFormat": "System CPU Load",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "process_cpu_load{instance=~\"$instance\",name=\"process\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Process CPU Load",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "CPU Load $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ns"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 21
-      },
-      "id": 18,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(process_cpu_time{instance=~\"$instance\", name=\"process\"}[1m]))*60",
-          "interval": "",
-          "legendFormat": "System CPU Load",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "CPU Time Per Minute $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Young GC"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 21
-      },
-      "id": 17,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", action=\"end of minor GC\"}[1m]))*60",
-          "legendFormat": "Young GC",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(jvm_gc_pause_seconds_sum{instance=~\"$instance\", action=\"end of major GC\"}[1m]))*60",
-          "hide": false,
-          "legendFormat": "Full GC",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "GC Time Per Minute $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 69
-      },
-      "id": 48,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(jvm_memory_max_bytes{instance=~\"$instance\",area=\"heap\"})",
-          "legendFormat": "Maximum heap memory",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(jvm_memory_used_bytes{instance=~\"$instance\",area=\"heap\"})",
-          "hide": false,
-          "legendFormat": "Used heap memory",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "jvm_memory_used_bytes{instance=~\"$instance\", area=\"heap\"}",
-          "hide": false,
-          "legendFormat": "{{id}}",
-          "range": true,
-          "refId": "D"
-        }
-      ],
-      "title": "Heap Memory $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 69
-      },
-      "id": 52,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(jvm_buffer_memory_used_bytes{instance=~\"$instance\"})",
-          "legendFormat": "off heap memory",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Off Heap Memory $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 69
-      },
-      "id": 49,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "jvm_threads_live_threads{instance=~\"$instance\"}",
-          "legendFormat": "total",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "jvm_threads_states_threads{instance=~\"$instance\"}",
-          "hide": false,
-          "legendFormat": "{{state}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "The Number Of Java Thread $instance",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "all"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "seq"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "unseq"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "wal"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 117
-      },
-      "id": 44,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "file_count{instance=~\"$instance\",name!=\"open_file_handlers\"}",
-          "interval": "",
-          "legendFormat": "{{name}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(file_count{instance=~\"$instance\", name!=\"open_file_handlers\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "all",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "File Count $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "bytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "all"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "seq"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "unseq"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "wal"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 117
-      },
-      "id": 16,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "file_size{instance=~\"$instance\"}",
-          "legendFormat": "{{name}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(file_size{instance=~\"$instance\"})",
-          "hide": false,
-          "legendFormat": "all",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "File Size $instance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "error"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "warn"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "info"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "debug"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "trace"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "purple",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 117
-      },
-      "id": 20,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "repeat": "instance",
-      "repeatDirection": "v",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(logback_events_total{instance=~\"${instance}\"}[1m])) by (level) * 60",
-          "legendFormat": "{{level}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Log Number Per Minute $instance",
-      "type": "timeseries"
     }
   ],
-  "refresh": "30s",
+  "refresh": false,
   "schemaVersion": 35,
   "style": "dark",
   "tags": [
@@ -5077,7 +5497,7 @@
           "query": "label_values(cluster)",
           "refId": "StandardVariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -5107,10 +5527,6 @@
       },
       {
         "current": {},
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
         "definition": "label_values({cluster=~\"$cluster\",nodeType=~\"$nodeType\"},instance)",
         "hide": 0,
         "includeAll": true,
@@ -5124,13 +5540,14 @@
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 3,
-        "type": "query"
+        "sort": 0,
+        "type": "query",
+        "datasource": "${DS_PROMETHEUS}"
       }
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -5150,6 +5567,6 @@
   "timezone": "browser",
   "title": "Apache IoTDB Performance Overview Dashboard",
   "uid": "ZRfEph04y",
-  "version": 152,
+  "version": 260,
   "weekStart": ""
 }
