@@ -156,7 +156,7 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>service-rpc</artifactId>
             <version>${project.version}</version>
         </dependency>
