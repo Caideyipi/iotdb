@@ -41,8 +41,8 @@ variables:
 # Maven 3.8.x REQUIRES HTTPS repositories.
 # See https://maven.apache.org/docs/3.8.1/release-notes.html#how-to-fix-when-i-get-a-http-repository-blocked for more.
 #image: maven:3-openjdk-8
-image: 
-  name: maven:3.8.1-openjdk-8-slim-lsof 
+image:
+  name: maven:3.8.1-openjdk-8-slim-lsof
   pull_policy: if-not-present
 
 # Cache downloaded dependencies and plugins between builds.
@@ -80,7 +80,7 @@ integration-test-1c1d:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
-    - 'mvn verify -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
+    - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
@@ -101,7 +101,7 @@ integration-test-1c3d:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
-    - 'mvn verify -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
+    - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
