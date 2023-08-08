@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.metadata.cache.dualkeycache;
 
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.db.queryengine.plan.analyze.cache.schema.SchemaCacheEntry;
 import org.apache.iotdb.db.queryengine.plan.analyze.cache.schema.dualkeycache.IDualKeyCache;
 import org.apache.iotdb.db.queryengine.plan.analyze.cache.schema.dualkeycache.IDualKeyCacheComputation;
@@ -31,7 +32,9 @@ import org.apache.iotdb.tsfile.read.TimeValuePair;
 import org.apache.iotdb.tsfile.utils.TsPrimitiveType;
 import org.apache.iotdb.tsfile.write.schema.MeasurementSchema;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -45,6 +48,8 @@ public class DualKeyCacheTest {
 
   private final String policy;
 
+  private boolean lastCacheEnabledDefaultValue;
+
   public DualKeyCacheTest(String policy) {
     this.policy = policy;
   }
@@ -52,6 +57,19 @@ public class DualKeyCacheTest {
   @Parameterized.Parameters
   public static List<String> getTestModes() {
     return Arrays.asList("FIFO", "LRU");
+  }
+
+  @Before
+  public void setUp() throws Exception {
+    lastCacheEnabledDefaultValue = CommonDescriptor.getInstance().getConfig().isLastCacheEnable();
+    if (!lastCacheEnabledDefaultValue) {
+      CommonDescriptor.getInstance().getConfig().setLastCacheEnable(true);
+    }
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    CommonDescriptor.getInstance().getConfig().setLastCacheEnable(lastCacheEnabledDefaultValue);
   }
 
   @Test
