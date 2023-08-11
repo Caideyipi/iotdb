@@ -56,6 +56,8 @@ public interface ObjectStorageConnector {
     cachedConnector.clear();
   }
 
+  boolean isConnectorEnabled();
+
   boolean doesObjectExist(OSURI osUri) throws ObjectStorageException;
 
   IMetaData getMetaData(OSURI osUri) throws ObjectStorageException;

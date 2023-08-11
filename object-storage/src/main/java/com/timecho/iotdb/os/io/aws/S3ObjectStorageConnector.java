@@ -60,6 +60,8 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
   private static final String RANGE_FORMAT = "bytes=%d-%d";
   private static final String S3_CONNECTION_ERROR =
       "cannot connect to S3 bucket. Please check the endpoint or credential";
+  private static final String DEFAULT_ENDPOINT = "yourEndpoint";
+
   private final AWSS3Config s3config =
       (AWSS3Config) ObjectStorageDescriptor.getInstance().getConfig().getProviderConfig();
   private final S3Client s3Client =
@@ -70,6 +72,11 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
                   AwsBasicCredentials.create(
                       s3config.getAccessKeyId(), s3config.getAccessKeySecret())))
           .build();
+
+  @Override
+  public boolean isConnectorEnabled() {
+    return !DEFAULT_ENDPOINT.equals(s3config.getEndpoint());
+  }
 
   @Override
   public boolean doesObjectExist(OSURI osUri) throws ObjectStorageException {

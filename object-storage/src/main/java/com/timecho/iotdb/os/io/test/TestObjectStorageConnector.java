@@ -41,6 +41,11 @@ public class TestObjectStorageConnector implements ObjectStorageConnector {
       (TestConfig) ObjectStorageDescriptor.getInstance().getConfig().getProviderConfig();
 
   @Override
+  public boolean isConnectorEnabled() {
+    return true;
+  }
+
+  @Override
   public boolean doesObjectExist(OSURI osUri) throws ObjectStorageException {
     File file = new File(getDstFilePath(osUri));
     return file.exists();

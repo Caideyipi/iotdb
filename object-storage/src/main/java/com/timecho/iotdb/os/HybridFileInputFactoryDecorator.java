@@ -25,6 +25,7 @@ import org.apache.iotdb.tsfile.utils.FSUtils;
 
 import com.timecho.iotdb.os.conf.ObjectStorageConfig;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
+import com.timecho.iotdb.os.io.ObjectStorageConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class HybridFileInputFactoryDecorator implements FileInputFactory {
   @Override
   public TsFileInput getTsFileInput(String filePath) throws IOException {
     File file = new File(filePath);
-    if (!file.exists()) {
+    if (!file.exists() && ObjectStorageConnector.getConnector().isConnectorEnabled()) {
       return fileInputFactory.getTsFileInput(
           FSUtils.parseLocalTsFile2OSFile(file, config.getBucketName(), dataNodeId).getPath());
     }

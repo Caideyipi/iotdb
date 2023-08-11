@@ -653,7 +653,7 @@ public class DataRegion implements IDataRegionForQuery {
                 if (!f.getCanonicalPath()
                     .startsWith(
                         tsFilePartitionPath2File.get(tsFilePartitionPath).getCanonicalPath())) {
-                  f.delete();
+                  Files.delete(f.toPath());
                 }
               } else {
                 tsFilePartitionPath2File.put(
