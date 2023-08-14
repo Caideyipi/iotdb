@@ -250,7 +250,7 @@ public class ConfigNodeDescriptor {
             properties
                 .getProperty(
                     "schema_region_per_data_node",
-                    String.valueOf(conf.getSchemaReplicationFactor()))
+                    String.valueOf(conf.getSchemaRegionPerDataNode()))
                 .trim()));
 
     conf.setDataRegionGroupExtensionPolicy(
