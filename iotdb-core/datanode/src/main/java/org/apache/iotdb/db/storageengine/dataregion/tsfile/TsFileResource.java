@@ -1226,6 +1226,14 @@ public class TsFileResource {
             : maxProgressIndex.updateToMinimumIsAfterProgressIndex(progressIndex));
   }
 
+  public void recoverProgressIndex(ProgressIndex progressIndex) {
+    if (progressIndex == null) {
+      return;
+    }
+
+    maxProgressIndex = progressIndex;
+  }
+
   public ProgressIndex getMaxProgressIndexAfterClose() throws IllegalStateException {
     if (getStatus().equals(TsFileResourceStatus.UNCLOSED)) {
       throw new IllegalStateException(
