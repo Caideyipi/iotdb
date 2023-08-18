@@ -28,7 +28,7 @@
     </parent>
     <groupId>com.timecho.iotdb</groupId>
     <artifactId>timechodb-thrift</artifactId>
-    <description>RPC (Thrift) framework for client and server.</description>
+    <description>RPC (Thrift) framework for client and DataNodes.</description>
     <name>IoTDB: Protocol: Thrift RPC</name>
     <build>
         <plugins>
