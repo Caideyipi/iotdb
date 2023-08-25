@@ -65,8 +65,7 @@ unit-test:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
-    - 'mvn clean install -DskipTests -s $MAVEN_SETTINGS_XML'
-    - 'mvn clean test -Dtest.port.closed=true -s $MAVEN_SETTINGS_XML'
+    - 'mvn clean install -Dtest.port.closed=true -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
