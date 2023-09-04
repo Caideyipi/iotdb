@@ -30,9 +30,11 @@ import org.eclipse.milo.opcua.sdk.server.api.config.OpcUaServerConfig;
 import org.eclipse.milo.opcua.sdk.server.identity.CompositeValidator;
 import org.eclipse.milo.opcua.sdk.server.identity.UsernameIdentityValidator;
 import org.eclipse.milo.opcua.sdk.server.identity.X509IdentityValidator;
+import org.eclipse.milo.opcua.sdk.server.items.BaseMonitoredItem;
 import org.eclipse.milo.opcua.sdk.server.model.nodes.objects.BaseEventTypeNode;
 import org.eclipse.milo.opcua.sdk.server.model.nodes.objects.ServerTypeNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.UaNode;
+import org.eclipse.milo.opcua.sdk.server.subscriptions.Subscription;
 import org.eclipse.milo.opcua.sdk.server.util.HostnameUtil;
 import org.eclipse.milo.opcua.stack.core.Identifiers;
 import org.eclipse.milo.opcua.stack.core.StatusCodes;
@@ -303,6 +305,11 @@ public class IoTDBOpcUaServerUtils {
 
         // Message --> Value
         switch (dataType) {
+          case BOOLEAN:
+            eventNode.setMessage(
+                LocalizedText.english(
+                    Boolean.toString(((boolean[]) tablet.values[columnIndex])[rowIndex])));
+            break;
           case INT32:
             eventNode.setMessage(
                 LocalizedText.english(
@@ -338,6 +345,16 @@ public class IoTDBOpcUaServerUtils {
         // Reset the eventId each time
         eventNode.setEventId(ByteString.of(Integer.toString(eventId++).getBytes()));
 
+        if (!server.getSubscriptions().isEmpty()) {
+          System.out.println(
+              ((BaseMonitoredItem<?>)
+                      ((Subscription) server.getSubscriptions().values().toArray()[0])
+                          .getMonitoredItems()
+                          .values()
+                          .toArray()[0])
+                  .getQueueSize());
+        }
+
         // Send the event
         server.getEventBus().post(eventNode);
       }
@@ -347,6 +364,8 @@ public class IoTDBOpcUaServerUtils {
 
   private static NodeId convertToOpcDataType(TSDataType type) {
     switch (type) {
+      case BOOLEAN:
+        return Identifiers.Boolean;
       case INT32:
         return Identifiers.Int32;
       case INT64:

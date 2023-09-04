@@ -19,9 +19,18 @@
 
 package org.apache.iotdb.db.pipe.connector.protocol.opcua;
 
+import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
+import org.apache.iotdb.commons.concurrent.ThreadName;
+import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
+
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaMonitoredItem;
 import org.eclipse.milo.opcua.sdk.client.api.subscriptions.UaSubscription;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedEventItem;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedItem;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.ManagedSubscription;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.OpcUaMonitoredItem;
+import org.eclipse.milo.opcua.sdk.client.subscriptions.OpcUaSubscription;
 import org.eclipse.milo.opcua.stack.core.AttributeId;
 import org.eclipse.milo.opcua.stack.core.Identifiers;
 import org.eclipse.milo.opcua.stack.core.types.builtin.ExtensionObject;
@@ -41,6 +50,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -64,7 +75,9 @@ public class ClientTest implements ClientExample {
     client.connect().get();
 
     // create a subscription and a monitored item
-    UaSubscription subscription = client.getSubscriptionManager().createSubscription(1000.0).get();
+    UaSubscription subscription = client.getSubscriptionManager().createSubscription(200.0).get();
+    ManagedSubscription managedSubscription =
+        new ManagedSubscription(client, (OpcUaSubscription) subscription);
 
     ReadValueId readValueId =
         new ReadValueId(
@@ -128,19 +141,35 @@ public class ClientTest implements ClientExample {
     // do something with the value updates
     UaMonitoredItem monitoredItem = items.get(0);
 
+    ManagedItem managedItem =
+        new ManagedEventItem(client, managedSubscription, (OpcUaMonitoredItem) monitoredItem);
+    managedItem.setQueueSize(UInteger.valueOf(50000));
+
     final AtomicInteger eventCount = new AtomicInteger(0);
 
     monitoredItem.setEventConsumer(
         (item, vs) -> {
-          logger.info("Event Received from {}", item.getReadValueId().getNodeId());
-
-          for (int i = 0; i < vs.length; i++) {
-            logger.info("\tvariant[{}]: {}", i, vs[i].getValue());
-          }
-
-          if (eventCount.incrementAndGet() == 100) {
-            future.complete(client);
-          }
+          eventCount.incrementAndGet();
+//          logger.info("Event Received from {}", item.getReadValueId().getNodeId());
+//
+//          for (int i = 0; i < vs.length; i++) {
+//            logger.info("\tvariant[{}]: {}", i, vs[i].getValue());
+//          }
+//
+//          if (eventCount.incrementAndGet() == 100) {
+//            future.complete(client);
+//          }
         });
+
+        final ScheduledExecutorService CRON_EVENT_INJECTOR_EXECUTOR =
+                IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
+                        ThreadName.PIPE_RUNTIME_CRON_EVENT_INJECTOR.getName());
+
+                ScheduledExecutorUtil.safelyScheduleWithFixedDelay(
+                        CRON_EVENT_INJECTOR_EXECUTOR,
+                        () -> System.out.println(eventCount.get()),
+                        1,
+                        1,
+                        TimeUnit.SECONDS);
   }
 }

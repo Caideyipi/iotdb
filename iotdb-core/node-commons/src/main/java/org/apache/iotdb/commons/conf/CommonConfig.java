@@ -126,7 +126,7 @@ public class CommonConfig {
   private final int TTimePartitionSlotTransmitLimit = 1000;
 
   /** Disk Monitor. */
-  private double diskSpaceWarningThreshold = 0.05;
+  private double diskSpaceWarningThreshold = 0;
 
   /** Ip and port of target ML node. */
   private TEndPoint targetMLNodeEndPoint = new TEndPoint("127.0.0.1", 10810);
