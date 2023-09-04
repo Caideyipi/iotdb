@@ -278,7 +278,8 @@ public class IoTDBOpcUaServerUtils {
     BaseEventTypeNode eventNode =
         server
             .getEventFactory()
-            .createEvent(new NodeId(pseudoNameSpaceIndex, UUID.randomUUID()), Identifiers.BaseEventType);
+            .createEvent(
+                new NodeId(pseudoNameSpaceIndex, UUID.randomUUID()), Identifiers.BaseEventType);
     // Use eventNode here because other nodes doesn't support values and times simultaneously
     for (int columnIndex = 0; columnIndex < tablet.getSchemas().size(); ++columnIndex) {
 
