@@ -19,7 +19,9 @@
 
 package org.apache.iotdb.db.pipe.task.subtask.processor;
 
+import org.apache.iotdb.db.pipe.event.EnrichedEvent;
 import org.apache.iotdb.db.pipe.event.common.heartbeat.PipeHeartbeatEvent;
+import org.apache.iotdb.db.pipe.event.common.tsfile.PipeTsFileInsertionEvent;
 import org.apache.iotdb.db.pipe.execution.scheduler.PipeSubtaskScheduler;
 import org.apache.iotdb.db.pipe.task.connection.EventSupplier;
 import org.apache.iotdb.db.pipe.task.connection.PipeEventCollector;
@@ -85,6 +87,10 @@ public class PipeProcessorSubtask extends PipeSubtask {
 
   @Override
   protected synchronized boolean executeOnce() throws Exception {
+    if (!outputEventCollector.hasCapacity()) {
+      return false;
+    }
+
     final Event event = lastEvent != null ? lastEvent : inputEventSupplier.supply();
     // Record the last event for retry when exception occurs
     lastEvent = event;
@@ -97,9 +103,22 @@ public class PipeProcessorSubtask extends PipeSubtask {
 
     try {
       if (event instanceof TabletInsertionEvent) {
-        pipeProcessor.process((TabletInsertionEvent) event, outputEventCollector);
+        pipeProcessor.process((((EnrichedEvent) event).shouldParsePatternOrTime()
+                ? ((TabletInsertionEvent) event).parseEventWithPattern()
+                : (TabletInsertionEvent) event), outputEventCollector);
       } else if (event instanceof TsFileInsertionEvent) {
-        pipeProcessor.process((TsFileInsertionEvent) event, outputEventCollector);
+        // Parse the pattern for TsFileInsertionEvent at the sender side if
+        // there are pruning needed in tsFile and the parsed data amount is
+        // small enough so that pruning before send is better.
+        if (event instanceof PipeTsFileInsertionEvent
+                && ((PipeTsFileInsertionEvent) event).betterParseAtSenderSide()) {
+          for (final TabletInsertionEvent tabletInsertionEvent :
+                  ((TsFileInsertionEvent) event).toTabletInsertionEvents()) {
+            pipeProcessor.process(tabletInsertionEvent, outputEventCollector);
+          }
+        } else {
+          pipeProcessor.process((TsFileInsertionEvent) event, outputEventCollector);
+        }
       } else if (event instanceof PipeHeartbeatEvent) {
         pipeProcessor.process(event, outputEventCollector);
         ((PipeHeartbeatEvent) event).onProcessed();

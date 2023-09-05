@@ -88,4 +88,8 @@ public abstract class BlockingPendingQueue<E extends Event> {
   public int size() {
     return pendingQueue.size();
   }
+
+  public int remainingCapacity() {
+    return pendingQueue.remainingCapacity();
+  }
 }

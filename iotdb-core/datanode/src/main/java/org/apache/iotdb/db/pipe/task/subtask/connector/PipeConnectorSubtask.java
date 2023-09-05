@@ -109,17 +109,12 @@ public class PipeConnectorSubtask extends PipeSubtask {
 
     try {
       if (event instanceof TabletInsertionEvent) {
-        outputPipeConnector.transfer(
-            ((EnrichedEvent) event).shouldParsePatternOrTime()
-                ? ((TabletInsertionEvent) event).parseEventWithPattern()
-                : (TabletInsertionEvent) event);
+        outputPipeConnector.transfer((TabletInsertionEvent) event);
       } else if (event instanceof TsFileInsertionEvent) {
-        // Parse the pattern for TsFileInsertionEvent at the sender side if
-        // there are pruning needed in tsFile and the parsed data amount is
-        // small enough so that pruning before send is better.
-        if (!enableReceiverParsing
-            || event instanceof PipeTsFileInsertionEvent
-                && ((PipeTsFileInsertionEvent) event).betterParseAtSenderSide()) {
+        // The processor subtask will not parse the tsFile that may
+        // be parse by the receiver. However, some receiver may not
+        // support tsFile parsing, which must be parsed here.
+        if (!enableReceiverParsing){
           for (final TabletInsertionEvent tabletInsertionEvent :
               ((TsFileInsertionEvent) event).toTabletInsertionEvents()) {
             outputPipeConnector.transfer(tabletInsertionEvent);

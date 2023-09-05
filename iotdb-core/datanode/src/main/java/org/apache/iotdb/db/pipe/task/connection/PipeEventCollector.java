@@ -38,6 +38,16 @@ public class PipeEventCollector implements EventCollector {
     bufferQueue = new LinkedList<>();
   }
 
+  /**
+   * Collect the processed event into pending queue, or buffer queue if pending queue
+   * insertion failed.
+   * However, the pending queue insertion is assumed to be usually successful,
+   * because the processor will not process the event if the pending queue is full.
+   * Yet, if the processor turn single event into several events, there might still be
+   * some event cannot be put into the connector pending queue. In this case, they will
+   * be put into the buffer queue to avoid blocking the executor thread.
+   * @param event Event to be collected
+   */
   @Override
   public synchronized void collect(Event event) {
     if (event instanceof EnrichedEvent) {
@@ -86,5 +96,9 @@ public class PipeEventCollector implements EventCollector {
       }
     }
     return false;
+  }
+
+  public synchronized boolean hasCapacity() {
+    return pendingQueue.remainingCapacity() != 0;
   }
 }
