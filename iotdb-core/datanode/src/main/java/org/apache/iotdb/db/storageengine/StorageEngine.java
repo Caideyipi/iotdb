@@ -167,7 +167,9 @@ public class StorageEngine implements IService {
     if (timePartitionInterval == -1) {
       initTimePartition();
     }
-    return time / timePartitionInterval;
+    return time > 0 || time % timePartitionInterval == 0
+        ? time / timePartitionInterval
+        : time / timePartitionInterval - 1;
   }
 
   /** block insertion if the insertion is rejected by memory control */
