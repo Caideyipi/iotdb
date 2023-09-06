@@ -1011,6 +1011,7 @@ public class IoTDBConfig {
   private boolean schemaRatisConsensusLogUnsafeFlushEnable = false;
 
   private int dataRatisConsensusLogForceSyncNum = 128;
+  private int schemaRatisConsensusLogForceSyncNum = 128;
 
   private long dataRatisConsensusLogSegmentSizeMax = 24 * 1024 * 1024L;
   private long schemaRatisConsensusLogSegmentSizeMax = 24 * 1024 * 1024L;
@@ -1019,6 +1020,8 @@ public class IoTDBConfig {
   private long schemaRatisConsensusGrpcFlowControlWindow = 4 * 1024 * 1024L;
 
   private int dataRatisConsensusGrpcLeaderOutstandingAppendsMax = 128;
+
+  private int schemaRatisConsensusGrpcLeaderOutstandingAppendsMax = 128;
 
   private long dataRatisConsensusLeaderElectionTimeoutMinMs = 2000L;
   private long schemaRatisConsensusLeaderElectionTimeoutMinMs = 2000L;
@@ -3378,6 +3381,14 @@ public class IoTDBConfig {
     this.dataRatisConsensusLogForceSyncNum = dataRatisConsensusLogForceSyncNum;
   }
 
+  public int getSchemaRatisConsensusLogForceSyncNum() {
+    return schemaRatisConsensusLogForceSyncNum;
+  }
+
+  public void setSchemaRatisConsensusLogForceSyncNum(int schemaRatisConsensusLogForceSyncNum) {
+    this.schemaRatisConsensusLogForceSyncNum = schemaRatisConsensusLogForceSyncNum;
+  }
+
   public long getDataRatisConsensusLogSegmentSizeMax() {
     return dataRatisConsensusLogSegmentSizeMax;
   }
@@ -3403,6 +3414,16 @@ public class IoTDBConfig {
       int dataRatisConsensusGrpcLeaderOutstandingAppendsMax) {
     this.dataRatisConsensusGrpcLeaderOutstandingAppendsMax =
         dataRatisConsensusGrpcLeaderOutstandingAppendsMax;
+  }
+
+  public int getSchemaRatisConsensusGrpcLeaderOutstandingAppendsMax() {
+    return schemaRatisConsensusGrpcLeaderOutstandingAppendsMax;
+  }
+
+  public void setSchemaRatisConsensusGrpcLeaderOutstandingAppendsMax(
+      int schemaRatisConsensusGrpcLeaderOutstandingAppendsMax) {
+    this.schemaRatisConsensusGrpcLeaderOutstandingAppendsMax =
+        schemaRatisConsensusGrpcLeaderOutstandingAppendsMax;
   }
 
   public long getDataRatisConsensusLeaderElectionTimeoutMinMs() {
