@@ -103,8 +103,10 @@ public class IoTDBAlterViewIT {
       }
 
       statement.execute(
-          "alter view root(view.d1.s1, view.d1.s2, view.d1.s3, view.d2.s1, view.d2.s2, view.d2.s3) "
-              + "as root(db.d2.s2, db.d2.s3, db.d2.s1, db.d1.s2, db.d1.s3, db.d1.s1)");
+          "alter view root(view.d1.s1, view.d1.s2, view.d1.s3) "
+              + "as select s2,s3,s1 from root.db.d2");
+      statement.execute(
+          "alter view root(view.d2.s1, view.d2.s2, view.d2.s3) " + "as root.db.d1(s2,s3,s1)");
 
       map =
           new String[][] {
@@ -121,6 +123,41 @@ public class IoTDBAlterViewIT {
           Assert.assertTrue(resultSet.next());
           Assert.assertEquals(strings[1], resultSet.getString("Source"));
         }
+      }
+    }
+  }
+
+  @Test
+  public void testAlterViewException() throws Exception {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      statement.execute("create timeseries root.db.d1.s1 with datatype=INT32");
+      statement.execute("create timeseries root.db.d1.s2 with datatype=INT32");
+      statement.execute("create timeseries root.db.d1.s3 with datatype=INT32");
+      statement.execute(
+          "create view root(view.d1.s1, view.d1.s2, view.d1.s3) " + "as root.db.d1(s1, s2, s3)");
+      try {
+        statement.execute("alter view root.view.d1.s1 as root.db.d2.s1");
+        Assert.fail("Exception expected");
+      } catch (Exception e) {
+        System.out.println(e.getMessage());
+        Assert.assertTrue(
+            e.getMessage().contains("Can not create a view based on non-exist time series"));
+      }
+      try {
+        statement.execute("alter view root.view.d1.s1 as select s1 from root.db.d2");
+        Assert.fail("Exception expected");
+      } catch (Exception e) {
+        System.out.println(e.getMessage());
+        Assert.assertTrue(e.getMessage().contains("Columns in the query statement is empty."));
+      }
+      try {
+        statement.execute("alter view root.view.d1.s1 as select s1,s2 from root.db.d1");
+        Assert.fail("Exception expected");
+      } catch (Exception e) {
+        Assert.assertTrue(
+            e.getMessage()
+                .contains("The number of target paths (1) and sources (2) are miss matched!"));
       }
     }
   }
