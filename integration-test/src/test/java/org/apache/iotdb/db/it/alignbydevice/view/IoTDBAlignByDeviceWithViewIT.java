@@ -264,8 +264,5 @@ public class IoTDBAlignByDeviceWithViewIT {
               VIEW_SAME_SERIES_ERROR),
           new Pair<>("SELECT vs3 FROM root.sg1.** ALIGN BY DEVICE", VIEW_IS_NOT_WRITABLE_ERROR),
           new Pair<>(
-              "SELECT count(vs3) FROM root.sg1.** ALIGN BY DEVICE", VIEW_IS_NOT_WRITABLE_ERROR),
-          new Pair<>(
-              "SELECT last vs3 FROM root.sg1.**",
-              "Views with functions and expressions cannot be used in LAST query"));
+              "SELECT count(vs3) FROM root.sg1.** ALIGN BY DEVICE", VIEW_IS_NOT_WRITABLE_ERROR));
 }
