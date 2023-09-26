@@ -91,15 +91,16 @@ public class AuditLogger {
 
   public static void log(String log, Statement statement) {
     AuditLogOperation operation = judgeLogOperation(statement.getType());
-    IClientSession currSession = SESSION_MANAGER.getCurrSession();
-    if (currSession == null) {
-      return;
+    IClientSession currSession = SessionManager.getInstance().getCurrSession();
+    String username = "";
+    String address = "";
+    if (currSession != null) {
+      ClientSession clientSession = (ClientSession) currSession;
+      String clientAddress = clientSession.getClientAddress();
+      int clientPort = ((ClientSession) currSession).getClientPort();
+      address = String.format("%s:%s", clientAddress, clientPort);
+      username = currSession.getUsername();
     }
-    ClientSession clientSession = (ClientSession) currSession;
-    String clientAddress = clientSession.getClientAddress();
-    int clientPort = ((ClientSession) currSession).getClientPort();
-    String address = String.format("%s:%s", clientAddress, clientPort);
-    String username = currSession.getUsername();
 
     if (auditLogOperationList.contains(operation)) {
       if (auditLogStorageList.contains(AuditLogStorage.IOTDB)) {
@@ -107,7 +108,7 @@ public class AuditLogger {
           COORDINATOR.execute(
               generateInsertStatement(log, address, username),
               SESSION_MANAGER.requestQueryId(),
-              SESSION_MANAGER.getSessionInfo(currSession),
+              SESSION_MANAGER.getSessionInfo(SESSION_MANAGER.getCurrSession()),
               "",
               ClusterPartitionFetcher.getInstance(),
               SCHEMA_FETCHER);
