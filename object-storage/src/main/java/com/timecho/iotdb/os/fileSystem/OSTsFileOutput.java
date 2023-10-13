@@ -71,4 +71,9 @@ public class OSTsFileOutput implements TsFileOutput {
   public void truncate(long size) throws IOException {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public void force() throws IOException {
+    throw new UnsupportedOperationException();
+  }
 }
