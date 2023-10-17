@@ -187,7 +187,7 @@
                 <configuration>
                     <usedDependencies>
                         <!-- This dependency is only used for ensuring the build order -->
-                        <usedDependency>org.apache.iotdb:iotdb-thrift-commons</usedDependency>
+                        <usedDependency>com.timecho.iotdb:iotdb-thrift-commons</usedDependency>
                     </usedDependencies>
                 </configuration>
             </plugin>
