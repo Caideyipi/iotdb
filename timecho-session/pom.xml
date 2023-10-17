@@ -32,18 +32,29 @@
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>session-parent</artifactId>
-            <version>${project.version}</version>
+            <version>1.3.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>isession-parent</artifactId>
+            <version>1.3.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-isession</artifactId>
-            <version>${project.version}</version>
+            <version>1.3.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
