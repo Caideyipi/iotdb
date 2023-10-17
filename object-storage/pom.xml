@@ -36,17 +36,6 @@
         <os.it.skip>${os.test.skip}</os.it.skip>
         <os.ut.skip>${os.test.skip}</os.ut.skip>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>bom</artifactId>
-                <version>2.20.1</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
