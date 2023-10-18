@@ -20,6 +20,7 @@
 package org.apache.iotdb.db;
 
 import org.apache.iotdb.commons.conf.CommonDescriptor;
+import org.apache.iotdb.commons.exception.BadNodeUrlException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
@@ -36,8 +37,12 @@ public class HackTimechoServer extends DataNode {
 
   public static void main(String[] args) {
     Properties properties = TimechoDBDescriptor.getInstance().getCustomizedProperties();
-    CommonDescriptor.getInstance().loadCommonProps(properties);
-    IoTDBDescriptor.getInstance().loadProperties(properties);
+    try {
+      CommonDescriptor.getInstance().loadCommonProps(properties);
+      IoTDBDescriptor.getInstance().loadProperties(properties);
+    } catch (BadNodeUrlException e) {
+      // will not happen
+    }
     IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
     TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
     TSFileDescriptor.getInstance().getConfig().setCustomizedProperties(properties);

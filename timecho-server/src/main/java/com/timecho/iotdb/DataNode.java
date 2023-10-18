@@ -19,6 +19,7 @@
 package com.timecho.iotdb;
 
 import org.apache.iotdb.commons.conf.CommonDescriptor;
+import org.apache.iotdb.commons.exception.BadNodeUrlException;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
@@ -99,7 +100,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
         logger.info("license verify error,please check license");
       }
 
-    } catch (StartupException e) {
+    } catch (BadNodeUrlException | StartupException e) {
       logger.error("system init error,", e);
       System.exit(-1);
     } catch (LicenseException e) {
