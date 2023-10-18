@@ -1086,7 +1086,7 @@ public class IoTDBConfig {
 
   /** Pipe related */
   /** initialized as null, updated based on the latest `systemDir` during querying */
-  private String pipeReceiverFileDir = null;
+  private String[] pipeReceiverFileDirs = null;
 
   /** multi-tenancy */
   private boolean quotaEnable = false;
@@ -1230,7 +1230,9 @@ public class IoTDBConfig {
     triggerTemporaryLibDir = addDataHomeDir(triggerTemporaryLibDir);
     pipeDir = addDataHomeDir(pipeDir);
     pipeTemporaryLibDir = addDataHomeDir(pipeTemporaryLibDir);
-    pipeReceiverFileDir = addDataHomeDir(pipeReceiverFileDir);
+    for (int i = 0; i < pipeReceiverFileDirs.length; i++) {
+      pipeReceiverFileDirs[i] = addDataHomeDir(pipeReceiverFileDirs[i]);
+    }
     mqttDir = addDataHomeDir(mqttDir);
     extPipeDir = addDataHomeDir(extPipeDir);
     queryDir = addDataHomeDir(queryDir);
@@ -3719,14 +3721,14 @@ public class IoTDBConfig {
     return modeMapSizeThreshold;
   }
 
-  public void setPipeReceiverFileDir(String pipeReceiverFileDir) {
-    this.pipeReceiverFileDir = pipeReceiverFileDir;
+  public void setPipeReceiverFileDirs(String[] pipeReceiverFileDirs) {
+    this.pipeReceiverFileDirs = pipeReceiverFileDirs;
   }
 
-  public String getPipeReceiverFileDir() {
-    return Objects.isNull(this.pipeReceiverFileDir)
-        ? (systemDir + File.separator + "pipe" + File.separator + "receiver")
-        : this.pipeReceiverFileDir;
+  public String[] getPipeReceiverFileDirs() {
+    return Objects.isNull(this.pipeReceiverFileDirs)
+        ? new String[] {systemDir + File.separator + "pipe" + File.separator + "receiver"}
+        : this.pipeReceiverFileDirs;
   }
 
   public void setSortBufferSize(long sortBufferSize) {
