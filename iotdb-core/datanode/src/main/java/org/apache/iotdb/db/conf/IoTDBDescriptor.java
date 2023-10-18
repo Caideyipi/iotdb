@@ -2127,11 +2127,14 @@ public class IoTDBDescriptor {
     conf.setPipeLibDir(properties.getProperty("pipe_lib_dir", conf.getPipeLibDir()));
 
     conf.setPipeReceiverFileDirs(
-        properties
-            .getProperty(
-                "pipe_receiver_file_dirs", String.join(",", conf.getPipeReceiverFileDirs()))
-            .trim()
-            .split(","));
+        Arrays.stream(
+                properties
+                    .getProperty(
+                        "pipe_receiver_file_dirs", String.join(",", conf.getPipeReceiverFileDirs()))
+                    .trim()
+                    .split(","))
+            .filter(dir -> !dir.isEmpty())
+            .toArray(String[]::new));
   }
 
   private void loadCQProps(Properties properties) {

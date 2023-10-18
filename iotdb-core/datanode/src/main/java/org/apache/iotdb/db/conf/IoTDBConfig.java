@@ -1085,8 +1085,8 @@ public class IoTDBConfig {
   private double maxMemoryRatioForQueue = 0.6;
 
   /** Pipe related */
-  /** initialized as null, updated based on the latest `systemDir` during querying */
-  private String[] pipeReceiverFileDirs = null;
+  /** initialized as empty, updated based on the latest `systemDir` during querying */
+  private String[] pipeReceiverFileDirs = new String[0];
 
   /** multi-tenancy */
   private boolean quotaEnable = false;
@@ -3725,7 +3725,7 @@ public class IoTDBConfig {
   }
 
   public String[] getPipeReceiverFileDirs() {
-    return Objects.isNull(this.pipeReceiverFileDirs)
+    return (Objects.isNull(this.pipeReceiverFileDirs) || this.pipeReceiverFileDirs.length == 0)
         ? new String[] {systemDir + File.separator + "pipe" + File.separator + "receiver"}
         : this.pipeReceiverFileDirs;
   }
