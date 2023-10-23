@@ -62,7 +62,11 @@ public class ConfigNodeDescriptor {
       CommonDescriptor.getInstance().loadCommonProps(properties);
       loadProperties(properties);
     } catch (BadNodeUrlException | IOException e) {
-      throw new RuntimeException(e);
+      if (!e.getMessage()
+          .equals(
+              "The parameter dn_seed_config_node is not set, this ConfigNode will not join in any cluster.")) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
