@@ -30,6 +30,7 @@ import com.timecho.iotdb.DataNodeServerCommandLineNew;
 import com.timecho.iotdb.conf.TimechoDBDescriptor;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 
+import java.io.IOException;
 import java.util.Properties;
 
 /** This class is used to run integration test using timecho-server without license. */
@@ -40,7 +41,7 @@ public class HackTimechoServer extends DataNode {
     try {
       CommonDescriptor.getInstance().loadCommonProps(properties);
       IoTDBDescriptor.getInstance().loadProperties(properties);
-    } catch (BadNodeUrlException e) {
+    } catch (BadNodeUrlException | IOException e) {
       // will not happen
     }
     IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);

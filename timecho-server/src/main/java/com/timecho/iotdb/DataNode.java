@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -102,6 +103,9 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
 
     } catch (BadNodeUrlException | StartupException e) {
       logger.error("system init error,", e);
+      System.exit(-1);
+    } catch (IOException e) {
+      logger.error("Cannot load config file, reject DataNode startup.", e);
       System.exit(-1);
     } catch (LicenseException e) {
       logger.error("license error,", e);
