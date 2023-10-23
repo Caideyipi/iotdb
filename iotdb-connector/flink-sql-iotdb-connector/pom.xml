@@ -31,8 +31,8 @@
     <dependencies>
         <!-- required by implement of flink sql connector -->
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-session</artifactId>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>session-parent</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -41,17 +41,17 @@
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>isession</artifactId>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>isession-parent</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>service-rpc</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>

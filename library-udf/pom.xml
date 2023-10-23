@@ -51,17 +51,6 @@
             <artifactId>eclipse-collections-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.timecho.iotdb</groupId>
-            <artifactId>tsfile</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.timecho.iotdb</groupId>
-            <artifactId>session-parent</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
         </dependency>

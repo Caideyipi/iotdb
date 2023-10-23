@@ -71,16 +71,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.iotdb</groupId>
-            <artifactId>isession</artifactId>
-            <version>1.3.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.iotdb</groupId>
             <artifactId>iotdb-antlr</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
+            <groupId>com.timecho.iotdb</groupId>
             <artifactId>iotdb-thrift-commons</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
@@ -100,8 +95,8 @@
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-thrift</artifactId>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>timechodb-thrift</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -120,8 +115,8 @@
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.iotdb</groupId>
-            <artifactId>iotdb-session</artifactId>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>session-parent</artifactId>
             <version>1.3.0-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -521,7 +516,7 @@
                 <configuration>
                     <ignoredDependencies>
                         <!-- For some reason this plugin missed it being used for a constant import -->
-                        <ignoredDependency>org.apache.iotdb:isession</ignoredDependency>
+                        <ignoredDependency>com.timecho.iotdb:isession-parent</ignoredDependency>
                     </ignoredDependencies>
                     <usedDependencies>
                         <!-- These are used at runtime in tests -->
