@@ -43,6 +43,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Properties;
 
+@Deprecated
 public class TimechoDBDescriptor {
   private static final Logger logger = LoggerFactory.getLogger(TimechoDBDescriptor.class);
   private static final String CONFIG_FILE = "timechodb-common.properties";

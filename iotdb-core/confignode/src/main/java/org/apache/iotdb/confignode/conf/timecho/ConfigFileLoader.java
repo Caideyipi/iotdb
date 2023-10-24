@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import static org.apache.iotdb.confignode.conf.ConfigNodeConstant.CONFIGNODE_CONF;
 import static org.apache.iotdb.confignode.conf.ConfigNodeConstant.CONFIGNODE_HOME;
 
+@Deprecated
 public class ConfigFileLoader {
   private static final Logger logger = LoggerFactory.getLogger(ConfigFileLoader.class);
 

@@ -18,16 +18,12 @@
  */
 package com.timecho.iotdb;
 
-import org.apache.iotdb.commons.conf.CommonDescriptor;
-import org.apache.iotdb.commons.exception.BadNodeUrlException;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
 import org.apache.iotdb.db.service.RPCService;
-import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
 
-import com.timecho.iotdb.conf.TimechoDBDescriptor;
 import com.timecho.iotdb.license.LicenseCheckService;
 import com.timecho.iotdb.license.LicenseException;
 import com.timecho.iotdb.license.LicenseManager;
@@ -38,8 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
 import java.util.Scanner;
 
 import static com.timecho.iotdb.license.LicenseManager.LICENSE_FILE_PATH;
@@ -48,12 +42,9 @@ import static com.timecho.iotdb.license.LicenseManager.LICENSE_PATH;
 public class DataNode extends org.apache.iotdb.db.service.DataNode {
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
 
-  private static final String CONFIG_FILE = "timechodb-datanode.properties";
-
   public static void main(String[] args) {
     try {
       // init licenseManager and machineCodeManager
-      TimechoDBDescriptor.getInstance().loadTimechoDBProperties(CONFIG_FILE);
       LicenseManager licenseManager = LicenseManager.getInstance();
       MachineCodeManager machineCodeManager = MachineCodeManager.getInstance();
       machineCodeManager.init();
@@ -87,13 +78,6 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
       // check license effective
       if (licenseManager.verify(machineCodeManager.getMachineCode())) {
         registerManager.register(LicenseCheckService.getInstance());
-        // rewrite
-        Properties properties = TimechoDBDescriptor.getInstance().getCustomizedProperties();
-        CommonDescriptor.getInstance().loadCommonProps(properties);
-        IoTDBDescriptor.getInstance().loadProperties(properties);
-        IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
-        TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
-        TSFileDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
         setUpEnterpriseEnvironment();
         new DataNodeServerCommandLineNew().doMain(args);
         logger.info("The license expires at {}", LicenseManager.getInstance().getExpireDate());
@@ -101,11 +85,8 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
         logger.info("license verify error,please check license");
       }
 
-    } catch (BadNodeUrlException | StartupException e) {
+    } catch (StartupException e) {
       logger.error("system init error,", e);
-      System.exit(-1);
-    } catch (IOException e) {
-      logger.error("Cannot load config file, reject DataNode startup.", e);
       System.exit(-1);
     } catch (LicenseException e) {
       logger.error("license error,", e);

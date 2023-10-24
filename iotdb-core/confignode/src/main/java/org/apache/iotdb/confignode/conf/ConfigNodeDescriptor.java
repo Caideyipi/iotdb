@@ -25,7 +25,6 @@ import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.BadNodeUrlException;
 import org.apache.iotdb.commons.schema.SchemaConstant;
 import org.apache.iotdb.commons.utils.NodeUrlUtils;
-import org.apache.iotdb.confignode.conf.timecho.TimechoDBDescriptor;
 import org.apache.iotdb.confignode.manager.load.balancer.RegionBalancer;
 import org.apache.iotdb.confignode.manager.load.balancer.router.leader.ILeaderBalancer;
 import org.apache.iotdb.confignode.manager.load.balancer.router.priority.IPriorityBalancer;
@@ -51,23 +50,8 @@ public class ConfigNodeDescriptor {
 
   private final ConfigNodeConfig conf = new ConfigNodeConfig();
 
-  private static final String CONFIG_FILE = "timechodb-confignode.properties";
-
   private ConfigNodeDescriptor() {
     loadProps();
-    TimechoDBDescriptor.getInstance().loadTimechoDBProperties(CONFIG_FILE);
-    // rewrite
-    Properties properties = TimechoDBDescriptor.getInstance().getCustomizedProperties();
-    try {
-      CommonDescriptor.getInstance().loadCommonProps(properties);
-      loadProperties(properties);
-    } catch (BadNodeUrlException | IOException e) {
-      if (!e.getMessage()
-          .equals(
-              "The parameter dn_seed_config_node is not set, this ConfigNode will not join in any cluster.")) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 
   public ConfigNodeConfig getConf() {
