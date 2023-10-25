@@ -25,7 +25,6 @@ IoTDB_BASE_BRANCH="master"
 # create brahch base on IoTDB_BASE_BRANCH
 IoTDB_COMMIT_BRANCH="iotdb_${IoTDB_BASE_BRANCH}"
 
-
 # pull commit from timechodb
 TIMECHODB_BASE_BRANCH="master"
 # create mr branch base on TIMECHODB_BASE_BRANCH
