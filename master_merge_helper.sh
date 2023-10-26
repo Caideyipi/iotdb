@@ -30,7 +30,6 @@ TIMECHODB_BASE_BRANCH="master"
 # create mr branch base on TIMECHODB_BASE_BRANCH
 LOCAL_MR_BRANCH="sync_from_iotdb_${IoTDB_BASE_BRANCH}_${time}"
 
-
 PRIVATE_COMMIT_PREFIX="TIMECHODB"
 
 function setup_env() {
