@@ -2116,7 +2116,7 @@ public class DataRegion implements IDataRegionForQuery {
     closeQueryLock.writeLock().lock();
     try {
       tsFileProcessor.close();
-      if (tsFileProcessor.isEmpty()) {
+      if (tsFileProcessor.isEmpty() || tsFileProcessor.getTsFileResource().isEmpty()) {
         try {
           fsFactory.deleteIfExists(tsFileProcessor.getTsFileResource().getTsFile());
           tsFileManager.remove(tsFileProcessor.getTsFileResource(), tsFileProcessor.isSequence());

@@ -1204,6 +1204,10 @@ public class TsFileResource {
     return maxProgressIndex == null ? MinimumProgressIndex.INSTANCE : maxProgressIndex;
   }
 
+  public boolean isEmpty() {
+    return getDevices().isEmpty();
+  }
+
   public String getDatabaseName() {
     return file.getParentFile().getParentFile().getParentFile().getName();
   }
