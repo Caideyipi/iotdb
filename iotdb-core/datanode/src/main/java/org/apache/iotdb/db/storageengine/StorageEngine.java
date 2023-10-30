@@ -570,7 +570,7 @@ public class StorageEngine implements IService {
   public void operateFlush(TFlushReq req) {
     if (req.storageGroups == null) {
       StorageEngine.getInstance().syncCloseAllProcessor();
-      WALManager.getInstance().deleteOutdatedWALFiles();
+      WALManager.getInstance().deleteOutdatedFilesInWALNodes();
     } else {
       for (String storageGroup : req.storageGroups) {
         if (req.isSeq == null) {
