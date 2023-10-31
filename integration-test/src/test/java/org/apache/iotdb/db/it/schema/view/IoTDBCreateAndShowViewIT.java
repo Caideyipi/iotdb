@@ -21,16 +21,14 @@ package org.apache.iotdb.db.it.schema.view;
 
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
+import org.apache.iotdb.util.AbstractSchemaIT;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -44,9 +42,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class})
-public class IoTDBCreateAndShowViewIT {
+public class IoTDBCreateAndShowViewIT extends AbstractSchemaIT {
 
   private static final String[] SQLs =
       new String[] {
@@ -83,22 +80,26 @@ public class IoTDBCreateAndShowViewIT {
         "ALTER VIW root.db.d01.s01 UPSERT TAGS(tag1=value1, tag2=value2) ATTRIBUTES(attribute1=value1)"
       };
 
-  @BeforeClass
-  public static void setUp() throws Exception {
-    EnvFactory.getEnv().initClusterEnvironment();
+  public IoTDBCreateAndShowViewIT(SchemaTestMode schemaTestMode) {
+    super(schemaTestMode);
+  }
 
+  @Parameterized.BeforeParam
+  public static void before() throws Exception {
+    setUpEnvironment();
+    EnvFactory.getEnv().initClusterEnvironment();
     createSchema();
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception {
+  @Parameterized.AfterParam
+  public static void after() throws Exception {
     EnvFactory.getEnv().cleanClusterEnvironment();
+    tearDownEnvironment();
   }
 
   // region Test show timesereis
   @Test
   public void testShowOriginTimeseries() {
-
     Set<String> retSet =
         new HashSet<>(
             Arrays.asList(

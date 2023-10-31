@@ -20,47 +20,43 @@
 package org.apache.iotdb.db.it.schema.view;
 
 import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
+import org.apache.iotdb.util.AbstractSchemaIT;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class})
-public class IoTDBAliasSeriesIT {
+public class IoTDBAliasSeriesIT extends AbstractSchemaIT {
 
-  @BeforeClass
-  public static void setUpCluster() throws Exception {
+  public IoTDBAliasSeriesIT(SchemaTestMode schemaTestMode) {
+    super(schemaTestMode);
+  }
+
+  @Parameterized.BeforeParam
+  public static void before() throws Exception {
+    setUpEnvironment();
     EnvFactory.getEnv().initClusterEnvironment();
   }
 
-  @AfterClass
-  public static void tearDownCluster() throws Exception {
+  @Parameterized.AfterParam
+  public static void after() throws Exception {
     EnvFactory.getEnv().cleanClusterEnvironment();
+    tearDownEnvironment();
   }
 
   @After
   public void tearDown() throws Exception {
-    try (Connection connection = EnvFactory.getEnv().getConnection();
-        Statement statement = connection.createStatement()) {
-      try {
-        statement.execute("DELETE DATABASE root.**");
-      } catch (Exception e) {
-        // If database is null, it will throw exception. Do nothing.
-      }
-    }
+    clearSchema();
   }
 
   @Test

@@ -17,34 +17,45 @@
  * under the License.
  */
 
-package com.timecho.iotdb.schemaregion.mtree.mem;
+package com.timecho.iotdb.schemaregion.mtree.pbtree;
 
 import org.apache.iotdb.commons.schema.node.common.AbstractMeasurementMNode;
 import org.apache.iotdb.commons.schema.node.role.IDeviceMNode;
 import org.apache.iotdb.commons.schema.node.utils.IMNodeContainer;
 import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
-import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.mnode.IMemMNode;
-import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.mnode.basic.BasicMNode;
-import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.mnode.container.MemMNodeContainer;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.mnode.info.LogicalViewInfo;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.cache.CacheEntry;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.ICachedMNode;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.basic.CachedBasicMNode;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.container.CachedMNodeContainer;
 
-public class LogicalViewMNode extends AbstractMeasurementMNode<IMemMNode, BasicMNode>
-    implements IMemMNode {
+public class CachedViewMNode extends AbstractMeasurementMNode<ICachedMNode, CachedBasicMNode>
+    implements ICachedMNode {
 
-  public LogicalViewMNode(
-      IDeviceMNode<IMemMNode> parent, String name, LogicalViewSchema measurementSchema) {
+  public CachedViewMNode(
+      IDeviceMNode<ICachedMNode> parent, String name, LogicalViewSchema measurementSchema) {
     super(
-        new BasicMNode(parent == null ? null : parent.getAsMNode(), name),
+        new CachedBasicMNode(parent == null ? null : parent.getAsMNode(), name),
         new LogicalViewInfo(measurementSchema));
   }
 
   @Override
-  public IMNodeContainer<IMemMNode> getChildren() {
-    return MemMNodeContainer.emptyMNodeContainer();
+  public CacheEntry getCacheEntry() {
+    return basicMNode.getCacheEntry();
   }
 
   @Override
-  public IMemMNode getAsMNode() {
+  public void setCacheEntry(CacheEntry cacheEntry) {
+    basicMNode.setCacheEntry(cacheEntry);
+  }
+
+  @Override
+  public IMNodeContainer<ICachedMNode> getChildren() {
+    return CachedMNodeContainer.emptyMNodeContainer();
+  }
+
+  @Override
+  public ICachedMNode getAsMNode() {
     return this;
   }
 

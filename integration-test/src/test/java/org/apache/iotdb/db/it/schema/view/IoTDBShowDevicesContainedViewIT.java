@@ -20,16 +20,15 @@
 package org.apache.iotdb.db.it.schema.view;
 
 import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
+import org.apache.iotdb.util.AbstractSchemaIT;
 
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -41,21 +40,30 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class})
-public class IoTDBShowDevicesContainedViewIT {
+public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
 
   private static final String showDevicesSQL = "show devices;";
-  private static final String deleteAllTimeSeriesSQL = "delete timeseries root.**;";
 
-  @BeforeClass
-  public static void setUp() throws Exception {
+  public IoTDBShowDevicesContainedViewIT(SchemaTestMode schemaTestMode) {
+    super(schemaTestMode);
+  }
+
+  @Parameterized.BeforeParam
+  public static void before() throws Exception {
+    setUpEnvironment();
     EnvFactory.getEnv().initClusterEnvironment();
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception {
+  @Parameterized.AfterParam
+  public static void after() throws Exception {
     EnvFactory.getEnv().cleanClusterEnvironment();
+    tearDownEnvironment();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    clearSchema();
   }
 
   private void validateResultSetAndStandard(ResultSet resultSet, Set<String> standard)
@@ -158,9 +166,6 @@ public class IoTDBShowDevicesContainedViewIT {
                   "root.db.d03,null,",
                   "root.db.d04,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
-
-      // clean environment
-      statement.execute(deleteAllTimeSeriesSQL);
     } // end of try
   }
 
@@ -219,9 +224,6 @@ public class IoTDBShowDevicesContainedViewIT {
           new HashSet<>(
               Arrays.asList("root.db.d01,false,", "root.db.d05,null,", "root.db.d06,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
-
-      // clean environment
-      statement.execute(deleteAllTimeSeriesSQL);
     } // end of try
   }
 }
