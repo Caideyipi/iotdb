@@ -33,6 +33,7 @@ import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.DataNodeHeartbeatCache;
+import org.apache.iotdb.confignode.manager.load.cache.node.MLNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeStatistics;
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionGroupCache;
@@ -152,6 +153,18 @@ public class LoadCache {
   public void cacheDataNodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new DataNodeHeartbeatCache(nodeId))
+        .cacheHeartbeatSample(sample);
+  }
+
+  /**
+   * Cache the latest heartbeat sample of a MLNode.
+   *
+   * @param nodeId the id of the MLNode
+   * @param sample the latest heartbeat sample
+   */
+  public void cacheMLNodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
+    nodeCacheMap
+        .computeIfAbsent(nodeId, empty -> new MLNodeHeartbeatCache(nodeId))
         .cacheHeartbeatSample(sample);
   }
 
@@ -374,6 +387,11 @@ public class LoadCache {
       case ConfigNode:
         nodeCacheMap
             .computeIfAbsent(nodeId, empty -> new ConfigNodeHeartbeatCache(nodeId))
+            .forceUpdate(heartbeatSample);
+        break;
+      case MLNode:
+        nodeCacheMap
+            .computeIfAbsent(nodeId, empty -> new MLNodeHeartbeatCache(nodeId))
             .forceUpdate(heartbeatSample);
         break;
       case DataNode:

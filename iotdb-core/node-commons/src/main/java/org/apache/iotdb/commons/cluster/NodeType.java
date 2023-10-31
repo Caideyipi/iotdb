@@ -21,7 +21,8 @@ package org.apache.iotdb.commons.cluster;
 
 public enum NodeType {
   ConfigNode("ConfigNode"),
-  DataNode("DataNode");
+  DataNode("DataNode"),
+  MLNode("MLNode");
 
   private final String nodeType;
 

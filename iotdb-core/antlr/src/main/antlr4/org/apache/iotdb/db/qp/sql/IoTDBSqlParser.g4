@@ -59,8 +59,10 @@ ddlStatement
     // CQ
     | createContinuousQuery | dropContinuousQuery | showContinuousQueries
     // Cluster
-    | showVariables | showCluster | showRegions | showDataNodes | showConfigNodes
+    | showVariables | showCluster | showRegions | showDataNodes | showConfigNodes | showMLNodes
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
+    // ML Model
+    | createModel | dropModel | showModels | showTrials | callInference
     // Quota
     | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
     // View
@@ -475,6 +477,11 @@ showConfigNodes
     : SHOW CONFIGNODES
     ;
 
+// ---- Show ML Nodes
+showMLNodes
+    : SHOW MLNODES
+    ;
+
 // ---- Get Region Id
 getRegionId
     : SHOW (DATA|SCHEMA) REGIONID WHERE (DATABASE operator_eq database=prefixPath
@@ -578,6 +585,55 @@ dropPipePlugin
 
 showPipePlugins
     : SHOW PIPEPLUGINS
+    ;
+
+// ML Model =========================================================================================
+// ---- Create Model
+createModel
+    : CREATE MODEL modelName=identifier USING URI modelUri=STRING_LITERAL
+    ;
+
+windowFunction
+    : BOTTOM LR_BRACKET windowSize=INTEGER_LITERAL RR_BRACKET
+    | TOP LR_BRACKET windowSize=INTEGER_LITERAL RR_BRACKET
+    | COUNT LR_BRACKET interval=INTEGER_LITERAL COMMA step=INTEGER_LITERAL RR_BRACKET
+    ;
+
+callInference
+    : CALL INFERENCE LR_BRACKET modelId=identifier COMMA inputSql=STRING_LITERAL (COMMA WINDOW operator_eq windowFunction)? RR_BRACKET
+    ;
+
+hparamPair
+    : hparamKey=attributeKey operator_eq hparamValue
+    ;
+
+hparamValue
+    : attributeValue
+    | hparamRange
+    | hparamCandidates
+    ;
+
+hparamRange
+    : LR_BRACKET hparamRangeStart=attributeValue COMMA hparamRangeEnd=attributeValue RR_BRACKET
+    ;
+
+hparamCandidates
+    : LS_BRACKET attributeValue (COMMA attributeValue)* RS_BRACKET
+    ;
+
+// ---- Drop Model
+dropModel
+    : DROP MODEL modelId=identifier
+    ;
+
+// ---- Show Models
+showModels
+    : SHOW MODELS
+    ;
+
+// ---- Show Trials
+showTrials
+    : SHOW TRIALS modelId=identifier
     ;
 
 // Create Logical View

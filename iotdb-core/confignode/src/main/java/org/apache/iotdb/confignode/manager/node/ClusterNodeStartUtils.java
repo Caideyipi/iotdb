@@ -23,6 +23,8 @@ import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
+import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
@@ -54,13 +56,21 @@ public class ClusterNodeStartUtils {
     // Empty constructor
   }
 
+  private static String getConfigFileName(NodeType nodeType) {
+    if (NodeType.ConfigNode.equals(nodeType)) {
+      return ConfigNodeConstant.CONF_FILE_NAME;
+    } else if (NodeType.DataNode.equals(nodeType)) {
+      return IoTDBConstant.DATA_NODE_CONF_FILE_NAME;
+    } else {
+      return IoTDBConstant.ML_NODE_CONF_FILE_NAME;
+    }
+  }
+
   public static TSStatus confirmNodeRegistration(
       NodeType nodeType, String clusterName, Object nodeLocation, ConfigManager configManager) {
 
-    final String CONF_FILE_NAME =
-        NodeType.ConfigNode.equals(nodeType)
-            ? ConfigNodeConstant.CONF_FILE_NAME
-            : IoTDBConstant.DATA_NODE_CONF_FILE_NAME;
+    final String confFileName = getConfigFileName(nodeType);
+
     TSStatus status = new TSStatus();
 
     /* Reject start if the cluster name is error */
@@ -77,8 +87,8 @@ public class ClusterNodeStartUtils {
               nodeType.getNodeType(),
               clusterName,
               CLUSTER_NAME,
-              CONF_FILE_NAME,
-              CONF_FILE_NAME));
+              confFileName,
+              confFileName));
       return status;
     }
 
@@ -91,6 +101,14 @@ public class ClusterNodeStartUtils {
               checkConflictTEndPointForNewConfigNode(
                   (TConfigNodeLocation) nodeLocation,
                   configManager.getNodeManager().getRegisteredConfigNodes());
+        }
+        break;
+      case MLNode:
+        if (nodeLocation instanceof TMLNodeLocation) {
+          conflictEndPoints =
+              checkConflictTEndPointForNewMLNode(
+                  (TMLNodeLocation) nodeLocation,
+                  configManager.getNodeManager().getRegisteredMLNodes());
         }
         break;
       case DataNode:
@@ -116,7 +134,7 @@ public class ClusterNodeStartUtils {
               nodeType.getNodeType(),
               conflictEndPoints,
               nodeType.getNodeType(),
-              CONF_FILE_NAME));
+              confFileName));
       return status;
     } else {
       /* Accept registration if all TEndPoints aren't conflict */
@@ -131,10 +149,8 @@ public class ClusterNodeStartUtils {
       Object nodeLocation,
       ConfigManager configManager) {
 
-    final String CONF_FILE_NAME =
-        NodeType.ConfigNode.equals(nodeType)
-            ? ConfigNodeConstant.CONF_FILE_NAME
-            : IoTDBConstant.DATA_NODE_CONF_FILE_NAME;
+    final String CONF_FILE_NAME = getConfigFileName(nodeType);
+
     TSStatus status = new TSStatus();
 
     /* Reject restart if the cluster name is error */
@@ -180,6 +196,14 @@ public class ClusterNodeStartUtils {
                   configManager.getNodeManager().getRegisteredConfigNodes());
         }
         break;
+      case MLNode:
+        if (nodeLocation instanceof TMLNodeLocation) {
+          matchedNodeLocation =
+              matchRegisteredMLNode(
+                  (TMLNodeLocation) nodeLocation,
+                  configManager.getNodeManager().getRegisteredMLNodes());
+        }
+        break;
       case DataNode:
       default:
         if (nodeLocation instanceof TDataNodeLocation) {
@@ -208,29 +232,33 @@ public class ClusterNodeStartUtils {
     }
 
     boolean acceptRestart = true;
-    Set<Integer> updatedTEndPoints = null;
+    Set<Integer> updatedTEndPoints;
     switch (nodeType) {
       case ConfigNode:
-        if (nodeLocation instanceof TConfigNodeLocation) {
-          updatedTEndPoints =
-              checkUpdatedTEndPointOfConfigNode(
-                  (TConfigNodeLocation) nodeLocation, (TConfigNodeLocation) matchedNodeLocation);
-          if (!updatedTEndPoints.isEmpty()) {
-            // TODO: Accept internal TEndPoints
-            acceptRestart = false;
-          }
+        updatedTEndPoints =
+            checkUpdatedTEndPointOfConfigNode(
+                (TConfigNodeLocation) nodeLocation, (TConfigNodeLocation) matchedNodeLocation);
+        if (!updatedTEndPoints.isEmpty()) {
+          // TODO: Accept internal TEndPoints
+          acceptRestart = false;
+        }
+        break;
+      case MLNode:
+        updatedTEndPoints =
+            checkUpdatedTEndPointOfMLNode(
+                (TMLNodeLocation) nodeLocation, (TMLNodeLocation) matchedNodeLocation);
+        if (!updatedTEndPoints.isEmpty()) {
+          acceptRestart = false;
         }
         break;
       case DataNode:
       default:
-        if (nodeLocation instanceof TDataNodeLocation) {
-          updatedTEndPoints =
-              checkUpdatedTEndPointOfDataNode(
-                  (TDataNodeLocation) nodeLocation, (TDataNodeLocation) matchedNodeLocation);
-          if (updatedTEndPoints.stream().max(Integer::compare).orElse(-1) > 0) {
-            // TODO: Accept internal TEndPoints
-            acceptRestart = false;
-          }
+        updatedTEndPoints =
+            checkUpdatedTEndPointOfDataNode(
+                (TDataNodeLocation) nodeLocation, (TDataNodeLocation) matchedNodeLocation);
+        if (updatedTEndPoints.stream().max(Integer::compare).orElse(-1) > 0) {
+          // TODO: Accept internal TEndPoints
+          acceptRestart = false;
         }
         break;
     }
@@ -322,6 +350,28 @@ public class ClusterNodeStartUtils {
   }
 
   /**
+   * Check if there exist conflict TEndPoints on the DataNode to be registered.
+   *
+   * @param newMLNodeLocation The TDataNodeLocation of the DataNode to be registered
+   * @param registeredMLNodes All registered DataNodes
+   * @return The conflict TEndPoints if exist
+   */
+  public static List<TEndPoint> checkConflictTEndPointForNewMLNode(
+      TMLNodeLocation newMLNodeLocation, List<TMLNodeConfiguration> registeredMLNodes) {
+    Set<TEndPoint> conflictEndPointSet = new HashSet<>();
+    for (TMLNodeConfiguration registeredMLNode : registeredMLNodes) {
+      TMLNodeLocation registeredLocation = registeredMLNode.getLocation();
+      if (registeredLocation
+          .getInternalEndPoint()
+          .equals(newMLNodeLocation.getInternalEndPoint())) {
+        conflictEndPointSet.add(newMLNodeLocation.getInternalEndPoint());
+      }
+    }
+
+    return new ArrayList<>(conflictEndPointSet);
+  }
+
+  /**
    * Check if there exists a registered ConfigNode who has the same index of the given one.
    *
    * @param configNodeLocation The given ConfigNode
@@ -351,6 +401,24 @@ public class ClusterNodeStartUtils {
     for (TDataNodeConfiguration registeredDataNode : registeredDataNodes) {
       if (registeredDataNode.getLocation().getDataNodeId() == dataNodeLocation.getDataNodeId()) {
         return registeredDataNode.getLocation();
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if there exists a registered MLNode who has the same index of the given one.
+   *
+   * @param mlNodeLocation The given MLNode
+   * @param registeredMLNodes Registered MLNodes
+   * @return The MLNodeLocation who has the same index of the given one, null otherwise.
+   */
+  public static TMLNodeLocation matchRegisteredMLNode(
+      TMLNodeLocation mlNodeLocation, List<TMLNodeConfiguration> registeredMLNodes) {
+    for (TMLNodeConfiguration registeredMLNode : registeredMLNodes) {
+      if (registeredMLNode.getLocation().getMlNodeId() == mlNodeLocation.getMlNodeId()) {
+        return registeredMLNode.getLocation();
       }
     }
 
@@ -406,6 +474,22 @@ public class ClusterNodeStartUtils {
         .getDataRegionConsensusEndPoint()
         .equals(restartLocation.getDataRegionConsensusEndPoint())) {
       updatedTEndPoints.add(4);
+    }
+    return updatedTEndPoints;
+  }
+
+  /**
+   * Check if some TEndPoints of the specified MLNode have updated.
+   *
+   * @param restartLocation The location of restart DataNode
+   * @param recordLocation The record DataNode location
+   * @return The set of TEndPoints that have modified.
+   */
+  public static Set<Integer> checkUpdatedTEndPointOfMLNode(
+      TMLNodeLocation restartLocation, TMLNodeLocation recordLocation) {
+    Set<Integer> updatedTEndPoints = new HashSet<>();
+    if (!recordLocation.getInternalEndPoint().equals(restartLocation.getInternalEndPoint())) {
+      updatedTEndPoints.add(0);
     }
     return updatedTEndPoints;
   }

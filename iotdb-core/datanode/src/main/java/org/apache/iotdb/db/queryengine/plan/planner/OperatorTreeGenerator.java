@@ -20,6 +20,7 @@
 package org.apache.iotdb.db.queryengine.plan.planner;
 
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
+import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.commons.path.AlignedPath;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
@@ -103,6 +104,7 @@ import org.apache.iotdb.db.queryengine.execution.operator.process.last.LastQuery
 import org.apache.iotdb.db.queryengine.execution.operator.process.last.LastQueryUtil;
 import org.apache.iotdb.db.queryengine.execution.operator.process.last.UpdateLastCacheOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.process.last.UpdateViewPathLastCacheOperator;
+import org.apache.iotdb.db.queryengine.execution.operator.process.ml.InferenceOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.CountGroupByLevelMergeOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.CountGroupByLevelScanOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.CountMergeOperator;
@@ -182,6 +184,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQ
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQueryMergeNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQueryNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQueryTransformNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ml.InferenceNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.sink.IdentitySinkNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.sink.ShuffleSinkNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.source.AlignedLastQueryScanNode;
@@ -205,6 +208,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.InputLocation
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.IntoPathDescriptor;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.OutputColumn;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.SeriesScanOptions;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model.ModelInferenceDescriptor;
 import org.apache.iotdb.db.queryengine.plan.statement.component.FillPolicy;
 import org.apache.iotdb.db.queryengine.plan.statement.component.OrderByKey;
 import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
@@ -217,6 +221,7 @@ import org.apache.iotdb.db.queryengine.transformation.dag.udf.UDTFContext;
 import org.apache.iotdb.tsfile.enums.TSDataType;
 import org.apache.iotdb.tsfile.read.TimeValuePair;
 import org.apache.iotdb.tsfile.read.common.block.TsBlockBuilder;
+import org.apache.iotdb.tsfile.read.common.block.column.TimeColumn;
 import org.apache.iotdb.tsfile.read.filter.basic.Filter;
 import org.apache.iotdb.tsfile.read.filter.operator.Gt;
 import org.apache.iotdb.tsfile.read.filter.operator.GtEq;
@@ -246,6 +251,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.iotdb.db.queryengine.common.DataNodeEndPoints.isSameNode;
 import static org.apache.iotdb.db.queryengine.execution.operator.AggregationUtil.calculateMaxAggregationResultSize;
 import static org.apache.iotdb.db.queryengine.execution.operator.AggregationUtil.calculateMaxAggregationResultSizeForLastQuery;
+import static org.apache.iotdb.db.queryengine.execution.operator.AggregationUtil.getOutputColumnSizePerLine;
 import static org.apache.iotdb.db.queryengine.execution.operator.AggregationUtil.initTimeRangeIterator;
 import static org.apache.iotdb.db.queryengine.plan.expression.leaf.TimestampOperand.TIMESTAMP_EXPRESSION_STRING;
 import static org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.SeriesScanOptions.updateFilterUsingTTL;
@@ -1674,6 +1680,47 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
         dataTypes,
         filePrefix,
         MergeSortComparator.getComparator(sortItemList, sortItemIndexList, sortItemDataTypeList));
+  }
+
+  @Override
+  public Operator visitInference(InferenceNode node, LocalExecutionPlanContext context) {
+    Operator child = node.getChild().accept(this, context);
+    OperatorContext operatorContext =
+        context
+            .getDriverContext()
+            .addOperatorContext(
+                context.getNextOperatorId(),
+                node.getPlanNodeId(),
+                InferenceOperator.class.getSimpleName());
+
+    ModelInferenceDescriptor modelInferenceDescriptor = node.getModelInferenceDescriptor();
+    ModelInformation modelInformation = modelInferenceDescriptor.getModelInformation();
+    int[] inputShape = modelInformation.getInputShape();
+    int[] outputShape = modelInformation.getOutputShape();
+    TSDataType[] inputTypes = modelInferenceDescriptor.getModelInformation().getInputDataType();
+    TSDataType[] outputTypes = modelInferenceDescriptor.getModelInformation().getOutputDataType();
+
+    long maxRetainedSize =
+        calculateSize(inputShape[0], inputTypes) + TimeColumn.SIZE_IN_BYTES_PER_POSITION;
+    long maxReturnSize = calculateSize(outputShape[0], outputTypes);
+
+    context.getTimeSliceAllocator().recordExecutionWeight(operatorContext, 1);
+    return new InferenceOperator(
+        operatorContext,
+        child,
+        modelInferenceDescriptor,
+        FragmentInstanceManager.getInstance().getModelInferenceExecutor(),
+        node.getChild().getOutputColumnNames(),
+        maxRetainedSize,
+        maxReturnSize);
+  }
+
+  private long calculateSize(long rowNumber, TSDataType[] dataTypes) {
+    long size = 0;
+    for (int i = 0; i < dataTypes.length; i++) {
+      size += getOutputColumnSizePerLine(dataTypes[i]);
+    }
+    return size * rowNumber;
   }
 
   @Override

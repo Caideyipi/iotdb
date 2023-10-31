@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_CONFIG_NODE;
 import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_DATA_NODE;
+import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_ML_NODE;
 
 public class ShowClusterTask implements IConfigTask {
 
@@ -135,6 +136,20 @@ public class ShowClusterTask implements IConfigTask {
                     e.getInternalEndPoint().getPort(),
                     clusterNodeInfos.getNodeVersionInfo().get(e.getDataNodeId())));
 
+    if (clusterNodeInfos.getMlNodeList() != null) {
+      clusterNodeInfos
+          .getMlNodeList()
+          .forEach(
+              e ->
+                  buildTsBlock(
+                      builder,
+                      e.getMlNodeId(),
+                      NODE_TYPE_ML_NODE,
+                      clusterNodeInfos.getNodeStatus().get(e.getMlNodeId()),
+                      e.getInternalEndPoint().getIp(),
+                      e.getInternalEndPoint().getPort(),
+                      clusterNodeInfos.getNodeVersionInfo().get(e.getMlNodeId())));
+    }
     DatasetHeader datasetHeader = DatasetHeaderFactory.getShowClusterHeader();
     future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS, builder.build(), datasetHeader));
   }

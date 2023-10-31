@@ -24,6 +24,7 @@ import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.common.rpc.thrift.TSchemaNode;
+import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.commons.partition.DataPartition;
 import org.apache.iotdb.commons.partition.SchemaPartition;
 import org.apache.iotdb.commons.path.PartialPath;
@@ -38,6 +39,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.GroupByParame
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.GroupByTimeParameter;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.IntoPathDescriptor;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.OrderByParameter;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model.ModelInferenceDescriptor;
 import org.apache.iotdb.db.queryengine.plan.statement.Statement;
 import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
 import org.apache.iotdb.db.queryengine.plan.statement.component.SortItem;
@@ -219,6 +221,8 @@ public class Analysis {
 
   // indicate whether the Nodes produce source data are VirtualSourceNodes
   private boolean isVirtualSource = false;
+
+  private ModelInferenceDescriptor modelInferenceDescriptor;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // SELECT INTO Analysis
@@ -749,6 +753,21 @@ public class Analysis {
   public void setLastQueryNonWritableViewSourceExpressionMap(
       Map<Expression, List<Expression>> lastQueryNonWritableViewSourceExpressionMap) {
     this.lastQueryNonWritableViewSourceExpressionMap = lastQueryNonWritableViewSourceExpressionMap;
+  }
+
+  public ModelInferenceDescriptor getModelInferenceDescriptor() {
+    return modelInferenceDescriptor;
+  }
+
+  public ModelInformation getModelInformation() {
+    if (modelInferenceDescriptor == null) {
+      return null;
+    }
+    return modelInferenceDescriptor.getModelInformation();
+  }
+
+  public void setModelInferenceDescriptor(ModelInferenceDescriptor modelInferenceDescriptor) {
+    this.modelInferenceDescriptor = modelInferenceDescriptor;
   }
 
   public Map<String, List<String>> getOutputDeviceToQueriedDevicesMap() {

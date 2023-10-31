@@ -19,9 +19,10 @@
 
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
+import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
+import org.apache.iotdb.mlnode.rpc.thrift.TMLHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
-import org.apache.iotdb.mpp.rpc.thrift.TLoadSample;
 
 public class NodeHeartbeatSample {
 
@@ -44,6 +45,19 @@ public class NodeHeartbeatSample {
 
   /** Constructor for DataNode sample. */
   public NodeHeartbeatSample(THeartbeatResp heartbeatResp, long receiveTimestamp) {
+    this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
+    this.receiveTimestamp = receiveTimestamp;
+
+    this.status = NodeStatus.parse(heartbeatResp.getStatus());
+    this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
+
+    if (heartbeatResp.isSetLoadSample()) {
+      this.loadSample = heartbeatResp.getLoadSample();
+    }
+  }
+
+  /** Constructor for MLNode sample. */
+  public NodeHeartbeatSample(TMLHeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
     this.receiveTimestamp = receiveTimestamp;
 

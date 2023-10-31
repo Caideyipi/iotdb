@@ -1,0 +1,7 @@
+configs:                
+    input_shape: [96, 2] 
+    output_shape: [96, 2] 
+
+attributes:      
+   'model_type': 'dlinear'
+   'kernel_size': '25'

@@ -111,6 +111,10 @@ public class DatasetHeaderFactory {
     return new DatasetHeader(ColumnHeaderConstant.showRegionColumnHeaders, true);
   }
 
+  public static DatasetHeader getShowMLNodesHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showMLNodesColumnHeaders, true);
+  }
+
   public static DatasetHeader getShowDataNodesHeader() {
     return new DatasetHeader(ColumnHeaderConstant.showDataNodesColumnHeaders, true);
   }
@@ -183,6 +187,14 @@ public class DatasetHeaderFactory {
 
   public static DatasetHeader getShowThrottleQuotaHeader() {
     return new DatasetHeader(ColumnHeaderConstant.showThrottleQuotaColumnHeaders, true);
+  }
+
+  public static DatasetHeader getShowModelsHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showModelsColumnHeaders, true);
+  }
+
+  public static DatasetHeader getShowTrialsHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showTrialsColumnHeaders, true);
   }
 
   public static DatasetHeader getShowLogicalViewHeader() {

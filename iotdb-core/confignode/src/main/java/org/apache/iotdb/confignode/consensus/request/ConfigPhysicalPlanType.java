@@ -35,6 +35,11 @@ public enum ConfigPhysicalPlanType {
   RemoveDataNode((short) 102),
   UpdateDataNodeConfiguration((short) 103),
 
+  /** MLNode. */
+  RegisterMLNode((short) 104),
+  UpdateMLNodeConfiguration((short) 105),
+  RemoveMLNode((short) 106),
+
   /** Database. */
   CreateDatabase((short) 200),
   SetTTL((short) 201),
@@ -179,7 +184,14 @@ public enum ConfigPhysicalPlanType {
   UPDATE_CQ_LAST_EXEC_TIME((short) 1103),
   SHOW_CQ((short) 1104),
 
-  // 1200-1299 planId is used by IoTDB-ML.
+  /** Ml model. */
+  CreateModel((short) 1200),
+  UpdateModelInfo((short) 1201),
+  UpdateModelState((short) 1202),
+  DropModel((short) 1203),
+  ShowModel((short) 1204),
+  ShowTrial((short) 1205),
+  GetModelInfo((short) 1206),
 
   /** Pipe Plugin. */
   CreatePipePlugin((short) 1300),

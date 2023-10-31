@@ -1,0 +1,3 @@
+configs:                
+    input_shape: [96, 2]   
+    output_shape: [96, 2] 

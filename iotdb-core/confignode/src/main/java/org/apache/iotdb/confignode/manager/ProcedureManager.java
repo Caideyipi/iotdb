@@ -39,6 +39,7 @@ import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.consensus.request.auth.AuthorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.procedure.UpdateProcedurePlan;
 import org.apache.iotdb.confignode.consensus.request.write.region.CreateRegionGroupsPlan;
 import org.apache.iotdb.confignode.manager.partition.PartitionManager;
@@ -47,9 +48,12 @@ import org.apache.iotdb.confignode.procedure.Procedure;
 import org.apache.iotdb.confignode.procedure.ProcedureExecutor;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.impl.cq.CreateCQProcedure;
+import org.apache.iotdb.confignode.procedure.impl.model.CreateModelProcedure;
+import org.apache.iotdb.confignode.procedure.impl.model.DropModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.AddConfigNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.RemoveConfigNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.RemoveDataNodeProcedure;
+import org.apache.iotdb.confignode.procedure.impl.node.RemoveMLNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.plugin.CreatePipePluginProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.plugin.DropPipePluginProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.runtime.PipeHandleLeaderChangeProcedure;
@@ -496,6 +500,13 @@ public class ProcedureManager {
     return true;
   }
 
+  public boolean removeMLNode(RemoveMLNodePlan removeMLNodePlan) {
+    this.executor.submitProcedure(new RemoveMLNodeProcedure(removeMLNodePlan.getMlNodeLocation()));
+    LOGGER.info(
+        "Submit RemoveMLNodeProcedure successfully, {}", removeMLNodePlan.getMlNodeLocation());
+    return true;
+  }
+
   public TSStatus migrateRegion(TMigrateRegionReq migrateRegionReq) {
     TConsensusGroupId regionGroupId;
     if (configManager
@@ -701,6 +712,25 @@ public class ProcedureManager {
     List<TSStatus> statusList = new ArrayList<>();
     waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     return statusList.get(0);
+  }
+
+  public TSStatus createModel(String modelName, String uri) {
+    long procedureId = executor.submitProcedure(new CreateModelProcedure(modelName, uri));
+    LOGGER.info("CreateModelProcedure was submitted, procedureId: {}.", procedureId);
+    return RpcUtils.SUCCESS_STATUS;
+  }
+
+  public TSStatus dropModel(String modelId) {
+    long procedureId = executor.submitProcedure(new DropModelProcedure(modelId));
+    List<TSStatus> statusList = new ArrayList<>();
+    boolean isSucceed =
+        waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
+    if (isSucceed) {
+      return RpcUtils.SUCCESS_STATUS;
+    } else {
+      return new TSStatus(TSStatusCode.DROP_MODEL_ERROR.getStatusCode())
+          .setMessage(statusList.get(0).getMessage());
+    }
   }
 
   public TSStatus createPipePlugin(PipePluginMeta pipePluginMeta, byte[] jarFile) {

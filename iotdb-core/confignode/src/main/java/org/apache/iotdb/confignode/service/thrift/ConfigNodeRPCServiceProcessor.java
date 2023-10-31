@@ -55,6 +55,7 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetSchemaRep
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
 import org.apache.iotdb.confignode.consensus.response.database.CountDatabaseResp;
 import org.apache.iotdb.confignode.consensus.response.database.DatabaseSchemaResp;
@@ -62,6 +63,7 @@ import org.apache.iotdb.confignode.consensus.response.datanode.ConfigurationResp
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeConfigurationResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeToStatusResp;
+import org.apache.iotdb.confignode.consensus.response.mlnode.MLNodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.partition.RegionInfoListResp;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
@@ -80,6 +82,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateFunctionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TCreateModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateSchemaTemplateReq;
@@ -102,6 +105,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TDeleteLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDeleteTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropFunctionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TDropModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipeSinkReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropTriggerReq;
@@ -112,6 +116,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetDatabaseReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetLocationForTriggerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoReq;
+import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPipePluginTableResp;
@@ -127,6 +133,11 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterResp;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRemoveReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPipeSinkInfo;
@@ -146,6 +157,9 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
+import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowRegionReq;
@@ -227,6 +241,38 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
     LOGGER.info("Execute RestartDataNodeRequest {} with result {}", req, resp);
 
     return resp;
+  }
+
+  @Override
+  public TMLNodeRegisterResp registerMLNode(TMLNodeRegisterReq req) {
+    TMLNodeRegisterResp resp =
+        ((MLNodeRegisterResp) configManager.registerMLNode(req)).convertToMLNodeRegisterResp();
+    LOGGER.info("Execute RegisterMLNodeRequest {} with result {}", req, resp);
+
+    return resp;
+  }
+
+  @Override
+  public TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req) {
+    TMLNodeRestartResp resp = configManager.restartMLNode(req);
+
+    LOGGER.info("Execute RestartMLNodeRequest {} with result {}", req, resp);
+    return resp;
+  }
+
+  @Override
+  public TSStatus removeMLNode(TMLNodeRemoveReq req) {
+    LOGGER.info("ConfigNode RPC Service start to remove MLNode, req: {}", req);
+    RemoveMLNodePlan removeMLNodePlan = new RemoveMLNodePlan(req.getMlNodeLocation());
+    TSStatus status = configManager.removeMLNode(removeMLNodePlan);
+    LOGGER.info(
+        "ConfigNode RPC Service finished to remove MLNode, req: {}, result: {}", req, status);
+    return status;
+  }
+
+  @Override
+  public TShowMLNodesResp showMLNodes() throws TException {
+    return configManager.showMLNodes();
   }
 
   @Override
@@ -992,6 +1038,26 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   @Override
   public TShowCQResp showCQ() {
     return configManager.showCQ();
+  }
+
+  @Override
+  public TSStatus createModel(TCreateModelReq req) {
+    return configManager.createModel(req);
+  }
+
+  @Override
+  public TSStatus dropModel(TDropModelReq req) {
+    return configManager.dropModel(req);
+  }
+
+  @Override
+  public TShowModelResp showModel(TShowModelReq req) {
+    return configManager.showModel(req);
+  }
+
+  @Override
+  public TGetModelInfoResp getModelInfo(TGetModelInfoReq req) {
+    return configManager.getModelInfo(req);
   }
 
   @Override

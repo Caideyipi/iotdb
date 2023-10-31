@@ -97,6 +97,7 @@ public class ColumnHeaderConstant {
   public static final String TRIGGER_NAME = "TriggerName";
   public static final String EVENT = "Event";
   public static final String STATE = "State";
+  public static final String CONFIGS = "Configs";
   public static final String PATH_PATTERN = "PathPattern";
   public static final String CLASS_NAME = "ClassName";
 
@@ -108,6 +109,7 @@ public class ColumnHeaderConstant {
   // show cluster status
   public static final String NODE_TYPE_CONFIG_NODE = "ConfigNode";
   public static final String NODE_TYPE_DATA_NODE = "DataNode";
+  public static final String NODE_TYPE_ML_NODE = "MLNode";
   public static final String COLUMN_CLUSTER_NAME = "ClusterName";
   public static final String CONFIG_NODE_CONSENSUS_PROTOCOL_CLASS =
       "ConfigNodeConsensusProtocolClass";
@@ -178,6 +180,12 @@ public class ColumnHeaderConstant {
   // column names for show throttle quota
   public static final String USER = "User";
   public static final String READ_WRITE = "Read/Write";
+
+  // column names for show models/trials
+  public static final String MODEL_ID = "ModelId";
+  public static final String TRIAL_ID = "TrialId";
+  public static final String HYPERPARAMETER = "Hyperparameter";
+  public static final String MODEL_PATH = "ModelPath";
 
   // column names for views (e.g. logical view)
   public static final String VIEW_TYPE = "ViewType";
@@ -296,6 +304,13 @@ public class ColumnHeaderConstant {
           new ColumnHeader(RPC_PORT, TSDataType.INT32),
           new ColumnHeader(ROLE, TSDataType.TEXT),
           new ColumnHeader(CREATE_TIME, TSDataType.TEXT));
+
+  public static final List<ColumnHeader> showMLNodesColumnHeaders =
+      ImmutableList.of(
+          new ColumnHeader(NODE_ID, TSDataType.INT32),
+          new ColumnHeader(STATUS, TSDataType.TEXT),
+          new ColumnHeader(RPC_ADDRESS, TSDataType.TEXT),
+          new ColumnHeader(RPC_PORT, TSDataType.INT32));
 
   public static final List<ColumnHeader> showDataNodesColumnHeaders =
       ImmutableList.of(
@@ -442,6 +457,19 @@ public class ColumnHeaderConstant {
           new ColumnHeader(QUOTA_TYPE, TSDataType.TEXT),
           new ColumnHeader(LIMIT, TSDataType.TEXT),
           new ColumnHeader(READ_WRITE, TSDataType.TEXT));
+
+  public static final List<ColumnHeader> showModelsColumnHeaders =
+      ImmutableList.of(
+          new ColumnHeader(MODEL_ID, TSDataType.TEXT),
+          new ColumnHeader(STATE, TSDataType.TEXT),
+          new ColumnHeader(CONFIGS, TSDataType.TEXT),
+          new ColumnHeader(ATTRIBUTES, TSDataType.TEXT));
+
+  public static final List<ColumnHeader> showTrialsColumnHeaders =
+      ImmutableList.of(
+          new ColumnHeader(TRIAL_ID, TSDataType.TEXT),
+          new ColumnHeader(MODEL_PATH, TSDataType.TEXT),
+          new ColumnHeader(HYPERPARAMETER, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showLogicalViewColumnHeaders =
       ImmutableList.of(

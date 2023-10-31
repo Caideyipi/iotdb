@@ -113,6 +113,10 @@ BLOCKED
     : B L O C K E D
     ;
 
+BOTTOM
+    : B O T T O M
+    ;
+
 BOUNDARY
     : B O U N D A R Y
     ;
@@ -123,6 +127,10 @@ BY
 
 CACHE
     : C A C H E
+    ;
+
+CALL
+    : C A L L
     ;
 
 CAST
@@ -354,6 +362,10 @@ INDEX
     : I N D E X
     ;
 
+INFERENCE
+    : I N F E R E N C E
+    ;
+
 INFO
     : I N F O
     ;
@@ -432,6 +444,18 @@ METADATA
 
 MIGRATE
     : M I G R A T E
+    ;
+
+MLNODES
+    : M L N O D E S
+    ;
+
+MODEL
+    : M O D E L
+    ;
+
+MODELS
+    : M O D E L S
     ;
 
 NAN
@@ -798,6 +822,10 @@ TRACING
     : T R A C I N G
     ;
 
+TRIALS
+    : T R I A L S
+    ;
+
 TRIGGER
     : T R I G G E R
     ;
@@ -880,6 +908,10 @@ WATERMARK_EMBEDDING
 
 WHERE
     : W H E R E
+    ;
+
+WINDOW
+    : W I N D O W
     ;
 
 WITH

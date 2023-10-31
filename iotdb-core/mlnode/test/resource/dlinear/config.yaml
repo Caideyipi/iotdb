@@ -1,0 +1,10 @@
+configs:                
+    input_shape: [96, 2]
+    output_shape: [96, 2] 
+    
+    input_type: ["float64","int64"]
+    output_type: ["text","int64"]
+
+attributes:
+   'model_type': 'dlinear'
+   'kernel_size': '25'

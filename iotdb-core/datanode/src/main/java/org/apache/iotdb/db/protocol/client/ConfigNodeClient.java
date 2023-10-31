@@ -48,6 +48,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateFunctionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TCreateModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateSchemaTemplateReq;
@@ -70,6 +71,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TDeleteLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDeleteTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropFunctionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TDropModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipeSinkReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropTriggerReq;
@@ -80,6 +82,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetDatabaseReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetLocationForTriggerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoReq;
+import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPipePluginTableResp;
@@ -95,6 +99,11 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterResp;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRemoveReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPipeSinkInfo;
@@ -114,6 +123,9 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
+import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowRegionReq;
@@ -388,6 +400,27 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TDataNodeRestartResp restartDataNode(TDataNodeRestartReq req) throws TException {
     return executeRemoteCallWithRetry(
         () -> client.restartDataNode(req), resp -> !updateConfigNodeLeader(resp.status));
+  }
+
+  @Override
+  public TMLNodeRegisterResp registerMLNode(TMLNodeRegisterReq req) throws TException {
+    throw new UnsupportedOperationException("RegisterMLNode method is not supported in datanode");
+  }
+
+  @Override
+  public TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req) throws TException {
+    throw new UnsupportedOperationException("RestartMLNode method is not supported in datanode");
+  }
+
+  @Override
+  public TSStatus removeMLNode(TMLNodeRemoveReq req) throws TException {
+    throw new UnsupportedOperationException("RemoveMLNode method is not supported in datanode");
+  }
+
+  @Override
+  public TShowMLNodesResp showMLNodes() throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.showMLNodes(), resp -> !updateConfigNodeLeader(resp.status));
   }
 
   @Override
@@ -943,6 +976,40 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TShowCQResp showCQ() throws TException {
     return executeRemoteCallWithRetry(
         () -> client.showCQ(), resp -> !updateConfigNodeLeader(resp.status));
+  }
+
+  @Override
+  public TSStatus createModel(TCreateModelReq req) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.createModel(req), status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TSStatus dropModel(TDropModelReq req) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.dropModel(req), status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TShowModelResp showModel(TShowModelReq req) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.showModel(req), resp -> !updateConfigNodeLeader(resp.status));
+  }
+
+  @Override
+  public TGetModelInfoResp getModelInfo(TGetModelInfoReq req) throws TException {
+    for (int i = 0; i < RETRY_NUM; i++) {
+      try {
+        TGetModelInfoResp resp = client.getModelInfo(req);
+        if (!updateConfigNodeLeader(resp.getStatus())) {
+          return resp;
+        }
+      } catch (TException e) {
+        configLeader = null;
+      }
+      waitAndReconnect();
+    }
+    throw new TException(MSG_RECONNECTION_FAIL);
   }
 
   @Override

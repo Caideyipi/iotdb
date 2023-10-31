@@ -48,6 +48,10 @@ import org.apache.iotdb.db.qp.sql.IoTDBSqlParser.ShowFunctionsContext;
 import org.apache.iotdb.db.qp.sql.IoTDBSqlParserBaseVisitor;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.db.queryengine.execution.operator.window.WindowType;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.BottomInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.CountInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.TopInferenceWindow;
 import org.apache.iotdb.db.queryengine.plan.analyze.ExpressionAnalyzer;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.expression.ExpressionType;
@@ -153,6 +157,10 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTimeSeriesSta
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTriggersStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.DropPipePluginStatement;
@@ -256,6 +264,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       "Limit configuration is not enabled, please enable it first.";
 
   private static final String IGNORENULL = "IgnoreNull";
+
   private ZoneId zoneId;
 
   private boolean useWildcard = false;
@@ -1213,6 +1222,27 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       queryStatement.setFromComponent(parseFromClause(ctx.fromClause()));
       setSourceQueryStatement.accept(queryStatement);
     }
+  }
+
+  // Create Model =====================================================================
+  @Override
+  public Statement visitCreateModel(IoTDBSqlParser.CreateModelContext ctx) {
+    CreateModelStatement createModelStatement = new CreateModelStatement();
+    createModelStatement.setModelName(parseIdentifier(ctx.modelName.getText()));
+    createModelStatement.setUri(ctx.modelUri.getText());
+    return createModelStatement;
+  }
+
+  // Drop Model =====================================================================
+  @Override
+  public Statement visitDropModel(IoTDBSqlParser.DropModelContext ctx) {
+    return new DropModelStatement(parseIdentifier(ctx.modelId.getText()));
+  }
+
+  // Show Models =====================================================================
+  @Override
+  public Statement visitShowModels(IoTDBSqlParser.ShowModelsContext ctx) {
+    return new ShowModelsStatement();
   }
 
   /** Data Manipulation Language (DML). */
@@ -3260,6 +3290,11 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
     return new ShowConfigNodesStatement();
   }
 
+  @Override
+  public Statement visitShowMLNodes(IoTDBSqlParser.ShowMLNodesContext ctx) {
+    return new ShowMLNodesStatement();
+  }
+
   // device template
 
   @Override
@@ -3971,5 +4006,36 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       showSpaceQuotaStatement.setDatabases(null);
     }
     return showSpaceQuotaStatement;
+  }
+
+  @Override
+  public Statement visitCallInference(IoTDBSqlParser.CallInferenceContext ctx) {
+    String sql = ctx.inputSql.getText();
+    QueryStatement statement =
+        (QueryStatement)
+            StatementGenerator.createStatement(sql.substring(1, sql.length() - 1), zoneId);
+
+    statement.setModelName(parseIdentifier(ctx.modelId.getText()));
+    statement.setHasModelInference(true);
+
+    if (ctx.windowFunction() != null) {
+      IoTDBSqlParser.WindowFunctionContext windowContext = ctx.windowFunction();
+      InferenceWindow inferenceWindow = null;
+      if (windowContext.BOTTOM() != null) {
+        inferenceWindow =
+            new BottomInferenceWindow(Integer.parseInt(windowContext.windowSize.getText()));
+      } else if (windowContext.TOP() != null) {
+        inferenceWindow =
+            new TopInferenceWindow(Integer.parseInt(windowContext.windowSize.getText()));
+      } else if (windowContext.COUNT() != null) {
+        inferenceWindow =
+            new CountInferenceWindow(
+                Integer.parseInt(windowContext.interval.getText()),
+                Integer.parseInt(windowContext.step.getText()));
+      }
+      statement.setInferenceWindow(inferenceWindow);
+    }
+
+    return statement;
   }
 }

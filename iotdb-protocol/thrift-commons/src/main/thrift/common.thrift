@@ -84,8 +84,18 @@ struct TDataNodeLocation {
   6: required TEndPoint schemaRegionConsensusEndPoint
 }
 
+struct TMLNodeLocation{
+  1: required i32 mlNodeId
+  2: required TEndPoint internalEndPoint
+}
+
 struct TDataNodeConfiguration {
   1: required TDataNodeLocation location
+  2: required TNodeResource resource
+}
+
+struct TMLNodeConfiguration{
+  1: required TMLNodeLocation location
   2: required TNodeResource resource
 }
 
@@ -165,6 +175,18 @@ struct TSetThrottleQuotaReq {
   2: required TThrottleQuota throttleQuota
 }
 
+struct TLoadSample {
+  // Percentage of occupied cpu in DataNode
+  1: required double cpuUsageRate
+  // Percentage of occupied memory space in DataNode
+  2: required double memoryUsageRate
+  // Percentage of occupied disk space in DataNode
+  3: required double diskUsageRate
+  // The size of free disk space
+  // Unit: Byte
+  4: required double freeDiskSpace
+}
+
 enum TAggregationType {
   COUNT,
   AVG,
@@ -180,4 +202,18 @@ enum TAggregationType {
   TIME_DURATION,
   MODE,
   COUNT_TIME
+}
+
+// for MLNode
+enum TrainingState {
+  PENDING,
+  RUNNING,
+  FINISHED,
+  FAILED,
+  DROPPING
+}
+
+enum TaskType {
+  FORECAST,
+  ANOMALY_DETECTION,
 }

@@ -38,4 +38,12 @@
         <module>node-commons</module>
         <module>tsfile</module>
     </modules>
+    <profiles>
+        <profile>
+            <id>with-mlnode</id>
+            <modules>
+                <module>mlnode</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

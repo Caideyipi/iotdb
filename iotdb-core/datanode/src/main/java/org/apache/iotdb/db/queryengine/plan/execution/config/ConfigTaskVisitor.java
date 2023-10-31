@@ -51,6 +51,10 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTTLTas
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTriggersTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariablesTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.UnSetTTLTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.CreateModelTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.DropModelTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowMLNodesTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.AlterSchemaTemplateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.CreateSchemaTemplateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.DeactivateSchemaTemplateTask;
@@ -109,6 +113,10 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTriggersStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.DropPipePluginStatement;
@@ -504,5 +512,30 @@ public class ConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQueryCon
   public IConfigTask visitShowThrottleQuota(
       ShowThrottleQuotaStatement showThrottleQuotaStatement, MPPQueryContext context) {
     return new ShowThrottleQuotaTask(showThrottleQuotaStatement);
+  }
+
+  /** ML Model Management */
+  @Override
+  public IConfigTask visitCreateModel(
+      CreateModelStatement createModelStatement, MPPQueryContext context) {
+    return new CreateModelTask(createModelStatement, context);
+  }
+
+  @Override
+  public IConfigTask visitDropModel(
+      DropModelStatement dropModelStatement, MPPQueryContext context) {
+    return new DropModelTask(dropModelStatement.getModelId());
+  }
+
+  @Override
+  public IConfigTask visitShowModels(
+      ShowModelsStatement showModelsStatement, MPPQueryContext context) {
+    return new ShowModelsTask();
+  }
+
+  @Override
+  public IConfigTask visitShowMLNodes(
+      ShowMLNodesStatement showMLNodesStatement, MPPQueryContext context) {
+    return new ShowMLNodesTask(showMLNodesStatement);
   }
 }

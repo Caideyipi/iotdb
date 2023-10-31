@@ -56,6 +56,8 @@ public class IoTDBConstant {
 
   public static final String DATA_NODE_CONF_FILE_NAME = "iotdb-datanode.properties";
 
+  public static final String ML_NODE_CONF_FILE_NAME = "iotdb-mlnode.properties";
+
   public static final String DN_RPC_ADDRESS = "dn_rpc_address";
   public static final String DN_RPC_PORT = "dn_rpc_port";
 

@@ -40,6 +40,7 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetSchemaRep
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.cq.CQManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
@@ -55,6 +56,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateFunctionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TCreateModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateSchemaTemplateReq;
@@ -67,6 +69,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TDeactivateSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDeleteLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDeleteTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropCQReq;
+import org.apache.iotdb.confignode.rpc.thrift.TDropModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropTriggerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllPipeInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllTemplatesResp;
@@ -75,6 +78,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetDatabaseReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetLocationForTriggerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoReq;
+import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPipePluginTableResp;
@@ -87,6 +92,9 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionMigrateResultReportReq;
@@ -100,6 +108,9 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
+import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowVariablesResp;
@@ -178,6 +189,13 @@ public interface IManager {
   CQManager getCQManager();
 
   /**
+   * Get ModelManager.
+   *
+   * @return ModelManager instance
+   */
+  ModelManager getModelManager();
+
+  /**
    * Get PipeManager.
    *
    * @return PipeManager instance
@@ -227,6 +245,30 @@ public interface IManager {
    * @return DataNodeToStatusResp
    */
   DataSet removeDataNode(RemoveDataNodePlan removeDataNodePlan);
+
+  /**
+   * Register MLNode
+   *
+   * @param req TMLNodeRegisterReq
+   * @return MLNodeConfigurationDataSet
+   */
+  DataSet registerMLNode(TMLNodeRegisterReq req);
+
+  /**
+   * Restart MLNode.
+   *
+   * @param req TMLNodeRestartReq
+   * @return SUCCESS_STATUS if allow MLNode to restart, REJECT_START otherwise
+   */
+  TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req);
+
+  /**
+   * Remove MLNode.
+   *
+   * @param removeMLNodePlan RemoveMLNodePlan
+   * @return MLNodeToStatusResp
+   */
+  TSStatus removeMLNode(RemoveMLNodePlan removeMLNodePlan);
 
   /**
    * Report that the specified DataNode will be shutdown.
@@ -470,6 +512,9 @@ public interface IManager {
   /** Show (data/schemaengine) regions. */
   DataSet showRegion(GetRegionInfoListPlan getRegionInfoListPlan);
 
+  /** Show MLNodes. */
+  TShowMLNodesResp showMLNodes();
+
   /** Show DataNodes. */
   TShowDataNodesResp showDataNodes();
 
@@ -631,6 +676,18 @@ public interface IManager {
   TSStatus checkConfigNodeGlobalConfig(TConfigNodeRegisterReq req);
 
   TSStatus transfer(List<TDataNodeLocation> newUnknownDataList);
+
+  /** Create a model. */
+  TSStatus createModel(TCreateModelReq req);
+
+  /** Drop a model. */
+  TSStatus dropModel(TDropModelReq req);
+
+  /** Return the model table. */
+  TShowModelResp showModel(TShowModelReq req);
+
+  /** Update the model state */
+  TGetModelInfoResp getModelInfo(TGetModelInfoReq req);
 
   /** Set space quota. */
   TSStatus setSpaceQuota(TSetSpaceQuotaReq req);

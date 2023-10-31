@@ -80,6 +80,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQ
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQueryMergeNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQueryNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.last.LastQueryTransformNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ml.InferenceNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.sink.IdentitySinkNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.sink.ShuffleSinkNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.source.AlignedLastQueryScanNode;
@@ -182,9 +183,7 @@ public enum PlanNodeType {
   LOGICAL_VIEW_SCHEMA_SCAN((short) 77),
   ALTER_LOGICAL_VIEW((short) 78),
   PIPE_ENRICHED_INSERT((short) 79),
-
-  // NodeId 80 is used by IoTDB-ML which shouldn't be used.
-
+  FORECAST((short) 80),
   LAST_QUERY_TRANSFORM((short) 81),
   TOP_K((short) 82);
 
@@ -391,6 +390,8 @@ public enum PlanNodeType {
         return AlterLogicalViewNode.deserialize(buffer);
       case 79:
         return PipeEnrichedInsertNode.deserialize(buffer);
+      case 80:
+        return InferenceNode.deserialize(buffer);
       case 81:
         return LastQueryTransformNode.deserialize(buffer);
       case 82:

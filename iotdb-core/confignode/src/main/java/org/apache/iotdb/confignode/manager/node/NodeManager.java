@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TFlushReq;
+import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.cluster.NodeStatus;
@@ -45,10 +46,14 @@ import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateVers
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RegisterDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.UpdateDataNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.mlnode.RegisterMLNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.mlnode.UpdateMLNodePlan;
 import org.apache.iotdb.confignode.consensus.response.datanode.ConfigurationResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeConfigurationResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeToStatusResp;
+import org.apache.iotdb.confignode.consensus.response.mlnode.MLNodeRegisterResp;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.TriggerManager;
@@ -72,6 +77,10 @@ import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGlobalConfig;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TRatisConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TRuntimeConfiguration;
@@ -406,6 +415,131 @@ public class NodeManager {
       }
     }
     return ClusterNodeStartUtils.ACCEPT_NODE_RESTART;
+  }
+
+  // getRegisteredMLNodeInfoList()
+  public List<TMLNodeInfo> getRegisteredMLNodeInfoList() {
+    List<TMLNodeInfo> mlNodeInfoList = new ArrayList<>();
+    for (TMLNodeConfiguration mlNodeConfiguration : getRegisteredMLNodes()) {
+      TMLNodeInfo mlNodeInfo = new TMLNodeInfo();
+      mlNodeInfo.setMlNodeId(mlNodeConfiguration.getLocation().getMlNodeId());
+      mlNodeInfo.setStatus(getLoadManager().getNodeStatusWithReason(mlNodeInfo.getMlNodeId()));
+      mlNodeInfo.setInternalAddress(mlNodeConfiguration.getLocation().getInternalEndPoint().ip);
+      mlNodeInfo.setInternalPort(mlNodeConfiguration.getLocation().getInternalEndPoint().port);
+      mlNodeInfoList.add(mlNodeInfo);
+    }
+    return mlNodeInfoList;
+  }
+
+  /** @return All registered MLNodes */
+  public List<TMLNodeConfiguration> getRegisteredMLNodes() {
+    return nodeInfo.getRegisteredMLNodes();
+  }
+
+  public TMLNodeConfiguration getRegisteredMLNode(int mlNodeId) {
+    return nodeInfo.getRegisteredMLNode(mlNodeId);
+  }
+
+  /**
+   * Register MLNode.
+   *
+   * @param req TMLNodeRegisterReq
+   * @return MLNodeConfigurationDataSet. The {@link TSStatus} will be set to {@link
+   *     TSStatusCode#SUCCESS_STATUS} when register success.
+   */
+  public DataSet registerMLNode(TMLNodeRegisterReq req) {
+    int mlNodeId = nodeInfo.generateNextNodeId();
+
+    RegisterMLNodePlan registerMLNodePlan = new RegisterMLNodePlan(req.getMlNodeConfiguration());
+    // Register new DataNode
+    registerMLNodePlan.getMLNodeConfiguration().getLocation().setMlNodeId(mlNodeId);
+    try {
+      getConsensusManager().write(registerMLNodePlan);
+    } catch (ConsensusException e) {
+      LOGGER.warn(CONSENSUS_WRITE_ERROR, e);
+    }
+
+    // Init HeartbeatCache
+    getLoadManager()
+        .forceUpdateNodeCache(
+            NodeType.MLNode,
+            mlNodeId,
+            NodeHeartbeatSample.generateDefaultSample(NodeStatus.Unknown));
+
+    // update datanode's versionInfo
+    UpdateVersionInfoPlan updateVersionInfoPlan =
+        new UpdateVersionInfoPlan(req.getVersionInfo(), mlNodeId);
+    try {
+      getConsensusManager().write(updateVersionInfoPlan);
+    } catch (ConsensusException e) {
+      LOGGER.warn(CONSENSUS_WRITE_ERROR, e);
+    }
+
+    MLNodeRegisterResp resp = new MLNodeRegisterResp();
+    resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_REGISTRATION);
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    resp.setMLNodeId(registerMLNodePlan.getMLNodeConfiguration().getLocation().getMlNodeId());
+    return resp;
+  }
+
+  /**
+   * Remove MLNodes.
+   *
+   * @param removeMLNodePlan removeDataNodePlan
+   */
+  public TSStatus removeMLNode(RemoveMLNodePlan removeMLNodePlan) {
+    LOGGER.info("NodeManager start to remove MLNode {}", removeMLNodePlan);
+
+    // check if the node exists
+    if (!nodeInfo.containsMLNode(removeMLNodePlan.getMlNodeLocation().getMlNodeId())) {
+      return new TSStatus(TSStatusCode.REMOVE_ML_NODE_ERROR.getStatusCode())
+          .setMessage("MLNode doesn't exist.");
+    }
+
+    // Add request to queue, then return to client
+    boolean removeSucceed = configManager.getProcedureManager().removeMLNode(removeMLNodePlan);
+    TSStatus status;
+    if (removeSucceed) {
+      status = new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+      status.setMessage("Server accepted the request");
+    } else {
+      status = new TSStatus(TSStatusCode.REMOVE_ML_NODE_ERROR.getStatusCode());
+      status.setMessage("Server rejected the request, maybe requests are too many");
+    }
+
+    LOGGER.info(
+        "NodeManager submit RemoveMLNodePlan finished, removeMLNodePlan: {}", removeMLNodePlan);
+    return status;
+  }
+
+  public TMLNodeRestartResp updateMLNodeIfNecessary(TMLNodeRestartReq req) {
+    int nodeId = req.getMlNodeConfiguration().getLocation().getMlNodeId();
+    TMLNodeConfiguration mlNodeConfiguration = getRegisteredMLNode(nodeId);
+    if (!req.getMlNodeConfiguration().equals(mlNodeConfiguration)) {
+      // Update MLNodeConfiguration when modified during restart
+      UpdateMLNodePlan updateMLNodePlan = new UpdateMLNodePlan(req.getMlNodeConfiguration());
+      try {
+        getConsensusManager().write(updateMLNodePlan);
+      } catch (ConsensusException e) {
+        LOGGER.warn(CONSENSUS_WRITE_ERROR, e);
+      }
+    }
+    TNodeVersionInfo versionInfo = nodeInfo.getVersionInfo(nodeId);
+    if (!req.getVersionInfo().equals(versionInfo)) {
+      // Update versionInfo when modified during restart
+      UpdateVersionInfoPlan updateVersionInfoPlan =
+          new UpdateVersionInfoPlan(req.getVersionInfo(), nodeId);
+      try {
+        getConsensusManager().write(updateVersionInfoPlan);
+      } catch (ConsensusException e) {
+        LOGGER.warn(CONSENSUS_WRITE_ERROR, e);
+      }
+    }
+
+    TMLNodeRestartResp resp = new TMLNodeRestartResp();
+    resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_RESTART);
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    return resp;
   }
 
   /**

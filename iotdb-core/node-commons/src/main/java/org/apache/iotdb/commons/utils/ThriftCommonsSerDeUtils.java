@@ -22,6 +22,8 @@ import org.apache.iotdb.common.rpc.thrift.TConsensusGroupId;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
+import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSchemaNode;
 import org.apache.iotdb.common.rpc.thrift.TSeriesPartitionSlot;
@@ -158,6 +160,63 @@ public class ThriftCommonsSerDeUtils {
       throw new ThriftSerDeException("Read TDataNodeInfo failed: ", e);
     }
     return dataNodeInfo;
+  }
+
+  public static void serializeTMLNodeInfo(
+      TMLNodeConfiguration mlNodeInfo, DataOutputStream stream) {
+    try {
+      mlNodeInfo.write(generateWriteProtocol(stream));
+    } catch (TException e) {
+      throw new ThriftSerDeException("Write TMLNodeInfo failed: ", e);
+    }
+  }
+
+  public static TMLNodeConfiguration deserializeTMLNodeInfo(ByteBuffer buffer) {
+    TMLNodeConfiguration mlNodeInfo = new TMLNodeConfiguration();
+    try {
+      mlNodeInfo.read(generateReadProtocol(buffer));
+    } catch (TException e) {
+      throw new ThriftSerDeException("Read TMLNodeInfo failed: ", e);
+    }
+    return mlNodeInfo;
+  }
+
+  public static void serializeTMLNodeConfiguration(
+      TMLNodeConfiguration mlNodeConfiguration, DataOutputStream stream) {
+    try {
+      mlNodeConfiguration.write(generateWriteProtocol(stream));
+    } catch (TException e) {
+      throw new ThriftSerDeException("Write TDataNodeConfiguration failed: ", e);
+    }
+  }
+
+  public static TMLNodeConfiguration deserializeTMLNodeConfiguration(ByteBuffer buffer) {
+    TMLNodeConfiguration mlNodeConfiguration = new TMLNodeConfiguration();
+    try {
+      mlNodeConfiguration.read(generateReadProtocol(buffer));
+    } catch (TException e) {
+      throw new ThriftSerDeException("Read TMLNodeConfiguration failed: ", e);
+    }
+    return mlNodeConfiguration;
+  }
+
+  public static void serializeTMLNodeLocation(
+      TMLNodeLocation mlNodeLocation, DataOutputStream stream) {
+    try {
+      mlNodeLocation.write(generateWriteProtocol(stream));
+    } catch (TException e) {
+      throw new ThriftSerDeException("Write TMLNodeLocation failed: ", e);
+    }
+  }
+
+  public static TMLNodeLocation deserializeTMLNodeLocation(ByteBuffer buffer) {
+    TMLNodeLocation mlNodeLocation = new TMLNodeLocation();
+    try {
+      mlNodeLocation.read(generateReadProtocol(buffer));
+    } catch (TException e) {
+      throw new ThriftSerDeException("Read TDataNodeLocation failed: ", e);
+    }
+    return mlNodeLocation;
   }
 
   public static void serializeTSeriesPartitionSlot(

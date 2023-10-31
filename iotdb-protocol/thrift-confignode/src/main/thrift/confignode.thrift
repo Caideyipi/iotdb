@@ -510,8 +510,9 @@ struct TShowClusterResp {
   1: required common.TSStatus status
   2: required list<common.TConfigNodeLocation> configNodeList
   3: required list<common.TDataNodeLocation> dataNodeList
-  4: required map<i32, string> nodeStatus
-  5: required map<i32, TNodeVersionInfo> nodeVersionInfo
+  4: required list<common.TMLNodeLocation> mlNodeList
+  5: required map<i32, string> nodeStatus
+  6: required map<i32, TNodeVersionInfo> nodeVersionInfo
 }
 
 struct TNodeVersionInfo {
@@ -535,9 +536,21 @@ struct TDataNodeInfo {
   7: optional i32 cpuCoreNum
 }
 
+struct TMLNodeInfo{
+  1: required i32 mlNodeId
+  2: required string status
+  3: required string internalAddress
+  4: required i32 internalPort
+}
+
 struct TShowDataNodesResp {
   1: required common.TSStatus status
   2: optional list<TDataNodeInfo> dataNodesInfoList
+}
+
+struct TShowMLNodesResp {
+  1: required common.TSStatus status
+  2: optional list<TMLNodeInfo> mlNodesInfoList
 }
 
 // Show confignodes
@@ -763,6 +776,56 @@ struct TUnsetSchemaTemplateReq{
   3: required string path
 }
 
+struct TCreateModelReq {
+  1: required string modelName
+  2: required string uri
+}
+
+struct TDropModelReq {
+  1: required string modelId
+}
+
+struct TShowModelReq {
+  1: optional string modelId
+}
+
+struct TShowModelResp {
+  1: required common.TSStatus status
+  2: required list<binary> modelInfoList
+}
+
+struct TShowTrialReq {
+  1: required string modelId
+  2: optional string trialId
+}
+
+struct TGetModelInfoReq {
+  1: required string modelId
+}
+
+struct TShowTrialResp {
+  1: required common.TSStatus status
+  2: required list<binary> trialInfoList
+}
+
+struct TUpdateModelInfoReq {
+  1: required string modelId
+  2: required string trialId
+  3: required map<string, string> modelInfo
+}
+
+struct TUpdateModelStateReq {
+  1: required string modelId
+  2: required common.TrainingState state
+  3: optional string bestTrialId
+}
+
+struct TGetModelInfoResp {
+  1: required common.TSStatus status
+  2: optional binary modelInfo
+  3: optional common.TEndPoint mlNodeAddress
+}
+
 // ====================================================
 // Quota
 // ====================================================
@@ -779,6 +842,33 @@ struct TThrottleQuotaResp{
 
 struct TShowThrottleReq{
   1: optional string userName;
+}
+
+struct TMLNodeRegisterReq{
+  1: required string clusterName
+  2: required common.TMLNodeConfiguration mlNodeConfiguration
+  3: optional TNodeVersionInfo versionInfo
+}
+
+struct TMLNodeRegisterResp{
+  1: required common.TSStatus status
+  2: required list<common.TConfigNodeLocation> configNodeList
+  3: optional i32 mlNodeId
+}
+
+struct TMLNodeRestartReq{
+  1: required string clusterName
+  2: required common.TMLNodeConfiguration mlNodeConfiguration
+  3: optional TNodeVersionInfo versionInfo
+}
+
+struct TMLNodeRestartResp{
+  1: required common.TSStatus status
+  2: required list<common.TConfigNodeLocation> configNodeList
+}
+
+struct TMLNodeRemoveReq{
+  1: required common.TMLNodeLocation mlNodeLocation
 }
 
 service IConfigNodeRPCService {
@@ -804,6 +894,17 @@ service IConfigNodeRPCService {
    *                           and a detailed error message will be returned.
    */
   TDataNodeRestartResp restartDataNode(TDataNodeRestartReq req)
+
+  /**
+  * node management for mlnode, it's similar to datanode above
+  */
+  TMLNodeRegisterResp registerMLNode(TMLNodeRegisterReq req)
+
+  TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req)
+
+  common.TSStatus removeMLNode(TMLNodeRemoveReq req)
+
+  TShowMLNodesResp showMLNodes()
 
   /**
    * Get system configurations. i.e. configurations that is not associated with the DataNodeId
@@ -1346,6 +1447,34 @@ service IConfigNodeRPCService {
    * Return the cq table of config leader
    */
   TShowCQResp showCQ()
+
+  // ====================================================
+  // ML Model
+  // ====================================================
+
+  /**
+   * Create a model
+   *
+   * @return SUCCESS_STATUS if the model was created successfully
+   */
+  common.TSStatus createModel(TCreateModelReq req)
+
+  /**
+   * Drop a model
+   *
+   * @return SUCCESS_STATUS if the model was removed successfully
+   */
+  common.TSStatus dropModel(TDropModelReq req)
+
+  /**
+   * Return the model table
+   */
+  TShowModelResp showModel(TShowModelReq req)
+
+   /**
+   * Return the model info by model_id
+   */
+  TGetModelInfoResp getModelInfo(TGetModelInfoReq req)
 
   // ======================================================
   // Quota

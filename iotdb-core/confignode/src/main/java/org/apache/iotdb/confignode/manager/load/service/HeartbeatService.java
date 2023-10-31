@@ -21,20 +21,24 @@ package org.apache.iotdb.confignode.manager.load.service;
 
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
 import org.apache.iotdb.commons.pipe.config.PipeConfig;
 import org.apache.iotdb.confignode.client.async.AsyncConfigNodeHeartbeatClientPool;
 import org.apache.iotdb.confignode.client.async.AsyncDataNodeHeartbeatClientPool;
+import org.apache.iotdb.confignode.client.async.AsyncMLNodeHeartbeatClientPool;
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.ConfigNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.DataNodeHeartbeatHandler;
+import org.apache.iotdb.confignode.client.async.handlers.heartbeat.MLNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
+import org.apache.iotdb.mlnode.rpc.thrift.TMlHeartbeatReq;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatReq;
 
 import org.slf4j.Logger;
@@ -114,6 +118,8 @@ public class HeartbeatService {
                     heartbeatReq, getNodeManager().getRegisteredConfigNodes());
                 // Send heartbeat requests to all the registered DataNodes
                 pingRegisteredDataNodes(heartbeatReq, getNodeManager().getRegisteredDataNodes());
+                // Send heartbeat requests to all the registered MLNodes
+                pingRegisteredMLNodes(genMLHeartbeatReq(), getNodeManager().getRegisteredMLNodes());
               }
             });
   }
@@ -142,6 +148,17 @@ public class HeartbeatService {
 
     /* Update heartbeat counter */
     heartbeatCounter.getAndIncrement();
+
+    return heartbeatReq;
+  }
+
+  private TMlHeartbeatReq genMLHeartbeatReq() {
+    /* Generate heartbeat request */
+    TMlHeartbeatReq heartbeatReq = new TMlHeartbeatReq();
+    heartbeatReq.setHeartbeatTimestamp(System.currentTimeMillis());
+
+    // We sample MLNode's load in every 10 heartbeat loop
+    heartbeatReq.setNeedSamplingLoad(heartbeatCounter.get() % 10 == 0);
 
     return heartbeatReq;
   }
@@ -192,6 +209,23 @@ public class HeartbeatService {
       AsyncDataNodeHeartbeatClientPool.getInstance()
           .getDataNodeHeartBeat(
               dataNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
+    }
+  }
+
+  /**
+   * Send heartbeat requests to all the Registered MLNodes.
+   *
+   * @param registeredMLNodes DataNodes that registered in cluster
+   */
+  private void pingRegisteredMLNodes(
+      TMlHeartbeatReq heartbeatReq, List<TMLNodeConfiguration> registeredMLNodes) {
+    // Send heartbeat requests
+    for (TMLNodeConfiguration mlNodeInfo : registeredMLNodes) {
+      MLNodeHeartbeatHandler handler =
+          new MLNodeHeartbeatHandler(mlNodeInfo.getLocation().getMlNodeId(), loadCache);
+      AsyncMLNodeHeartbeatClientPool.getInstance()
+          .getMLNodeHeartBeat(
+              mlNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
     }
   }
 
