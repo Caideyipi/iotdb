@@ -120,6 +120,44 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
   }
 
   public SessionPool(
+      String host,
+      int port,
+      String user,
+      String password,
+      int maxSize,
+      int fetchSize,
+      long waitToGetSessionTimeoutInMs,
+      boolean enableCompression,
+      ZoneId zoneId,
+      boolean enableRedirection,
+      int connectionTimeoutInMs,
+      Version version,
+      int thriftDefaultBufferSize,
+      int thriftMaxFrameSize,
+      boolean useSSL,
+      String trustStore,
+      String trustStorePwd) {
+    super(
+        host,
+        port,
+        user,
+        password,
+        maxSize,
+        fetchSize,
+        waitToGetSessionTimeoutInMs,
+        enableCompression,
+        zoneId,
+        enableRedirection,
+        connectionTimeoutInMs,
+        version,
+        thriftDefaultBufferSize,
+        thriftMaxFrameSize,
+        useSSL,
+        trustStore,
+        trustStorePwd);
+  }
+
+  public SessionPool(
       List<String> nodeUrls,
       String user,
       String password,
@@ -147,6 +185,29 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
         version,
         thriftDefaultBufferSize,
         thriftMaxFrameSize);
+  }
+
+  public SessionPool(Builder builder) {
+    super(
+        new org.apache.iotdb.session.pool.SessionPool.Builder()
+            .maxSize(builder.maxSize)
+            .user(builder.user)
+            .password(builder.password)
+            .fetchSize(builder.fetchSize)
+            .waitToGetSessionTimeoutInMs(builder.waitToGetSessionTimeoutInMs)
+            .enableCompression(builder.enableCompression)
+            .zoneId(builder.zoneId)
+            .enableRedirection(builder.enableRedirection)
+            .connectionTimeoutInMs(builder.connectionTimeoutInMs)
+            .version(builder.version)
+            .thriftDefaultBufferSize(builder.thriftDefaultBufferSize)
+            .thriftMaxFrameSize(builder.thriftMaxFrameSize)
+            .nodeUrls(builder.nodeUrls)
+            .host(builder.host)
+            .port(builder.port)
+            .useSSL(builder.useSSL)
+            .trustStore(builder.trustStore)
+            .trustStorePwd(builder.trustStorePwd));
   }
 
   @Override
@@ -291,6 +352,9 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
               .thriftMaxFrameSize(thriftMaxFrameSize)
               .enableRedirection(enableRedirection)
               .version(version)
+              .useSSL(useSSL)
+              .trustStore(trustStore)
+              .trustStorePwd(trustStorePwd)
               .build();
     } else {
       // Construct redirect-able Session
@@ -305,6 +369,9 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
               .thriftMaxFrameSize(thriftMaxFrameSize)
               .enableRedirection(enableRedirection)
               .version(version)
+              .useSSL(useSSL)
+              .trustStore(trustStore)
+              .trustStorePwd(trustStorePwd)
               .build();
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
@@ -329,6 +396,25 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
     private int connectionTimeoutInMs = SessionConfig.DEFAULT_CONNECTION_TIMEOUT_MS;
     private Version version = SessionConfig.DEFAULT_VERSION;
     private long timeOut = SessionConfig.DEFAULT_QUERY_TIME_OUT;
+
+    private boolean useSSL = false;
+    private String trustStore;
+    private String trustStorePwd;
+
+    public Builder useSSL(boolean useSSL) {
+      this.useSSL = useSSL;
+      return this;
+    }
+
+    public Builder trustStore(String keyStore) {
+      this.trustStore = keyStore;
+      return this;
+    }
+
+    public Builder trustStorePwd(String keyStorePwd) {
+      this.trustStorePwd = keyStorePwd;
+      return this;
+    }
 
     public Builder host(String host) {
       this.host = host;
@@ -411,38 +497,7 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
     }
 
     public SessionPool build() {
-      if (nodeUrls == null) {
-        return new SessionPool(
-            host,
-            port,
-            user,
-            password,
-            maxSize,
-            fetchSize,
-            waitToGetSessionTimeoutInMs,
-            enableCompression,
-            zoneId,
-            enableRedirection,
-            connectionTimeoutInMs,
-            version,
-            thriftDefaultBufferSize,
-            thriftMaxFrameSize);
-      } else {
-        return new SessionPool(
-            nodeUrls,
-            user,
-            password,
-            maxSize,
-            fetchSize,
-            waitToGetSessionTimeoutInMs,
-            enableCompression,
-            zoneId,
-            enableRedirection,
-            connectionTimeoutInMs,
-            version,
-            thriftDefaultBufferSize,
-            thriftMaxFrameSize);
-      }
+      return new SessionPool(this);
     }
   }
 }

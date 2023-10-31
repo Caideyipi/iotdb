@@ -150,6 +150,26 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
         version);
   }
 
+  public Session(Builder builder) {
+    super(
+        new org.apache.iotdb.session.Session.Builder()
+            .nodeUrls(builder.nodeUrls)
+            .enableRedirection(builder.enableRedirection)
+            .version(builder.version)
+            .password(builder.password)
+            .username(builder.username)
+            .fetchSize(builder.fetchSize)
+            .zoneId(builder.zoneId)
+            .thriftDefaultBufferSize(builder.thriftDefaultBufferSize)
+            .thriftMaxFrameSize(builder.thriftMaxFrameSize)
+            .timeOut(builder.timeOut)
+            .useSSL(builder.useSSL)
+            .trustStore(builder.trustStore)
+            .trustStorePwd(builder.trustStorePwd)
+            .host(builder.host)
+            .port(builder.rpcPort));
+  }
+
   @Override
   public WhiteListInfoResp getWhiteIpSet()
       throws IoTDBConnectionException, StatementExecutionException {
@@ -288,6 +308,25 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
     private Version version = SessionConfig.DEFAULT_VERSION;
     private long timeOut = SessionConfig.DEFAULT_QUERY_TIME_OUT;
 
+    private boolean useSSL = false;
+    private String trustStore;
+    private String trustStorePwd;
+
+    public Session.Builder useSSL(boolean useSSL) {
+      this.useSSL = useSSL;
+      return this;
+    }
+
+    public Session.Builder trustStore(String keyStore) {
+      this.trustStore = keyStore;
+      return this;
+    }
+
+    public Session.Builder trustStorePwd(String keyStorePwd) {
+      this.trustStorePwd = keyStorePwd;
+      return this;
+    }
+
     private List<String> nodeUrls = null;
 
     public Session.Builder host(String host) {
@@ -356,34 +395,7 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
         throw new IllegalArgumentException(
             "You should specify either nodeUrls or (host + rpcPort), but not both");
       }
-
-      if (nodeUrls != null) {
-        Session newSession =
-            new Session(
-                nodeUrls,
-                username,
-                password,
-                fetchSize,
-                zoneId,
-                thriftDefaultBufferSize,
-                thriftMaxFrameSize,
-                enableRedirection,
-                version);
-        newSession.setEnableQueryRedirection(true);
-        return newSession;
-      }
-
-      return new Session(
-          host,
-          rpcPort,
-          username,
-          password,
-          fetchSize,
-          zoneId,
-          thriftDefaultBufferSize,
-          thriftMaxFrameSize,
-          enableRedirection,
-          version);
+      return new Session(this);
     }
   }
 }

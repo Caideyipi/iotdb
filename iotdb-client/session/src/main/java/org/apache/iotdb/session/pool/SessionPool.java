@@ -92,17 +92,17 @@ public class SessionPool implements ISessionPool {
   protected final long waitToGetSessionTimeoutInMs;
 
   // parameters for Session constructor
-  private final String host;
-  private final int port;
-  private final String user;
-  private final String password;
-  private int fetchSize;
-  private ZoneId zoneId;
-  private boolean enableRedirection;
-  private boolean enableQueryRedirection = false;
-  private boolean useSSL;
-  private String trustStore;
-  private String trustStorePwd;
+  protected final String host;
+  protected final int port;
+  protected final String user;
+  protected final String password;
+  protected int fetchSize;
+  protected ZoneId zoneId;
+  protected boolean enableRedirection;
+  protected boolean enableQueryRedirection = false;
+  protected boolean useSSL;
+  protected String trustStore;
+  protected String trustStorePwd;
 
   protected Map<String, TEndPoint> deviceIdToEndpoint;
 
