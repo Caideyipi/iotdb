@@ -34,7 +34,6 @@ import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.schemaengine.rescon.DataNodeSchemaQuotaManager;
 import org.apache.iotdb.db.service.metrics.IoTDBInternalLocalReporter;
 import org.apache.iotdb.db.storageengine.StorageEngine;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionValidationLevel;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.performer.constant.CrossCompactionPerformer;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.performer.constant.InnerSeqCompactionPerformer;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.performer.constant.InnerUnseqCompactionPerformer;
@@ -689,10 +688,10 @@ public class IoTDBDescriptor {
                 "compaction_write_throughput_mb_per_sec",
                 Integer.toString(conf.getCompactionWriteThroughputMbPerSec()))));
 
-    conf.setCompactionValidationLevel(
-        CompactionValidationLevel.valueOf(
+    conf.setEnableTsFileValidation(
+        Boolean.parseBoolean(
             properties.getProperty(
-                "compaction_validation_level", conf.getCompactionValidationLevel().toString())));
+                "enable_tsfile_validation", String.valueOf(conf.isEnableTsFileValidation()))));
     conf.setCandidateCompactionTaskQueueSize(
         Integer.parseInt(
             properties.getProperty(
@@ -1248,10 +1247,6 @@ public class IoTDBDescriptor {
   }
 
   private void loadCompactionHotModifiedProps(Properties properties) throws InterruptedException {
-    conf.setCompactionValidationLevel(
-        CompactionValidationLevel.valueOf(
-            properties.getProperty(
-                "compaction_validation_level", conf.getCompactionValidationLevel().toString())));
 
     loadCompactionIsEnabledHotModifiedProps(properties);
 
@@ -1760,6 +1755,11 @@ public class IoTDBDescriptor {
               properties.getProperty(
                   "enable_query_memory_estimation",
                   Boolean.toString(conf.isEnableQueryMemoryEstimation()))));
+
+      conf.setEnableTsFileValidation(
+          Boolean.parseBoolean(
+              properties.getProperty(
+                  "enable_tsfile_validation", String.valueOf(conf.isEnableTsFileValidation()))));
 
       // update wal config
       long prevDeleteWalFilesPeriodInMs = conf.getDeleteWalFilesPeriodInMs();
