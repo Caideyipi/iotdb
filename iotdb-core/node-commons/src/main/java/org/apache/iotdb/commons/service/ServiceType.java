@@ -78,7 +78,6 @@ public enum ServiceType {
       "Pipe Plugin Classloader Manager Service", "PipePluginClassLoader"),
   PIPE_RUNTIME_AGENT("Pipe Runtime Agent", "PipeRuntimeAgent"),
   MIGRATION_SERVICE("Migration Manager", "Migration Manager"),
-  MLNode_RPC_SERVICE("Rpc Service for MLNode", "MLNodeRPCService"),
   SESSION_MANAGER("Session Manager", "RpcSession"),
   CONFIG_NODE("Config Node", "ConfigNode"),
   DATA_NODE("Data Node", "DataNode");
