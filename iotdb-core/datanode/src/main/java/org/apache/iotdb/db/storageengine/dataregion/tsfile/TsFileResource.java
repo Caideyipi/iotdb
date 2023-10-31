@@ -156,6 +156,8 @@ public class TsFileResource {
 
   private ProgressIndex maxProgressIndex;
 
+  private boolean isInsertionCompactionTaskCandidate = true;
+
   public TsFileResource() {}
 
   public TsFileResource(TsFileResource other) throws IOException {
@@ -317,7 +319,15 @@ public class TsFileResource {
   }
 
   public boolean resourceFileExists() {
-    return fsFactory.getFile(file + RESOURCE_SUFFIX).exists();
+    return file != null && fsFactory.getFile(file + RESOURCE_SUFFIX).exists();
+  }
+
+  public boolean tsFileExists() {
+    return file != null && file.exists();
+  }
+
+  public boolean modFileExists() {
+    return getModFile().exists();
   }
 
   public List<IChunkMetadata> getChunkMetadataList(PartialPath seriesPath) {
@@ -889,7 +899,7 @@ public class TsFileResource {
    *     be created.
    */
   public TsFileResource createHardlink() {
-    if (!file.exists()) {
+    if (file == null || !file.exists()) {
       return null;
     }
 
@@ -1214,5 +1224,13 @@ public class TsFileResource {
 
   public String getDataRegionId() {
     return file.getParentFile().getParentFile().getName();
+  }
+
+  public boolean isInsertionCompactionTaskCandidate() {
+    return !isSeq && isInsertionCompactionTaskCandidate;
+  }
+
+  public void setInsertionCompactionTaskCandidate(boolean insertionCompactionTaskCandidate) {
+    isInsertionCompactionTaskCandidate = insertionCompactionTaskCandidate;
   }
 }

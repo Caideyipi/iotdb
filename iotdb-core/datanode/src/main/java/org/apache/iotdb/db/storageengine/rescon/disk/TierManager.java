@@ -137,7 +137,7 @@ public class TierManager {
               .map(
                   v ->
                       FSFactoryProducer.getFSFactory()
-                          .getFile(v, IoTDBConstant.SEQUENCE_FLODER_NAME)
+                          .getFile(v, IoTDBConstant.SEQUENCE_FOLDER_NAME)
                           .getPath())
               .collect(Collectors.toList());
       mkDataDirs(seqDirs);
@@ -156,7 +156,7 @@ public class TierManager {
               .map(
                   v ->
                       FSFactoryProducer.getFSFactory()
-                          .getFile(v, IoTDBConstant.UNSEQUENCE_FLODER_NAME)
+                          .getFile(v, IoTDBConstant.UNSEQUENCE_FOLDER_NAME)
                           .getPath())
               .collect(Collectors.toList());
       mkDataDirs(unSeqDirs);

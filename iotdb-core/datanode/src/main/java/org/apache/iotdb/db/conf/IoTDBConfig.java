@@ -436,6 +436,9 @@ public class IoTDBConfig {
   /** Enable the service for MLNode */
   private boolean enableMLNodeService = false;
 
+  /** Insert the non overlapped unsequence files into sequence space */
+  private boolean enableInsertionCrossSpaceCompaction = false;
+
   /** The buffer for sort operation */
   private long sortBufferSize = 1024 * 1024L;
 
@@ -2699,6 +2702,14 @@ public class IoTDBConfig {
 
   public void setEnableMLNodeService(boolean enableMLNodeService) {
     this.enableMLNodeService = enableMLNodeService;
+  }
+
+  public boolean isEnableInsertionCrossSpaceCompaction() {
+    return enableInsertionCrossSpaceCompaction;
+  }
+
+  public void setEnableInsertionCrossSpaceCompaction(boolean enableInsertionCrossSpaceCompaction) {
+    this.enableInsertionCrossSpaceCompaction = enableInsertionCrossSpaceCompaction;
   }
 
   public InnerSequenceCompactionSelector getInnerSequenceCompactionSelector() {

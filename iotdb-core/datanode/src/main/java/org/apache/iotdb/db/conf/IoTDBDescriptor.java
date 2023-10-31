@@ -458,6 +458,12 @@ public class IoTDBDescriptor {
                 "compaction_submission_interval_in_ms",
                 Long.toString(conf.getCompactionSubmissionIntervalInMs()))));
 
+    conf.setEnableInsertionCrossSpaceCompaction(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_insertion_cross_space_compaction",
+                Boolean.toString(conf.isEnableInsertionCrossSpaceCompaction()))));
+
     conf.setEnableCrossSpaceCompaction(
         Boolean.parseBoolean(
             properties.getProperty(
@@ -1297,8 +1303,14 @@ public class IoTDBDescriptor {
     boolean isCompactionEnabled =
         conf.isEnableSeqSpaceCompaction()
             || conf.isEnableUnseqSpaceCompaction()
-            || conf.isEnableCrossSpaceCompaction();
+            || conf.isEnableCrossSpaceCompaction()
+            || conf.isEnableInsertionCrossSpaceCompaction();
 
+    boolean newConfigEnableInsertionCrossSpaceCompaction =
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_insertion_cross_space_compaction",
+                Boolean.toString(conf.isEnableInsertionCrossSpaceCompaction())));
     boolean newConfigEnableCrossSpaceCompaction =
         Boolean.parseBoolean(
             properties.getProperty(
@@ -1316,6 +1328,7 @@ public class IoTDBDescriptor {
                 Boolean.toString(conf.isEnableUnseqSpaceCompaction())));
     boolean compactionEnabledInNewConfig =
         newConfigEnableCrossSpaceCompaction
+            || newConfigEnableInsertionCrossSpaceCompaction
             || newConfigEnableSeqSpaceCompaction
             || newConfigEnableUnseqSpaceCompaction;
 
@@ -1324,6 +1337,7 @@ public class IoTDBDescriptor {
       return;
     }
 
+    conf.setEnableInsertionCrossSpaceCompaction(newConfigEnableInsertionCrossSpaceCompaction);
     conf.setEnableCrossSpaceCompaction(newConfigEnableCrossSpaceCompaction);
     conf.setEnableSeqSpaceCompaction(newConfigEnableSeqSpaceCompaction);
     conf.setEnableUnseqSpaceCompaction(newConfigEnableUnseqSpaceCompaction);
