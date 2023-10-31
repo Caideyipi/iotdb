@@ -37,6 +37,11 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>org.apache.iotdb</groupId>
+            <artifactId>common-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>1.3.0-SNAPSHOT</version>

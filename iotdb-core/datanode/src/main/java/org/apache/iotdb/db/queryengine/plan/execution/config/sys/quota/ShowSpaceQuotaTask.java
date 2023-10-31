@@ -32,9 +32,9 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.IConfigTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.executor.IConfigTaskExecutor;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.ShowSpaceQuotaStatement;
 import org.apache.iotdb.rpc.TSStatusCode;
-import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
+import org.apache.iotdb.tsfile.enums.TSDataType;
 import org.apache.iotdb.tsfile.read.common.block.TsBlockBuilder;
-import org.apache.iotdb.tsfile.utils.Binary;
+import org.apache.iotdb.tsfile.utils.BytesUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -67,57 +67,61 @@ public class ShowSpaceQuotaTask implements IConfigTask {
       for (Map.Entry<String, TSpaceQuota> spaceQuotaEntry : resp.getSpaceQuota().entrySet()) {
         if (spaceQuotaEntry.getValue().getDiskSize() != -1) {
           builder.getTimeColumnBuilder().writeLong(0L);
-          builder.getColumnBuilder(0).writeBinary(Binary.valueOf(spaceQuotaEntry.getKey()));
-          builder.getColumnBuilder(1).writeBinary(Binary.valueOf(SpaceQuotaType.diskSize.name()));
+          builder.getColumnBuilder(0).writeBinary(BytesUtils.valueOf(spaceQuotaEntry.getKey()));
+          builder
+              .getColumnBuilder(1)
+              .writeBinary(BytesUtils.valueOf(SpaceQuotaType.diskSize.name()));
           builder
               .getColumnBuilder(2)
               .writeBinary(
-                  Binary.valueOf(
+                  BytesUtils.valueOf(
                       spaceQuotaEntry.getValue().getDiskSize() == 0
                           ? IoTDBConstant.QUOTA_UNLIMITED
                           : spaceQuotaEntry.getValue().getDiskSize() + "M"));
           builder
               .getColumnBuilder(3)
               .writeBinary(
-                  Binary.valueOf(
+                  BytesUtils.valueOf(
                       resp.getSpaceQuotaUsage().get(spaceQuotaEntry.getKey()).getDiskSize() + "M"));
           builder.declarePosition();
         }
         if (spaceQuotaEntry.getValue().getDeviceNum() != -1) {
           builder.getTimeColumnBuilder().writeLong(0L);
-          builder.getColumnBuilder(0).writeBinary(Binary.valueOf(spaceQuotaEntry.getKey()));
-          builder.getColumnBuilder(1).writeBinary(Binary.valueOf(SpaceQuotaType.deviceNum.name()));
+          builder.getColumnBuilder(0).writeBinary(BytesUtils.valueOf(spaceQuotaEntry.getKey()));
+          builder
+              .getColumnBuilder(1)
+              .writeBinary(BytesUtils.valueOf(SpaceQuotaType.deviceNum.name()));
           builder
               .getColumnBuilder(2)
               .writeBinary(
-                  Binary.valueOf(
+                  BytesUtils.valueOf(
                       spaceQuotaEntry.getValue().getDeviceNum() == 0
                           ? IoTDBConstant.QUOTA_UNLIMITED
                           : spaceQuotaEntry.getValue().getDeviceNum() + ""));
           builder
               .getColumnBuilder(3)
               .writeBinary(
-                  Binary.valueOf(
+                  BytesUtils.valueOf(
                       resp.getSpaceQuotaUsage().get(spaceQuotaEntry.getKey()).getDeviceNum() + ""));
           builder.declarePosition();
         }
         if (spaceQuotaEntry.getValue().getTimeserieNum() != -1) {
           builder.getTimeColumnBuilder().writeLong(0L);
-          builder.getColumnBuilder(0).writeBinary(Binary.valueOf(spaceQuotaEntry.getKey()));
+          builder.getColumnBuilder(0).writeBinary(BytesUtils.valueOf(spaceQuotaEntry.getKey()));
           builder
               .getColumnBuilder(1)
-              .writeBinary(Binary.valueOf(SpaceQuotaType.timeSeriesNum.name()));
+              .writeBinary(BytesUtils.valueOf(SpaceQuotaType.timeSeriesNum.name()));
           builder
               .getColumnBuilder(2)
               .writeBinary(
-                  Binary.valueOf(
+                  BytesUtils.valueOf(
                       spaceQuotaEntry.getValue().getTimeserieNum() == 0
                           ? IoTDBConstant.QUOTA_UNLIMITED
                           : spaceQuotaEntry.getValue().getTimeserieNum() + ""));
           builder
               .getColumnBuilder(3)
               .writeBinary(
-                  Binary.valueOf(
+                  BytesUtils.valueOf(
                       resp.getSpaceQuotaUsage().get(spaceQuotaEntry.getKey()).getTimeserieNum()
                           + ""));
           builder.declarePosition();
