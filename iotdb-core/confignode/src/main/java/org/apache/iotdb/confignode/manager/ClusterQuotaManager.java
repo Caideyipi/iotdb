@@ -25,6 +25,7 @@ import org.apache.iotdb.common.rpc.thrift.TSetSpaceQuotaReq;
 import org.apache.iotdb.common.rpc.thrift.TSetThrottleQuotaReq;
 import org.apache.iotdb.common.rpc.thrift.TSpaceQuota;
 import org.apache.iotdb.common.rpc.thrift.TThrottleQuota;
+import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.client.DataNodeRequestType;
 import org.apache.iotdb.confignode.client.async.AsyncDataNodeClientPool;
 import org.apache.iotdb.confignode.client.async.handlers.AsyncClientHandler;
@@ -110,9 +111,19 @@ public class ClusterQuotaManager {
     for (String database : req.getDatabase()) {
       if (quotaInfo.getSpaceQuotaLimit().containsKey(database)) {
         TSpaceQuota spaceQuota = quotaInfo.getSpaceQuotaUsage().get(database);
-        if (spaceQuota.getDeviceNum() > req.getSpaceLimit().getDeviceNum()
-            || spaceQuota.getTimeserieNum() > req.getSpaceLimit().getTimeserieNum()
-            || spaceQuota.getDiskSize() > req.getSpaceLimit().getDiskSize()) {
+        if (req.getSpaceLimit().getDeviceNum() != IoTDBConstant.UNLIMITED_VALUE
+            && req.getSpaceLimit().getDeviceNum() != IoTDBConstant.DEFAULT_VALUE
+            && spaceQuota.getDeviceNum() > req.getSpaceLimit().getDeviceNum()) {
+          return false;
+        }
+        if (req.getSpaceLimit().getTimeserieNum() != IoTDBConstant.UNLIMITED_VALUE
+            && req.getSpaceLimit().getTimeserieNum() != IoTDBConstant.DEFAULT_VALUE
+            && spaceQuota.getTimeserieNum() > req.getSpaceLimit().getTimeserieNum()) {
+          return false;
+        }
+        if (req.getSpaceLimit().getDiskSize() != IoTDBConstant.UNLIMITED_VALUE
+            && req.getSpaceLimit().getDiskSize() != IoTDBConstant.DEFAULT_VALUE
+            && spaceQuota.getDiskSize() > req.getSpaceLimit().getDiskSize()) {
           return false;
         }
       }

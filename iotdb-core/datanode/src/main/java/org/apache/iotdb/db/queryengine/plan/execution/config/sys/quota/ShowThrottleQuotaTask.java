@@ -93,11 +93,12 @@ public class ShowThrottleQuotaTask implements IConfigTask {
           builder
               .getColumnBuilder(2)
               .writeBinary(
-                  BytesUtils.valueOf((throttleQuota.getValue().getMemLimit() / 1024 / 1024 + "M")));
+                  BytesUtils.valueOf(
+                      throttleQuota.getValue().getMemLimit() / IoTDBConstant.KB / IoTDBConstant.KB
+                          + IoTDBConstant.MB_UNIT));
           builder
               .getColumnBuilder(3)
               .writeBinary(BytesUtils.valueOf(IoTDBConstant.REQUEST_TYPE_READ));
-
           builder.declarePosition();
         }
 
@@ -160,19 +161,19 @@ public class ShowThrottleQuotaTask implements IConfigTask {
             + File.separator
             + toTimeUnit(timedQuota.getTimeUnit());
       case IoTDBConstant.REQUEST_SIZE_PER_UNIT_TIME:
-        if (timedQuota.getSoftLimit() < 1024) {
+        if (timedQuota.getSoftLimit() < IoTDBConstant.KB) {
           return timedQuota.getSoftLimit()
-              + "B"
+              + IoTDBConstant.B_UNIT
               + File.separator
               + toTimeUnit(timedQuota.getTimeUnit());
-        } else if (timedQuota.getSoftLimit() < 1024 * 1024) {
-          return timedQuota.getSoftLimit() / 1024
-              + "K"
+        } else if (timedQuota.getSoftLimit() < IoTDBConstant.MB) {
+          return timedQuota.getSoftLimit() / IoTDBConstant.KB
+              + IoTDBConstant.KB_UNIT
               + File.separator
               + toTimeUnit(timedQuota.getTimeUnit());
         } else {
-          return timedQuota.getSoftLimit() / 1024 / 1024
-              + "M"
+          return timedQuota.getSoftLimit() / IoTDBConstant.KB / IoTDBConstant.KB
+              + IoTDBConstant.MB_UNIT
               + File.separator
               + toTimeUnit(timedQuota.getTimeUnit());
         }
@@ -183,14 +184,14 @@ public class ShowThrottleQuotaTask implements IConfigTask {
 
   private static String toTimeUnit(long timeUnit) {
     switch ((int) timeUnit) {
-      case 1000:
-        return "sec";
-      case 60 * 1000:
-        return "min";
-      case 60 * 60 * 1000:
-        return "hour";
-      case 24 * 60 * 60 * 1000:
-        return "day";
+      case IoTDBConstant.SEC:
+        return IoTDBConstant.SEC_UNIT;
+      case IoTDBConstant.MIN:
+        return IoTDBConstant.MIN_UNIT;
+      case IoTDBConstant.HOUR:
+        return IoTDBConstant.HOUR_UNIT;
+      case IoTDBConstant.DAY:
+        return IoTDBConstant.DAY_UNIT;
       default:
         throw new IllegalArgumentException("Wrong unit type");
     }
