@@ -31,7 +31,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TRatisConfig;
 import org.apache.iotdb.db.audit.AuditLogOperation;
 import org.apache.iotdb.db.audit.AuditLogStorage;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
-import org.apache.iotdb.db.schemaengine.rescon.DataNodeSchemaQuotaManager;
 import org.apache.iotdb.db.service.metrics.IoTDBInternalLocalReporter;
 import org.apache.iotdb.db.storageengine.StorageEngine;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.performer.constant.CrossCompactionPerformer;
@@ -207,17 +206,6 @@ public class IoTDBDescriptor {
   }
 
   public void loadProperties(Properties properties) throws BadNodeUrlException, IOException {
-    conf.setClusterSchemaLimitLevel(
-        properties
-            .getProperty("cluster_schema_limit_level", conf.getClusterSchemaLimitLevel())
-            .trim());
-    conf.setClusterSchemaLimitThreshold(
-        Long.parseLong(
-            properties
-                .getProperty(
-                    "cluster_schema_limit_threshold",
-                    Long.toString(conf.getClusterSchemaLimitThreshold()))
-                .trim()));
     conf.setClusterName(
         properties.getProperty(IoTDBConstant.CLUSTER_NAME, conf.getClusterName()).trim());
 
@@ -1775,20 +1763,6 @@ public class IoTDBDescriptor {
                   "enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
       // update compaction config
       loadCompactionHotModifiedProps(properties);
-
-      // update schema quota configuration
-      conf.setClusterSchemaLimitLevel(
-          properties
-              .getProperty("cluster_schema_limit_level", conf.getClusterSchemaLimitLevel())
-              .trim());
-      conf.setClusterSchemaLimitThreshold(
-          Long.parseLong(
-              properties
-                  .getProperty(
-                      "cluster_schema_limit_threshold",
-                      Long.toString(conf.getClusterSchemaLimitThreshold()))
-                  .trim()));
-      DataNodeSchemaQuotaManager.getInstance().updateConfiguration();
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }
