@@ -499,7 +499,7 @@ public class ConfigManager implements IManager {
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       List<TConfigNodeLocation> configNodeLocations = getNodeManager().getRegisteredConfigNodes();
       configNodeLocations.sort(Comparator.comparingInt(TConfigNodeLocation::getConfigNodeId));
-      List<TDataNodeLocation> dataNodeInfoLocations =
+      List<TDataNodeLocation> dataNodeLocations =
           getNodeManager().getRegisteredDataNodes().stream()
               .map(TDataNodeConfiguration::getLocation)
               .sorted(Comparator.comparingInt(TDataNodeLocation::getDataNodeId))
@@ -511,25 +511,21 @@ public class ConfigManager implements IManager {
               .collect(Collectors.toList());
       Map<Integer, TNodeVersionInfo> nodeVersionInfo = getNodeManager().getNodeVersionInfo();
       Map<Integer, String> nodeStatus = getLoadManager().getNodeStatusWithReason();
-      for (TConfigNodeLocation configNodeLocation : configNodeLocations) {
-        if (!nodeStatus.containsKey(configNodeLocation.getConfigNodeId())) {
-          nodeStatus.put(configNodeLocation.getConfigNodeId(), NodeStatus.Unknown.toString());
-        }
-      }
-      for (TDataNodeLocation dataNodeLocation : dataNodeInfoLocations) {
-        if (!nodeStatus.containsKey(dataNodeLocation.getDataNodeId())) {
-          nodeStatus.put(dataNodeLocation.getDataNodeId(), NodeStatus.Unknown.toString());
-        }
-      }
-      for (TMLNodeLocation mlNodeLocation : mlNodeInfoLocations) {
-        if (!nodeStatus.containsKey(mlNodeLocation.getMlNodeId())) {
-          nodeStatus.put(mlNodeLocation.getMlNodeId(), NodeStatus.Unknown.toString());
-        }
-      }
+      configNodeLocations.forEach(
+          configNodeLocation ->
+              nodeStatus.putIfAbsent(
+                  configNodeLocation.getConfigNodeId(), NodeStatus.Unknown.toString()));
+      dataNodeLocations.forEach(
+          dataNodeLocation ->
+              nodeStatus.putIfAbsent(
+                  dataNodeLocation.getDataNodeId(), NodeStatus.Unknown.toString()));
+      mlNodeInfoLocations.forEach(
+          mlNodeLocation ->
+              nodeStatus.putIfAbsent(mlNodeLocation.getMlNodeId(), NodeStatus.Unknown.toString()));
       return new TShowClusterResp(
           status,
           configNodeLocations,
-          dataNodeInfoLocations,
+          dataNodeLocations,
           mlNodeInfoLocations,
           nodeStatus,
           nodeVersionInfo);

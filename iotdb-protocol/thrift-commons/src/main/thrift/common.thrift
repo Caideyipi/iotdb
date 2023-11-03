@@ -175,6 +175,17 @@ struct TSetThrottleQuotaReq {
   2: required TThrottleQuota throttleQuota
 }
 
+struct TLicense {
+    1: required i64 licenseIssueTimestamp
+    2: required i64 expireTimestamp
+    4: required i16 dataNodeNumLimit
+    5: required i32 cpuCoreNumLimit
+    6: required i64 deviceNumLimit
+    7: required i64 sensorNumLimit
+    8: required i64 disconnectionFromActiveNodeTimeLimit
+    9: required i16 mlNodeNumLimit
+}
+
 struct TLoadSample {
   // Percentage of occupied cpu in DataNode
   1: required double cpuUsageRate

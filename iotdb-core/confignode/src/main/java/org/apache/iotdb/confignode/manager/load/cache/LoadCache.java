@@ -41,6 +41,7 @@ import org.apache.iotdb.confignode.manager.load.cache.region.RegionGroupStatisti
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionHeartbeatSample;
 import org.apache.iotdb.confignode.manager.load.cache.route.RegionRouteCache;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
+import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.slf4j.Logger;
@@ -136,12 +137,13 @@ public class LoadCache {
    * Cache the latest heartbeat sample of a ConfigNode.
    *
    * @param nodeId the id of the ConfigNode
-   * @param sample the latest heartbeat sample
+   * @param resp the heartbeat response
    */
-  public void cacheConfigNodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
+  public void cacheConfigNodeHeartbeatSample(int nodeId, TConfigNodeHeartbeatResp resp) {
+    long receiveTime = System.currentTimeMillis();
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new ConfigNodeHeartbeatCache(nodeId))
-        .cacheHeartbeatSample(sample);
+        .cacheHeartbeatSample(new NodeHeartbeatSample(resp, receiveTime));
   }
 
   /**

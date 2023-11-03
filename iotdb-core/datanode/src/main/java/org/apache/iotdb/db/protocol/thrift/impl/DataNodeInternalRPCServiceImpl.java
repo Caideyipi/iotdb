@@ -261,6 +261,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   private final DataNodeThrottleQuotaManager throttleQuotaManager =
       DataNodeThrottleQuotaManager.getInstance();
 
+  private final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
+
   private static final String SYSTEM = "system";
 
   public DataNodeInternalRPCServiceImpl() {
@@ -1188,9 +1190,9 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     }
     AuthorityChecker.getAuthorityFetcher().refreshToken();
     resp.setHeartbeatTimestamp(req.getHeartbeatTimestamp());
-    resp.setStatus(CommonDescriptor.getInstance().getConfig().getNodeStatus().getStatus());
-    if (CommonDescriptor.getInstance().getConfig().getStatusReason() != null) {
-      resp.setStatusReason(CommonDescriptor.getInstance().getConfig().getStatusReason());
+    resp.setStatus(commonConfig.getNodeStatus().getStatus());
+    if (commonConfig.getStatusReason() != null) {
+      resp.setStatusReason(commonConfig.getStatusReason());
     }
     if (req.getSchemaRegionIds() != null) {
       spaceQuotaManager.updateSpaceQuotaUsage(req.getSpaceQuotaUsage());
@@ -1272,8 +1274,6 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   }
 
   private void sampleDiskLoad(TLoadSample loadSample) {
-    final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
-
     double availableDisk =
         MetricService.getInstance()
             .getAutoGauge(
@@ -1367,7 +1367,6 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   @Override
   public TSStatus setSystemStatus(String status) throws TException {
     try {
-      final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
       commonConfig.setNodeStatus(NodeStatus.parse(status));
       if (commonConfig.getNodeStatus().equals(NodeStatus.Removing)) {
         PipeAgent.runtime().stop();

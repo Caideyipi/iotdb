@@ -610,7 +610,7 @@ public class NodeManager {
     List<TDataNodeConfiguration> registeredDataNodes = this.getRegisteredDataNodes();
     if (registeredDataNodes != null) {
       registeredDataNodes.forEach(
-          (registeredDataNode) -> {
+          registeredDataNode -> {
             TDataNodeInfo dataNodeInfo = new TDataNodeInfo();
             int dataNodeId = registeredDataNode.getLocation().getDataNodeId();
             dataNodeInfo.setDataNodeId(dataNodeId);
@@ -678,7 +678,7 @@ public class NodeManager {
     List<TConfigNodeLocation> registeredConfigNodes = this.getRegisteredConfigNodes();
     if (registeredConfigNodes != null) {
       registeredConfigNodes.forEach(
-          (configNodeLocation) -> {
+          configNodeLocation -> {
             TConfigNodeInfo info = new TConfigNodeInfo();
             int configNodeId = configNodeLocation.getConfigNodeId();
             info.setConfigNodeId(configNodeId);
