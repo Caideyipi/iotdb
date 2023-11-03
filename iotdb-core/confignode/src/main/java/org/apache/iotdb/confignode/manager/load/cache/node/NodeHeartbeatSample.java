@@ -24,7 +24,6 @@ import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.mlnode.rpc.thrift.TMLHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
-import org.apache.iotdb.mpp.rpc.thrift.TLoadSample;
 
 public class NodeHeartbeatSample {
 
