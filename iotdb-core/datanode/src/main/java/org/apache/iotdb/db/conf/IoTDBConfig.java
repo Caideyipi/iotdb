@@ -1415,7 +1415,7 @@ public class IoTDBConfig {
     return systemDir;
   }
 
-  void setSystemDir(String systemDir) {
+  public void setSystemDir(String systemDir) {
     this.systemDir = systemDir;
   }
 
@@ -1439,7 +1439,7 @@ public class IoTDBConfig {
     return queryDir;
   }
 
-  void setQueryDir(String queryDir) {
+  public void setQueryDir(String queryDir) {
     this.queryDir = queryDir;
   }
 
