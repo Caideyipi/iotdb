@@ -22,55 +22,69 @@
 @REM The defaulte venv environment is used if mln_interpreter_dir is not set. Please use absolute path without quotation mark
 @REM set mln_interpreter_dir=
 
-@REM Set mln_check_version to 1 to force reinstall MLNode
-set mln_check_version=0
+@REM Set mln_force_reinstall to 1 to force reinstall MLNode
+set mln_force_reinstall=0
 
+set ENV_SCRIPT_DIR=%~dp0
+
+:initial
+if "%1"=="" goto done
+set aux=%1
+if "%aux:~0,2%"=="-r" (
+    set mln_force_reinstall=1
+    shift
+    goto initial
+)
+if "%aux:~0,1%"=="-" (
+   set nome=%aux:~1,250%
+) else (
+   set "%nome%=%1"
+   set nome=
+)
+shift
+goto initial
+
+:done
 @REM check if the parameters are set
-if "%1"=="" (
-    echo No interpreter_dir is set, use default value.
-) else if "%1"=="0" (
+if "%i%"=="" (
     echo No interpreter_dir is set, use default value.
 ) else (
-    set mln_interpreter_dir=%1
+    set mln_interpreter_dir=%i%
 )
-if "%2"=="" (
-    echo No check_version is set, use default value.
-) else (
-    set mln_check_version=%2
-)
-echo Script got inputs: mln_interpreter_dir: %mln_interpreter_dir% , mln_check_version: %mln_check_version%
+
+echo Script got inputs: mln_interpreter_dir: %mln_interpreter_dir% , mln_force_reinstall: %mln_force_reinstall%
 if "%mln_interpreter_dir%"=="" (
-    %~dp0..//venv//Scripts//python.exe -c "import sys; print(sys.executable)" && (
+    %ENV_SCRIPT_DIR%//..//venv//Scripts//python.exe -c "import sys; print(sys.executable)" && (
         echo Activate default venv environment
     ) || (
         echo Creating default venv environment
-        python -m venv "%~dp0..//venv"
+        python -m venv "%ENV_SCRIPT_DIR%//..//venv"
     )
-    set mln_interpreter_dir="%~dp0..//venv//Scripts//python.exe"
+    set mln_interpreter_dir="%ENV_SCRIPT_DIR%//..//venv//Scripts//python.exe"
 )
 
 @REM Switch the working directory to the directory one level above the script
-cd %~dp0/../
-
+cd %ENV_SCRIPT_DIR%/../
 
 echo Confirming mlnode
 %mln_interpreter_dir% -m pip list | findstr /C:"apache-iotdb-mlnode" >nul
 if %errorlevel% == 0 (
-    if %mln_check_version% == 0 (
+    if %mln_force_reinstall% == 0 (
         echo MLNode is already installed
         exit /b 0
     )
 )
 
 echo Installing MLNode...
+@REM Print current work dir
 cd lib
 for %%i in (*.whl) do (
-    @REM if mln_check_version is 1 then force reinstall MLNode
-    if %mln_check_version% == 1 (
+    @REM if mln_force_reinstall is 1 then force reinstall MLNode
+    if %mln_force_reinstall% == 1 (
         echo Force reinstall %%i
-        %mln_interpreter_dir% -m pip install %%i --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple
+        %mln_interpreter_dir% -m pip install %%i --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
     ) else (
-        %mln_interpreter_dir% -m pip install %%i -i https://pypi.tuna.tsinghua.edu.cn/simple
+        %mln_interpreter_dir% -m pip install %%i -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
     )
     if %errorlevel% == 0 (
         echo MLNode is installed successfully

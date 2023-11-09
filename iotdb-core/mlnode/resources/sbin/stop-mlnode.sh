@@ -37,7 +37,6 @@ else
 fi
 
 PID_VERIFY=$(ps ax | grep -i 'mlnode' | grep -v grep | awk '{print $1}')
-echo "PID_VERIFY:" "$PID_VERIFY"
 if [ -z "$PID" ]; then
   echo "No MLNode to stop"
   if [ "$(id -u)" -ne 0 ]; then

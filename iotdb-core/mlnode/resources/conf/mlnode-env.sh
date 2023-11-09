@@ -21,24 +21,35 @@
 # The defaulte venv environment is used if mln_interpreter_dir is not set. Please use absolute path without quotation mark
 # mln_interpreter_dir=
 
-# Set mln_check_version to 1 to force reinstall MLNode
-mln_check_version=0
+# Set mln_force_reinstall to 1 to force reinstall MLNode
+mln_force_reinstall=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-if [ -z "$1" ]; then
-  echo "No interpreter_dir is set, use default value."
-elif [ "$1" -eq "0" ]; then
+# fetch parameters with names
+while getopts "i:r" opt; do
+  case $opt in
+    i) p_mln_interpreter_dir="$OPTARG"
+    ;;
+    r) p_mln_force_reinstall=1
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    exit 1
+    ;;
+  esac
+done
+
+if [ -z "$p_mln_interpreter_dir" ]; then
   echo "No interpreter_dir is set, use default value."
 else
-  mln_interpreter_dir="$1"
+  mln_interpreter_dir="$p_mln_interpreter_dir"
 fi
 
-if [ -z "$2" ]; then
+if [ -z "$p_mln_force_reinstall" ]; then
   echo "No check_version is set, use default value."
 else
-  mln_check_version="$2"
+  mln_force_reinstall="$p_mln_force_reinstall"
 fi
-echo Script got inputs: "mln_interpreter_dir: $mln_interpreter_dir", "mln_check_version: $mln_check_version"
+echo Script got inputs: "mln_interpreter_dir: $mln_interpreter_dir", "mln_force_reinstall: $mln_force_reinstall"
 
 if [ -z $mln_interpreter_dir ]; then
   $(dirname "$0")/../venv/bin/python3 -c "import sys; print(sys.executable)" &&
@@ -55,7 +66,7 @@ cd "$SCRIPT_DIR/.."
 echo "Confirming MLNode..."
 $mln_interpreter_dir -m pip list | grep "apache-iotdb-mlnode" >/dev/null
 if [ $? -eq 0 ]; then
-  if [ $mln_check_version -eq 0 ]; then
+  if [ $mln_force_reinstall -eq 0 ]; then
     echo "MLNode is already installed"
     exit 0
   fi
@@ -64,12 +75,12 @@ fi
 echo "Installing MLNode..."
 cd "$SCRIPT_DIR/../lib/"
 for i in *.whl; do
-  # if mln_check_version is 1 then force reinstall MLNode
-  if [ $mln_check_version -eq 1 ]; then
+  # if mln_force_reinstall is 1 then force reinstall MLNode
+  if [ $mln_force_reinstall -eq 1 ]; then
     echo Force reinstall $i
-    $mln_interpreter_dir -m pip install "$i" --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $mln_interpreter_dir -m pip install "$i" --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
   else
-    $mln_interpreter_dir -m pip install "$i" -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $mln_interpreter_dir -m pip install "$i" -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
   fi
   if [ $? -eq 0 ]; then
     echo "MLNode is installed successfully"

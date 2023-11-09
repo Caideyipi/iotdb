@@ -23,25 +23,44 @@ echo ```````````````````````````
 echo Starting IoTDB MLNode
 echo ```````````````````````````
 
-call %~dp0..\\conf\\mlnode-env.bat %*
+set START_SCRIPT_DIR=%~dp0
+call %START_SCRIPT_DIR%\\..\\conf\\mlnode-env.bat %*
 if %errorlevel% neq 0 (
     echo Environment check failed. Exiting...
     exit /b 1
 )
 
-for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_interpreter_dir" "%~dp0..\\conf\\mlnode-env.bat"') do (
+for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_interpreter_dir" "%START_SCRIPT_DIR%\\..\\conf\\mlnode-env.bat"') do (
     set _mln_interpreter_dir=%%a
     goto :done
 )
 
-:done
-if "%_mln_interpreter_dir%"=="" (
-    set _mln_interpreter_dir=%~dp0..\\venv\\Scripts\\python.exe
+:initial
+if "%1"=="" goto done
+set aux=%1
+if "%aux:~0,1%"=="-" (
+   set nome=%aux:~1,250%
+) else (
+   set "%nome%=%1"
+   set nome=
 )
+shift
+goto initial
+
+:done
+if "%i%"=="" (
+    if "%_mln_interpreter_dir%"=="" (
+        set _mln_interpreter_dir=%START_SCRIPT_DIR%\\..\\venv\\Scripts\\python.exe
+    )
+) else (
+    set _mln_interpreter_dir=%i%
+)
+
 echo Script got parameter: mln_interpreter_dir: %_mln_interpreter_dir%
-cd %~dp0..
+cd %START_SCRIPT_DIR%\\..
 for %%i in ("%_mln_interpreter_dir%") do set "parent=%%~dpi"
 set mln_mlnode_dir=%parent%\mlnode.exe
+echo Starting MLNode...
 %mln_mlnode_dir% start
 
 pause

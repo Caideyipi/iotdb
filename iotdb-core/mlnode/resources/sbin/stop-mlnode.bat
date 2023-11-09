@@ -38,5 +38,3 @@ for /f "tokens=5" %%a in ('netstat /ano ^| findstr /r /c:"^ *TCP *%mln_inference
   taskkill /f /pid %%a
   echo Close MLNode, PID: %%a
 )
-
-pause

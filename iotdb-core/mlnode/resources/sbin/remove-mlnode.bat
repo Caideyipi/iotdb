@@ -17,38 +17,58 @@
 @REM under the License.
 @REM
 
+@echo off
+
 echo ```````````````````````````
 echo Removing IoTDB MLNode
 echo ```````````````````````````
 
-call %~dp0..\\conf\\mlnode-env.bat %*
+set REMOVE_SCRIPT_DIR=%~dp0
+call %REMOVE_SCRIPT_DIR%\\..\\conf\\mlnode-env.bat %*
 if %errorlevel% neq 0 (
     echo Environment check failed. Exiting...
     exit /b 1
 )
 
-for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_interpreter_dir" "%~dp0..\\conf\\mlnode-env.bat"') do (
+for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_interpreter_dir" "%REMOVE_SCRIPT_DIR%\\..\\conf\\mlnode-env.bat"') do (
     set _mln_interpreter_dir=%%a
     goto :interpreter
 )
 
+:initial
+if "%1"=="" goto interpreter
+set aux=%1
+if "%aux:~0,1%"=="-" (
+   set nome=%aux:~1,250%
+) else (
+   set "%nome%=%1"
+   set nome=
+)
+shift
+goto initial
+
 :interpreter
-if "%_mln_interpreter_dir%"=="" (
-    set _mln_interpreter_dir=%~dp0..\\venv\\Scripts\\python.exe
+if "%i%"=="" (
+    if "%_mln_interpreter_dir%"=="" (
+        set _mln_interpreter_dir=%REMOVE_SCRIPT_DIR%\\..\\venv\\Scripts\\python.exe
+    )
+) else (
+    set _mln_interpreter_dir=%i%
 )
 
-for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_system_dir" "%~dp0..\\conf\\iotdb-mlnode.properties"') do (
+
+for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_system_dir" "%REMOVE_SCRIPT_DIR%\\..\\conf\\iotdb-mlnode.properties"') do (
     set _mln_system_dir=%%a
     goto :system
 )
 
 :system
 if "%_mln_system_dir%"=="" (
-    set _mln_system_dir=%~dp0..\\data\\mlnode\\system
+    set _mln_system_dir=%REMOVE_SCRIPT_DIR%\\..\\data\\mlnode\\system
 )
 
 echo Script got parameters: mln_interpreter_dir: %_mln_interpreter_dir%, mln_system_dir: %_mln_system_dir%
-cd %~dp0..
+cd %REMOVE_SCRIPT_DIR%\\..
 for %%i in ("%_mln_interpreter_dir%") do set "parent=%%~dpi"
 set mln_mlnode_dir=%parent%\\mlnode.exe
 
@@ -59,7 +79,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-call %~dp0\\stop-mlnode.bat
+call %REMOVE_SCRIPT_DIR%\\stop-mlnode.bat
 
 rd /s /q %_mln_system_dir%
 

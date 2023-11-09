@@ -33,11 +33,30 @@ if [ $? -eq 1 ]; then
     exit 1
 fi
 
-# If mln_interpreter_dir is empty, set default value to ../venv/bin/python3
-if [ -z "$mln_interpreter_dir" ]
-then
-  mln_interpreter_dir="$SCRIPT_DIR/../venv/bin/python3"
+# fetch parameters with names
+while getopts "i:r" opt; do
+  case $opt in
+    i) p_mln_interpreter_dir="$OPTARG"
+    ;;
+    r) p_mln_force_reinstall="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    exit 1
+    ;;
+  esac
+done
+
+# If mln_interpreter_dir in parameters is empty:
+if [ -z "$p_mln_interpreter_dir" ]; then
+  # If mln_interpreter_dir in ../conf/mlnode-env.sh is empty, set default value to ../venv/bin/python3
+  if [ -z "$mln_interpreter_dir" ]; then
+    mln_interpreter_dir="$SCRIPT_DIR/../venv/bin/python3"
+  fi
+else
+  # If mln_interpreter_dir in parameters is not empty, set mln_interpreter_dir to the value in parameters
+  mln_interpreter_dir="$p_mln_interpreter_dir"
 fi
+
 # If mln_system_dir is empty, set default value to ../data/mlnode/system
 if [ -z "$mln_system_dir" ]
 then
