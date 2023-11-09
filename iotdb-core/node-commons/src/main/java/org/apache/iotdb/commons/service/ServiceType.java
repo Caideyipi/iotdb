@@ -20,6 +20,7 @@
 package org.apache.iotdb.commons.service;
 
 public enum ServiceType {
+  LICENSE_CHECK_SERVICE("Enterprise License Check Service", "LicenseCheckService"),
   STORAGE_ENGINE_SERVICE("Storage Engine ServerService", "StorageEngine"),
   JMX_SERVICE("JMX ServerService", "JMX ServerService"),
   METRIC_SERVICE("Metrics ServerService", "MetricService"),

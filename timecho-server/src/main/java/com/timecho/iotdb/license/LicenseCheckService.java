@@ -66,7 +66,7 @@ public class LicenseCheckService implements Runnable, IService {
 
   @Override
   public ServiceType getID() {
-    return null;
+    return ServiceType.LICENSE_CHECK_SERVICE;
   }
 
   @Override
