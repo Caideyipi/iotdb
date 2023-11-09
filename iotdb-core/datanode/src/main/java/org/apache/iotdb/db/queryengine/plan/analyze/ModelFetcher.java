@@ -26,7 +26,7 @@ import org.apache.iotdb.commons.consensus.ConfigRegionId;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
-import org.apache.iotdb.db.exception.sql.SemanticException;
+import org.apache.iotdb.db.exception.mlnode.ModelNotFoundException;
 import org.apache.iotdb.db.exception.sql.StatementAnalyzeException;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
@@ -71,7 +71,7 @@ public class ModelFetcher implements IModelFetcher {
           return new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode());
         }
       } else {
-        throw new SemanticException(getModelInfoResp.getStatus().getMessage());
+        throw new ModelNotFoundException(getModelInfoResp.getStatus().getMessage());
       }
     } catch (ClientManagerException | TException e) {
       throw new StatementAnalyzeException(e.getMessage());

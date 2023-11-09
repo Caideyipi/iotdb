@@ -1985,6 +1985,10 @@ public class ConfigManager implements IManager {
   @Override
   public TSStatus createModel(TCreateModelReq req) {
     TSStatus status = confirmLeader();
+    if (nodeManager.getRegisteredMLNodes().isEmpty()) {
+      return new TSStatus(TSStatusCode.NO_REGISTERED_ML_NODE_ERROR.getStatusCode())
+          .setMessage("There is no available MLNode! Try to start one.");
+    }
     return status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
         ? modelManager.createModel(req)
         : status;

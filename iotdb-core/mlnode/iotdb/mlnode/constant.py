@@ -22,6 +22,7 @@ from typing import List
 MLNODE_CONF_DIRECTORY_NAME = "conf"
 MLNODE_CONF_FILE_NAME = "iotdb-mlnode.properties"
 MLNODE_CONF_GIT_FILE_NAME = "git.properties"
+MLNODE_CONF_POM_FILE_NAME = "pom.properties"
 MLNODE_SYSTEM_FILE_NAME = "system.properties"
 # inference_rpc_address
 MLNODE_INFERENCE_RPC_ADDRESS = "127.0.0.1"

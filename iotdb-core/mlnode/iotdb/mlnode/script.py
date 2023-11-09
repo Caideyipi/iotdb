@@ -15,15 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
-import shutil
 import sys
+
+from iotdb.thrift.common.ttypes import TMLNodeLocation, TEndPoint
+
 from iotdb.mlnode.client import client_manager
 from iotdb.mlnode.config import descriptor
 from iotdb.mlnode.constant import TSStatusCode
 from iotdb.mlnode.log import logger
 from iotdb.mlnode.service import MLNode
-from iotdb.thrift.common.ttypes import TMLNodeLocation, TEndPoint
 
 server: MLNode = None
 

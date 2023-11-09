@@ -17,19 +17,18 @@
 #
 
 import json
-import multiprocessing
 import os
 import shutil
 import threading
 from typing import Dict, Tuple
 from urllib.parse import urljoin, urlparse
 
+import requests
 import torch
 import torch.nn as nn
-from pylru import lrucache
-import requests
-from requests.adapters import HTTPAdapter
 import yaml
+from pylru import lrucache
+from requests.adapters import HTTPAdapter
 
 from iotdb.mlnode.config import descriptor
 from iotdb.mlnode.constant import (OptionsKey, DEFAULT_MODEL_FILE_NAME,
@@ -37,8 +36,8 @@ from iotdb.mlnode.constant import (OptionsKey, DEFAULT_MODEL_FILE_NAME,
                                    DEFAULT_RECONNECT_TIMES, DEFAULT_CHUNK_SIZE)
 from iotdb.mlnode.exception import ModelNotExistError, InvaildUriError
 from iotdb.mlnode.log import logger
-from iotdb.mlnode.util import pack_input_dict
 from iotdb.mlnode.parser import parse_inference_config
+from iotdb.mlnode.util import pack_input_dict
 
 
 class ModelStorage(object):
@@ -78,7 +77,7 @@ class ModelStorage(object):
         is_network_path = parse_result.scheme in ('http', 'https')
         if is_network_path:
             return True, uri
-        
+
         # handle file:// in uri
         if parse_result.scheme == 'file':
             uri = uri[7:]
@@ -207,7 +206,7 @@ class ModelStorage(object):
         storage_path = os.path.join(self.__model_dir, f'{model_id}')
         model_storage_path = os.path.join(storage_path, DEFAULT_MODEL_FILE_NAME)
         config_storage_path = os.path.join(storage_path, DEFAULT_CONFIG_FILE_NAME)
-        
+
         is_network_path, uri = self._parse_uri(uri)
 
         if is_network_path:

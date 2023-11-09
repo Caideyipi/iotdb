@@ -19,15 +19,6 @@ import time
 from typing import Dict, List
 
 import pandas as pd
-from thrift.protocol import TCompactProtocol, TBinaryProtocol
-from thrift.Thrift import TException
-from thrift.transport import TSocket, TTransport
-
-from iotdb.mlnode import serde
-from iotdb.mlnode.config import descriptor
-from iotdb.mlnode.constant import TSStatusCode
-from iotdb.mlnode.log import logger
-from iotdb.mlnode.util import verify_success
 from iotdb.thrift.common.ttypes import TEndPoint, TrainingState, TSStatus, TMLNodeLocation, TMLNodeConfiguration
 from iotdb.thrift.confignode import IConfigNodeRPCService
 from iotdb.thrift.confignode.ttypes import (TUpdateModelInfoReq,
@@ -37,6 +28,15 @@ from iotdb.thrift.datanode import IMLNodeInternalRPCService
 from iotdb.thrift.datanode.ttypes import (TFetchMoreDataReq,
                                           TFetchTimeseriesReq,
                                           TRecordModelMetricsReq)
+from thrift.Thrift import TException
+from thrift.protocol import TCompactProtocol, TBinaryProtocol
+from thrift.transport import TSocket, TTransport
+
+from iotdb.mlnode import serde
+from iotdb.mlnode.config import descriptor
+from iotdb.mlnode.constant import TSStatusCode
+from iotdb.mlnode.log import logger
+from iotdb.mlnode.util import verify_success
 
 
 class ClientManager(object):

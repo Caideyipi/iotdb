@@ -15,14 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
 
 import torch
+from iotdb.thrift.common.ttypes import TEndPoint, TSStatus
 
 from iotdb.mlnode.constant import TSStatusCode, ModelInputName
 from iotdb.mlnode.exception import BadNodeUrlError
 from iotdb.mlnode.log import logger
-from iotdb.thrift.common.ttypes import TEndPoint, TSStatus
 
 
 def parse_endpoint_url(endpoint_url: str) -> TEndPoint:

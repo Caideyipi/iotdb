@@ -28,13 +28,12 @@ from iotdb.mlnode.algorithm.factory import create_forecast_model
 from iotdb.mlnode.algorithm.hyperparameter import HyperparameterName
 from iotdb.mlnode.algorithm.metric import build_metrics, forecast_metric_names
 from iotdb.mlnode.client import client_manager
-from iotdb.mlnode.constant import OptionsKey, ModelInputName
+from iotdb.mlnode.constant import OptionsKey
 from iotdb.mlnode.dataset.dataset import TsForecastDataset
 from iotdb.mlnode.log import logger
 from iotdb.mlnode.parser import ForecastTaskOptions
 from iotdb.mlnode.storage import model_storage
 from iotdb.mlnode.util import pack_input_dict
-from iotdb.thrift.common.ttypes import TrainingState
 
 
 class BasicTrial(object):

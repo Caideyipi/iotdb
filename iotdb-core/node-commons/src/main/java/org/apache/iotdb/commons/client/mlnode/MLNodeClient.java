@@ -25,6 +25,7 @@ import org.apache.iotdb.commons.client.ClientManager;
 import org.apache.iotdb.commons.client.ThriftClient;
 import org.apache.iotdb.commons.client.factory.ThriftClientFactory;
 import org.apache.iotdb.commons.client.property.ThriftClientProperty;
+import org.apache.iotdb.commons.exception.mlnode.LoadModelException;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.mlnode.rpc.thrift.IMLNodeRPCService;
 import org.apache.iotdb.mlnode.rpc.thrift.TConfigs;
@@ -106,12 +107,12 @@ public class MLNodeClient implements AutoCloseable, ThriftClient {
     return transport;
   }
 
-  public ModelInformation registerModel(String modelName, String uri) {
+  public ModelInformation registerModel(String modelName, String uri) throws LoadModelException {
     try {
       TRegisterModelReq req = new TRegisterModelReq(uri, modelName);
       TRegisterModelResp resp = client.registerModel(req);
       if (resp.status.code != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        return null;
+        throw new LoadModelException(resp.status.message, resp.status.getCode());
       }
       return parseModelInformation(modelName, resp.getAttributes(), resp.getConfigs());
     } catch (TException e) {
@@ -119,7 +120,8 @@ public class MLNodeClient implements AutoCloseable, ThriftClient {
           "Failed to connect to MLNode from ConfigNode when executing {}: {}",
           Thread.currentThread().getStackTrace()[1].getMethodName(),
           e.getMessage());
-      return null;
+      throw new LoadModelException(
+          e.getMessage(), TSStatusCode.ML_NODE_INTERNAL_ERROR.getStatusCode());
     }
   }
 

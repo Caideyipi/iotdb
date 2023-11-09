@@ -15,12 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+import inspect
 import logging
+import multiprocessing
 import os
 import random
 import sys
-import multiprocessing
-import inspect
+
 from iotdb.mlnode.constant import MLNODE_LOG_DIR, STD_LEVEL, MLNODE_LOG_FILE_NAMES, MLNODE_LOG_FILE_LEVELS
 
 
@@ -45,7 +46,6 @@ class LoggerFilter(logging.Filter):
             if file_name[i:].startswith("iotdb/") or file_name[i:].startswith("iotdb\\"):
                 file_name = file_name[i:]
                 break
-
 
         stack_info += f"{file_name}:{frame_info.lineno}-{frame_info.function}"
 

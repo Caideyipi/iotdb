@@ -20,7 +20,11 @@ import sys
 import threading
 import time
 from datetime import datetime
+
 import psutil
+from iotdb.thrift.common.ttypes import TMLNodeConfiguration, TMLNodeLocation, TEndPoint, TNodeResource
+from iotdb.thrift.confignode.ttypes import TNodeVersionInfo
+from iotdb.thrift.mlnode import IMLNodeRPCService
 from thrift.protocol import TCompactProtocol, TBinaryProtocol
 from thrift.server import TServer
 from thrift.transport import TSocket, TTransport
@@ -30,9 +34,6 @@ from iotdb.mlnode.config import descriptor
 from iotdb.mlnode.constant import MLNODE_SYSTEM_FILE_NAME
 from iotdb.mlnode.handler import MLNodeRPCServiceHandler
 from iotdb.mlnode.log import logger
-from iotdb.thrift.common.ttypes import TMLNodeConfiguration, TMLNodeLocation, TEndPoint, TNodeResource
-from iotdb.thrift.confignode.ttypes import TNodeVersionInfo
-from iotdb.thrift.mlnode import IMLNodeRPCService
 
 
 class RPCService(threading.Thread):

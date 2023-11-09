@@ -25,19 +25,19 @@ import numpy as np
 import optuna
 import pandas as pd
 import torch
+from iotdb.thrift.common.ttypes import TrainingState
 
 from iotdb.mlnode.algorithm.hyperparameter import (generate_hyperparameters,
                                                    parse_fixed_hyperparameters)
 from iotdb.mlnode.client import client_manager
 from iotdb.mlnode.config import descriptor
-from iotdb.mlnode.constant import DEFAULT_TRIAL_ID, TRIAL_ID_PREFIX, OptionsKey, ModelInputName
+from iotdb.mlnode.constant import DEFAULT_TRIAL_ID, TRIAL_ID_PREFIX, OptionsKey
 from iotdb.mlnode.dataset.dataset import TsForecastDataset
 from iotdb.mlnode.log import logger
 from iotdb.mlnode.parser import ForecastTaskOptions
 from iotdb.mlnode.process.trial import ForecastingTrainingTrial
 from iotdb.mlnode.storage import model_storage
 from iotdb.mlnode.util import pack_input_dict
-from iotdb.thrift.common.ttypes import TrainingState
 
 
 class _BasicTask(object):

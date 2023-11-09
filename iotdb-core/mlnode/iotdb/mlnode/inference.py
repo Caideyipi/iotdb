@@ -17,9 +17,10 @@
 #
 import pandas as pd
 import torch
-from iotdb.mlnode.storage import model_storage
+
 from iotdb.mlnode.exception import InvalidWindowArgumentError, InferenceModelInternalError
 from iotdb.mlnode.log import logger
+from iotdb.mlnode.storage import model_storage
 
 
 def inference(model_id, full_data, window_interval, window_step):
@@ -90,7 +91,7 @@ def process_data(full_data):
         data points, C is the number of variables, the data and time_stamp are aligned by index. The module will also
         convert the data type of each column to the corresponding type.
     """
-    data, time_stamp, type_list, column_name_list = full_data
+    data, time_stamp, type_list, _ = full_data
     data_length = time_stamp.shape[0]
     data = data.fillna(0)
     for i in range(len(type_list)):

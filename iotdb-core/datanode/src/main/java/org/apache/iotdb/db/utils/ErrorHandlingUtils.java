@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.exception.IoTDBException;
 import org.apache.iotdb.db.exception.BatchProcessException;
 import org.apache.iotdb.db.exception.QueryInBatchStatementException;
 import org.apache.iotdb.db.exception.StorageGroupNotReadyException;
+import org.apache.iotdb.db.exception.mlnode.ModelException;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.exception.query.QueryTimeoutRuntimeException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
@@ -134,6 +135,8 @@ public class ErrorHandlingUtils {
             ((IoTDBException) t.getCause()).getErrorCode(), rootCause.getMessage());
       }
       return RpcUtils.getStatus(TSStatusCode.SEMANTIC_ERROR, rootCause.getMessage());
+    } else if (t instanceof ModelException) {
+      return RpcUtils.getStatus(((ModelException) t).getStatusCode(), rootCause.getMessage());
     }
 
     if (t instanceof RuntimeException && rootCause instanceof IoTDBException) {

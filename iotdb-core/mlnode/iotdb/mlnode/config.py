@@ -15,21 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import multiprocessing
 import os
 
-from dynaconf import Dynaconf
+from iotdb.thrift.common.ttypes import TEndPoint
 
 from iotdb.mlnode.constant import (MLNODE_CONF_DIRECTORY_NAME,
                                    MLNODE_CONF_FILE_NAME,
                                    MLNODE_MODELS_DIR, MLNODE_LOG_DIR, MLNODE_SYSTEM_DIR, MLNODE_INFERENCE_RPC_ADDRESS,
                                    MLNODE_INFERENCE_RPC_PORT, MLNODE_THRIFT_COMPRESSION_ENABLED,
                                    MLNODE_SYSTEM_FILE_NAME, MLNODE_CLUSTER_NAME, MLNODE_VERSION_INFO, MLNODE_BUILD_INFO,
-                                   MLNODE_CONF_GIT_FILE_NAME)
+                                   MLNODE_CONF_GIT_FILE_NAME, MLNODE_CONF_POM_FILE_NAME)
 from iotdb.mlnode.exception import BadNodeUrlError
 from iotdb.mlnode.log import logger, set_logger
 from iotdb.mlnode.util import parse_endpoint_url
-from iotdb.thrift.common.ttypes import TEndPoint
 
 
 class MLNodeConfig(object):
@@ -91,6 +89,9 @@ class MLNodeConfig(object):
 
     def set_build_info(self, build_info: str) -> None:
         self.__build_info = build_info
+
+    def set_version_info(self, version_info: str) -> None:
+        self.__version_info = version_info
 
     def get_mln_inference_rpc_address(self) -> str:
         return self.__mln_inference_rpc_address
@@ -208,6 +209,12 @@ class MLNodeDescriptor(object):
             if git_configs['git.commit.id.abbrev'] is not None:
                 self.__config.set_build_info(git_configs['git.commit.id.abbrev'])
 
+        pom_file = os.path.join(MLNODE_CONF_DIRECTORY_NAME, MLNODE_CONF_POM_FILE_NAME)
+        if os.path.exists(pom_file):
+            pom_configs = self.load_properties(pom_file)
+            if pom_configs['version'] is not None:
+                self.__config.set_version_info(pom_configs['version'])
+
         conf_file = os.path.join(MLNODE_CONF_DIRECTORY_NAME, MLNODE_CONF_FILE_NAME)
         if not os.path.exists(conf_file):
             logger.info("Cannot find MLNode config file '{}', use default configuration.".format(conf_file))
@@ -256,4 +263,3 @@ class MLNodeDescriptor(object):
 
 # initialize a singleton
 descriptor = MLNodeDescriptor()
-

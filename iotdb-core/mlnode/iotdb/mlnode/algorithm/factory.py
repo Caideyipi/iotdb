@@ -26,7 +26,6 @@ from iotdb.mlnode.algorithm.models.forecast.dlinear import (DLinear,
 from iotdb.mlnode.algorithm.models.forecast.nbeats import NBeats
 from iotdb.mlnode.constant import ForecastModelType, OptionsKey
 from iotdb.mlnode.exception import BadConfigValueError
-from iotdb.mlnode.parser import ForecastTaskOptions
 
 
 def create_forecast_model(

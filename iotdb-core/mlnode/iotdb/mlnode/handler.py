@@ -18,6 +18,12 @@
 from typing import cast
 
 import psutil
+from iotdb.thrift.common.ttypes import TLoadSample
+from iotdb.thrift.mlnode import IMLNodeRPCService
+from iotdb.thrift.mlnode.ttypes import (TCreateTrainingTaskReq,
+                                        TDeleteModelReq, TRegisterModelReq,
+                                        TRegisterModelResp, TMlHeartbeatReq, TMLHeartbeatResp,
+                                        TInferenceReq, TInferenceResp)
 
 from iotdb.mlnode.constant import TaskType, TSStatusCode
 from iotdb.mlnode.dataset.dataset import TsForecastDataset
@@ -30,13 +36,6 @@ from iotdb.mlnode.parser import (ForecastTaskOptions,
 from iotdb.mlnode.serde import convert_to_binary
 from iotdb.mlnode.storage import model_storage
 from iotdb.mlnode.util import get_status
-from iotdb.thrift.common.ttypes import TLoadSample
-from iotdb.thrift.mlnode import IMLNodeRPCService
-from iotdb.thrift.mlnode.ttypes import (TCreateTrainingTaskReq,
-                                        TDeleteModelReq, TRegisterModelReq,
-                                        TRegisterModelResp, TConfigs,
-                                        TMlHeartbeatReq, TMLHeartbeatResp,
-                                        TInferenceReq, TInferenceResp)
 
 
 class MLNodeRPCServiceHandler(IMLNodeRPCService.Iface):
@@ -52,15 +51,15 @@ class MLNodeRPCServiceHandler(IMLNodeRPCService.Iface):
         except InvaildUriError as e:
             logger.warning(e)
             model_storage.delete_model(req.modelId)
-            return TRegisterModelResp(get_status(TSStatusCode.INVALID_URI_ERROR), TConfigs())
+            return TRegisterModelResp(get_status(TSStatusCode.INVALID_URI_ERROR, e.message))
         except BadConfigValueError as e:
             logger.warning(e)
             model_storage.delete_model(req.modelId)
-            return TRegisterModelResp(get_status(TSStatusCode.INVALID_INFERENCE_CONFIG),TConfigs())
+            return TRegisterModelResp(get_status(TSStatusCode.INVALID_INFERENCE_CONFIG, e.message))
         except Exception as e:
             logger.warning(e)
             model_storage.delete_model(req.modelId)
-            return TRegisterModelResp(get_status(TSStatusCode.MLNODE_INTERNAL_ERROR),TConfigs())
+            return TRegisterModelResp(get_status(TSStatusCode.MLNODE_INTERNAL_ERROR))
 
     def deleteModel(self, req: TDeleteModelReq):
         logger.debug(f"delete model {req.modelId}")

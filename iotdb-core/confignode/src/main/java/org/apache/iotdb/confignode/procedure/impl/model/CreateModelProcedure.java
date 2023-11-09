@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.client.mlnode.MLNodeClient;
 import org.apache.iotdb.commons.client.mlnode.MLNodeClientManager;
+import org.apache.iotdb.commons.exception.mlnode.LoadModelException;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.commons.model.ModelStatus;
 import org.apache.iotdb.commons.model.exception.ModelManagementException;
@@ -60,6 +61,8 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
   private ModelInformation modelInformation = null;
 
   private List<Integer> mlNodeIds;
+
+  private String loadErrorMsg = "";
 
   public CreateModelProcedure() {
     super();
@@ -101,7 +104,7 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
             "Retrievable error trying to create model [{}], state [{}]", modelName, state, e);
         if (getCycles() > RETRY_THRESHOLD) {
           modelInformation = new ModelInformation(modelName, ModelStatus.FAILED);
-          modelInformation.setAttribute(e.getMessage());
+          modelInformation.setAttribute(loadErrorMsg);
           updateModel(env);
           setFailure(
               new ProcedureException(
@@ -145,26 +148,22 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
           MLNodeClientManager.getInstance()
               .borrowClient(curNodeConfig.getLocation().getInternalEndPoint())) {
         ModelInformation resp = client.registerModel(modelName, uri);
-        if (resp != null) {
-          checkModelInformationEquals(resp);
-          mlNodeIds.add(curNodeConfig.getLocation().mlNodeId);
-        } else {
-          LOGGER.warn(
-              "Failed to load model on MLNode {} from ConfigNode",
-              curNodeConfig.getLocation().getInternalEndPoint());
-        }
+        checkModelInformationEquals(resp);
+        mlNodeIds.add(curNodeConfig.getLocation().mlNodeId);
+      } catch (LoadModelException e) {
+        LOGGER.warn(e.getMessage());
+        loadErrorMsg = e.getMessage();
       } catch (Exception e) {
         LOGGER.warn(
             "Failed to load model on MLNode {} from ConfigNode",
             curNodeConfig.getLocation().getInternalEndPoint());
+        loadErrorMsg = e.getMessage();
       }
     }
 
     if (mlNodeIds.isEmpty()) {
       throw new ModelManagementException(
-          String.format(
-              "Failed to load model [%s] on ML Nodes, check if there is model file in any MLNode",
-              modelName));
+          String.format("CREATE MODEL [%s] failed on all MLNodes:[%s]", modelName, loadErrorMsg));
     }
   }
 

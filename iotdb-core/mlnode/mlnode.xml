@@ -46,9 +46,6 @@
             <source>${maven.multiModuleProjectDirectory}/NOTICE-binary</source>
             <destName>NOTICE</destName>
         </file>
-        <!--        <file>-->
-        <!--            <source>${maven.multiModuleProjectDirectory}/RELEASE_NOTES.md</source>-->
-        <!--        </file>-->
     </files>
     <fileSets>
         <fileSet>
@@ -69,6 +66,13 @@
         </fileSet>
         <fileSet>
             <directory>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/target/classes</directory>
+            <outputDirectory>conf</outputDirectory>
+            <includes>
+                <include>*.properties</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/target/maven-archiver</directory>
             <outputDirectory>conf</outputDirectory>
             <includes>
                 <include>*.properties</include>

@@ -19,11 +19,12 @@ import argparse
 from abc import abstractmethod
 from typing import Dict
 
+from iotdb.thrift.mlnode.ttypes import TInferenceReq, TConfigs
+
 from iotdb.mlnode.constant import OptionsKey, TaskType, ForecastModelType
 from iotdb.mlnode.exception import (MissingOptionError, RedundantOptionError,
                                     UnsupportedError, BadConfigValueError)
 from iotdb.mlnode.serde import convert_to_df, get_data_type_byte_from_str
-from iotdb.thrift.mlnode.ttypes import TInferenceReq, TConfigs, TWindowParams
 
 
 class TaskOptions(object):
@@ -98,7 +99,8 @@ def parse_inference_config(config_dict):
 
     # check if input_shape and output_shape are two-dimensional array
     if not (isinstance(configs['input_shape'], list) and len(configs['input_shape']) == 2):
-        raise BadConfigValueError('input_shape', configs['input_shape'], 'input_shape should be a two-dimensional array.')
+        raise BadConfigValueError('input_shape', configs['input_shape'],
+                                  'input_shape should be a two-dimensional array.')
     if not (isinstance(configs['output_shape'], list) and len(configs['output_shape']) == 2):
         raise BadConfigValueError('output_shape', configs['output_shape'],
                                   'output_shape should be a two-dimensional array.')
@@ -131,12 +133,12 @@ def parse_inference_config(config_dict):
     if 'input_type' in configs:
         input_type = [get_data_type_byte_from_str(x) for x in configs['input_type']]
     else:
-        input_type = [get_data_type_byte_from_str('float64')] * configs['input_shape'][1]
+        input_type = [get_data_type_byte_from_str('float32')] * configs['input_shape'][1]
 
     if 'output_type' in configs:
         output_type = [get_data_type_byte_from_str(x) for x in configs['output_type']]
     else:
-        output_type = [get_data_type_byte_from_str('float64')] * configs['output_shape'][1]
+        output_type = [get_data_type_byte_from_str('float32')] * configs['output_shape'][1]
 
     # parse attributes
     attributes = ""

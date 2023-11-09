@@ -17,6 +17,7 @@
 #
 
 import multiprocessing as mp
+import multiprocessing.pool
 import signal
 import sys
 from subprocess import call
@@ -32,7 +33,6 @@ from iotdb.mlnode.process.task import (ForecastAutoTuningTrainingTask,
                                        ForecastFixedParamTrainingTask,
                                        ForecastingInferenceTask,
                                        _BasicTrainingTask)
-import multiprocessing.pool
 
 
 class NoDaemonProcess(multiprocessing.Process):

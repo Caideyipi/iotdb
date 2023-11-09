@@ -58,7 +58,7 @@ struct TConfigs {
 
 struct TRegisterModelResp {
   1: required common.TSStatus status
-  2: required TConfigs configs
+  2: optional TConfigs configs
   3: optional string attributes
 }
 
