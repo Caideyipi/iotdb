@@ -44,7 +44,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -67,7 +69,7 @@ public class InferenceOperator implements ProcessOperator {
   private final long maxRetainedSize;
   private final long maxReturnSize;
   private final List<String> inputColumnNames;
-
+  private final List<String> targetColumnNames;
   private long totalRow;
   private int resultIndex = 0;
   private List<ByteBuffer> results;
@@ -79,6 +81,7 @@ public class InferenceOperator implements ProcessOperator {
       Operator child,
       ModelInferenceDescriptor modelInferenceDescriptor,
       ExecutorService modelInferenceExecutor,
+      List<String> targetColumnNames,
       List<String> inputColumnNames,
       long maxRetainedSize,
       long maxReturnSize) {
@@ -89,6 +92,7 @@ public class InferenceOperator implements ProcessOperator {
         new TsBlockBuilder(
             Arrays.asList(modelInferenceDescriptor.getModelInformation().getInputDataType()));
     this.modelInferenceExecutor = modelInferenceExecutor;
+    this.targetColumnNames = targetColumnNames;
     this.inputColumnNames = inputColumnNames;
     this.maxRetainedSize = maxRetainedSize;
     this.maxReturnSize = maxReturnSize;
@@ -140,7 +144,7 @@ public class InferenceOperator implements ProcessOperator {
           appendTsBlockToBuilder(inputTsBlock);
         }
       } else {
-        submitForecastTask();
+        submitInferenceTask();
       }
       return null;
     } else {
@@ -243,12 +247,19 @@ public class InferenceOperator implements ProcessOperator {
     return inputTsBlock;
   }
 
-  private void submitForecastTask() {
+  private void submitInferenceTask() {
 
     TsBlock inputTsBlock = inputTsBlockBuilder.build();
 
     TsBlock finalInputTsBlock = preProcess(inputTsBlock);
     TWindowParams windowParams = getWindowParams();
+
+    Map<String, Integer> columnNameIndexMap = new HashMap<>();
+
+    for (int i = 0; i < inputColumnNames.size(); i++) {
+      columnNameIndexMap.put(inputColumnNames.get(i), i);
+    }
+
     inferenceExecutionFuture =
         Futures.submit(
             () -> {
@@ -257,10 +268,11 @@ public class InferenceOperator implements ProcessOperator {
                       .borrowClient(modelInferenceDescriptor.getTargetMLNode())) {
                 return client.inference(
                     modelInferenceDescriptor.getModelName(),
-                    inputColumnNames,
+                    targetColumnNames,
                     Arrays.stream(modelInferenceDescriptor.getModelInformation().getInputDataType())
                         .map(TSDataType::toString)
                         .collect(Collectors.toList()),
+                    columnNameIndexMap,
                     finalInputTsBlock,
                     windowParams);
               } catch (Exception e) {

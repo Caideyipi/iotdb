@@ -92,7 +92,6 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.GroupByParame
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.GroupByTimeParameter;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.IntoPathDescriptor;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.OrderByParameter;
-import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model.ModelInferenceDescriptor;
 import org.apache.iotdb.db.queryengine.plan.statement.component.OrderByKey;
 import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
 import org.apache.iotdb.db.queryengine.plan.statement.component.SortItem;
@@ -1609,11 +1608,15 @@ public class LogicalPlanBuilder {
     return this;
   }
 
-  public LogicalPlanBuilder planInference(
-      ModelInferenceDescriptor forecastModelInferenceDescriptor) {
+  public LogicalPlanBuilder planInference(Analysis analysis) {
     this.root =
         new InferenceNode(
-            context.getQueryId().genPlanNodeId(), root, forecastModelInferenceDescriptor);
+            context.getQueryId().genPlanNodeId(),
+            root,
+            analysis.getModelInferenceDescriptor(),
+            analysis.getOutputExpressions().stream()
+                .map(expressionStringPair -> expressionStringPair.left.getExpressionString())
+                .collect(Collectors.toList()));
     return this;
   }
 }

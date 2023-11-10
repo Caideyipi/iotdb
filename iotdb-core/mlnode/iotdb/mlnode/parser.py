@@ -152,7 +152,8 @@ def parse_inference_request(req: TInferenceReq):
     binary_dataset = req.dataset
     type_list = req.typeList
     column_name_list = req.columnNameList
-    data = convert_to_df(column_name_list, type_list, None, [binary_dataset])
+    column_name_index = req.columnNameIndexMap
+    data = convert_to_df(column_name_list, type_list, column_name_index, [binary_dataset])
     time_stamp, data = data[data.columns[0:1]], data[data.columns[1:]]
     full_data = (data, time_stamp, type_list, column_name_list)
 

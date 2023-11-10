@@ -222,7 +222,7 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
             .planLimit(queryStatement.getRowLimit());
 
     if (queryStatement.hasModelInference()) {
-      planBuilder.planInference(analysis.getModelInferenceDescriptor());
+      planBuilder.planInference(analysis);
     }
 
     // plan select into

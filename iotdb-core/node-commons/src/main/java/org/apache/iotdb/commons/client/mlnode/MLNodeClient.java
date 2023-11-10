@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class MLNodeClient implements AutoCloseable, ThriftClient {
@@ -116,10 +117,6 @@ public class MLNodeClient implements AutoCloseable, ThriftClient {
       }
       return parseModelInformation(modelName, resp.getAttributes(), resp.getConfigs());
     } catch (TException e) {
-      logger.warn(
-          "Failed to connect to MLNode from ConfigNode when executing {}: {}",
-          Thread.currentThread().getStackTrace()[1].getMethodName(),
-          e.getMessage());
       throw new LoadModelException(
           e.getMessage(), TSStatusCode.ML_NODE_INTERNAL_ERROR.getStatusCode());
     }
@@ -159,13 +156,18 @@ public class MLNodeClient implements AutoCloseable, ThriftClient {
       String modelId,
       List<String> inputColumnNames,
       List<String> inputTypeList,
+      Map<String, Integer> columnIndexMap,
       TsBlock inputTsBlock,
       TWindowParams windowParams)
       throws TException {
     try {
       TInferenceReq forecastReq =
           new TInferenceReq(
-              modelId, tsBlockSerde.serialize(inputTsBlock), inputTypeList, inputColumnNames);
+              modelId,
+              tsBlockSerde.serialize(inputTsBlock),
+              inputTypeList,
+              inputColumnNames,
+              columnIndexMap);
       if (windowParams != null) {
         forecastReq.setWindowParams(windowParams);
       }

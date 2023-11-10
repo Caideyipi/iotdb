@@ -24,6 +24,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNodeId;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanVisitor;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.SingleChildProcessNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model.ModelInferenceDescriptor;
+import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -35,19 +36,34 @@ public class InferenceNode extends SingleChildProcessNode {
 
   private final ModelInferenceDescriptor modelInferenceDescriptor;
 
+  // the column order in select item which reflects the real input order
+  private final List<String> targetColumnNames;
+
   public InferenceNode(
-      PlanNodeId id, PlanNode child, ModelInferenceDescriptor modelInferenceDescriptor) {
+      PlanNodeId id,
+      PlanNode child,
+      ModelInferenceDescriptor modelInferenceDescriptor,
+      List<String> targetColumnNames) {
     super(id, child);
     this.modelInferenceDescriptor = modelInferenceDescriptor;
+    this.targetColumnNames = targetColumnNames;
   }
 
-  public InferenceNode(PlanNodeId id, ModelInferenceDescriptor modelInferenceDescriptor) {
+  public InferenceNode(
+      PlanNodeId id,
+      ModelInferenceDescriptor modelInferenceDescriptor,
+      List<String> inputColumnNames) {
     super(id);
     this.modelInferenceDescriptor = modelInferenceDescriptor;
+    this.targetColumnNames = inputColumnNames;
   }
 
   public ModelInferenceDescriptor getModelInferenceDescriptor() {
     return modelInferenceDescriptor;
+  }
+
+  public List<String> getInputColumnNames() {
+    return targetColumnNames;
   }
 
   @Override
@@ -57,7 +73,7 @@ public class InferenceNode extends SingleChildProcessNode {
 
   @Override
   public PlanNode clone() {
-    return new InferenceNode(getPlanNodeId(), child, modelInferenceDescriptor);
+    return new InferenceNode(getPlanNodeId(), child, modelInferenceDescriptor, targetColumnNames);
   }
 
   @Override
@@ -68,23 +84,26 @@ public class InferenceNode extends SingleChildProcessNode {
   @Override
   protected void serializeAttributes(ByteBuffer byteBuffer) {
     modelInferenceDescriptor.serialize(byteBuffer);
+    ReadWriteIOUtils.writeStringList(targetColumnNames, byteBuffer);
   }
 
   @Override
   protected void serializeAttributes(DataOutputStream stream) throws IOException {
     modelInferenceDescriptor.serialize(stream);
+    ReadWriteIOUtils.writeStringList(targetColumnNames, stream);
   }
 
   public static InferenceNode deserialize(ByteBuffer buffer) {
     ModelInferenceDescriptor modelInferenceDescriptor =
         ModelInferenceDescriptor.deserialize(buffer);
+    List<String> inputColumnNames = ReadWriteIOUtils.readStringList(buffer);
     PlanNodeId planNodeId = PlanNodeId.deserialize(buffer);
-    return new InferenceNode(planNodeId, modelInferenceDescriptor);
+    return new InferenceNode(planNodeId, modelInferenceDescriptor, inputColumnNames);
   }
 
   @Override
   public String toString() {
-    return "ForecastNode-" + this.getPlanNodeId();
+    return "InferenceNode-" + this.getPlanNodeId();
   }
 
   @Override
@@ -99,11 +118,12 @@ public class InferenceNode extends SingleChildProcessNode {
       return false;
     }
     InferenceNode that = (InferenceNode) o;
-    return modelInferenceDescriptor.equals(that.modelInferenceDescriptor);
+    return modelInferenceDescriptor.equals(that.modelInferenceDescriptor)
+        && targetColumnNames.equals(that.targetColumnNames);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), modelInferenceDescriptor);
+    return Objects.hash(super.hashCode(), modelInferenceDescriptor, targetColumnNames);
   }
 }

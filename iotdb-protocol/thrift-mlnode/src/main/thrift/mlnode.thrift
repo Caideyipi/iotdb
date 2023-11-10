@@ -67,7 +67,8 @@ struct TInferenceReq {
   2: required binary dataset
   3: required list<string> typeList
   4: required list<string> columnNameList
-  5: optional TWindowParams windowParams
+  5: required map<string, i32> columnNameIndexMap
+  6: optional TWindowParams windowParams
 }
 
 struct TWindowParams {
