@@ -107,15 +107,20 @@ public class ActivationManager {
 
   private final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
       ImmutableMap.of(
-          License.CPU_ID_NAME, () -> this.systemInfoGetter.getCPUId(),
-          License.MAIN_BOARD_ID_NAME, () -> this.systemInfoGetter.getMainBoardId(),
-          License.SYSTEM_UUID_NAME, () -> this.systemInfoGetter.getSystemUUID(),
-          License.IP_ADDRESS_NAME, () -> this.configNodeDescriptor.getConf().getInternalAddress(),
+          License.CPU_ID_NAME,
+          () -> this.systemInfoGetter.getCPUId(),
+          License.MAIN_BOARD_ID_NAME,
+          () -> this.systemInfoGetter.getMainBoardId(),
+          License.SYSTEM_UUID_NAME,
+          () -> this.systemInfoGetter.getSystemUUID(),
+          License.IP_ADDRESS_NAME,
+          () -> this.configNodeDescriptor.getConf().getInternalAddress(),
           License.INTERNAL_PORT_NAME,
-              () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
+          () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
           License.IS_SEED_CONFIGNODE_NODE_NAME,
-              () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()),
-          License.CLUSTER_NAME_NAME, () -> this.configNodeDescriptor.getConf().getClusterName());
+          () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()),
+          License.CLUSTER_NAME_NAME,
+          () -> this.configNodeDescriptor.getConf().getClusterName());
 
   /** In some situation (like not root user) we cannot get cpu id or main board id. */
   private final ImmutableSet<String> systemInfoAllowEmpty = ImmutableSet.of("cpu", "mdb", "uuid");
@@ -505,8 +510,9 @@ public class ActivationManager {
       String afterEncrypt = encrypt(beforeEncrypt);
       fos.write(afterEncrypt.getBytes());
       fos.getFD().sync();
-      logger.info("System info file generated successfully.");
-    } catch (IOException | LicenseException e) {
+      logger.info("{} file generated successfully.", SYSTEM_INFO_FILE_PATH);
+    } catch (Exception e) {
+      logger.error("{} file generated fail.", SYSTEM_INFO_FILE_PATH, e);
       throw new RuntimeException(e);
     }
   }

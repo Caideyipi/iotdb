@@ -53,7 +53,7 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
   public String getSystemUUID() {
     try {
       return getSystemUUIDImpl();
-    } catch (IOException e) {
+    } catch (Exception e) {
       getLogger().warn("Get system UUID fail", e);
       return "";
     }
