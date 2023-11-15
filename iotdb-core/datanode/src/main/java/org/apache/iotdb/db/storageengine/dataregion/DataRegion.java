@@ -2151,13 +2151,20 @@ public class DataRegion implements IDataRegionForQuery {
   // TODO please consider concurrency with read and insert method.
   private void closeUnsealedTsFileProcessorCallBack(TsFileProcessor tsFileProcessor)
       throws TsFileProcessorException {
-    boolean tsFileNotValid =
-        tsFileProcessor.isEmpty()
-            || !TsFileValidator.getInstance().validateTsFile(tsFileProcessor.getTsFileResource());
+    boolean isEmptyFile =
+        tsFileProcessor.isEmpty() || tsFileProcessor.getTsFileResource().isEmpty();
+    boolean isValidateTsFileFailed = false;
+    if (!isEmptyFile) {
+      isValidateTsFileFailed =
+          !TsFileValidator.getInstance().validateTsFile(tsFileProcessor.getTsFileResource());
+    }
     closeQueryLock.writeLock().lock();
     try {
       tsFileProcessor.close();
-      if (tsFileNotValid) {
+      if (isEmptyFile) {
+        tsFileProcessor.getTsFileResource().remove();
+        tsFileManager.remove(tsFileProcessor.getTsFileResource(), tsFileProcessor.isSequence());
+      } else if (isValidateTsFileFailed) {
         String tsFilePath = tsFileProcessor.getTsFileResource().getTsFile().getAbsolutePath();
         renameAndHandleError(tsFilePath, tsFilePath + BROKEN_SUFFIX);
         renameAndHandleError(
@@ -2178,7 +2185,7 @@ public class DataRegion implements IDataRegionForQuery {
     synchronized (closeStorageGroupCondition) {
       closeStorageGroupCondition.notifyAll();
     }
-    if (!tsFileNotValid) {
+    if (!isValidateTsFileFailed) {
       TsFileResource tsFileResource = tsFileProcessor.getTsFileResource();
       FileMetrics.getInstance()
           .addTsFile(
@@ -3110,7 +3117,10 @@ public class DataRegion implements IDataRegionForQuery {
 
   private void renameAndHandleError(String originFileName, String newFileName) {
     try {
-      Files.move(Paths.get(originFileName), Paths.get(newFileName));
+      File originFile = new File(originFileName);
+      if (originFile.exists()) {
+        Files.move(originFile.toPath(), Paths.get(newFileName));
+      }
     } catch (IOException e) {
       logger.error("Failed to rename {} to {},", originFileName, newFileName, e);
     }
