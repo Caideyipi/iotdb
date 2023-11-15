@@ -103,7 +103,7 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
         LOGGER.error(
             "Retrievable error trying to create model [{}], state [{}]", modelName, state, e);
         if (getCycles() > RETRY_THRESHOLD) {
-          modelInformation = new ModelInformation(modelName, ModelStatus.FAILED);
+          modelInformation = new ModelInformation(modelName, ModelStatus.UNAVAILABLE);
           modelInformation.setAttribute(loadErrorMsg);
           updateModel(env);
           setFailure(

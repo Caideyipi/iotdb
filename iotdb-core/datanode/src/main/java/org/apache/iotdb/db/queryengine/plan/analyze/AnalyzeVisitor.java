@@ -60,14 +60,14 @@ import org.apache.iotdb.db.queryengine.common.header.DatasetHeaderFactory;
 import org.apache.iotdb.db.queryengine.common.schematree.DeviceSchemaInfo;
 import org.apache.iotdb.db.queryengine.common.schematree.ISchemaTree;
 import org.apache.iotdb.db.queryengine.execution.operator.window.WindowType;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.BottomInferenceWindow;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.BottomInferenceWindowParameter;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.CountInferenceWindow;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.CountInferenceWindowParameter;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.HeadInferenceWindow;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindow;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindowParameter;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindowType;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.TopInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.TailInferenceWindow;
 import org.apache.iotdb.db.queryengine.metric.QueryPlanCostMetricSet;
 import org.apache.iotdb.db.queryengine.plan.analyze.schema.ISchemaFetcher;
 import org.apache.iotdb.db.queryengine.plan.analyze.schema.SchemaValidator;
@@ -368,30 +368,30 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       return;
     }
 
+    // Get model metadata from configNode and do some check
     String modelId = queryStatement.getModelName();
     TSStatus status = modelFetcher.fetchModel(modelId, analysis);
     if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      throw new GetModelInfoException(
-          "Failed to fetch model " + modelId + " from config node " + status.getMessage());
+      throw new GetModelInfoException(status.getMessage());
     }
-
     ModelInformation modelInformation = analysis.getModelInformation();
     if (modelInformation == null || !modelInformation.available()) {
       throw new SemanticException("Model " + modelId + " is not active");
     }
 
-    InferenceWindow window = queryStatement.getInferenceWindow();
-    if (window != null) {
-      if (InferenceWindowType.TOP == window.getType()) {
-        long windowSize = ((TopInferenceWindow) window).getWindowSize();
+    // set inference window if there is
+    if (queryStatement.isSetInferenceWindow()) {
+      InferenceWindow window = queryStatement.getInferenceWindow();
+      if (InferenceWindowType.HEAD == window.getType()) {
+        long windowSize = ((HeadInferenceWindow) window).getWindowSize();
         checkWindowSize(windowSize, modelInformation.getInputShape()[0]);
         if (queryStatement.hasLimit() && queryStatement.getRowLimit() < windowSize) {
           throw new SemanticException(
               "Limit in Sql should be larger than window size in inference");
         }
         queryStatement.setRowLimit(windowSize);
-      } else if (InferenceWindowType.BOTTOM == window.getType()) {
-        long windowSize = ((BottomInferenceWindow) window).getWindowSize();
+      } else if (InferenceWindowType.TAIL == window.getType()) {
+        long windowSize = ((TailInferenceWindow) window).getWindowSize();
         checkWindowSize(windowSize, modelInformation.getInputShape()[0]);
         InferenceWindowParameter inferenceWindowParameter =
             new BottomInferenceWindowParameter(windowSize);
@@ -408,6 +408,13 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
             .getModelInferenceDescriptor()
             .setInferenceWindowParameter(inferenceWindowParameter);
       }
+    }
+
+    // set inference attributes if there is
+    if (queryStatement.hasInferenceAttributes()) {
+      analysis
+          .getModelInferenceDescriptor()
+          .setInferenceAttributes(queryStatement.getInferenceAttributes());
     }
   }
 

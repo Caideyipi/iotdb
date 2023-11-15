@@ -60,6 +60,14 @@ public class ModelTable {
     return null;
   }
 
+  public void clearFailedModel() {
+    for (ModelInformation modelInformation : modelInfoMap.values()) {
+      if (modelInformation.getStatus() == ModelStatus.UNAVAILABLE) {
+        modelInfoMap.remove(modelInformation.getModelName());
+      }
+    }
+  }
+
   public void updateModel(String modelName, ModelInformation modelInfo) {
     modelInfoMap.replace(modelName, modelInfo);
   }

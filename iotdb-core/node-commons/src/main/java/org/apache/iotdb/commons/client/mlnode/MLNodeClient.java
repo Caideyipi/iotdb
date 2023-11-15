@@ -158,10 +158,11 @@ public class MLNodeClient implements AutoCloseable, ThriftClient {
       List<String> inputTypeList,
       Map<String, Integer> columnIndexMap,
       TsBlock inputTsBlock,
+      Map<String, String> inferenceAttributes,
       TWindowParams windowParams)
       throws TException {
     try {
-      TInferenceReq forecastReq =
+      TInferenceReq inferenceReq =
           new TInferenceReq(
               modelId,
               tsBlockSerde.serialize(inputTsBlock),
@@ -169,9 +170,12 @@ public class MLNodeClient implements AutoCloseable, ThriftClient {
               inputColumnNames,
               columnIndexMap);
       if (windowParams != null) {
-        forecastReq.setWindowParams(windowParams);
+        inferenceReq.setWindowParams(windowParams);
       }
-      return client.inference(forecastReq);
+      if (inferenceAttributes != null) {
+        inferenceReq.setInferenceAttributes(inferenceAttributes);
+      }
+      return client.inference(inferenceReq);
     } catch (IOException e) {
       throw new TException("An exception occurred while serializing input tsblock", e);
     } catch (TException e) {

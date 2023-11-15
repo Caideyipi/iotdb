@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.utils.ThriftCommonsSerDeUtils;
 import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.model.DropModelInNodePlan;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureSuspendedException;
@@ -61,6 +62,10 @@ public class RemoveMLNodeProcedure extends AbstractNodeProcedure<RemoveMLNodeSta
     try {
       switch (state) {
         case MODEL_DELETE:
+          env.getConfigManager()
+              .getConsensusManager()
+              .write(new DropModelInNodePlan(removedMLNode.mlNodeId));
+          // Cause the MLNode is removed, so we don't need to remove the model file.
           setNextState(RemoveMLNodeState.NODE_REMOVE);
           break;
         case NODE_REMOVE:
@@ -75,7 +80,6 @@ public class RemoveMLNodeProcedure extends AbstractNodeProcedure<RemoveMLNodeSta
                     "Fail to remove [%s] MLNode on Config Nodes [%s]",
                     removedMLNode, response.getMessage()));
           }
-          setNextState(RemoveMLNodeState.NODE_REMOVE);
           return Flow.NO_MORE_STATE;
         default:
           throw new UnsupportedOperationException(

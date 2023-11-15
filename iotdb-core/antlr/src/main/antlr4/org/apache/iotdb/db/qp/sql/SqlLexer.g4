@@ -350,6 +350,10 @@ HAVING
     : H A V I N G
     ;
 
+HEAD
+    : H E A D
+    ;
+
 HYPERPARAMETERS
     : H Y P E R P A R A M E T E R S
     ;
@@ -766,6 +770,10 @@ TAGS
     : T A G S
     ;
 
+TAIL
+    : T A I L
+    ;
+
 TASK
     : T A S K
     ;
@@ -908,10 +916,6 @@ WATERMARK_EMBEDDING
 
 WHERE
     : W H E R E
-    ;
-
-WINDOW
-    : W I N D O W
     ;
 
 WITH

@@ -21,58 +21,46 @@ package org.apache.iotdb.confignode.consensus.request.write.model;
 
 import org.apache.iotdb.confignode.consensus.request.ConfigPhysicalPlan;
 import org.apache.iotdb.confignode.consensus.request.ConfigPhysicalPlanType;
-import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class DropModelPlan extends ConfigPhysicalPlan {
+public class DropModelInNodePlan extends ConfigPhysicalPlan {
 
-  private String modelName;
+  private int nodeId;
 
-  public DropModelPlan() {
-    super(ConfigPhysicalPlanType.DropModel);
+  public DropModelInNodePlan(int nodeId) {
+    super(ConfigPhysicalPlanType.DropModelInNode);
+    this.nodeId = nodeId;
   }
 
-  public DropModelPlan(String modelName) {
-    super(ConfigPhysicalPlanType.DropModel);
-    this.modelName = modelName;
-  }
-
-  public String getModelName() {
-    return modelName;
+  public int getNodeId() {
+    return nodeId;
   }
 
   @Override
   protected void serializeImpl(DataOutputStream stream) throws IOException {
     stream.writeShort(getType().getPlanType());
-    ReadWriteIOUtils.write(modelName, stream);
+    stream.writeInt(nodeId);
   }
 
   @Override
   protected void deserializeImpl(ByteBuffer buffer) throws IOException {
-    modelName = ReadWriteIOUtils.readString(buffer);
+    nodeId = buffer.getInt();
   }
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    if (!super.equals(o)) {
-      return false;
-    }
-    DropModelPlan that = (DropModelPlan) o;
-    return modelName.equals(that.modelName);
+    if (this == o) return true;
+    if (!(o instanceof DropModelInNodePlan)) return false;
+    DropModelInNodePlan that = (DropModelInNodePlan) o;
+    return nodeId == that.nodeId;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), modelName);
+    return Objects.hash(super.hashCode(), nodeId);
   }
 }

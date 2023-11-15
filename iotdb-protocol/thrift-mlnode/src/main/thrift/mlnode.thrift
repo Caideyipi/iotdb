@@ -69,6 +69,7 @@ struct TInferenceReq {
   4: required list<string> columnNameList
   5: required map<string, i32> columnNameIndexMap
   6: optional TWindowParams windowParams
+  7: optional map<string, string> inferenceAttributes
 }
 
 struct TWindowParams {

@@ -524,13 +524,13 @@ public class ConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQueryCon
   @Override
   public IConfigTask visitDropModel(
       DropModelStatement dropModelStatement, MPPQueryContext context) {
-    return new DropModelTask(dropModelStatement.getModelId());
+    return new DropModelTask(dropModelStatement.getModelName());
   }
 
   @Override
   public IConfigTask visitShowModels(
       ShowModelsStatement showModelsStatement, MPPQueryContext context) {
-    return new ShowModelsTask();
+    return new ShowModelsTask(showModelsStatement.getModelName());
   }
 
   @Override

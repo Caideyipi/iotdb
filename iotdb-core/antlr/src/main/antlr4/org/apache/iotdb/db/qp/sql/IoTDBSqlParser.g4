@@ -594,13 +594,13 @@ createModel
     ;
 
 windowFunction
-    : BOTTOM LR_BRACKET windowSize=INTEGER_LITERAL RR_BRACKET
-    | TOP LR_BRACKET windowSize=INTEGER_LITERAL RR_BRACKET
+    : TAIL LR_BRACKET windowSize=INTEGER_LITERAL RR_BRACKET
+    | HEAD LR_BRACKET windowSize=INTEGER_LITERAL RR_BRACKET
     | COUNT LR_BRACKET interval=INTEGER_LITERAL COMMA step=INTEGER_LITERAL RR_BRACKET
     ;
 
 callInference
-    : CALL INFERENCE LR_BRACKET modelId=identifier COMMA inputSql=STRING_LITERAL (COMMA WINDOW operator_eq windowFunction)? RR_BRACKET
+    : CALL INFERENCE LR_BRACKET modelId=identifier COMMA inputSql=STRING_LITERAL (COMMA hparamPair)* RR_BRACKET
     ;
 
 hparamPair
@@ -609,8 +609,7 @@ hparamPair
 
 hparamValue
     : attributeValue
-    | hparamRange
-    | hparamCandidates
+    | windowFunction
     ;
 
 hparamRange
@@ -629,6 +628,7 @@ dropModel
 // ---- Show Models
 showModels
     : SHOW MODELS
+    | SHOW MODELS modelId=identifier
     ;
 
 // ---- Show Trials

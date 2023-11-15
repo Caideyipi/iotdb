@@ -41,8 +41,10 @@ import java.util.stream.Collectors;
 
 public class ShowModelsTask implements IConfigTask {
 
-  public ShowModelsTask() {
-    // do nothing
+  private final String modelName;
+
+  public ShowModelsTask(String modelName) {
+    this.modelName = modelName;
   }
 
   private static final String INPUT_SHAPE = "inputShape:";
@@ -53,7 +55,7 @@ public class ShowModelsTask implements IConfigTask {
   @Override
   public ListenableFuture<ConfigTaskResult> execute(IConfigTaskExecutor configTaskExecutor)
       throws InterruptedException {
-    return configTaskExecutor.showModels();
+    return configTaskExecutor.showModels(modelName);
   }
 
   public static void buildTsBlock(

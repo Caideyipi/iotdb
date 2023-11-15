@@ -31,7 +31,7 @@ public class BottomInferenceWindowParameter extends InferenceWindowParameter {
 
   public BottomInferenceWindowParameter(long windowSize) {
     this.windowSize = windowSize;
-    this.windowType = InferenceWindowType.BOTTOM;
+    this.windowType = InferenceWindowType.TAIL;
   }
 
   public long getWindowSize() {

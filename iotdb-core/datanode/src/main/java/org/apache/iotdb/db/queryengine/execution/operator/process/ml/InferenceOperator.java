@@ -215,7 +215,7 @@ public class InferenceOperator implements ProcessOperator {
   }
 
   private TsBlock preProcess(TsBlock inputTsBlock) {
-    if (windowType == null || windowType == InferenceWindowType.TOP) {
+    if (windowType == null || windowType == InferenceWindowType.HEAD) {
       if (totalRow != modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
         throw new ModelInferenceProcessException(
             String.format(
@@ -230,7 +230,7 @@ public class InferenceOperator implements ProcessOperator {
                 "The number of rows %s in the input data is less than the model input %s. ",
                 totalRow, modelInferenceDescriptor.getModelInformation().getInputShape()[0]));
       }
-    } else if (windowType == InferenceWindowType.BOTTOM) {
+    } else if (windowType == InferenceWindowType.TAIL) {
       if (totalRow < modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
         throw new ModelInferenceProcessException(
             String.format(
@@ -274,6 +274,7 @@ public class InferenceOperator implements ProcessOperator {
                         .collect(Collectors.toList()),
                     columnNameIndexMap,
                     finalInputTsBlock,
+                    modelInferenceDescriptor.getInferenceAttributes(),
                     windowParams);
               } catch (Exception e) {
                 throw new ModelInferenceProcessException(e.getMessage());

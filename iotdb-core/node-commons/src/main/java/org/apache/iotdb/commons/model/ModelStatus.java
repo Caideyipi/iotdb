@@ -24,5 +24,5 @@ public enum ModelStatus {
   LOADING,
   ACTIVE,
   DROPPING,
-  FAILED
+  UNAVAILABLE
 }

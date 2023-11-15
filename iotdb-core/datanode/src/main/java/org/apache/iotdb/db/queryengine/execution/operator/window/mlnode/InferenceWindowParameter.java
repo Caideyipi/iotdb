@@ -51,7 +51,7 @@ public abstract class InferenceWindowParameter {
   public static InferenceWindowParameter deserialize(ByteBuffer byteBuffer) {
     InferenceWindowType windowType =
         InferenceWindowType.values()[ReadWriteIOUtils.readInt(byteBuffer)];
-    if (windowType == InferenceWindowType.BOTTOM) {
+    if (windowType == InferenceWindowType.TAIL) {
       return BottomInferenceWindowParameter.deserialize(byteBuffer);
     } else if (windowType == InferenceWindowType.COUNT) {
       return CountInferenceWindowParameter.deserialize(byteBuffer);

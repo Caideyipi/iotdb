@@ -56,6 +56,9 @@ public class GetModelInfoResp implements DataSet {
   }
 
   public void setTargetMLNodeAddress(TMLNodeConfiguration mlNodeConfiguration) {
+    if (mlNodeConfiguration.getLocation() == null) {
+      return;
+    }
     this.targetMLNodeAddress = mlNodeConfiguration.getLocation().getInternalEndPoint();
   }
 

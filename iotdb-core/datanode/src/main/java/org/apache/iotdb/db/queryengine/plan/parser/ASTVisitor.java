@@ -49,10 +49,10 @@ import org.apache.iotdb.db.qp.sql.IoTDBSqlParser.ShowFunctionsContext;
 import org.apache.iotdb.db.qp.sql.IoTDBSqlParserBaseVisitor;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.db.queryengine.execution.operator.window.WindowType;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.BottomInferenceWindow;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.CountInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.HeadInferenceWindow;
 import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindow;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.TopInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.TailInferenceWindow;
 import org.apache.iotdb.db.queryengine.plan.analyze.ExpressionAnalyzer;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.expression.ExpressionType;
@@ -1248,7 +1248,11 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   // Show Models =====================================================================
   @Override
   public Statement visitShowModels(IoTDBSqlParser.ShowModelsContext ctx) {
-    return new ShowModelsStatement();
+    ShowModelsStatement statement = new ShowModelsStatement();
+    if (ctx.modelId != null) {
+      statement.setModelName(parseIdentifier(ctx.modelId.getText()));
+    }
+    return statement;
   }
 
   /** Data Manipulation Language (DML). */
@@ -4020,24 +4024,44 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
     statement.setModelName(parseIdentifier(ctx.modelId.getText()));
     statement.setHasModelInference(true);
 
-    if (ctx.windowFunction() != null) {
-      IoTDBSqlParser.WindowFunctionContext windowContext = ctx.windowFunction();
-      InferenceWindow inferenceWindow = null;
-      if (windowContext.BOTTOM() != null) {
-        inferenceWindow =
-            new BottomInferenceWindow(Integer.parseInt(windowContext.windowSize.getText()));
-      } else if (windowContext.TOP() != null) {
-        inferenceWindow =
-            new TopInferenceWindow(Integer.parseInt(windowContext.windowSize.getText()));
-      } else if (windowContext.COUNT() != null) {
-        inferenceWindow =
-            new CountInferenceWindow(
-                Integer.parseInt(windowContext.interval.getText()),
-                Integer.parseInt(windowContext.step.getText()));
+    if (ctx.hparamPair() != null) {
+      for (IoTDBSqlParser.HparamPairContext context : ctx.hparamPair()) {
+        IoTDBSqlParser.HparamValueContext valueContext = context.hparamValue();
+        String paramKey = context.hparamKey.getText();
+        if (paramKey.equalsIgnoreCase("WINDOW")) {
+          if (statement.isSetInferenceWindow()) {
+            throw new SemanticException("There should be only one window in CALL INFERENCE.");
+          }
+          if (valueContext.windowFunction().isEmpty()) {
+            throw new SemanticException(
+                "Window Function(e.g. HEAD, TAIL, COUNT) should be set in value when key is 'WINDOW' in CALL INFERENCE");
+          }
+          parseWindowFunctionInInference(valueContext.windowFunction(), statement);
+        } else {
+          statement.addInferenceAttribute(
+              paramKey, parseAttributeValue(valueContext.attributeValue()));
+        }
       }
-      statement.setInferenceWindow(inferenceWindow);
     }
 
     return statement;
+  }
+
+  private void parseWindowFunctionInInference(
+      IoTDBSqlParser.WindowFunctionContext windowContext, QueryStatement statement) {
+    InferenceWindow inferenceWindow = null;
+    if (windowContext.TAIL() != null) {
+      inferenceWindow =
+          new TailInferenceWindow(Integer.parseInt(windowContext.windowSize.getText()));
+    } else if (windowContext.HEAD() != null) {
+      inferenceWindow =
+          new HeadInferenceWindow(Integer.parseInt(windowContext.windowSize.getText()));
+    } else if (windowContext.COUNT() != null) {
+      inferenceWindow =
+          new CountInferenceWindow(
+              Integer.parseInt(windowContext.interval.getText()),
+              Integer.parseInt(windowContext.step.getText()));
+    }
+    statement.setInferenceWindow(inferenceWindow);
   }
 }

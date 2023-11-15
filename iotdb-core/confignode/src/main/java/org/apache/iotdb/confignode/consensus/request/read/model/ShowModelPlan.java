@@ -31,7 +31,7 @@ import java.util.Objects;
 
 public class ShowModelPlan extends ConfigPhysicalPlan {
 
-  private String modelId;
+  private String modelName;
 
   public ShowModelPlan() {
     super(ConfigPhysicalPlanType.ShowModel);
@@ -40,30 +40,30 @@ public class ShowModelPlan extends ConfigPhysicalPlan {
   public ShowModelPlan(TShowModelReq showModelReq) {
     super(ConfigPhysicalPlanType.ShowModel);
     if (showModelReq.isSetModelId()) {
-      this.modelId = showModelReq.getModelId();
+      this.modelName = showModelReq.getModelId();
     }
   }
 
-  public boolean isSetModelId() {
-    return modelId != null;
+  public boolean isSetModelName() {
+    return modelName != null;
   }
 
-  public String getModelId() {
-    return modelId;
+  public String getModelName() {
+    return modelName;
   }
 
   @Override
   protected void serializeImpl(DataOutputStream stream) throws IOException {
     stream.writeShort(getType().getPlanType());
-    ReadWriteIOUtils.write(modelId != null, stream);
-    ReadWriteIOUtils.write(modelId, stream);
+    ReadWriteIOUtils.write(modelName != null, stream);
+    ReadWriteIOUtils.write(modelName, stream);
   }
 
   @Override
   protected void deserializeImpl(ByteBuffer buffer) throws IOException {
     boolean isSetModelId = ReadWriteIOUtils.readBool(buffer);
     if (isSetModelId) {
-      this.modelId = ReadWriteIOUtils.readString(buffer);
+      this.modelName = ReadWriteIOUtils.readString(buffer);
     }
   }
 
@@ -79,11 +79,11 @@ public class ShowModelPlan extends ConfigPhysicalPlan {
       return false;
     }
     ShowModelPlan that = (ShowModelPlan) o;
-    return Objects.equals(modelId, that.modelId);
+    return Objects.equals(modelName, that.modelName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), modelId);
+    return Objects.hash(super.hashCode(), modelName);
   }
 }

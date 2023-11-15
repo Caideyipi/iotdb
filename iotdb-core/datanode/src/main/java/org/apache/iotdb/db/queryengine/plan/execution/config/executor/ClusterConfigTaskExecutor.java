@@ -2148,13 +2148,13 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> dropModel(String modelId) {
+  public SettableFuture<ConfigTaskResult> dropModel(String modelName) {
     SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (ConfigNodeClient client =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      final TSStatus executionStatus = client.dropModel(new TDropModelReq(modelId));
+      final TSStatus executionStatus = client.dropModel(new TDropModelReq(modelName));
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != executionStatus.getCode()) {
-        LOGGER.warn("[{}] Failed to drop model {}.", executionStatus, modelId);
+        LOGGER.warn("[{}] Failed to drop model {}.", executionStatus, modelName);
         future.setException(new IoTDBException(executionStatus.message, executionStatus.code));
       } else {
         future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
@@ -2166,11 +2166,15 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> showModels() {
+  public SettableFuture<ConfigTaskResult> showModels(String modelName) {
     SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (ConfigNodeClient client =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      TShowModelResp showModelResp = client.showModel(new TShowModelReq());
+      TShowModelReq req = new TShowModelReq();
+      if (modelName != null) {
+        req.setModelId(modelName);
+      }
+      TShowModelResp showModelResp = client.showModel(req);
       if (showModelResp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(
             new IoTDBException(showModelResp.getStatus().message, showModelResp.getStatus().code));

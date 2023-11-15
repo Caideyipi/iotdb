@@ -120,6 +120,25 @@ public class ModelInfo implements SnapshotProcessor {
     }
   }
 
+  public TSStatus dropModelInNode(int mlNodeId) {
+    acquireModelTableWriteLock();
+    try {
+      for (Map.Entry<String, List<Integer>> entry : modelNameToNodes.entrySet()) {
+        entry.getValue().remove(Integer.valueOf(mlNodeId));
+        // if list is empty, remove this model totally
+        if (entry.getValue().isEmpty()) {
+          modelTable.removeModel(entry.getKey());
+          modelNameToNodes.remove(entry.getKey());
+        }
+      }
+      // currently, we only have one MLNode at a time, so we can just clear failed model.
+      modelTable.clearFailedModel();
+      return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+    } finally {
+      releaseModelTableWriteLock();
+    }
+  }
+
   public TSStatus dropModel(String modelName) {
     acquireModelTableWriteLock();
     TSStatus status;
@@ -145,8 +164,8 @@ public class ModelInfo implements SnapshotProcessor {
     try {
       ModelTableResp modelTableResp =
           new ModelTableResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-      if (plan.isSetModelId()) {
-        ModelInformation modelInformation = modelTable.getModelInformationById(plan.getModelId());
+      if (plan.isSetModelName()) {
+        ModelInformation modelInformation = modelTable.getModelInformationById(plan.getModelName());
         if (modelInformation != null) {
           modelTableResp.addModelInformation(modelInformation);
         }
@@ -186,7 +205,9 @@ public class ModelInfo implements SnapshotProcessor {
       getModelInfoResp.setModelInfo(ByteBuffer.wrap(buffer.getBuf(), 0, buffer.size()));
       // select the nodeId to process the task, currently we default use the first one.
       List<Integer> mlNodeIds = modelNameToNodes.get(modelName);
-      getModelInfoResp.setTargetMLNodeId(mlNodeIds.get(0));
+      if (mlNodeIds != null) {
+        getModelInfoResp.setTargetMLNodeId(mlNodeIds.get(0));
+      }
       return getModelInfoResp;
     } catch (IOException e) {
       LOGGER.warn("Fail to get model info", e);

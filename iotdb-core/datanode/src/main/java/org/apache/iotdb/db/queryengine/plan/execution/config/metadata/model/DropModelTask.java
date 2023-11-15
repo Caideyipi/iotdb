@@ -27,15 +27,15 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 public class DropModelTask implements IConfigTask {
 
-  private final String modelId;
+  private final String modelName;
 
-  public DropModelTask(String modelId) {
-    this.modelId = modelId;
+  public DropModelTask(String modelName) {
+    this.modelName = modelName;
   }
 
   @Override
   public ListenableFuture<ConfigTaskResult> execute(IConfigTaskExecutor configTaskExecutor)
       throws InterruptedException {
-    return configTaskExecutor.dropModel(modelId);
+    return configTaskExecutor.dropModel(modelName);
   }
 }

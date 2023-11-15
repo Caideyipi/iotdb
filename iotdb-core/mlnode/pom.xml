@@ -84,7 +84,6 @@
                                 <include>LICENSE</include>
                             </includes>
                         </fileset>
-                        <!--                        <fileset dir="${project.basedir}/dist"/>-->
                         <fileset>
                             <directory>target</directory>
                             <excludes>

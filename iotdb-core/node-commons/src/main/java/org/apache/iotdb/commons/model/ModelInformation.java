@@ -34,13 +34,13 @@ public class ModelInformation {
 
   private final String modelName;
 
-  private int[] inputShape;
+  private final int[] inputShape;
 
-  private int[] outputShape;
+  private final int[] outputShape;
 
-  private TSDataType[] inputDataType;
+  private final TSDataType[] inputDataType;
 
-  private TSDataType[] outputDataType;
+  private final TSDataType[] outputDataType;
 
   private ModelStatus status = ModelStatus.INACTIVE;
 
@@ -131,7 +131,7 @@ public class ModelInformation {
 
     ReadWriteIOUtils.write(status.ordinal(), stream);
     ReadWriteIOUtils.write(modelName, stream);
-    if (status == ModelStatus.FAILED) {
+    if (status == ModelStatus.UNAVAILABLE) {
       return;
     }
 
@@ -155,7 +155,7 @@ public class ModelInformation {
   public void serialize(FileOutputStream stream) throws IOException {
     ReadWriteIOUtils.write(status.ordinal(), stream);
     ReadWriteIOUtils.write(modelName, stream);
-    if (status == ModelStatus.FAILED) {
+    if (status == ModelStatus.UNAVAILABLE) {
       return;
     }
 
@@ -179,7 +179,7 @@ public class ModelInformation {
   public void serialize(ByteBuffer byteBuffer) {
     ReadWriteIOUtils.write(status.ordinal(), byteBuffer);
     ReadWriteIOUtils.write(modelName, byteBuffer);
-    if (status == ModelStatus.FAILED) {
+    if (status == ModelStatus.UNAVAILABLE) {
       return;
     }
 
@@ -203,7 +203,7 @@ public class ModelInformation {
   public static ModelInformation deserialize(ByteBuffer buffer) {
     ModelStatus status = ModelStatus.values()[ReadWriteIOUtils.readInt(buffer)];
     String modelName = ReadWriteIOUtils.readString(buffer);
-    if (status == ModelStatus.FAILED) {
+    if (status == ModelStatus.UNAVAILABLE) {
       return new ModelInformation(modelName, status);
     }
 
@@ -236,7 +236,7 @@ public class ModelInformation {
   public static ModelInformation deserialize(InputStream stream) throws IOException {
     ModelStatus status = ModelStatus.values()[ReadWriteIOUtils.readInt(stream)];
     String modelName = ReadWriteIOUtils.readString(stream);
-    if (status == ModelStatus.FAILED) {
+    if (status == ModelStatus.UNAVAILABLE) {
       return new ModelInformation(modelName, status);
     }
 

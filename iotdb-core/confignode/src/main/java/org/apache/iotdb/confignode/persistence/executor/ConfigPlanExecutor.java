@@ -73,6 +73,7 @@ import org.apache.iotdb.confignode.consensus.request.write.mlnode.RegisterMLNode
 import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.mlnode.UpdateMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.CreateModelPlan;
+import org.apache.iotdb.confignode.consensus.request.write.model.DropModelInNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.UpdateModelInfoPlan;
 import org.apache.iotdb.confignode.consensus.request.write.partition.CreateDataPartitionPlan;
@@ -449,7 +450,9 @@ public class ConfigPlanExecutor {
       case UpdateModelInfo:
         return modelInfo.updateModelInfo((UpdateModelInfoPlan) physicalPlan);
       case DropModel:
-        return modelInfo.dropModel(((DropModelPlan) physicalPlan).getModelId());
+        return modelInfo.dropModel(((DropModelPlan) physicalPlan).getModelName());
+      case DropModelInNode:
+        return modelInfo.dropModelInNode(((DropModelInNodePlan) physicalPlan).getNodeId());
       case CreatePipePlugin:
         return pipeInfo.getPipePluginInfo().createPipePlugin((CreatePipePluginPlan) physicalPlan);
       case DropPipePlugin:

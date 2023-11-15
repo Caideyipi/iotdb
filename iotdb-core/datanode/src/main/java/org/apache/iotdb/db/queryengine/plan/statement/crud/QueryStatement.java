@@ -54,8 +54,10 @@ import org.apache.iotdb.rpc.TSStatusCode;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.apache.iotdb.db.utils.constant.SqlConstant.COUNT_TIME;
@@ -138,6 +140,7 @@ public class QueryStatement extends AuthorityInformationStatement {
   private String modelName;
   private boolean hasModelInference = false;
   private InferenceWindow inferenceWindow = null;
+  private Map<String, String> inferenceAttribute = null;
 
   public void setModelName(String modelName) {
     this.modelName = modelName;
@@ -159,9 +162,30 @@ public class QueryStatement extends AuthorityInformationStatement {
     this.inferenceWindow = inferenceWindow;
   }
 
+  public boolean isSetInferenceWindow() {
+    return this.inferenceWindow != null;
+  }
+
   public InferenceWindow getInferenceWindow() {
     return inferenceWindow;
   }
+
+  public void addInferenceAttribute(String key, String value) {
+    if (inferenceAttribute == null) {
+      inferenceAttribute = new HashMap<>();
+    }
+    inferenceAttribute.put(key, value);
+  }
+
+  public Map<String, String> getInferenceAttributes() {
+    return inferenceAttribute;
+  }
+
+  public boolean hasInferenceAttributes() {
+    return inferenceAttribute != null;
+  }
+
+  // [IoTDB-ML] END
 
   public QueryStatement() {
     this.statementType = StatementType.QUERY;

@@ -96,6 +96,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -502,6 +503,16 @@ public class NodeManager {
    *     TSStatusCode#SUCCESS_STATUS} when register success.
    */
   public synchronized DataSet registerMLNode(TMLNodeRegisterReq req) {
+
+    if (!nodeInfo.getRegisteredMLNodes().isEmpty()) {
+      MLNodeRegisterResp dataSet = new MLNodeRegisterResp();
+      dataSet.setConfigNodeList(Collections.emptyList());
+      dataSet.setStatus(
+          new TSStatus(TSStatusCode.REGISTER_ML_NODE_ERROR.getStatusCode())
+              .setMessage("There is already one MLNode in the cluster."));
+      return dataSet;
+    }
+
     int mlNodeId = nodeInfo.generateNextNodeId();
 
     MLNodeRegisterResp activationCheckResp = registerMLNodeActivationCheck(req);

@@ -213,9 +213,9 @@ public interface IConfigTaskExecutor {
   SettableFuture<ConfigTaskResult> createModel(
       CreateModelStatement createModelStatement, MPPQueryContext context);
 
-  SettableFuture<ConfigTaskResult> dropModel(String modelId);
+  SettableFuture<ConfigTaskResult> dropModel(String modelName);
 
-  SettableFuture<ConfigTaskResult> showModels();
+  SettableFuture<ConfigTaskResult> showModels(String modelName);
 
   SettableFuture<ConfigTaskResult> showMLNodes(ShowMLNodesStatement showMLNodesStatement);
 }

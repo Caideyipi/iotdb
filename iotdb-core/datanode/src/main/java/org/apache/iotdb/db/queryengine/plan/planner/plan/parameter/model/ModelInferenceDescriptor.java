@@ -28,7 +28,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class ModelInferenceDescriptor {
@@ -38,6 +40,7 @@ public class ModelInferenceDescriptor {
   private final ModelInformation modelInformation;
   private List<String> outputColumnNames;
   private InferenceWindowParameter inferenceWindowParameter;
+  private Map<String, String> inferenceAttributes;
 
   public ModelInferenceDescriptor(
       String modelName, TEndPoint targetMLNode, ModelInformation modelInformation) {
@@ -66,6 +69,24 @@ public class ModelInferenceDescriptor {
     } else {
       this.inferenceWindowParameter = null;
     }
+    int inferenceAttributesSize = ReadWriteIOUtils.readInt(buffer);
+    if (inferenceAttributesSize == 0) {
+      this.inferenceAttributes = null;
+    } else {
+      this.inferenceAttributes = new HashMap<>();
+      for (int i = 0; i < inferenceAttributesSize; i++) {
+        this.inferenceAttributes.put(
+            ReadWriteIOUtils.readString(buffer), ReadWriteIOUtils.readString(buffer));
+      }
+    }
+  }
+
+  public void setInferenceAttributes(Map<String, String> inferenceAttributes) {
+    this.inferenceAttributes = inferenceAttributes;
+  }
+
+  public Map<String, String> getInferenceAttributes() {
+    return inferenceAttributes;
   }
 
   public void setInferenceWindowParameter(InferenceWindowParameter inferenceWindowParameter) {
@@ -115,6 +136,15 @@ public class ModelInferenceDescriptor {
       ReadWriteIOUtils.write(true, byteBuffer);
       inferenceWindowParameter.serialize(byteBuffer);
     }
+    if (inferenceAttributes == null) {
+      ReadWriteIOUtils.write(0, byteBuffer);
+    } else {
+      ReadWriteIOUtils.write(inferenceAttributes.size(), byteBuffer);
+      for (Map.Entry<String, String> entry : inferenceAttributes.entrySet()) {
+        ReadWriteIOUtils.write(entry.getKey(), byteBuffer);
+        ReadWriteIOUtils.write(entry.getValue(), byteBuffer);
+      }
+    }
   }
 
   public void serialize(DataOutputStream stream) throws IOException {
@@ -136,6 +166,15 @@ public class ModelInferenceDescriptor {
       ReadWriteIOUtils.write(true, stream);
       inferenceWindowParameter.serialize(stream);
     }
+    if (inferenceAttributes == null) {
+      ReadWriteIOUtils.write(0, stream);
+    } else {
+      ReadWriteIOUtils.write(inferenceAttributes.size(), stream);
+      for (Map.Entry<String, String> entry : inferenceAttributes.entrySet()) {
+        ReadWriteIOUtils.write(entry.getKey(), stream);
+        ReadWriteIOUtils.write(entry.getValue(), stream);
+      }
+    }
   }
 
   public static ModelInferenceDescriptor deserialize(ByteBuffer buffer) {
@@ -155,12 +194,18 @@ public class ModelInferenceDescriptor {
         && targetMLNode.equals(that.targetMLNode)
         && modelInformation.equals(that.modelInformation)
         && outputColumnNames.equals(that.outputColumnNames)
-        && inferenceWindowParameter.equals(that.inferenceWindowParameter);
+        && inferenceWindowParameter.equals(that.inferenceWindowParameter)
+        && inferenceAttributes.equals(that.inferenceAttributes);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        modelName, targetMLNode, modelInformation, outputColumnNames, inferenceWindowParameter);
+        modelName,
+        targetMLNode,
+        modelInformation,
+        outputColumnNames,
+        inferenceWindowParameter,
+        inferenceAttributes);
   }
 }

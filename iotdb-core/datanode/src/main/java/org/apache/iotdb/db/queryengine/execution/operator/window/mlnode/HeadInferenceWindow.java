@@ -19,11 +19,11 @@
 
 package org.apache.iotdb.db.queryengine.execution.operator.window.mlnode;
 
-public class TopInferenceWindow extends InferenceWindow {
+public class HeadInferenceWindow extends InferenceWindow {
   private final long windowSize;
 
-  public TopInferenceWindow(long windowSize) {
-    super(InferenceWindowType.TOP);
+  public HeadInferenceWindow(long windowSize) {
+    super(InferenceWindowType.HEAD);
     this.windowSize = windowSize;
   }
 

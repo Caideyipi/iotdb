@@ -68,7 +68,9 @@ public class ModelFetcher implements IModelFetcher {
                   ModelInformation.deserialize(getModelInfoResp.modelInfo)));
           return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
         } else {
-          return new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode());
+          TSStatus status = new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode());
+          status.setMessage(String.format("model [%s] is not available", modelName));
+          return status;
         }
       } else {
         throw new ModelNotFoundException(getModelInfoResp.getStatus().getMessage());
