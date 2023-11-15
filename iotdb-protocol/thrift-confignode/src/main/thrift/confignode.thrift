@@ -525,6 +525,7 @@ struct TShowClusterResp {
   4: required list<common.TMLNodeLocation> mlNodeList
   5: required map<i32, string> nodeStatus
   6: required map<i32, TNodeVersionInfo> nodeVersionInfo
+  7: required map<i32, TNodeActivateInfo> nodeActivateInfo
 }
 
 struct TNodeVersionInfo {
@@ -1502,6 +1503,19 @@ service IConfigNodeRPCService {
    * Return the model info by model_id
    */
   TGetModelInfoResp getModelInfo(TGetModelInfoReq req)
+
+  // ======================================================
+  // License
+  // ======================================================
+  common.TSStatus setLicenseFile(1:string fileName, 2:string licenseContent)
+
+  common.TSStatus deleteLicenseFile(1:string fileName)
+
+  common.TSStatus getLicenseFile(1:string fileName)
+
+  TLicenseContentResp getLicenseContent()
+
+  common.TSStatus getActivateStatus()
 
   // ======================================================
   // Quota

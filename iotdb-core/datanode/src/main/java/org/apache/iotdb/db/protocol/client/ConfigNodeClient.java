@@ -100,6 +100,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
+import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterResp;
@@ -1001,18 +1002,39 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
 
   @Override
   public TGetModelInfoResp getModelInfo(TGetModelInfoReq req) throws TException {
-    for (int i = 0; i < RETRY_NUM; i++) {
-      try {
-        TGetModelInfoResp resp = client.getModelInfo(req);
-        if (!updateConfigNodeLeader(resp.getStatus())) {
-          return resp;
-        }
-      } catch (TException e) {
-        configLeader = null;
-      }
-      waitAndReconnect();
-    }
-    throw new TException(MSG_RECONNECTION_FAIL);
+    return executeRemoteCallWithRetry(
+        () -> client.getModelInfo(req), resp -> !updateConfigNodeLeader(resp.getStatus()));
+  }
+
+  @Override
+  public TSStatus setLicenseFile(String fileName, String licenseContent) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.setLicenseFile(fileName, licenseContent),
+        status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TSStatus deleteLicenseFile(String fileName) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.deleteLicenseFile(fileName), status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TSStatus getLicenseFile(String fileName) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.getLicenseFile(fileName), status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TLicenseContentResp getLicenseContent() throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.getLicenseContent(), resp -> !updateConfigNodeLeader(resp.getStatus()));
+  }
+
+  @Override
+  public TSStatus getActivateStatus() throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.getActivateStatus(), status -> !updateConfigNodeLeader(status));
   }
 
   @Override

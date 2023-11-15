@@ -16,32 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.license;
+
+package org.apache.iotdb.confignode.manager.activation.SystemInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Scanner;
 
-public class WindowsSystem extends SystemInfoService {
+public class WindowsSystemInfoGetter extends SystemInfoGetter {
+
+  private static final Logger logger = LoggerFactory.getLogger(WindowsSystemInfoGetter.class);
 
   @Override
-  protected String getCPUSerial() throws LicenseException {
-    try {
-      return executeShell("wmic cpu get processorid");
-    } catch (Exception e) {
-      throw new LicenseException("CPU information cannot be read");
-    }
+  Logger getLogger() {
+    return logger;
   }
 
   @Override
-  protected String getMainBoardSerial() throws LicenseException {
-    try {
-      return executeShell("wmic baseboard get serialnumber");
-    } catch (Exception e) {
-      throw new LicenseException("MainBoard information cannot be read");
-    }
+  String getCPUIdImpl() throws IOException {
+    return executeShell("wmic cpu get processorid");
   }
 
-  protected static String executeShell(String shell) throws IOException {
+  @Override
+  String getMainBoardIdImpl() throws IOException {
+    return executeShell("wmic baseboard get serialnumber");
+  }
+
+  @Override
+  String getSystemUUIDImpl() throws IOException {
+    return executeShell("wmic csproduct get uuid");
+  }
+
+  private static String executeShell(String shell) throws IOException {
     Process process = Runtime.getRuntime().exec(shell);
     process.getOutputStream().close();
     Scanner scanner = new Scanner(process.getInputStream());

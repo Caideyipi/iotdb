@@ -1,0 +1,1024 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * LICENSE_FILE_NAME); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.iotdb.confignode.it.cluster;
+
+import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
+import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.confignode.manager.activation.ActivationManager;
+import org.apache.iotdb.confignode.manager.activation.License;
+import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
+import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
+import org.apache.iotdb.consensus.ConsensusFactory;
+import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.env.cluster.ClusterConstant;
+import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
+import org.apache.iotdb.it.framework.IoTDBTestLogger;
+import org.apache.iotdb.it.framework.IoTDBTestRunner;
+import org.apache.iotdb.itbase.category.ClusterIT;
+import org.apache.iotdb.rpc.TSStatusCode;
+
+import org.apache.thrift.TException;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVATED;
+import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_ACTIVATED;
+import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_UNACTIVATED;
+import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_ACTIVATED;
+import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_UNACTIVATED;
+import static org.apache.iotdb.commons.license.ActivateStatus.UNACTIVATED;
+import static org.apache.iotdb.commons.license.ActivateStatus.UNKNOWN;
+import static org.apache.iotdb.confignode.manager.activation.ActivationManager.LICENSE_FILE_NAME;
+import static org.apache.iotdb.confignode.manager.activation.License.DATANODE_NUM_LIMIT_NAME;
+import static org.apache.iotdb.confignode.manager.activation.License.LICENSE_EXPIRE_TIMESTAMP_NAME;
+import static org.apache.iotdb.confignode.manager.activation.License.LICENSE_ISSUE_TIMESTAMP_NAME;
+
+@RunWith(IoTDBTestRunner.class)
+@Category({ClusterIT.class})
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class IoTDBActivationIT {
+  private static final Logger logger = IoTDBTestLogger.logger;
+
+  private static final String ratisConsensusProtocolClass =
+      "org.apache.iotdb.consensus.ratis.RatisConsensus";
+
+  private static final int testReplicationFactor = 1;
+
+  private static String baseLicenseContent;
+  private static Properties baseLicenseProperties = new Properties();
+
+  private static final int baseTest = 0;
+  private static final int normalTest = 0;
+  private static final int bigSlowTest = 0;
+
+  @BeforeClass
+  public static void setUpClass() throws IOException {
+    baseLicenseProperties = ActivationManager.buildUnlimitedLicenseProperties();
+    StringWriter writer = new StringWriter();
+    baseLicenseProperties.store(writer, null);
+    baseLicenseContent = writer.toString();
+  }
+
+  @Before
+  public void setUp() {
+    EnvFactory.getEnv()
+        .getConfig()
+        .getCommonConfig()
+        .setSchemaRegionConsensusProtocolClass(ratisConsensusProtocolClass)
+        .setDataRegionConsensusProtocolClass(ratisConsensusProtocolClass)
+        .setConfigNodeConsensusProtocolClass(ConsensusFactory.RATIS_CONSENSUS)
+        .setSchemaReplicationFactor(testReplicationFactor)
+        .setDataReplicationFactor(testReplicationFactor);
+
+    // This test will use MAIN_CONFIGNODE_CLASS_NAME_FOR_ACTIVATION_IT as default main class
+    ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_IT =
+        ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_ACTIVATION_IT;
+  }
+
+  @After
+  public void tearDown() {
+    EnvFactory.getEnv().cleanClusterEnvironment();
+  }
+
+  // region ConfigNode Test
+  @Test
+  @Order(baseTest)
+  public void licenseFileManageTest() {
+    System.out.println(System.getProperty("user.dir"));
+    EnvFactory.getEnv().initClusterEnvironment(1, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      testStatusWithRetry(leaderClient, Collections.singletonList(PASSIVE_UNACTIVATED));
+
+      // create license file
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(leaderClient, Collections.singletonList(ACTIVE_ACTIVATED));
+
+      // add datanode
+      EnvFactory.getEnv().registerNewDataNode(true);
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED));
+
+      // read license file, then compare
+      TSStatus status = leaderClient.getLicenseFile(LICENSE_FILE_NAME);
+      Assert.assertEquals(status.message, baseLicenseContent);
+
+      // delete license file
+      leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
+      testGoIntoUnactivated(leaderClient, 1, 1);
+    } catch (AssertionError | Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  @Order(baseTest)
+  public void activateCnTest() {
+    EnvFactory.getEnv().initClusterEnvironment(3, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED));
+
+      // activate leader
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(
+          leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED));
+
+      EnvFactory.getEnv().registerNewDataNode(true);
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
+
+      // deactivate leader
+      leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
+      testGoIntoUnactivated(leaderClient, 3, 1);
+
+      // activate follower
+      int leaderIndex = EnvFactory.getEnv().getLeaderConfigNodeIndex();
+      int followerIndex = -1;
+      for (int configNodeId = 0;
+          configNodeId < EnvFactory.getEnv().getConfigNodeWrapperList().size();
+          configNodeId++) {
+        if (configNodeId != leaderIndex) {
+          followerIndex = configNodeId;
+          break;
+        }
+      }
+      Assert.assertNotEquals(-1, followerIndex);
+      SyncConfigNodeIServiceClient followerClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(followerIndex);
+      followerClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
+      followerClient.close();
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  @Order(normalTest)
+  public void activateAllCnTest() {
+    EnvFactory.getEnv().initClusterEnvironment(3, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      // activate all 3 cn
+      for (int configNodeId = 0;
+          configNodeId < EnvFactory.getEnv().getConfigNodeWrapperList().size();
+          configNodeId++) {
+        SyncConfigNodeIServiceClient client =
+            (SyncConfigNodeIServiceClient)
+                EnvFactory.getEnv().getConfigNodeConnection(configNodeId);
+        client.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+        client.close();
+      }
+      EnvFactory.getEnv().registerNewDataNode(true);
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED, ACTIVE_ACTIVATED, ACTIVATED));
+
+      // deactivate all 3 cn, check status each time
+      SyncConfigNodeIServiceClient client =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(0);
+      client.deleteLicenseFile(LICENSE_FILE_NAME);
+      client.close();
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
+
+      client = (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(1);
+      client.deleteLicenseFile(LICENSE_FILE_NAME);
+      client.close();
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
+
+      client = (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(2);
+      client.deleteLicenseFile(LICENSE_FILE_NAME);
+      client.close();
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
+      testGoIntoUnactivated(leaderClient, 3, 1);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Ignore // This test has been covered by licenseModifyParallelTest
+  @Test
+  public void activateCnBigTest() {
+    final int configNodeNum = 5;
+    final int testTimes = 20;
+    EnvFactory.getEnv().initClusterEnvironment(configNodeNum, 0);
+    SyncConfigNodeIServiceClient leaderClient;
+    Function<Map<ActivateStatus, Integer>, List<ActivateStatus>> mapToList =
+        map -> {
+          List<ActivateStatus> list = new ArrayList<>();
+          for (ActivateStatus activateStatus : map.keySet()) {
+            for (int i = 0; i < map.get(activateStatus); i++) {
+              list.add(activateStatus);
+            }
+          }
+          return list;
+        };
+    try {
+      leaderClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection();
+      testPassiveUnactivated(leaderClient, configNodeNum, 0);
+
+      // Do operation for many times.
+      // In each operation, there are 2 probabilities:
+      // 1. randomly choose one ConfigNode, flip its activate state
+      // 2. deactivate all ConfigNode
+      Random random = new Random();
+      Map<ActivateStatus, Integer> initStatusCountMap = new HashMap<>();
+      initStatusCountMap.put(PASSIVE_ACTIVATED, configNodeNum - 1);
+      initStatusCountMap.put(ACTIVE_ACTIVATED, 0);
+      Map<ActivateStatus, Integer> statusCountMap = new HashMap<>(initStatusCountMap);
+      for (int i = 0; i < testTimes; i++) {
+        int choice = random.nextInt(10);
+        if (choice < 9) {
+          int randomId = random.nextInt(configNodeNum);
+          SyncConfigNodeIServiceClient client =
+              (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(randomId);
+          TSStatus status = client.getActivateStatus();
+          if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+            continue;
+          }
+          ActivateStatus activateStatus = ActivateStatus.valueOf(status.getMessage());
+          if (ACTIVE_ACTIVATED.equals(activateStatus)) {
+            client.deleteLicenseFile(LICENSE_FILE_NAME);
+            statusCountMap.computeIfPresent(ACTIVE_ACTIVATED, (key, count) -> count - 1);
+            statusCountMap.computeIfPresent(PASSIVE_ACTIVATED, (key, count) -> count + 1);
+            logger.info(
+                String.format(
+                    "configNode%d deactivate",
+                    EnvFactory.getEnv().getConfigNodeWrapper(randomId).getPort()));
+          } else {
+            client.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+            statusCountMap.computeIfPresent(activateStatus, (key, count) -> count - 1);
+            statusCountMap.computeIfPresent(ACTIVE_ACTIVATED, (key, count) -> count + 1);
+            logger.info(
+                String.format(
+                    "configNode%d activate",
+                    EnvFactory.getEnv().getConfigNodeWrapper(randomId).getPort()));
+          }
+          client.close();
+          // check cluster activate status
+          testStatusWithRetry(leaderClient, mapToList.apply(statusCountMap));
+        } else if (choice == 9) {
+          // delete all license file
+          for (int configNodeId = 0;
+              configNodeId < EnvFactory.getEnv().getConfigNodeWrapperList().size();
+              configNodeId++) {
+            SyncConfigNodeIServiceClient client =
+                (SyncConfigNodeIServiceClient)
+                    EnvFactory.getEnv().getConfigNodeConnection(configNodeId);
+            client.deleteLicenseFile(LICENSE_FILE_NAME);
+            client.close();
+          }
+          logger.info("deactivate all configNodes");
+          testGoIntoUnactivated(leaderClient, 5, 0);
+          statusCountMap = new HashMap<>(initStatusCountMap);
+        }
+        if (i % 10 == 0) {
+          logger.info(String.format("activateCnBigTest: %d pass", i));
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  @Order(normalTest)
+  public void licenseUpdateTest() throws IOException {
+    EnvFactory.getEnv().initClusterEnvironment(2, 0);
+    long baseIssueTimestamp =
+        Long.parseLong(baseLicenseProperties.getProperty(LICENSE_ISSUE_TIMESTAMP_NAME));
+    String license0 = buildLicenseFromBase();
+    String license1 =
+        buildLicenseFromBase(LICENSE_ISSUE_TIMESTAMP_NAME, String.valueOf(baseIssueTimestamp + 1));
+    String license2 =
+        buildLicenseFromBase(LICENSE_ISSUE_TIMESTAMP_NAME, String.valueOf(baseIssueTimestamp + 2));
+    try {
+      SyncConfigNodeIServiceClient leaderClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection();
+      SyncConfigNodeIServiceClient client0 =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(0);
+      SyncConfigNodeIServiceClient client1 =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(1);
+
+      client0.setLicenseFile(LICENSE_FILE_NAME, license0);
+      client1.setLicenseFile(LICENSE_FILE_NAME, license0);
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
+
+      client0.setLicenseFile(LICENSE_FILE_NAME, license1); // expect cn1 -> PASSIVE
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED));
+      //      Assert.assertTrue(client0.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
+      //      Assert.assertTrue(client1.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
+
+      client1.setLicenseFile(LICENSE_FILE_NAME, license0);
+      testStatusFalse(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
+
+      client1.setLicenseFile(LICENSE_FILE_NAME, license2); // expect cn0 -> PASSIVE, cn1 -> ACTIVE
+      waitToMakeSureLicenseHasBeenReloaded();
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED));
+      //      Assert.assertNull(client0.getLicenseFile(LICENSE_FILE_NAME).message);
+      //      Assert.assertTrue(client1.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
+
+      client0.setLicenseFile(LICENSE_FILE_NAME, license2); // expect cn0 -> ACTIVE
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
+      //      Assert.assertTrue(client0.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
+      //      Assert.assertTrue(client1.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void licenseModifyParallelTest() {
+    final int configNodeNum = 5;
+    final int testTimes = 20;
+    EnvFactory.getEnv().initClusterEnvironment(configNodeNum, 0);
+    List<SyncConfigNodeIServiceClient> clients = new ArrayList<>();
+    try {
+      SyncConfigNodeIServiceClient leaderClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection();
+      for (int i = 0; i < configNodeNum; i++) {
+        clients.add((SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(i));
+      }
+
+      // Prepare test stuff
+      Random random = new Random();
+      List<Consumer<String>> setAll = new ArrayList<>();
+      long issueTimestamp =
+          Long.parseLong(baseLicenseProperties.getProperty(LICENSE_ISSUE_TIMESTAMP_NAME));
+      for (SyncConfigNodeIServiceClient client : clients) {
+        setAll.add(
+            (licenseContent) -> {
+              try {
+                client.setLicenseFile(LICENSE_FILE_NAME, licenseContent);
+              } catch (TException e) {
+                throw new RuntimeException(e);
+              }
+            });
+      }
+
+      // Do the test
+      String licenseContent = baseLicenseContent;
+      for (int i = 0; i < testTimes; i++) {
+        // In each round, there are 3 probabilities:
+        // 1. 20% chance: Activate all ConfigNodes.
+        // 2. 20% chance: Randomly accumulate some licenses' issue timestamp.
+        // 3. 60% chance: Randomly set each ConfigNodes to activated or unactivated.
+        // Besides, ConfigNodes' licenses will be set in parallel.
+        int choice1 = new Random().nextInt(5);
+        if (choice1 == 0) {
+          logger.info("Activate all");
+          runConsumerInParallel(setAll, licenseContent);
+          waitToMakeSureLicenseHasBeenReloaded();
+          testStatusAllActiveActivate(leaderClient, configNodeNum, 0);
+        } else if (choice1 == 1) {
+          int dontBeZero = 0;
+          while (dontBeZero == 0) {
+            dontBeZero = random.nextInt(configNodeNum);
+          }
+          final int updateNum = dontBeZero;
+          logger.info("Update {} licenses' issue time to {}", updateNum, issueTimestamp);
+          issueTimestamp++;
+          logger.info("issueTimestamp changed to {}", issueTimestamp);
+          licenseContent =
+              buildLicenseFromBase(LICENSE_ISSUE_TIMESTAMP_NAME, String.valueOf(issueTimestamp));
+          List<Runnable> updateRandomly = new ArrayList<>();
+          HashSet<Integer> toUpdate = getNFromM(configNodeNum, updateNum);
+          for (int j = 0; j < configNodeNum; j++) {
+            final int finalJ = j;
+            final String finalLicenseContent = licenseContent;
+            if (toUpdate.contains(j)) {
+              updateRandomly.add(
+                  () -> {
+                    try {
+                      clients.get(finalJ).setLicenseFile(LICENSE_FILE_NAME, finalLicenseContent);
+                    } catch (TException e) {
+                      throw new RuntimeException(e);
+                    }
+                  });
+            }
+          }
+          runInParallel(updateRandomly);
+          waitToMakeSureLicenseHasBeenReloaded();
+          List<ActivateStatus> expectation = new ArrayList<>();
+          for (int j = 0; j < updateNum; j++) {
+            expectation.add(ACTIVE_ACTIVATED);
+          }
+          for (int j = 0; j < configNodeNum - updateNum; j++) {
+            expectation.add(PASSIVE_ACTIVATED);
+          }
+          testStatusWithRetry(leaderClient, expectation);
+        } else {
+          // randomly set
+          List<Runnable> setRandomly = new ArrayList<>();
+          final int activeActivatedNum = random.nextInt(configNodeNum + 1);
+          HashSet<Integer> toActivate = getNFromM(configNodeNum, activeActivatedNum);
+          for (int j = 0; j < configNodeNum; j++) {
+            final int finalJ = j;
+            final String finalLicenseContent = licenseContent;
+            if (toActivate.contains(j)) {
+              setRandomly.add(
+                  () -> {
+                    try {
+                      clients.get(finalJ).setLicenseFile(LICENSE_FILE_NAME, finalLicenseContent);
+                    } catch (TException e) {
+                      throw new RuntimeException(e);
+                    }
+                  });
+            } else {
+              setRandomly.add(
+                  () -> {
+                    try {
+                      clients.get(finalJ).deleteLicenseFile(LICENSE_FILE_NAME);
+                    } catch (TException e) {
+                      throw new RuntimeException(e);
+                    }
+                  });
+            }
+          }
+          logger.info("Set {} of {} to activated", activeActivatedNum, configNodeNum);
+          runInParallel(setRandomly);
+          waitToMakeSureLicenseHasBeenReloaded();
+          if (activeActivatedNum == 0) {
+            testGoIntoUnactivated(leaderClient, configNodeNum, 0);
+          } else {
+            List<ActivateStatus> expectation = new ArrayList<>();
+            for (int j = 0; j < activeActivatedNum; j++) {
+              expectation.add(ACTIVE_ACTIVATED);
+            }
+            for (int j = 0; j < configNodeNum - activeActivatedNum; j++) {
+              expectation.add(PASSIVE_ACTIVATED);
+            }
+            testStatusWithRetry(leaderClient, expectation);
+          }
+        }
+        logger.info("loop {} pass", i);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  @Order(normalTest)
+  public void licenseExpireTest() {
+    EnvFactory.getEnv().initClusterEnvironment(3, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      // set license which will expire in 10 seconds
+      String willExpireSoonLicense =
+          buildLicenseFromBase(
+              LICENSE_EXPIRE_TIMESTAMP_NAME,
+              String.valueOf(System.currentTimeMillis() + 10000),
+              LICENSE_ISSUE_TIMESTAMP_NAME,
+              "1");
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, willExpireSoonLicense);
+      testStatusWithRetry(
+          leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED));
+
+      // Wait until the license expired
+      Thread.sleep(10000);
+      // Then, cluster should go into active unactivated state
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_UNACTIVATED, PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED));
+
+      // Give valid license to a follower, cluster should be activated again
+      int followerIndex = (1 + EnvFactory.getEnv().getLeaderConfigNodeIndex()) % 3;
+      SyncConfigNodeIServiceClient followerClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(followerIndex);
+      followerClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(
+          leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED));
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  // endregion
+
+  // region DataNode Test
+  @Test
+  @Order(normalTest)
+  public void dataNodeNumLimitSequentialTest() throws IOException {
+    EnvFactory.getEnv().initClusterEnvironment(1, 0);
+    String nodeNumLimit0License = buildLicenseFromBase(DATANODE_NUM_LIMIT_NAME, "0");
+    String nodeNumLimit1License = buildLicenseFromBase(DATANODE_NUM_LIMIT_NAME, "1");
+    String nodeNumLimit2License = buildLicenseFromBase(DATANODE_NUM_LIMIT_NAME, "2");
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      List<DataNodeWrapper> dataNodeWrappers = new ArrayList<>();
+      for (int i = 0; i < 2; i++) {
+        DataNodeWrapper wrapper = EnvFactory.getEnv().generateRandomDataNodeWrapper();
+        dataNodeWrappers.add(wrapper);
+      }
+
+      // 1. first datanode start fail
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, nodeNumLimit0License);
+      testStatusAllActiveActivate(leaderClient, 1, 0);
+      dataNodeWrappers.get(0).start();
+      testStatusFalse(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED));
+
+      // 2. set license, then first datanode start success
+      leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
+      testGoIntoUnactivated(leaderClient, 1, 0);
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, nodeNumLimit1License);
+      testStatusWithRetry(leaderClient, Collections.singletonList(ACTIVE_ACTIVATED));
+      dataNodeWrappers.get(0).start();
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED));
+
+      // 3. second datanode start fail
+      dataNodeWrappers.get(1).start();
+      testStatusFalse(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
+
+      // 4. modify license, set nodeNumLimit to 2, then second datanode start success
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, nodeNumLimit2License);
+      dataNodeWrappers.get(1).start();
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void dataNodeNumLimitParallelTest() throws IOException {
+    final int dataNodeNum = 3;
+    EnvFactory.getEnv().initClusterEnvironment(1, 0);
+    String nodeNumLimit2License = buildLicenseFromBase(DATANODE_NUM_LIMIT_NAME, "2");
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      List<Runnable> startAllDataNodes = new ArrayList<>();
+      for (int i = 0; i < dataNodeNum; i++) {
+        DataNodeWrapper wrapper = EnvFactory.getEnv().generateRandomDataNodeWrapper();
+        startAllDataNodes.add(wrapper::start);
+      }
+
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, nodeNumLimit2License);
+      waitToMakeSureLicenseHasBeenReloaded();
+      runInParallel(startAllDataNodes);
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
+      testStatusFalse(
+          leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED, ACTIVATED));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  @Order(normalTest)
+  public void dataNodeCpuNumLimitSequentialTest() throws IOException {
+    EnvFactory.getEnv().initClusterEnvironment(1, 0);
+    String cpuCoreLimit1 = buildLicenseFromBase(License.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "1");
+    String cpuCoreLimit2 = buildLicenseFromBase(License.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "2");
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      List<DataNodeWrapper> dataNodeWrappers = new ArrayList<>();
+      for (int i = 0; i < 2; i++) {
+        DataNodeWrapper wrapper = EnvFactory.getEnv().generateRandomDataNodeWrapper();
+        dataNodeWrappers.add(wrapper);
+      }
+
+      // 1. first datanode start fail
+      dataNodeWrappers.get(0).start();
+      for (int i = 0; i < 10; i++) {
+        TShowClusterResp clusterInfo = leaderClient.showCluster();
+        assert clusterInfo.getDataNodeListSize() == 0;
+        Thread.sleep(1000);
+      }
+
+      // 2. set license, then first datanode start success
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, cpuCoreLimit1);
+      testStatusWithRetry(leaderClient, Collections.singletonList(ACTIVE_ACTIVATED));
+      dataNodeWrappers.get(0).start();
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED));
+
+      // 3. second datanode start fail
+      dataNodeWrappers.get(1).start();
+      for (int i = 0; i < 10; i++) {
+        TShowClusterResp clusterInfo = leaderClient.showCluster();
+        assert clusterInfo.getDataNodeListSize() == 1;
+        Thread.sleep(1000);
+      }
+
+      // 4. modify license, set nodeNumLimit to 2, then second datanode start success
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, cpuCoreLimit2);
+      waitToMakeSureLicenseHasBeenReloaded();
+      dataNodeWrappers.get(1).start();
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  // endregion
+
+  // region MLNode Tests
+
+  // endregion
+
+  // region Other Tests
+
+  @Test
+  @Order(baseTest)
+  public void showClusterTest() throws SQLException {
+    ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_IT =
+        ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_OTHER_IT;
+    EnvFactory.getEnv().initClusterEnvironment(1, 1);
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      ResultSet resultSet = statement.executeQuery("show cluster");
+      while (resultSet.next()) {
+        // must contain "ActivateStatus" column, and this column must contain valid value
+        ActivateStatus.valueOf(resultSet.getString("ActivateStatus"));
+      }
+    }
+  }
+
+  @Test
+  public void unactivatedTest() {
+    EnvFactory.getEnv().initClusterEnvironment(1, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+
+      // new ConfigNode can join cluster
+      EnvFactory.getEnv().registerNewConfigNode(true);
+      testPassiveUnactivated(leaderClient, 2, 0);
+
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED));
+      EnvFactory.getEnv().registerNewDataNode(true);
+      testStatusWithRetry(
+          leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
+      leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
+
+      Connection connection = EnvFactory.getEnv().getConnection();
+
+      // old DataNode can restart
+      testGoIntoUnactivated(leaderClient, 2, 1);
+      EnvFactory.getEnv().getDataNodeWrapper(0).stop();
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNKNOWN),
+          BaseNodeCache.HEARTBEAT_TIMEOUT_TIME + TimeUnit.SECONDS.toMillis(2));
+      EnvFactory.getEnv().getDataNodeWrapper(0).start();
+      testPassiveUnactivated(leaderClient, 2, 1);
+
+      // new DataNode cannot join
+      EnvFactory.getEnv().registerNewDataNode(false);
+      testStatusFalseWithFailMessage(
+          leaderClient,
+          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNACTIVATED, UNACTIVATED),
+          "New DataNode started success, which should not happen");
+
+      // not allow manually set system status to running
+      Statement statement = connection.createStatement();
+      boolean pass = false;
+      try {
+        statement.executeQuery("set system to running");
+      } catch (SQLException e) {
+        pass = true;
+      }
+      Assert.assertTrue(pass);
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  // endregion
+
+  // region Helpers
+  private static void waitToMakeSureLicenseHasBeenReloaded() {
+    try {
+      Thread.sleep(ActivationManager.FILE_MONITOR_INTERVAL * 2);
+    } catch (InterruptedException e) {
+      logger.warn("Sleeping was interrupted");
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private String mapToString(Map<Integer, TNodeActivateInfo> map) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("{");
+    for (Map.Entry<Integer, TNodeActivateInfo> entry : map.entrySet()) {
+      builder.append(entry.getKey()).append(":").append(entry.getValue().getStatus()).append(", ");
+    }
+    builder.append("}");
+    return builder.toString();
+  }
+
+  private String listToString(List<ActivateStatus> list) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("{");
+    for (ActivateStatus status : list) {
+      builder.append(status).append(", ");
+    }
+    builder.append("}");
+    return builder.toString();
+  }
+
+  /**
+   * When there is no active node in cluster, still need to wait a moment before goes into
+   * unactivated state
+   */
+  private void testGoIntoUnactivated(
+      SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
+      throws Exception {
+    try {
+      Thread.sleep(10000);
+    } catch (InterruptedException ignored) {
+
+    }
+    testPassiveUnactivated(leaderClient, configNodeNum, dataNodeNum);
+  }
+
+  private void testStatusWithRetry(
+      SyncConfigNodeIServiceClient leaderClient, List<ActivateStatus> expectation)
+      throws Exception {
+    testStatusWithRetry(leaderClient, expectation, 10000);
+  }
+
+  private void testStatusFalse(
+      SyncConfigNodeIServiceClient leaderClient, List<ActivateStatus> expectation)
+      throws Exception {
+    testStatusFalseWithFailMessage(leaderClient, expectation, "");
+  }
+
+  private void testStatusFalseWithFailMessage(
+      SyncConfigNodeIServiceClient leaderClient,
+      List<ActivateStatus> expectation,
+      String failMessage)
+      throws Exception {
+    long startTime = System.currentTimeMillis();
+    while (true) {
+      TShowClusterResp resp = null;
+      try {
+        resp = leaderClient.showCluster();
+      } catch (TException ignored) {
+
+      }
+      if (resp != null
+          && TSStatusCode.SUCCESS_STATUS.getStatusCode() == resp.status.getCode()
+          && compareLists(
+              expectation,
+              resp.getNodeActivateInfo().values().stream()
+                  .map(activateInfo -> ActivateStatus.valueOf(activateInfo.getStatus()))
+                  .collect(Collectors.toList()))) {
+        String errMsg =
+            "Test fail because cluster goes into the undesirable state: "
+                + mapToString(resp.nodeActivateInfo)
+                + ".\n"
+                + failMessage;
+        logger.error(errMsg);
+        throw new Exception(errMsg);
+      }
+      if (System.currentTimeMillis() - startTime > 5000) {
+        return;
+      }
+      try {
+        Thread.sleep(1000);
+      } catch (Exception ignored) {
+
+      }
+    }
+  }
+
+  private void testStatusWithRetry(
+      SyncConfigNodeIServiceClient client, List<ActivateStatus> expectation, long timeLimit)
+      throws Exception {
+    logger.info("expect {}", listToString(expectation));
+    long startTime = System.currentTimeMillis();
+    while (true) {
+      TShowClusterResp resp = null;
+      try {
+        resp = client.showCluster();
+      } catch (TException ignored) {
+
+      }
+      if (resp != null
+          && TSStatusCode.SUCCESS_STATUS.getStatusCode() == resp.status.getCode()
+          && compareLists(
+              expectation,
+              resp.getNodeActivateInfo().values().stream()
+                  .map(activateInfo -> ActivateStatus.valueOf(activateInfo.getStatus()))
+                  .collect(Collectors.toList()))) {
+        break;
+      }
+      if (System.currentTimeMillis() - startTime > timeLimit) {
+        StringBuilder errBuilder = new StringBuilder();
+        errBuilder
+            .append("Test fail because cluster not goes into desirable state after ")
+            .append(timeLimit / 1000)
+            .append(" seconds retry.\n")
+            .append("Desirable state is ")
+            .append(listToString(expectation))
+            .append("\n");
+
+        if (resp != null) {
+          errBuilder.append("Actual state is ").append(mapToString(resp.nodeActivateInfo));
+        } else {
+          errBuilder.append("Actual state is unknown, because last resp is null");
+        }
+        String errMsg = errBuilder.toString();
+        logger.error(errMsg);
+        throw new Exception(errMsg);
+      }
+      try {
+        Thread.sleep(1000);
+      } catch (Exception ignored) {
+
+      }
+    }
+  }
+
+  private void testPassiveActivated(
+      SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
+      throws Exception {
+    List<ActivateStatus> statusList = new ArrayList<>();
+    for (int i = 0; i < configNodeNum; i++) {
+      statusList.add(PASSIVE_ACTIVATED);
+    }
+    for (int i = 0; i < dataNodeNum; i++) {
+      statusList.add(ACTIVATED);
+    }
+    testStatusWithRetry(leaderClient, statusList);
+  }
+
+  private void testStatusAllActiveActivate(
+      SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
+      throws Exception {
+    List<ActivateStatus> statusList = new ArrayList<>();
+    for (int i = 0; i < configNodeNum; i++) {
+      statusList.add(ACTIVE_ACTIVATED);
+    }
+    for (int i = 0; i < dataNodeNum; i++) {
+      statusList.add(ACTIVATED);
+    }
+    testStatusWithRetry(leaderClient, statusList);
+  }
+
+  private void testPassiveUnactivated(
+      SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
+      throws Exception {
+    List<ActivateStatus> statusList = new ArrayList<>();
+    for (int i = 0; i < configNodeNum; i++) {
+      statusList.add(PASSIVE_UNACTIVATED);
+    }
+    for (int i = 0; i < dataNodeNum; i++) {
+      statusList.add(UNACTIVATED);
+    }
+    testStatusWithRetry(leaderClient, statusList);
+  }
+
+  public static <T> boolean compareLists(List<T> list1, List<T> list2) {
+    if (list1.size() != list2.size()) {
+      return false;
+    }
+    Map<T, Integer> countMap = new HashMap<>();
+    for (T element : list1) {
+      countMap.put(element, countMap.getOrDefault(element, 0) + 1);
+    }
+    for (T element : list2) {
+      Integer count = countMap.get(element);
+      if (count == null || count <= 0) {
+        return false;
+      }
+      countMap.put(element, count - 1);
+    }
+    return true;
+  }
+
+  private static String propertiesToString(Properties properties) throws IOException {
+    StringWriter writer = new StringWriter();
+    properties.store(writer, "");
+    return writer.toString();
+  }
+
+  private static String buildLicenseFromBase(String... contents) throws IOException {
+    if (contents.length % 2 != 0) {
+      throw new RuntimeException("contents.length % 2 needs to be 0!");
+    }
+    Properties newProperties = new Properties();
+    newProperties.load(new StringReader(baseLicenseContent));
+    for (int i = 0; i < contents.length; i += 2) {
+      newProperties.setProperty(contents[i], contents[i + 1]);
+    }
+    return propertiesToString(newProperties);
+  }
+
+  private static void setLicense(SyncConfigNodeIServiceClient client, String licenseFileName)
+      throws IOException, TException {
+    Path licensePath = Paths.get(".license/" + licenseFileName);
+    String licenseContent = new String(Files.readAllBytes(licensePath));
+    client.setLicenseFile(LICENSE_FILE_NAME, licenseContent);
+  }
+
+  private static void runInParallel(List<Runnable> runnableList) {
+    List<CompletableFuture<?>> tasks = new ArrayList<>();
+    for (Runnable runnable : runnableList) {
+      tasks.add(CompletableFuture.runAsync(runnable));
+    }
+    tasks.forEach(CompletableFuture::join);
+  }
+
+  private static <T> void runConsumerInParallel(List<Consumer<T>> consumerList, T parameter) {
+    List<Runnable> runnableList = new ArrayList<>();
+    for (Consumer<T> consumer : consumerList) {
+      Runnable runnable = () -> consumer.accept(parameter);
+      runnableList.add(runnable);
+    }
+    runInParallel(runnableList);
+  }
+
+  /**
+   * Fisher-Yates Shuffle algorithm, randomly get n stuff from m stuff in an efficient way. For
+   * example, getNFromM(5, 2) will return {1,3} {3,4} {2,0} in same opportunity.
+   */
+  private static HashSet<Integer> getNFromM(int m, int n) {
+    int[] numbers = new int[m];
+    for (int i = 0; i < m; i++) {
+      numbers[i] = i;
+    }
+    Random random = new Random();
+    for (int i = 0; i < n; i++) {
+      int j = i + random.nextInt(m - i);
+      int temp = numbers[j];
+      numbers[j] = numbers[i];
+      numbers[i] = temp;
+    }
+    HashSet<Integer> result = new HashSet<>();
+    for (int i = 0; i < n; i++) {
+      result.add(numbers[i]);
+    }
+    return result;
+  }
+
+  // endregion
+}

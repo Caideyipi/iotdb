@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.queryengine.plan.execution.config.metadata;
 
+import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeader;
@@ -66,7 +67,8 @@ public class ShowClusterTask implements IConfigTask {
       String nodeStatus,
       String hostAddress,
       int port,
-      TNodeVersionInfo versionInfo) {
+      TNodeVersionInfo versionInfo,
+      TNodeActivateInfo activateInfo) {
     builder.getTimeColumnBuilder().writeLong(0L);
     builder.getColumnBuilder(0).writeInt(nodeId);
     if (nodeType == null) {
@@ -99,7 +101,11 @@ public class ShowClusterTask implements IConfigTask {
           .getColumnBuilder(6)
           .writeBinary(new Binary(versionInfo.getBuildInfo(), TSFileConfig.STRING_CHARSET));
     }
-
+    if (activateInfo == null || activateInfo.getStatus() == null) {
+      builder.getColumnBuilder(7).appendNull();
+    } else {
+      builder.getColumnBuilder(7).writeBinary(new Binary(activateInfo.getStatus()));
+    }
     builder.declarePosition();
   }
 
@@ -122,7 +128,8 @@ public class ShowClusterTask implements IConfigTask {
                     clusterNodeInfos.getNodeStatus().get(e.getConfigNodeId()),
                     e.getInternalEndPoint().getIp(),
                     e.getInternalEndPoint().getPort(),
-                    clusterNodeInfos.getNodeVersionInfo().get(e.getConfigNodeId())));
+                    clusterNodeInfos.getNodeVersionInfo().get(e.getConfigNodeId()),
+                    clusterNodeInfos.getNodeActivateInfo().get(e.getConfigNodeId())));
 
     clusterNodeInfos
         .getDataNodeList()
@@ -135,7 +142,8 @@ public class ShowClusterTask implements IConfigTask {
                     clusterNodeInfos.getNodeStatus().get(e.getDataNodeId()),
                     e.getInternalEndPoint().getIp(),
                     e.getInternalEndPoint().getPort(),
-                    clusterNodeInfos.getNodeVersionInfo().get(e.getDataNodeId())));
+                    clusterNodeInfos.getNodeVersionInfo().get(e.getDataNodeId()),
+                    clusterNodeInfos.getNodeActivateInfo().get(e.getDataNodeId())));
 
     if (clusterNodeInfos.getMlNodeList() != null) {
       clusterNodeInfos
@@ -149,7 +157,8 @@ public class ShowClusterTask implements IConfigTask {
                       clusterNodeInfos.getNodeStatus().get(e.getMlNodeId()),
                       e.getInternalEndPoint().getIp(),
                       e.getInternalEndPoint().getPort(),
-                      clusterNodeInfos.getNodeVersionInfo().get(e.getMlNodeId())));
+                      clusterNodeInfos.getNodeVersionInfo().get(e.getMlNodeId()),
+                      clusterNodeInfos.getNodeActivateInfo().get(e.getMlNodeId())));
     }
     DatasetHeader datasetHeader = DatasetHeaderFactory.getShowClusterHeader();
     future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS, builder.build(), datasetHeader));

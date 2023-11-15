@@ -16,32 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.license;
 
-import com.alibaba.fastjson2.JSON;
+package org.apache.iotdb.confignode.service;
 
-public class SystemInfo {
-  private String cpu;
-  private String mainBoard;
-
-  public String getCpu() {
-    return cpu;
-  }
-
-  public void setCpu(String cpu) {
-    this.cpu = cpu;
-  }
-
-  public String getMainBoard() {
-    return mainBoard;
-  }
-
-  public void setMainBoard(String mainBoard) {
-    this.mainBoard = mainBoard;
-  }
-
+public class ConfigNodeShutdownHookForActivationIT extends ConfigNodeShutdownHook {
   @Override
-  public String toString() {
-    return JSON.toJSONString(this);
+  protected ConfigNode getConfigNodeInstance() {
+    return ConfigNodeForActivationIT.getInstance();
   }
 }

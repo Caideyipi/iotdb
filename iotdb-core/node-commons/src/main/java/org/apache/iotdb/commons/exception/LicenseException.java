@@ -16,10 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.license;
 
-public interface LicenseVerifier {
-  boolean verify(SystemInfo var1);
+package org.apache.iotdb.commons.exception;
 
-  boolean verify(String var1);
+public class LicenseException extends Exception {
+  public LicenseException() {}
+
+  public LicenseException(String message) {
+    super(message);
+  }
+
+  public LicenseException(Throwable cause) {
+    super(cause);
+  }
+
+  public LicenseException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

@@ -39,6 +39,8 @@ import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.IllegalPathException;
+import org.apache.iotdb.commons.exception.LicenseException;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.SchemaConstant;
@@ -82,6 +84,7 @@ import org.apache.iotdb.confignode.consensus.response.partition.SchemaNodeManage
 import org.apache.iotdb.confignode.consensus.response.partition.SchemaPartitionResp;
 import org.apache.iotdb.confignode.consensus.response.template.TemplateSetInfoResp;
 import org.apache.iotdb.confignode.consensus.statemachine.ConfigRegionStateMachine;
+import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.cq.CQManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
@@ -157,6 +160,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionMigrateResultReportReq;
@@ -253,6 +257,8 @@ public class ConfigManager implements IManager {
   /** Pipe */
   private final PipeManager pipeManager;
 
+  protected ActivationManager activationManager;
+
   /** Manage quotas */
   private final ClusterQuotaManager clusterQuotaManager;
 
@@ -321,6 +327,10 @@ public class ConfigManager implements IManager {
 
   public void initConsensusManager() throws IOException {
     this.consensusManager.set(new ConsensusManager(this, this.stateMachine));
+  }
+
+  public void initActivationManager() throws LicenseException {
+    this.activationManager = new ActivationManager(this);
   }
 
   public void close() throws IOException {
@@ -522,19 +532,38 @@ public class ConfigManager implements IManager {
       mlNodeInfoLocations.forEach(
           mlNodeLocation ->
               nodeStatus.putIfAbsent(mlNodeLocation.getMlNodeId(), NodeStatus.Unknown.toString()));
+
+      // prepare nodeActivateInfo
+      Map<Integer, TNodeActivateInfo> nodeActivateInfo = getLoadManager().getNodeActivateStatus();
+      nodeActivateInfo.put(
+          CONF.getConfigNodeId(),
+          new TNodeActivateInfo(activationManager.getActivateStatus().toString()));
+      configNodeLocations.forEach(
+          configNodeLocation ->
+              nodeActivateInfo.putIfAbsent(
+                  configNodeLocation.getConfigNodeId(),
+                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+      dataNodeLocations.forEach(
+          dataNodeInfoLocation ->
+              nodeActivateInfo.putIfAbsent(
+                  dataNodeInfoLocation.getDataNodeId(),
+                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+
       return new TShowClusterResp(
           status,
           configNodeLocations,
           dataNodeLocations,
           mlNodeInfoLocations,
           nodeStatus,
-          nodeVersionInfo);
+          nodeVersionInfo,
+          nodeActivateInfo);
     } else {
       return new TShowClusterResp(
           status,
           new ArrayList<>(),
           new ArrayList<>(),
           new ArrayList<>(),
+          new HashMap<>(),
           new HashMap<>(),
           new HashMap<>());
     }
@@ -1563,6 +1592,11 @@ public class ConfigManager implements IManager {
   @Override
   public CQManager getCQManager() {
     return cqManager;
+  }
+
+  @Override
+  public ActivationManager getActivationManager() {
+    return activationManager;
   }
 
   @Override

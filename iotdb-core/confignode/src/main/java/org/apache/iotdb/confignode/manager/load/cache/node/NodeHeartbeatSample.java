@@ -21,6 +21,7 @@ package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.mlnode.rpc.thrift.TMLHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
@@ -31,6 +32,8 @@ public class NodeHeartbeatSample {
   private final long sendTimestamp;
   private final long receiveTimestamp;
 
+  private final ActivateStatus activateStatus;
+
   private final NodeStatus status;
   private final String statusReason;
 
@@ -40,6 +43,7 @@ public class NodeHeartbeatSample {
   public NodeHeartbeatSample(long sendTimestamp, long receiveTimestamp) {
     this.sendTimestamp = sendTimestamp;
     this.receiveTimestamp = receiveTimestamp;
+    this.activateStatus = ActivateStatus.UNKNOWN;
     this.status = NodeStatus.Running;
     this.statusReason = null;
   }
@@ -48,20 +52,11 @@ public class NodeHeartbeatSample {
   public NodeHeartbeatSample(THeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
     this.receiveTimestamp = receiveTimestamp;
-
-    this.status = NodeStatus.parse(heartbeatResp.getStatus());
-    this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
-
-    if (heartbeatResp.isSetLoadSample()) {
-      this.loadSample = heartbeatResp.getLoadSample();
+    if (heartbeatResp.getActivateStatus() == null) {
+      this.activateStatus = ActivateStatus.UNKNOWN;
+    } else {
+      this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
     }
-  }
-
-  /** Constructor for MLNode sample. */
-  public NodeHeartbeatSample(TMLHeartbeatResp heartbeatResp, long receiveTimestamp) {
-    this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
-    this.receiveTimestamp = receiveTimestamp;
-
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
 
@@ -73,8 +68,26 @@ public class NodeHeartbeatSample {
   public NodeHeartbeatSample(TConfigNodeHeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getTimestamp();
     this.receiveTimestamp = receiveTimestamp;
+    if (heartbeatResp.getActivateStatus() == null) {
+      this.activateStatus = ActivateStatus.UNKNOWN;
+    } else {
+      this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
+    }
     this.status = NodeStatus.Running;
     this.statusReason = null;
+  }
+
+  /** Constructor for MLNode sample. */
+  public NodeHeartbeatSample(TMLHeartbeatResp heartbeatResp, long receiveTimestamp) {
+    this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
+    this.receiveTimestamp = receiveTimestamp;
+    this.activateStatus = ActivateStatus.UNKNOWN; // TODO: mlnode激活
+    this.status = NodeStatus.parse(heartbeatResp.getStatus());
+    this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
+
+    if (heartbeatResp.isSetLoadSample()) {
+      this.loadSample = heartbeatResp.getLoadSample();
+    }
   }
 
   public long getSendTimestamp() {
@@ -87,6 +100,10 @@ public class NodeHeartbeatSample {
 
   public NodeStatus getStatus() {
     return status;
+  }
+
+  public ActivateStatus getActivateStatus() {
+    return activateStatus;
   }
 
   public String getStatusReason() {
@@ -112,6 +129,9 @@ public class NodeHeartbeatSample {
   public static NodeHeartbeatSample generateDefaultSample(NodeStatus status) {
     long currentTime = System.currentTimeMillis();
     return new NodeHeartbeatSample(
-        new THeartbeatResp(currentTime, status.getStatus()).setStatusReason(null), currentTime);
+        new THeartbeatResp(currentTime, status.getStatus())
+            .setStatusReason(null)
+            .setActivateStatus(ActivateStatus.UNKNOWN.toString()),
+        currentTime);
   }
 }

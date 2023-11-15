@@ -42,6 +42,8 @@ import org.apache.iotdb.confignode.manager.load.cache.region.RegionHeartbeatSamp
 import org.apache.iotdb.confignode.manager.load.cache.route.RegionRouteCache;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
+import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
+import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
 import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.slf4j.Logger;
@@ -150,12 +152,13 @@ public class LoadCache {
    * Cache the latest heartbeat sample of a DataNode.
    *
    * @param nodeId the id of the DataNode
-   * @param sample the latest heartbeat sample
+   * @param resp the latest heartbeat response
    */
-  public void cacheDataNodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
+  public void cacheDataNodeHeartbeatSample(int nodeId, THeartbeatResp resp) {
+    long receiveTime = System.currentTimeMillis();
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new DataNodeHeartbeatCache(nodeId))
-        .cacheHeartbeatSample(sample);
+        .cacheHeartbeatSample(new NodeHeartbeatSample(resp, receiveTime));
   }
 
   /**
@@ -284,6 +287,19 @@ public class LoadCache {
   public Map<Integer, String> getNodeStatusWithReason() {
     return nodeCacheMap.entrySet().stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getNodeStatusWithReason()));
+  }
+
+  /**
+   * Get all Node's current activation info
+   *
+   * @return Map<NodeId, Node activation info
+   */
+  public Map<Integer, TNodeActivateInfo> getNodeActivateStatus() {
+    return nodeCacheMap.entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                Map.Entry::getKey,
+                e -> new TNodeActivateInfo(e.getValue().getNodeActivateStatus().toString())));
   }
 
   /**

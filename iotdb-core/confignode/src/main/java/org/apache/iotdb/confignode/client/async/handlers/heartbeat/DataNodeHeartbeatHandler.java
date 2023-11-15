@@ -75,8 +75,7 @@ public class DataNodeHeartbeatHandler implements AsyncMethodCallback<THeartbeatR
     long receiveTime = System.currentTimeMillis();
 
     // Update NodeCache
-    loadCache.cacheDataNodeHeartbeatSample(
-        nodeId, new NodeHeartbeatSample(heartbeatResp, receiveTime));
+    loadCache.cacheDataNodeHeartbeatSample(nodeId, heartbeatResp);
 
     heartbeatResp
         .getJudgedLeaders()

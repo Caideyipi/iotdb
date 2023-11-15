@@ -510,7 +510,9 @@ public class PartitionManager {
         }
       }
     } catch (NotEnoughDataNodeException e) {
-      String prompt = "ConfigNode failed to extend Region because there are not enough DataNodes";
+      String prompt =
+          "ConfigNode failed to extend Region because there are not enough DataNodes:"
+              + e.getMessage();
       LOGGER.error(prompt);
       result.setCode(TSStatusCode.NO_ENOUGH_DATANODE.getStatusCode());
       result.setMessage(prompt);

@@ -19,14 +19,17 @@
 package com.timecho.iotdb.service;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.client.exception.ClientManagerException;
+import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
+import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
+import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
 import org.apache.iotdb.db.protocol.session.SessionManager;
 import org.apache.iotdb.db.protocol.thrift.impl.ClientRPCServiceImpl;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
-import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
+import org.apache.iotdb.service.rpc.thrift.TLicenseInfoResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
-import com.timecho.iotdb.license.LicenseManager;
 import com.timecho.iotdb.rpc.IPFilter;
 import org.apache.thrift.TException;
 
@@ -76,12 +79,14 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
   }
 
   @Override
-  public LicenseInfoResp getLicenseInfo() throws TException {
-    LicenseInfoResp licenseInfoResp =
-        new LicenseInfoResp(RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS));
-    licenseInfoResp.setExpireDate(LicenseManager.getInstance().getExpireDate());
-    licenseInfoResp.setIsActive(true);
-    licenseInfoResp.setIsEnterprise(true);
-    return licenseInfoResp;
+  public TLicenseInfoResp getLicenseInfo() throws TException {
+    try (ConfigNodeClient configNodeClient =
+        ConfigNodeClientManager.getInstance().borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      return new TLicenseInfoResp(
+          new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()),
+          configNodeClient.getLicenseContent().getLicenseContent());
+    } catch (ClientManagerException e) {
+      throw new TException(e);
+    }
   }
 }

@@ -19,79 +19,26 @@
 package com.timecho.iotdb;
 
 import org.apache.iotdb.commons.exception.StartupException;
+import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
 import org.apache.iotdb.db.service.RPCService;
 
-import com.timecho.iotdb.license.LicenseCheckService;
-import com.timecho.iotdb.license.LicenseException;
-import com.timecho.iotdb.license.LicenseManager;
-import com.timecho.iotdb.license.MachineCodeManager;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.Scanner;
-
-import static com.timecho.iotdb.license.LicenseManager.LICENSE_FILE_PATH;
-import static com.timecho.iotdb.license.LicenseManager.LICENSE_PATH;
-
 public class DataNode extends org.apache.iotdb.db.service.DataNode {
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
 
   public static void main(String[] args) {
-    try {
-      // init licenseManager and machineCodeManager
-      LicenseManager licenseManager = LicenseManager.getInstance();
-      MachineCodeManager machineCodeManager = MachineCodeManager.getInstance();
-      machineCodeManager.init();
-      String systemInfo = machineCodeManager.getMachineCodeCipher();
-      File licenseFile = new File(LICENSE_FILE_PATH);
-      String licenseStr;
-      if (!licenseFile.exists()) {
-        logger.info(
-            "\t\n=============Copy the machine code and contact the service provider==============\t\n{}\t\n=================================================================================\t\nTimechoDB is not activated. Please activate it:",
-            systemInfo);
-        Scanner scanner = new Scanner(System.in);
-        licenseStr = scanner.next();
-
-        File licenseDirectoryFile = new File(LICENSE_PATH);
-        // If this is the first startup, license file is not exists,need to activate.else read from
-        // license file.
-        if (!licenseDirectoryFile.exists() && !licenseDirectoryFile.mkdirs()) {
-          logger.info("create directory error, insufficient permissions.");
-          System.exit(-1);
-        }
-        licenseManager.loadLicense(licenseStr);
-        if (!licenseManager.verify(machineCodeManager.getMachineCode())) {
-          logger.info("license verify error,please check license");
-          System.exit(-1);
-        }
-        licenseManager.write(licenseStr, LICENSE_FILE_PATH);
-      } else {
-        licenseStr = licenseManager.read(LICENSE_FILE_PATH);
-        licenseManager.loadLicense(licenseStr);
-      }
-      // check license effective
-      if (licenseManager.verify(machineCodeManager.getMachineCode())) {
-        registerManager.register(LicenseCheckService.getInstance());
-        setUpEnterpriseEnvironment();
-        new DataNodeServerCommandLineNew().doMain(args);
-        logger.info("The license expires at {}", LicenseManager.getInstance().getExpireDate());
-      } else {
-        logger.info("license verify error,please check license");
-      }
-
-    } catch (StartupException e) {
-      logger.error("system init error,", e);
-      System.exit(-1);
-    } catch (LicenseException e) {
-      logger.error("license error,", e);
-      System.exit(-1);
-    }
+    // set up environment for schema region
+    MNodeFactoryLoader.getInstance()
+        .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
+    MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
+    new DataNodeServerCommandLineNew().doMain(args);
   }
 
   @Override
@@ -114,11 +61,13 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
     initProtocols();
   }
 
-  private static void setUpEnterpriseEnvironment() {
-    // set up environment for schema region
-    MNodeFactoryLoader.getInstance()
-        .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
-    MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
+  @Override
+  protected void versionCheck(TSystemConfigurationResp configurationResp) throws StartupException {
+    if (!configurationResp.globalConfig.isEnterprise) {
+      final String message = "Timecho DataNode cannot use with open source ConfigNode";
+      logger.error(message);
+      throw new StartupException(message);
+    }
   }
 
   private static class DataNodeNewHolder {

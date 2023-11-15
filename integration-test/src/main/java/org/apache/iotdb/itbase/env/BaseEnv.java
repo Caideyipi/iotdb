@@ -52,10 +52,6 @@ public interface BaseEnv {
    */
   void initClusterEnvironment(int configNodesNum, int dataNodesNum);
 
-  default void addClusterDataNodes(int dataNodesNum) throws IOException, InterruptedException {
-    throw new UnsupportedOperationException();
-  }
-
   /**
    * Init a cluster with the specified number of ConfigNodes and DataNodes.
    *

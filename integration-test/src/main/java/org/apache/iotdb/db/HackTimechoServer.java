@@ -19,42 +19,47 @@
 
 package org.apache.iotdb.db;
 
-import org.apache.iotdb.commons.conf.CommonDescriptor;
-import org.apache.iotdb.commons.exception.BadNodeUrlException;
-import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
+import org.apache.iotdb.common.rpc.thrift.TNodeResource;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
-import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
 
 import com.timecho.iotdb.DataNode;
-import com.timecho.iotdb.DataNodeServerCommandLineNew;
-import com.timecho.iotdb.conf.TimechoDBDescriptor;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
-
-import java.io.IOException;
-import java.util.Properties;
 
 /** This class is used to run integration test using timecho-server without license. */
 public class HackTimechoServer extends DataNode {
 
-  public static void main(String[] args) {
-    Properties properties = TimechoDBDescriptor.getInstance().getCustomizedProperties();
-    try {
-      CommonDescriptor.getInstance().loadCommonProps(properties);
-      IoTDBDescriptor.getInstance().loadProperties(properties);
-    } catch (BadNodeUrlException | IOException e) {
-      // will not happen
-    }
-    IoTDBDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
-    TSFileDescriptor.getInstance().overwriteConfigByCustomSettings(properties);
-    TSFileDescriptor.getInstance().getConfig().setCustomizedProperties(properties);
-    setUpEnterpriseEnvironment();
-    new DataNodeServerCommandLineNew().doMain(args);
-  }
+  private static final int CPU_CORE_NUM_FOR_TEST = 1;
+  private static final long TOTAL_MEMORY_FOR_TEST = 8000000000L;
 
-  private static void setUpEnterpriseEnvironment() {
+  public static void main(String[] args) {
     // set up environment for schema region
     MNodeFactoryLoader.getInstance()
         .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
+    new HackTimechoServerCommandLineNew().doMain(args);
+  }
+
+  // Fix the number of CPU cores for testing purposes
+  @Override
+  public TDataNodeConfiguration generateDataNodeConfiguration() {
+    // Set DataNodeLocation
+    TDataNodeLocation location = generateDataNodeLocation();
+    // Set NodeResource
+    TNodeResource resource = new TNodeResource();
+    resource.setCpuCoreNum(CPU_CORE_NUM_FOR_TEST);
+    resource.setMaxMemory(TOTAL_MEMORY_FOR_TEST);
+    return new TDataNodeConfiguration(location, resource);
+  }
+
+  private static class HackTimechoServerNewHolder {
+    private static final HackTimechoServer INSTANCE = new HackTimechoServer();
+
+    private HackTimechoServerNewHolder() {}
+  }
+
+  public static HackTimechoServer getInstance() {
+    return HackTimechoServer.HackTimechoServerNewHolder.INSTANCE;
   }
 }

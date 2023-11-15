@@ -321,6 +321,18 @@ public class NodeInfo implements SnapshotProcessor {
     }
   }
 
+  /** Return the number of registered DataNodes. */
+  public int getRegisteredMLNodeCount() {
+    int result;
+    mlNodeInfoReadWriteLock.readLock().lock();
+    try {
+      result = registeredMLNodes.size();
+    } finally {
+      mlNodeInfoReadWriteLock.readLock().unlock();
+    }
+    return result;
+  }
+
   public boolean containsMLNode(int mlNodeId) {
     mlNodeInfoReadWriteLock.readLock().lock();
     try {

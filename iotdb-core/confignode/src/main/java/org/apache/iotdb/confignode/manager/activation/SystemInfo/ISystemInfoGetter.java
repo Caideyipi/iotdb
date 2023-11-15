@@ -16,20 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.license;
 
-public class LicenseException extends Exception {
-  public LicenseException() {}
+package org.apache.iotdb.confignode.manager.activation.SystemInfo;
 
-  public LicenseException(String message) {
-    super(message);
-  }
+public interface ISystemInfoGetter {
 
-  public LicenseException(Throwable cause) {
-    super(cause);
-  }
+  String getCPUId();
 
-  public LicenseException(String message, Throwable cause) {
-    super(message, cause);
-  }
+  String getMainBoardId();
+
+  String getSystemUUID();
 }

@@ -21,7 +21,7 @@ package org.apache.iotdb.confignode.exception;
 
 public class NotEnoughDataNodeException extends ConfigNodeException {
 
-  public NotEnoughDataNodeException() {
-    super("DataNode is not enough, please register more.");
+  public NotEnoughDataNodeException(int now, int need) {
+    super(String.format("%d DataNode is not enough, need at least %d", now, need));
   }
 }

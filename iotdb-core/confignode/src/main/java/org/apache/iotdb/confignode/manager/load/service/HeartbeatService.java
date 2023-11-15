@@ -34,12 +34,14 @@ import org.apache.iotdb.confignode.client.async.handlers.heartbeat.DataNodeHeart
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.MLNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.IManager;
+import org.apache.iotdb.confignode.manager.activation.License;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.mlnode.rpc.thrift.TMlHeartbeatReq;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeActivation;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatReq;
 import org.apache.iotdb.tsfile.utils.Pair;
 
@@ -150,6 +152,9 @@ public class HeartbeatService {
       heartbeatReq.setSpaceQuotaUsage(configManager.getClusterQuotaManager().getSpaceQuotaUsage());
     }
 
+    heartbeatReq.setActivation(
+        new TDataNodeActivation(configManager.getActivationManager().isActivated(), 0, 0));
+
     /* Update heartbeat counter */
     heartbeatCounter.getAndIncrement();
 
@@ -159,6 +164,10 @@ public class HeartbeatService {
   private TConfigNodeHeartbeatReq genConfigNodeHeartbeatReq() {
     TConfigNodeHeartbeatReq req = new TConfigNodeHeartbeatReq();
     req.setTimestamp(System.currentTimeMillis());
+    License license = configManager.getActivationManager().getLicense();
+    if (configManager.getActivationManager().activeNodeExistForLeader()) {
+      req.setLicence(license.toTLicense());
+    }
     return req;
   }
 

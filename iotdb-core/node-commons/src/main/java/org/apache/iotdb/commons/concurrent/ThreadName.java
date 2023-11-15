@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -91,6 +92,8 @@ public enum ThreadName {
   CONFIG_NODE_REGION_MAINTAINER("IoTDB-Region-Maintainer"),
   // -------------------------- ConfigNode-Recover --------------------------
   CONFIG_NODE_RECOVER("ConfigNode-Manager-Recovery"),
+  // -------------------------- Activation --------------------------
+  ACTIVATION_SERVICE("Activation-Service"),
   // -------------------------- ConfigNode-Procedure ------------------------
   // TODO: Use Thread Pool to manage the procedure thread @Potato
   CONFIG_NODE_PROCEDURE_WORKER("ProcedureWorkerGroup"),
@@ -323,6 +326,9 @@ public enum ThreadName {
   private static final Set<ThreadName> configNodeRecoverThreadNames =
       new HashSet<>(Arrays.asList(CONFIG_NODE_RECOVER));
 
+  private static final Set<ThreadName> configNodeActivationThreadNames =
+      new HashSet<>(Collections.singletonList(ACTIVATION_SERVICE));
+
   private static final Set<ThreadName> configNodeProcedureThreadNames =
       new HashSet<>(
           Arrays.asList(
@@ -375,6 +381,7 @@ public enum ThreadName {
         configNodeLoadBalanceThreadNames,
         configNodeRegionManagementThreadNames,
         configNodeRecoverThreadNames,
+        configNodeActivationThreadNames,
         configNodeProcedureThreadNames,
         otherThreadNames
       };

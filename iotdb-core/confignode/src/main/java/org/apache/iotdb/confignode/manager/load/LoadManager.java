@@ -44,6 +44,7 @@ import org.apache.iotdb.confignode.manager.load.cache.region.RegionHeartbeatSamp
 import org.apache.iotdb.confignode.manager.load.service.HeartbeatService;
 import org.apache.iotdb.confignode.manager.load.service.StatisticsService;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
+import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TTimeSlotList;
 
 import com.google.common.eventbus.AsyncEventBus;
@@ -192,6 +193,15 @@ public class LoadManager {
    */
   public Map<Integer, String> getNodeStatusWithReason() {
     return loadCache.getNodeStatusWithReason();
+  }
+
+  /**
+   * Get all Node's current activation info
+   *
+   * @return Map<NodeId, Node activation info
+   */
+  public Map<Integer, TNodeActivateInfo> getNodeActivateStatus() {
+    return loadCache.getNodeActivateStatus();
   }
 
   /**

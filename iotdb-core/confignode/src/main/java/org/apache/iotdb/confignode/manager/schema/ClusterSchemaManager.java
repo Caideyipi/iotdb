@@ -1103,7 +1103,7 @@ public class ClusterSchemaManager {
     schemaQuotaStatistics.updateDeviceUsage(deviceUsage);
   }
 
-  public void updateSchemaQuotaConfiguration(long seriesThreshold, long deviceThreshold) {
+  public void updateSchemaQuotaConfiguration(long deviceThreshold, long seriesThreshold) {
     schemaQuotaStatistics.setDeviceThreshold(deviceThreshold);
     schemaQuotaStatistics.setSeriesThreshold(seriesThreshold);
   }

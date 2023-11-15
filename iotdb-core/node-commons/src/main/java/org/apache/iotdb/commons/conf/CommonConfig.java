@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.commons.client.property.ClientPoolProperty.DefaultProperty;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.enums.HandleSystemErrorStrategy;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.utils.FileUtils;
 import org.apache.iotdb.tsfile.fileSystem.FSType;
 
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class CommonConfig {
@@ -118,6 +120,8 @@ public class CommonConfig {
 
   /** Status of current system. */
   private volatile NodeStatus status = NodeStatus.Running;
+
+  private NodeStatus lastStatus = NodeStatus.Unknown;
 
   private volatile boolean isStopping = false;
 
@@ -423,6 +427,13 @@ public class CommonConfig {
   }
 
   public void setNodeStatus(NodeStatus newStatus) {
+    if (isUnactivated()) {
+      // This function cannot be used to modify unactivated status
+      logger.warn(
+          "It's not permitted to transition the DataNode out of the unactivated state in this way");
+      return;
+    }
+
     logger.info("Set system mode from {} to {}.", status, newStatus);
     this.status = newStatus;
     this.statusReason = null;
@@ -440,20 +451,51 @@ public class CommonConfig {
     }
   }
 
-  public String getStatusReason() {
-    return statusReason;
-  }
-
-  public void setStatusReason(String statusReason) {
-    this.statusReason = statusReason;
-  }
-
   public NodeStatus getStatus() {
     return status;
   }
 
+  public void setStatusReason(String statusReason) {
+    if (this.isUnactivated()) {
+      logger.warn(
+          "It's not permitted to transition the DataNode out of the unactivated status in this way");
+      return;
+    }
+    this.statusReason = statusReason;
+  }
+
+  public String getStatusReason() {
+    return statusReason;
+  }
+
   public void setStatus(NodeStatus status) {
     this.status = status;
+  }
+
+  public synchronized void setUnactivated() {
+    if (this.isUnactivated()) {
+      return;
+    }
+    this.lastStatus = this.status;
+    this.status = NodeStatus.ReadOnly;
+    this.statusReason = ActivateStatus.UNACTIVATED.toString();
+    logger.warn(
+        "DataNode's activation status changed: activated -> unactivated. Only query statements are permitted!");
+  }
+
+  public boolean isUnactivated() {
+    return status.equals(NodeStatus.ReadOnly)
+        && Objects.equals(statusReason, ActivateStatus.UNACTIVATED.toString());
+  }
+
+  public synchronized void setActivated() {
+    if (!isUnactivated()) {
+      // If datanode is not in unactivated status, do nothing and return
+      return;
+    }
+    this.status = this.lastStatus;
+    this.statusReason = ActivateStatus.ACTIVATED.toString();
+    logger.info("DataNode's activation status changed: unactivated -> activated.");
   }
 
   public TEndPoint getTargetMLNodeEndPoint() {

@@ -215,7 +215,13 @@ public class ClusterConstant {
           + "bin"
           + File.separator
           + (SystemUtils.IS_OS_WINDOWS ? "java.exe" : "java");
+
   public static final String MAIN_CLASS_NAME = "org.apache.iotdb.db.HackTimechoServer";
+  public static final String MAIN_CONFIGNODE_CLASS_NAME_FOR_ACTIVATION_IT =
+      "org.apache.iotdb.confignode.service.ConfigNodeForActivationIT";
+  public static final String MAIN_CONFIGNODE_CLASS_NAME_FOR_OTHER_IT =
+      "org.apache.iotdb.confignode.service.ConfigNodeForOtherIT";
+  public static String MAIN_CONFIGNODE_CLASS_NAME_FOR_IT = MAIN_CONFIGNODE_CLASS_NAME_FOR_OTHER_IT;
 
   private ClusterConstant() {
     throw new IllegalStateException("Utility class");

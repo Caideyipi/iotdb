@@ -678,6 +678,8 @@ public class DateTimeUtils {
       case "us":
         timestamp /= 1000;
         break;
+      case "ms":
+        break;
     }
     return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
         .toString();

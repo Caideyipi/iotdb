@@ -1,0 +1,635 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.iotdb.confignode.manager.activation;
+
+import org.apache.iotdb.common.rpc.thrift.TLicense;
+import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
+import org.apache.iotdb.commons.concurrent.ThreadName;
+import org.apache.iotdb.commons.exception.LicenseException;
+import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.commons.utils.TestOnly;
+import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
+import org.apache.iotdb.confignode.manager.ConfigManager;
+import org.apache.iotdb.confignode.manager.activation.SystemInfo.ISystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.SystemInfo.LinuxSystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.SystemInfo.MacSystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.SystemInfo.WindowsSystemInfoGetter;
+import org.apache.iotdb.db.utils.DateTimeUtils;
+import org.apache.iotdb.rpc.TSStatusCode;
+
+import cn.hutool.system.OsInfo;
+import cn.hutool.system.SystemUtil;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
+import org.apache.commons.io.monitor.FileAlterationMonitor;
+import org.apache.commons.io.monitor.FileAlterationObserver;
+import org.apache.ratis.util.AutoCloseableLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
+
+public class ActivationManager {
+  static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
+
+  private static final String HOME_PATH =
+      System.getProperty("CONFIGNODE_HOME") == null ? "." : System.getProperty("CONFIGNODE_HOME");
+  public static final String ACTIVATION_DIR_PATH = HOME_PATH + File.separatorChar + "activation";
+  public static final String LICENSE_FILE_NAME = "license";
+  public static final String LICENSE_FILE_PATH =
+      ACTIVATION_DIR_PATH + File.separatorChar + LICENSE_FILE_NAME;
+  public static final String SYSTEM_INFO_FILE_PATH =
+      ACTIVATION_DIR_PATH + File.separatorChar + "system_info";
+
+  // region Time
+  private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
+  private static final long ONE_MINUTE = TimeUnit.MINUTES.toMillis(1);
+  private static final long ONE_HOUR = TimeUnit.HOURS.toMillis(1);
+  private static final long ONE_DAY = TimeUnit.DAYS.toMillis(1);
+  private static final long ONE_MONTH = 30 * ONE_DAY;
+
+  public static final long FILE_MONITOR_INTERVAL = ONE_SECOND;
+  private static final long LEADER_DISCONNECT_FROM_ACTIVE_NODE_TIME_LIMIT = 5 * ONE_SECOND;
+  private static final long LICENSE_MANAGER_PERIODICAL_TASK_MINIMAL_INTERVAL = ONE_SECOND;
+  private static final long LICENSE_MANAGER_PERIODICAL_TASK_MAXIMAL_INTERVAL = ONE_MINUTE;
+
+  // endregion
+
+  private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+  ExecutorService executor =
+      IoTDBThreadPoolFactory.newFixedThreadPool(2, ThreadName.ACTIVATION_SERVICE.getName());
+
+  protected License license;
+
+  private final AtomicLong lastTimeHeardActiveNode = new AtomicLong(0);
+
+  LicenseFileMonitor licenseFileMonitor;
+
+  private ISystemInfoGetter systemInfoGetter;
+
+  private final ConfigNodeDescriptor configNodeDescriptor = ConfigNodeDescriptor.getInstance();
+
+  private final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
+      ImmutableMap.of(
+          License.CPU_ID_NAME, () -> this.systemInfoGetter.getCPUId(),
+          License.MAIN_BOARD_ID_NAME, () -> this.systemInfoGetter.getMainBoardId(),
+          License.SYSTEM_UUID_NAME, () -> this.systemInfoGetter.getSystemUUID(),
+          License.IP_ADDRESS_NAME, () -> this.configNodeDescriptor.getConf().getInternalAddress(),
+          License.INTERNAL_PORT_NAME,
+              () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
+          License.IS_SEED_CONFIGNODE_NODE_NAME,
+              () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()),
+          License.CLUSTER_NAME_NAME, () -> this.configNodeDescriptor.getConf().getClusterName());
+
+  /** In some situation (like not root user) we cannot get cpu id or main board id. */
+  private final ImmutableSet<String> systemInfoAllowEmpty = ImmutableSet.of("cpu", "mdb", "uuid");
+
+  ReentrantLock loadLock = new ReentrantLock();
+
+  public ActivationManager(ConfigManager configManager) throws LicenseException {
+    initLicense(configManager);
+
+    setSystemInfoGetter();
+
+    createActivationDir();
+
+    tryLoadLicenseForTheFirstTime();
+
+    launchLicenseFileMonitorService();
+
+    executor.submit(this::activeNodeMonitorService);
+    logger.info("Active node watching service launched successfully");
+
+    executor.submit(this::expirationWarningService);
+    logger.info("Expiration warning service launched successfully");
+  }
+
+  private void initLicense(ConfigManager configManager) {
+    this.license =
+        new License(
+            () ->
+                configManager
+                    .getClusterSchemaManager()
+                    .updateSchemaQuotaConfiguration(
+                        license.getDeviceNumLimit(), license.getSensorNumLimit()));
+  }
+
+  private void setSystemInfoGetter() {
+    OsInfo osInfo = SystemUtil.getOsInfo();
+    if (osInfo.isWindows()) {
+      systemInfoGetter = new WindowsSystemInfoGetter();
+    } else if (osInfo.isMac()) {
+      systemInfoGetter = new MacSystemInfoGetter();
+    } else if (osInfo.isLinux()) {
+      systemInfoGetter = new LinuxSystemInfoGetter();
+    } else {
+      logger.warn("OS {} is not officially supported, will be treated as Linux", osInfo.getName());
+      systemInfoGetter = new LinuxSystemInfoGetter();
+    }
+  }
+
+  private void createActivationDir() throws LicenseException {
+    File activationDir = new File(ACTIVATION_DIR_PATH);
+    if (!activationDir.exists() || !activationDir.isDirectory()) {
+      logger.info(
+          "try to make activation dir {}, absolute path {}",
+          ACTIVATION_DIR_PATH,
+          activationDir.getAbsolutePath());
+      boolean makeDirSuccess = activationDir.mkdir();
+      if (!makeDirSuccess) {
+        final String msg =
+            String.format("failed to create activation dir at %s", activationDir.getAbsolutePath());
+        logger.error(msg);
+        throw new LicenseException(msg);
+      }
+      logger.info("successfully create activation dir at {}", activationDir.getAbsolutePath());
+    }
+  }
+
+  private void tryLoadLicenseForTheFirstTime() {
+    File file = new File(LICENSE_FILE_PATH);
+    if (file.exists()) {
+      logger.info("License file detected during ConfigNode's starting.");
+      loadLicenseFromFile();
+    } else {
+      logger.info("License file not detected during ConfigNode's starting.");
+    }
+  }
+
+  private void launchLicenseFileMonitorService() throws LicenseException {
+    licenseFileMonitor = new LicenseFileMonitor();
+    licenseFileMonitor.monitor(ACTIVATION_DIR_PATH, new LicenseFileAlterationListener());
+    try {
+      licenseFileMonitor.start();
+    } catch (Exception e) {
+      logger.error("start licenseFileMonitor fail");
+      throw new LicenseException(e);
+    }
+    logger.info("License file watching service launched successfully");
+  }
+
+  private class LicenseFileAlterationListener extends FileAlterationListenerAdaptor {
+    @Override
+    public void onFileCreate(File file) {
+      if (LICENSE_FILE_NAME.equals(file.getName())) {
+        logger.info("license file creation detected");
+        loadLicenseFromFile();
+      }
+    }
+
+    @Override
+    public void onFileChange(File file) {
+      if (LICENSE_FILE_NAME.equals(file.getName())) {
+        logger.info("license file modification detected");
+        loadLicenseFromFile();
+      }
+    }
+
+    @Override
+    public void onFileDelete(File file) {
+      if (LICENSE_FILE_NAME.equals(file.getName())) {
+        logger.info("license file deletion detected");
+        license.licenseFileNotExistOrInvalid();
+        showActivateStatus();
+      }
+    }
+  }
+
+  private class LicenseFileMonitor {
+    private final FileAlterationMonitor monitor;
+
+    public LicenseFileMonitor() {
+      monitor = new FileAlterationMonitor(FILE_MONITOR_INTERVAL);
+    }
+
+    public void monitor(String path, LicenseFileAlterationListener listener) {
+      FileAlterationObserver observer = new FileAlterationObserver(new File(path));
+      monitor.addObserver(observer);
+      observer.addListener(listener);
+    }
+
+    public void stop() throws LicenseException {
+      try {
+        monitor.stop();
+      } catch (Exception e) {
+        throw new LicenseException(e);
+      }
+    }
+
+    public void start() throws LicenseException {
+      try {
+        monitor.start();
+      } catch (Exception e) {
+        throw new LicenseException(e);
+      }
+    }
+  }
+
+  /*
+   activationManagerPeriodicalTask now do two things:
+   1. Check active node existence every second.
+      If I've not heard any Active ConfigNode for more than disconnectionFromActiveNodeTimeLimit ms,
+      set myself to unactivated state.
+   2. Check how much time left before the license expiration. If remain time is less than a week, warn in log.
+  */
+  private void activeNodeMonitorService() {
+    long lastTimeWarnDisconnection = 0;
+    while (true) {
+      long now = System.currentTimeMillis();
+      if (this.license.isActive()) {
+        this.lastTimeHeardActiveNode.set(System.currentTimeMillis());
+      }
+      final long disconnectionLimit = license.getDisconnectionFromActiveNodeTimeLimit();
+      if (this.license.isActivated()) {
+        // Active node related task
+        long timeRemain = passiveActiveTimeRemain();
+        final String disconnectionStr =
+            DateTimeUtils.convertMillisecondToDurationStr(msSinceLastTimeHeardActiveNode());
+        final String remainStr =
+            DateTimeUtils.convertMillisecondToDurationStr(passiveActiveTimeRemain());
+        final String disconnectionLimitStr =
+            DateTimeUtils.convertMillisecondToDurationStr(disconnectionLimit);
+        if (timeRemain < 0) {
+          logger.warn(
+              "This ConfigNode has disconnected from all active ConfigNodes for {} ({} ms), exceeds the disconnection time limit {}. License will be given up now.",
+              disconnectionStr,
+              msSinceLastTimeHeardActiveNode(),
+              disconnectionLimitStr);
+          giveUpLicense();
+        } else if (disconnectionLimit * 0.9 < timeRemain) {
+          // Has good connection with active node, or I'm an active node. Do nothing.
+        } else if (timeRemain < ONE_HOUR) {
+          // Remaining time is less than 1 hour, warning every minute.
+          if (now - lastTimeWarnDisconnection > ONE_MINUTE) {
+            disconnectionWarn(remainStr);
+            lastTimeWarnDisconnection = now;
+          }
+        } else if (ONE_HOUR < timeRemain && timeRemain < ONE_DAY) {
+          // Remaining time is less than 1 day. Warning every hour.
+          if (now - lastTimeWarnDisconnection > ONE_HOUR) {
+            disconnectionWarn(remainStr);
+            lastTimeWarnDisconnection = now;
+          }
+        } else {
+          // Remaining time is more than 1 day. Warning every day.
+          if (now - lastTimeWarnDisconnection > ONE_DAY) {
+            disconnectionWarn(remainStr);
+            lastTimeWarnDisconnection = now;
+          }
+        }
+      }
+      try {
+        long sleepInterval = license.getDisconnectionFromActiveNodeTimeLimit() / 10;
+        // sleep interval shall not be too long or too short
+        sleepInterval = Math.min(sleepInterval, LICENSE_MANAGER_PERIODICAL_TASK_MAXIMAL_INTERVAL);
+        sleepInterval = Math.max(sleepInterval, LICENSE_MANAGER_PERIODICAL_TASK_MINIMAL_INTERVAL);
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        logger.warn("Sleeping was interrupted", e);
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  private void expirationWarningService() {
+    long lastTimeWarn = 0;
+    while (true) {
+      final long now = System.currentTimeMillis();
+      final long timeRemain = license.licenseExpireTimestamp - now;
+      if (license.getLicenseExpireTimestamp() == 0) {
+        if (now - lastTimeWarn > ONE_HOUR) {
+          logger.warn(
+              "License has not been set, and this ConfigNode currently not connects to any active ConfigNode. Cluster is readonly now. Contact Timecho for more information.");
+          lastTimeWarn = now;
+        }
+      } else if (timeRemain < 0) {
+        final String expireTimeString =
+            DateTimeUtils.convertLongToDate(license.getLicenseExpireTimestamp(), "ms");
+        logger.warn(
+            "License expired at {}, cluster is readonly now. Contact Timecho for more information.",
+            expireTimeString);
+      } else if (timeRemain < ONE_HOUR) {
+        expirationWarn(now);
+        lastTimeWarn = now;
+      } else if (timeRemain < ONE_DAY) {
+        if (now - lastTimeWarn > ONE_HOUR) {
+          expirationWarn(now);
+          lastTimeWarn = now;
+        }
+      } else if (timeRemain < ONE_MONTH) {
+        if (now - lastTimeWarn > ONE_DAY) {
+          expirationWarn(now);
+          lastTimeWarn = now;
+        }
+      }
+      try {
+        Thread.sleep(ONE_MINUTE);
+      } catch (InterruptedException e) {
+        logger.warn("Sleeping was interrupted", e);
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  private void disconnectionWarn(String timeRemainStr) {
+    logger.warn(
+        "Disconnect from all active ConfigNode, will switch to read-only mode in {}",
+        timeRemainStr);
+  }
+
+  private void expirationWarn(Long now) {
+    String expirationTimeStr =
+        DateTimeUtils.convertLongToDate(license.getLicenseExpireTimestamp(), "ms");
+    String timeRemainStr =
+        DateTimeUtils.convertMillisecondToDurationStr(license.licenseExpireTimestamp - now);
+    logger.warn(
+        "License will expire at {}, there is {} remain. Cluster will only allow reading when the time comes. Contact Timecho for more information.",
+        expirationTimeStr,
+        timeRemainStr);
+  }
+
+  private void showActivateStatus() {
+    logger.info("activate status: {}", license.getActivateStatus());
+  }
+
+  // If in passive activated state, calculate how much time still remain
+  public long passiveActiveTimeRemain() {
+    return license.getDisconnectionFromActiveNodeTimeLimit() - msSinceLastTimeHeardActiveNode();
+  }
+
+  protected void loadLicenseFromFile() {
+    Properties properties = new Properties();
+    try (FileReader fileReader = new FileReader(LICENSE_FILE_PATH);
+        AutoCloseableLock autoCloseableLock = AutoCloseableLock.acquire(loadLock)) {
+      StringBuilder builder = new StringBuilder();
+      int data;
+      while ((data = fileReader.read()) != -1) {
+        builder.append((char) data);
+      }
+      String licenseContent = builder.toString();
+      licenseContent = decrypt(licenseContent);
+      logger.info("Loading license: \n{}", licenseContent);
+      properties.load(new StringReader(licenseContent));
+      if (!verifyAllSystemInfo(properties)) {
+        throw new LicenseException("This license is not allowed to activate this ConfigNode");
+      }
+      license.loadFromProperties(properties);
+      logger.info("Load license success");
+      showActivateStatus();
+    } catch (LicenseException | IOException e) {
+      logger.error("Load license fail", e);
+      license.licenseFileNotExistOrInvalid();
+    }
+  }
+
+  public void loadRemoteLicense(TLicense remoteLicense) {
+    try (AutoCloseableLock autoCloseableLock = AutoCloseableLock.acquire(loadLock)) {
+      if (remoteLicense == null) {
+        // do nothing
+      } else if (remoteLicense.licenseIssueTimestamp < this.license.getLicenseIssueTimestamp()) {
+        // remote license is older, do nothing
+        final String myIssueTime = dateFormat.format(this.license.licenseIssueTimestamp);
+        final String remoteIssueTime = dateFormat.format(remoteLicense.licenseIssueTimestamp);
+        logger.info(
+            "Receive remote license which issue timestamp {} ({}) is older than mine {} ({}), ignored",
+            remoteIssueTime,
+            remoteLicense.licenseIssueTimestamp,
+            myIssueTime,
+            this.license.licenseIssueTimestamp);
+      } else if (remoteLicense.licenseIssueTimestamp == this.license.getLicenseIssueTimestamp()) {
+        // remote license is the same, just update my lastTimeHeardActiveNode
+        this.heardActiveNode();
+      } else {
+        this.heardActiveNode();
+        this.license.loadFromTLicense(remoteLicense);
+        logger.info("License updated because receive remote license");
+        showActivateStatus();
+      }
+    }
+  }
+
+  private void giveUpLicense() {
+    license.reset();
+    logger.info("License has been reset");
+    showActivateStatus();
+  }
+
+  public License getLicense() {
+    return this.license;
+  }
+
+  public ActivateStatus getActivateStatus() {
+    return license.getActivateStatus();
+  }
+
+  public boolean isActivated() {
+    return this.license.isActivated();
+  }
+
+  public boolean isActive() {
+    return this.license.isActive();
+  }
+
+  public void heardActiveNode() {
+    lastTimeHeardActiveNode.set(System.currentTimeMillis());
+  }
+
+  /**
+   * Leader only broadcast license when it knows there are active nodes in cluster. This detection
+   * needs to be sensitive. This method should only be use when leader needs to send heartbeat req.
+   *
+   * @return Whether active node exists
+   */
+  public boolean activeNodeExistForLeader() {
+    return msSinceLastTimeHeardActiveNode() <= LEADER_DISCONNECT_FROM_ACTIVE_NODE_TIME_LIMIT;
+  }
+
+  private long msSinceLastTimeHeardActiveNode() {
+    return System.currentTimeMillis() - lastTimeHeardActiveNode.get();
+  }
+
+  /**
+   * This function should be called at the end of ConfigNode's launching. The existence of
+   * system_info file will be treated as a signal, which means timecho-ConfigNode has started
+   * successfully.
+   */
+  public void generateSystemInfoFile() {
+    Properties systemInfoProperties = new Properties();
+    for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
+      systemInfoProperties.setProperty(entry.getKey(), entry.getValue().get());
+    }
+    try (FileOutputStream fos = new FileOutputStream(SYSTEM_INFO_FILE_PATH)) {
+      StringWriter stringWriter = new StringWriter();
+      systemInfoProperties.store(stringWriter, null);
+      String beforeEncrypt = stringWriter.toString();
+      // remove time comment
+      if (beforeEncrypt.charAt(0) == '#') {
+        beforeEncrypt = beforeEncrypt.substring(beforeEncrypt.indexOf('\n') + 1);
+      }
+      String afterEncrypt = encrypt(beforeEncrypt);
+      fos.write(afterEncrypt.getBytes());
+      fos.getFD().sync();
+      logger.info("System info file generated successfully.");
+    } catch (IOException | LicenseException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public boolean verifyAllSystemInfo(Properties licenseProperties) {
+    for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
+      if (!verifySystemInfo(
+          licenseProperties,
+          entry.getKey(),
+          entry.getValue().get(),
+          systemInfoAllowEmpty.contains(entry.getKey()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean verifySystemInfo(
+      Properties licenseProperties, String key, String expectedValue, boolean allowEmpty) {
+    if (!licenseProperties.containsKey(key)) {
+      logger.error("License does not contain the \"{}\" field", key);
+      return false;
+    }
+    if (licenseProperties.get(key).equals("") && allowEmpty) {
+      logger.warn("License's \"{}\" field is empty, and this field is allowed to be empty.", key);
+      return true;
+    }
+    if (!licenseProperties.get(key).equals(expectedValue)) {
+      logger.error(
+          "License's \"{}\" field has unexpected value \"{}\", expect \"{}\"",
+          key,
+          licenseProperties.get(key),
+          expectedValue);
+      return false;
+    }
+    return true;
+  }
+
+  // region file operation
+
+  @TestOnly
+  public TSStatus setLicenseFile(String fileName, String content) {
+    Path filePath = Paths.get(ACTIVATION_DIR_PATH, fileName);
+    try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
+      fos.write(content.getBytes());
+      fos.getFD().sync();
+      logger.info("set license file success: {}", filePath);
+      return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+    } catch (IOException e) {
+      logger.error("set license file {} fail: {}", filePath, e);
+      TSStatus status = new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode());
+      status.setMessage(e.getMessage());
+      return status;
+    }
+  }
+
+  @TestOnly
+  public TSStatus deleteLicenseFile(String filename) {
+    return deleteLicenseFile(filename, false);
+  }
+
+  @TestOnly
+  public TSStatus deleteLicenseFile(String fileName, boolean allowFail) {
+    Path filePath = Paths.get(ACTIVATION_DIR_PATH, fileName);
+    if (!Files.exists(filePath)) {
+      return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+    }
+    try {
+      Files.delete(filePath);
+    } catch (IOException e) {
+      if (!allowFail) {
+        logger.error("delete license file {} fail: {}", filePath, e);
+        TSStatus status = new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode());
+        status.setMessage(e.getMessage());
+        return status;
+      }
+    }
+    logger.info("delete license file：{}", filePath);
+    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+  }
+
+  @TestOnly
+  public TSStatus getLicenseFile(String fileName) {
+    Path filePath = Paths.get(ACTIVATION_DIR_PATH, fileName);
+    if (!Files.exists(filePath)) {
+      return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+    }
+    try {
+      byte[] buffer = Files.readAllBytes(filePath);
+      TSStatus status = new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+      status.message = new String(buffer);
+      return status;
+    } catch (IOException e) {
+      logger.error("read license file {} fail: {}", filePath, e);
+      TSStatus status = new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode());
+      status.setMessage(e.getMessage());
+      return status;
+    }
+  }
+
+  // endregion
+
+  // region security
+  protected String encrypt(String src) throws LicenseException {
+    return RSA.publicEncrypt(src);
+  }
+
+  protected String decrypt(String src) throws LicenseException {
+    return RSA.publicDecrypt(src);
+  }
+
+  // region helpers
+  @TestOnly
+  public static Properties buildUnlimitedLicenseProperties() {
+    Properties properties = new Properties();
+    properties.setProperty(License.LICENSE_ISSUE_TIMESTAMP_NAME, "10000");
+    properties.setProperty(License.LICENSE_EXPIRE_TIMESTAMP_NAME, "4102416000000");
+    properties.setProperty(License.DATANODE_NUM_LIMIT_NAME, "9999");
+    properties.setProperty(License.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "999999");
+    properties.setProperty(License.DEVICE_NUM_LIMIT_NAME, String.valueOf(Long.MAX_VALUE));
+    properties.setProperty(License.SENSOR_NUM_LIMIT_NAME, String.valueOf(Long.MAX_VALUE));
+    properties.setProperty(License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME, "10000");
+    properties.setProperty(License.MLNODE_NUM_LIMIT_NAME, "9999");
+    return properties;
+  }
+}

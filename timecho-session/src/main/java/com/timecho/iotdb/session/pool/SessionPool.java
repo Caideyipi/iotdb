@@ -22,7 +22,7 @@ import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
-import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
+import org.apache.iotdb.service.rpc.thrift.TLicenseInfoResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
 import com.timecho.iotdb.isession.ISession;
@@ -252,12 +252,12 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
   }
 
   @Override
-  public LicenseInfoResp getLicenseInfo()
+  public TLicenseInfoResp getLicenseInfo()
       throws IoTDBConnectionException, StatementExecutionException {
     for (int i = 0; i < RETRY; i++) {
       ISession session = (ISession) getSession();
       try {
-        LicenseInfoResp licenseInfoResp = session.getLicenseInfo();
+        TLicenseInfoResp licenseInfoResp = session.getLicenseInfo();
         putBack(session);
         return licenseInfoResp;
       } catch (IoTDBConnectionException e) {

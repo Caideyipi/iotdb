@@ -27,6 +27,7 @@ import org.apache.iotdb.commons.concurrent.ThreadModule;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.concurrent.ThreadPoolMetrics;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.commons.service.JMXService;
 import org.apache.iotdb.commons.service.RegisterManager;
@@ -94,7 +95,7 @@ public class ConfigNode implements ConfigNodeMBean {
 
   protected ConfigManager configManager;
 
-  private ConfigNode() {
+  ConfigNode() {
     // We do not init anything here, so that we can re-initialize the instance in IT.
   }
 
@@ -162,6 +163,7 @@ public class ConfigNode implements ConfigNodeMBean {
             startUpSleep("restart ConfigNode failed! ");
           }
         }
+        configManager.getActivationManager().generateSystemInfoFile();
         return;
       }
 
@@ -189,6 +191,8 @@ public class ConfigNode implements ConfigNodeMBean {
         // Notice: We always set up Seed-ConfigNode's RPC service lastly to ensure
         // that the external service is not provided until Seed-ConfigNode is fully initialized
         setUpRPCService();
+        configManager.getActivationManager().generateSystemInfoFile();
+
         // The initial startup of Seed-ConfigNode finished
         LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
         LOGGER.info(
@@ -231,6 +235,7 @@ public class ConfigNode implements ConfigNodeMBean {
             "The current ConfigNode can't joined the cluster because leader's scheduling failed. The possible cause is that the ip:port configuration is incorrect.");
         stop();
       }
+      configManager.getActivationManager().generateSystemInfoFile();
     } catch (StartupException | IOException e) {
       LOGGER.error("Meet error while starting up.", e);
       stop();
@@ -296,6 +301,12 @@ public class ConfigNode implements ConfigNodeMBean {
       configManager = new ConfigManager();
     } catch (IOException e) {
       LOGGER.error("Can't start ConfigNode consensus group!", e);
+      stop();
+    }
+    try {
+      configManager.initActivationManager();
+    } catch (LicenseException e) {
+      LOGGER.error("init license manager fail!");
       stop();
     }
     LOGGER.info("Successfully initialize ConfigManager.");

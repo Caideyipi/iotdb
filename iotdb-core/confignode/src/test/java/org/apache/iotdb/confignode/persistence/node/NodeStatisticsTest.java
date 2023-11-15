@@ -19,6 +19,7 @@
 package org.apache.iotdb.confignode.persistence.node;
 
 import org.apache.iotdb.commons.cluster.NodeStatus;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeStatistics;
 import org.apache.iotdb.tsfile.utils.PublicBAOS;
 
@@ -35,7 +36,8 @@ public class NodeStatisticsTest {
 
   @Test
   public void NodeStatisticsSerDeTest() throws IOException {
-    NodeStatistics statistics0 = new NodeStatistics(20000331, NodeStatus.ReadOnly, "DiskFull");
+    NodeStatistics statistics0 =
+        new NodeStatistics(20000331, ActivateStatus.UNKNOWN, NodeStatus.ReadOnly, "DiskFull");
 
     // Deserialization from buffer
     try (PublicBAOS byteArrayOutputStream = new PublicBAOS();

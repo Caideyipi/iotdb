@@ -16,21 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.license;
 
-import org.apache.commons.codec.binary.Base64;
+package org.apache.iotdb.confignode.service;
 
-public class TimechoHookThread extends Thread {
-
+public class ConfigNodeShutdownHookForOtherIT extends ConfigNodeShutdownHook {
   @Override
-  public void run() {
-    LicenseManager licenseManager = LicenseManager.getInstance();
-    try {
-      licenseManager.write(
-          Base64.encodeBase64String(licenseManager.getLastDate().getBytes()),
-          LicenseManager.EXPIRE_FILE_PATH);
-    } catch (LicenseException e) {
-      throw new RuntimeException("hook error");
-    }
+  protected ConfigNode getConfigNodeInstance() {
+    return ConfigNodeForOtherIT.getInstance();
   }
 }

@@ -645,15 +645,13 @@ service IClientRPCService {
 
   common.TSStatus updateWhiteList(1:set<string> ipSet)
 
-  LicenseInfoResp getLicenseInfo()
+  TLicenseInfoResp getLicenseInfo()
 }
 
 
-struct LicenseInfoResp{
+struct TLicenseInfoResp{
   1: required common.TSStatus status
-  2: optional bool isActive
-  3: optional string expireDate
-  4: optional bool isEnterprise
+  2: required common.TLicense licenseContent
 }
 
 struct WhiteListInfoResp{

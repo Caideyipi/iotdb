@@ -20,6 +20,7 @@
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.commons.cluster.NodeStatus;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
@@ -34,6 +35,8 @@ public class NodeStatistics {
   // For guiding queries, the higher the score the higher the load
   private long loadScore;
 
+  private ActivateStatus activateStatus = ActivateStatus.UNKNOWN;
+
   // The current status of the Node
   private NodeStatus status;
   // The reason why lead to the current NodeStatus (for showing cluster)
@@ -44,14 +47,20 @@ public class NodeStatistics {
     // Empty constructor
   }
 
-  public NodeStatistics(long loadScore, NodeStatus status, String statusReason) {
+  public NodeStatistics(
+      long loadScore, ActivateStatus activateStatus, NodeStatus status, String statusReason) {
     this.loadScore = loadScore;
+    this.activateStatus = activateStatus;
     this.status = status;
     this.statusReason = statusReason;
   }
 
   public long getLoadScore() {
     return loadScore;
+  }
+
+  public ActivateStatus getActivateStatus() {
+    return activateStatus;
   }
 
   public NodeStatus getStatus() {
@@ -96,17 +105,19 @@ public class NodeStatistics {
   }
 
   public static NodeStatistics generateDefaultNodeStatistics() {
-    return new NodeStatistics(Long.MAX_VALUE, NodeStatus.Unknown, null);
+    return new NodeStatistics(Long.MAX_VALUE, ActivateStatus.UNKNOWN, NodeStatus.Unknown, null);
   }
 
   public NodeStatistics deepCopy() {
-    return new NodeStatistics(loadScore, status, statusReason);
+    return new NodeStatistics(loadScore, activateStatus, status, statusReason);
   }
 
   public NodeHeartbeatSample convertToNodeHeartbeatSample() {
     long currentTime = System.currentTimeMillis();
     return new NodeHeartbeatSample(
-        new THeartbeatResp(currentTime, status.getStatus()).setStatusReason(statusReason),
+        new THeartbeatResp(currentTime, status.getStatus())
+            .setStatusReason(statusReason)
+            .setActivateStatus(ActivateStatus.UNKNOWN.toString()),
         currentTime);
   }
 
@@ -120,6 +131,7 @@ public class NodeStatistics {
     }
     NodeStatistics that = (NodeStatistics) o;
     return loadScore == that.loadScore
+        && activateStatus == that.activateStatus
         && status == that.status
         && Objects.equals(statusReason, that.statusReason);
   }
@@ -134,6 +146,8 @@ public class NodeStatistics {
     return "NodeStatistics{"
         + "loadScore="
         + loadScore
+        + ", activateStatus="
+        + activateStatus
         + ", status="
         + status
         + ", statusReason='"

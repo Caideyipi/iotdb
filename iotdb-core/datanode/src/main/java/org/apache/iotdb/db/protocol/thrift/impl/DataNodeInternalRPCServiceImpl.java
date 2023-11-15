@@ -38,7 +38,9 @@ import org.apache.iotdb.commons.consensus.ConsensusGroupId;
 import org.apache.iotdb.commons.consensus.DataRegionId;
 import org.apache.iotdb.commons.consensus.SchemaRegionId;
 import org.apache.iotdb.commons.exception.IllegalPathException;
+import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.exception.MetadataException;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathDeserializeUtil;
 import org.apache.iotdb.commons.path.PathPatternTree;
@@ -1208,6 +1210,18 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     // Update schema quota if necessary
     SchemaEngine.getInstance().updateAndFillSchemaCountMap(req, resp);
 
+    // Update activation status
+    CommonConfig config = commonConfig;
+    if (req.getActivation().isActivated()) {
+      config.setActivated();
+    } else {
+      config.setUnactivated();
+    }
+    resp.setActivateStatus(
+        config.isUnactivated()
+            ? ActivateStatus.UNACTIVATED.toString()
+            : ActivateStatus.ACTIVATED.toString());
+
     // Update pipe meta if necessary
     if (req.isNeedPipeMetaList()) {
       PipeAgent.task().collectPipeMetaList(resp);
@@ -1367,6 +1381,10 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   @Override
   public TSStatus setSystemStatus(String status) throws TException {
     try {
+      if (commonConfig.isUnactivated()) {
+        throw new LicenseException(
+            "It's not permitted to manually transition the DataNode out of the unactivated state");
+      }
       commonConfig.setNodeStatus(NodeStatus.parse(status));
       if (commonConfig.getNodeStatus().equals(NodeStatus.Removing)) {
         PipeAgent.runtime().stop();

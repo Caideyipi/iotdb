@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.license;
+
+package org.apache.iotdb.confignode.manager.activation;
+
+import org.apache.iotdb.commons.exception.LicenseException;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -31,7 +34,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
-public class Rsa {
+public class RSA {
   private static final String RSA_PUBLIC_KEY =
       "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAWzhK/X+CtDhMQyUzVEQH/euInXQxbC4vXPi/HNvhBqg4p4fGN600OFWpuB3ToGgL2wOP5+JVaOUqUh7GRSEUzzPt+GGOLGujuzsT5auZ/TgJmsWUTsL555bYYp5euoPBy/KdbkjMKR8vGTITG75ngj2JhN+1etYkUlgUfuhoOQIDAQAB";
 
@@ -46,7 +49,9 @@ public class Rsa {
   public static final String CIPHER_ENCRYPT = "encrypt";
   public static final String CIPHER_DECRYPT = "decrypt";
 
-  private Rsa() {
+  private static final String ILLEGAL_LICENSE = "illegal license";
+
+  private RSA() {
     throw new IllegalStateException("Utility class");
   }
 
@@ -102,7 +107,7 @@ public class Rsa {
         return out.toString();
       }
     } catch (Exception e) {
-      throw new LicenseException("illegal license");
+      throw new LicenseException(ILLEGAL_LICENSE);
     }
     return "";
   }
@@ -113,7 +118,7 @@ public class Rsa {
       cipher.init(Cipher.ENCRYPT_MODE, getPublicKey());
       return section(CIPHER_ENCRYPT, src, cipher);
     } catch (Exception e) {
-      throw new LicenseException("illegal license");
+      throw new LicenseException(ILLEGAL_LICENSE);
     }
   }
 
@@ -123,7 +128,7 @@ public class Rsa {
       cipher.init(Cipher.DECRYPT_MODE, getPublicKey());
       return section(CIPHER_DECRYPT, src, cipher);
     } catch (Exception e) {
-      throw new LicenseException("illegal license");
+      throw new LicenseException(ILLEGAL_LICENSE);
     }
   }
 }

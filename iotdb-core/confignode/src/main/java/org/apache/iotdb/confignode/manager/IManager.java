@@ -41,6 +41,7 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
+import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.cq.CQManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
@@ -201,6 +202,13 @@ public interface IManager {
    * @return PipeManager instance
    */
   PipeManager getPipeManager();
+
+  /**
+   * Get ActivationManager
+   *
+   * @return ActivationManager instance
+   */
+  ActivationManager getActivationManager();
 
   /**
    * Get ClusterQuotaManager.

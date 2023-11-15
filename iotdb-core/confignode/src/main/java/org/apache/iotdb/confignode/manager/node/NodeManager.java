@@ -58,6 +58,7 @@ import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.TriggerManager;
 import org.apache.iotdb.confignode.manager.UDFManager;
+import org.apache.iotdb.confignode.manager.activation.License;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
@@ -154,6 +155,7 @@ public class NodeManager {
     globalConfig.setSeriesPartitionExecutorClass(
         configNodeConfig.getSeriesPartitionExecutorClass());
     globalConfig.setTimePartitionInterval(commonConfig.getTimePartitionInterval());
+    globalConfig.setIsEnterprise(true);
     globalConfig.setReadConsistencyLevel(configNodeConfig.getReadConsistencyLevel());
     globalConfig.setDiskSpaceWarningThreshold(commonConfig.getDiskSpaceWarningThreshold());
     globalConfig.setTimestampPrecision(commonConfig.getTimestampPrecision());
@@ -265,7 +267,12 @@ public class NodeManager {
    * @return DataNodeConfigurationDataSet. The {@link TSStatus} will be set to {@link
    *     TSStatusCode#SUCCESS_STATUS} when register success.
    */
-  public DataSet registerDataNode(TDataNodeRegisterReq req) {
+  public synchronized DataSet registerDataNode(TDataNodeRegisterReq req) {
+    DataNodeRegisterResp activationCheckResp = registerDataNodeActivationCheck(req);
+    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != activationCheckResp.getStatus().getCode()) {
+      return activationCheckResp;
+    }
+
     int dataNodeId = nodeInfo.generateNextNodeId();
 
     RegisterDataNodePlan registerDataNodePlan =
@@ -302,12 +309,59 @@ public class NodeManager {
     getClusterSchemaManager().adjustMaxRegionGroupNum();
 
     DataNodeRegisterResp resp = new DataNodeRegisterResp();
-
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_REGISTRATION);
     resp.setConfigNodeList(getRegisteredConfigNodes());
     resp.setDataNodeId(
         registerDataNodePlan.getDataNodeConfiguration().getLocation().getDataNodeId());
     resp.setRuntimeConfiguration(getRuntimeConfiguration());
+
+    License license = configManager.getActivationManager().getLicense();
+    LOGGER.info(
+        "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
+        license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
+        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getTotalCpuCoreCount());
+
+    return resp;
+  }
+
+  private DataNodeRegisterResp registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
+    License license = configManager.getActivationManager().getLicense();
+    DataNodeRegisterResp resp = new DataNodeRegisterResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    // check if unactivated
+    if (!license.isActivated()) {
+      final String message =
+          "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    }
+    // check DataNode num limit
+    if (nodeInfo.getRegisteredDataNodeCount() + 1 > license.getDataNodeNumLimit()) {
+      final String message =
+          String.format(
+              "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
+              nodeInfo.getRegisteredDataNodeCount(),
+              nodeInfo.getRegisteredDataNodeCount() + 1,
+              license.getDataNodeNumLimit());
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    }
+    // check DataNode's cpu core num limit
+    int clusterCpuCores = nodeInfo.getTotalCpuCoreCount();
+    int newNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
+    int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
+    if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
+      String message =
+          String.format(
+              "Deny DataNode registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
+              clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     return resp;
   }
 
@@ -441,14 +495,19 @@ public class NodeManager {
   }
 
   /**
-   * Register MLNode.
+   * Register MLNode. Use synchronized to make sure
    *
    * @param req TMLNodeRegisterReq
    * @return MLNodeConfigurationDataSet. The {@link TSStatus} will be set to {@link
    *     TSStatusCode#SUCCESS_STATUS} when register success.
    */
-  public DataSet registerMLNode(TMLNodeRegisterReq req) {
+  public synchronized DataSet registerMLNode(TMLNodeRegisterReq req) {
     int mlNodeId = nodeInfo.generateNextNodeId();
+
+    MLNodeRegisterResp activationCheckResp = registerMLNodeActivationCheck(req);
+    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != activationCheckResp.getStatus().getCode()) {
+      return activationCheckResp;
+    }
 
     RegisterMLNodePlan registerMLNodePlan = new RegisterMLNodePlan(req.getMlNodeConfiguration());
     // Register new DataNode
@@ -479,6 +538,33 @@ public class NodeManager {
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_REGISTRATION);
     resp.setConfigNodeList(getRegisteredConfigNodes());
     resp.setMLNodeId(registerMLNodePlan.getMLNodeConfiguration().getLocation().getMlNodeId());
+    return resp;
+  }
+
+  private MLNodeRegisterResp registerMLNodeActivationCheck(TMLNodeRegisterReq req) {
+    License license = configManager.getActivationManager().getLicense();
+    MLNodeRegisterResp resp = new MLNodeRegisterResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    // check if unactivated
+    if (!license.isActivated()) {
+      final String message =
+          "Deny MLNode registration: Cluster is unactivated now, MLNode is not allowed to join.";
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+    }
+    // check MLNode num limit
+    if (nodeInfo.getRegisteredMLNodeCount() + 1 > license.getMLNodeNumLimit()) {
+      final String message =
+          String.format(
+              "Deny MLNode registration: MLNodes number limit exceeded, %d + 1 = %d. Only %d MLNodes is allowed.",
+              nodeInfo.getRegisteredMLNodeCount(),
+              nodeInfo.getRegisteredMLNodeCount() + 1,
+              license.getMLNodeNumLimit());
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     return resp;
   }
 

@@ -134,6 +134,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
+import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterResp;
@@ -870,6 +871,12 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   public TConfigNodeHeartbeatResp getConfigNodeHeartBeat(TConfigNodeHeartbeatReq heartbeatReq) {
     TConfigNodeHeartbeatResp resp = new TConfigNodeHeartbeatResp();
     resp.setTimestamp(System.currentTimeMillis());
+    configManager.getActivationManager().loadRemoteLicense(heartbeatReq.getLicence());
+    resp.setActivateStatus(configManager.getActivationManager().getActivateStatus().toString());
+    if (configManager.getActivationManager().isActive()) {
+      // Report my license only if I'm active
+      resp.setLicense(configManager.getActivationManager().getLicense().toTLicense());
+    }
     return resp;
   }
 
@@ -1062,6 +1069,36 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   @Override
   public TGetModelInfoResp getModelInfo(TGetModelInfoReq req) {
     return configManager.getModelInfo(req);
+  }
+
+  @Override
+  public TSStatus setLicenseFile(String fileName, String content) throws TException {
+    return configManager.getActivationManager().setLicenseFile(fileName, content);
+  }
+
+  @Override
+  public TSStatus deleteLicenseFile(String fileName) throws TException {
+    return configManager.getActivationManager().deleteLicenseFile(fileName);
+  }
+
+  @Override
+  public TSStatus getLicenseFile(String fileName) throws TException {
+    return configManager.getActivationManager().getLicenseFile(fileName);
+  }
+
+  @Override
+  public TLicenseContentResp getLicenseContent() throws TException {
+    TLicenseContentResp resp =
+        new TLicenseContentResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+    resp.setLicenseContent(configManager.getActivationManager().getLicense().toTLicense());
+    return resp;
+  }
+
+  @Override
+  public TSStatus getActivateStatus() throws TException {
+    TSStatus result = new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+    result.setMessage(configManager.getActivationManager().getActivateStatus().toString());
+    return result;
   }
 
   @Override

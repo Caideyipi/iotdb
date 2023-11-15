@@ -21,6 +21,7 @@ package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
+import org.apache.iotdb.commons.license.ActivateStatus;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -53,14 +54,17 @@ public class DataNodeHeartbeatCache extends BaseNodeCache {
     /* Update Node status */
     NodeStatus status = null;
     String statusReason = null;
+    ActivateStatus activateStatus = ActivateStatus.UNKNOWN;
     // TODO: Optimize judge logic
     if (lastSample != null && NodeStatus.Removing.equals(lastSample.getStatus())) {
       status = NodeStatus.Removing;
     } else if (System.currentTimeMillis() - lastSendTime > HEARTBEAT_TIMEOUT_TIME) {
       status = NodeStatus.Unknown;
+      activateStatus = ActivateStatus.UNKNOWN;
     } else if (lastSample != null) {
       status = lastSample.getStatus();
       statusReason = lastSample.getStatusReason();
+      activateStatus = lastSample.getActivateStatus();
     }
 
     /* Update loadScore */
@@ -68,7 +72,8 @@ public class DataNodeHeartbeatCache extends BaseNodeCache {
     // TODO: Construct load score module
     long loadScore = NodeStatus.isNormalStatus(status) ? 0 : Long.MAX_VALUE;
 
-    NodeStatistics newStatistics = new NodeStatistics(loadScore, status, statusReason);
+    NodeStatistics newStatistics =
+        new NodeStatistics(loadScore, activateStatus, status, statusReason);
     if (!currentStatistics.get().equals(newStatistics)) {
       // Update the current NodeStatistics if necessary
       currentStatistics.set(newStatistics);

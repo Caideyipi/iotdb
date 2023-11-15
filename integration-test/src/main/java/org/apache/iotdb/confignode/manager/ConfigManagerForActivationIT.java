@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.utils;
 
-import java.util.Collections;
-import java.util.List;
+package org.apache.iotdb.confignode.manager;
 
-public class ListUtils {
-  private ListUtils() {
-    throw new IllegalStateException("Utility class");
+import org.apache.iotdb.commons.exception.LicenseException;
+import org.apache.iotdb.confignode.manager.activation.ActivationManagerWithoutEncryptionAndMachineBinding;
+
+import java.io.IOException;
+
+/**
+ * ConfigManager which holds a ActivationManagerWithoutEncryptionAndMachineBinding. Only for
+ * IoTDBActivationTest.
+ */
+public class ConfigManagerForActivationIT extends ConfigManager {
+
+  public ConfigManagerForActivationIT() throws IOException {
+    super();
   }
 
-  public static boolean equalLists(List<String> one, List<String> two) {
-    if (one == null && two == null) {
-      return true;
-    }
-
-    if (one == null || two == null || one.size() != two.size()) {
-      return false;
-    }
-    Collections.sort(one);
-    Collections.sort(two);
-    return one.equals(two);
+  @Override
+  public void initActivationManager() throws LicenseException {
+    this.activationManager = new ActivationManagerWithoutEncryptionAndMachineBinding(this);
   }
 }

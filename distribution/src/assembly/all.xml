@@ -61,6 +61,14 @@
             <directory>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/conf</directory>
         </fileSet>
         <fileSet>
+            <outputDirectory>activation</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/activation</directory>
+            <fileMode>0755</fileMode>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
             <outputDirectory>sbin</outputDirectory>
             <directory>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin</directory>
             <fileMode>0755</fileMode>

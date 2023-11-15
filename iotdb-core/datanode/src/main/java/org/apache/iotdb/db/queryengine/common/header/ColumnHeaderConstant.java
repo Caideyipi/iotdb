@@ -79,6 +79,7 @@ public class ColumnHeaderConstant {
   public static final String NODE_ID = "NodeID";
   public static final String NODE_TYPE = "NodeType";
   public static final String STATUS = "Status";
+  public static final String ACTIVATE_STATUS = "ActivateStatus";
   public static final String INTERNAL_ADDRESS = "InternalAddress";
   public static final String INTERNAL_PORT = "InternalPort";
   public static final String CONFIG_CONSENSUS_PORT = "ConfigConsensusPort";
@@ -337,7 +338,8 @@ public class ColumnHeaderConstant {
           new ColumnHeader(INTERNAL_ADDRESS, TSDataType.TEXT),
           new ColumnHeader(INTERNAL_PORT, TSDataType.INT32),
           new ColumnHeader(VERSION, TSDataType.TEXT),
-          new ColumnHeader(BUILD_INFO, TSDataType.TEXT));
+          new ColumnHeader(BUILD_INFO, TSDataType.TEXT),
+          new ColumnHeader(ACTIVATE_STATUS, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showClusterDetailsColumnHeaders =
       ImmutableList.of(

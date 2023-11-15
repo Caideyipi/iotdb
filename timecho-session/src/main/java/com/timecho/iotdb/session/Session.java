@@ -24,7 +24,7 @@ import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.StatementExecutionException;
-import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
+import org.apache.iotdb.service.rpc.thrift.TLicenseInfoResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 import org.apache.iotdb.tsfile.read.common.RowRecord;
 
@@ -212,9 +212,9 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
   }
 
   @Override
-  public LicenseInfoResp getLicenseInfo()
+  public TLicenseInfoResp getLicenseInfo()
       throws StatementExecutionException, IoTDBConnectionException {
-    LicenseInfoResp resp;
+    TLicenseInfoResp resp;
     try {
       resp = defaultSessionConnection.getClient().getLicenseInfo();
 

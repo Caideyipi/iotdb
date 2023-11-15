@@ -289,6 +289,8 @@ public class DataNode implements DataNodeMBean {
       throw new StartupException("Cannot pull system configurations from ConfigNode-leader");
     }
 
+    versionCheck(configurationResp);
+
     /* Load system configurations */
     IoTDBDescriptor.getInstance().loadGlobalConfig(configurationResp.globalConfig);
     IoTDBDescriptor.getInstance().loadRatisConfig(configurationResp.ratisConfig);
@@ -323,6 +325,10 @@ public class DataNode implements DataNodeMBean {
     logger.info(
         "Successfully pull system configurations from ConfigNode-leader, which takes {} ms",
         (endTime - startTime));
+  }
+
+  protected void versionCheck(TSystemConfigurationResp configurationResp) throws StartupException {
+    // do nothing, but, don't remove or modify this function
   }
 
   /**
