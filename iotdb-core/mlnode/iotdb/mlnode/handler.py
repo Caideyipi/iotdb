@@ -18,6 +18,8 @@
 from typing import cast
 
 import psutil
+from yaml import YAMLError
+
 from iotdb.thrift.common.ttypes import TLoadSample
 from iotdb.thrift.mlnode import IMLNodeRPCService
 from iotdb.thrift.mlnode.ttypes import (TCreateTrainingTaskReq,
@@ -56,6 +58,16 @@ class MLNodeRPCServiceHandler(IMLNodeRPCService.Iface):
             logger.warning(e)
             model_storage.delete_model(req.modelId)
             return TRegisterModelResp(get_status(TSStatusCode.INVALID_INFERENCE_CONFIG, e.message))
+        except YAMLError as e:
+            logger.warning(e)
+            model_storage.delete_model(req.modelId)
+            if hasattr(e, 'problem_mark'):
+                mark = e.problem_mark
+                return TRegisterModelResp(get_status(TSStatusCode.INVALID_INFERENCE_CONFIG,
+                                                     f"An error occurred while parsing the yaml file, "
+                                                     f"at line {mark.line + 1} column {mark.column + 1}."))
+            return TRegisterModelResp(
+                get_status(TSStatusCode.INVALID_INFERENCE_CONFIG, f"An error occurred while parsing the yaml file"))
         except Exception as e:
             logger.warning(e)
             model_storage.delete_model(req.modelId)

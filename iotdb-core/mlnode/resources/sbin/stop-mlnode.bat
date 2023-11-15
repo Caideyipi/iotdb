@@ -22,6 +22,19 @@
 set current_dir=%~dp0
 set superior_dir=%current_dir%\..\
 
+:initial
+if "%1"=="" goto done
+set aux=%1
+if "%aux:~0,1%"=="-" (
+   set nome=%aux:~1,250%
+) else (
+   set "%nome%=%1"
+   set nome=
+)
+shift
+goto initial
+
+:done
 for /f  "eol=# tokens=2 delims==" %%i in ('findstr /i "^mln_inference_rpc_port"
 %superior_dir%\conf\iotdb-mlnode.properties') do (
   set mln_inference_rpc_port=%%i
@@ -34,7 +47,14 @@ for /f  "eol=# tokens=2 delims==" %%i in ('findstr /i "mln_inference_rpc_address
   set mln_inference_rpc_address=%%i
 )
 
-for /f "tokens=5" %%a in ('netstat /ano ^| findstr /r /c:"^ *TCP *%mln_inference_rpc_address%:%mln_inference_rpc_port%.*$"') do (
+if defined t (
+    for /f "tokens=2 delims=/" %%a in ("%t%") do set "mln_inference_rpc=%%a"
+) else (
+    set mln_inference_rpc=%mln_inference_rpc_address%:%mln_inference_rpc_port%
+)
+
+echo Target MLNode to be stopped: %mln_inference_rpc%
+for /f "tokens=5" %%a in ('netstat /ano ^| findstr /r /c:"^ *TCP *%mln_inference_rpc%.*$"') do (
   taskkill /f /pid %%a
   echo Close MLNode, PID: %%a
 )

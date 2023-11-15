@@ -65,19 +65,8 @@ class Logger:
     __lock: lock for logger
     """
 
-    def __init__(self, log_dir=MLNODE_LOG_DIR):
-        file_names = MLNODE_LOG_FILE_NAMES
-        file_levels = MLNODE_LOG_FILE_LEVELS
+    def __init__(self, log_dir=None):
 
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
-            os.chmod(log_dir, 0o777)
-        for file_name in file_names:
-            log_path = log_dir + "/" + file_name
-            if not os.path.exists(log_path):
-                f = open(log_path, mode='w', encoding='utf-8')
-                f.close()
-                os.chmod(log_path, 0o777)
         self.logger_format = logging.Formatter(fmt='%(asctime)s %(levelname)s %('
                                                    'message)s',
                                                datefmt='%Y-%m-%d %H:%M:%S')
@@ -85,20 +74,33 @@ class Logger:
         self.logger = logging.getLogger(str(random.random()))
         self.logger.handlers.clear()
         self.logger.setLevel(logging.DEBUG)
-
-        self.file_handlers = []
-        for l in range(len(file_names)):
-            self.file_handlers.append(logging.FileHandler(log_dir + "/" + file_names[l], mode='a'))
-            self.file_handlers[l].setLevel(file_levels[l])
-            self.file_handlers[l].setFormatter(self.logger_format)
-
         self.console_handler = logging.StreamHandler(sys.stdout)
         self.console_handler.setLevel(STD_LEVEL)
         self.console_handler.setFormatter(self.logger_format)
 
         self.logger.addHandler(self.console_handler)
-        for filehandler in self.file_handlers:
-            self.logger.addHandler(filehandler)
+
+        if log_dir is not None:
+            file_names = MLNODE_LOG_FILE_NAMES
+            file_levels = MLNODE_LOG_FILE_LEVELS
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+                os.chmod(log_dir, 0o777)
+            for file_name in file_names:
+                log_path = log_dir + "/" + file_name
+                if not os.path.exists(log_path):
+                    f = open(log_path, mode='w', encoding='utf-8')
+                    f.close()
+                    os.chmod(log_path, 0o777)
+            self.file_handlers = []
+            for l in range(len(file_names)):
+                self.file_handlers.append(logging.FileHandler(log_dir + "/" + file_names[l], mode='a'))
+                self.file_handlers[l].setLevel(file_levels[l])
+                self.file_handlers[l].setFormatter(self.logger_format)
+
+            for filehandler in self.file_handlers:
+                self.logger.addHandler(filehandler)
+
 
         self.logger.addFilter(LoggerFilter())
         self.__lock = multiprocessing.Lock()

@@ -29,7 +29,7 @@ MLNODE_INFERENCE_RPC_ADDRESS = "127.0.0.1"
 MLNODE_INFERENCE_RPC_PORT = 10810
 MLNODE_MODELS_DIR = "data/mlnode/models"
 MLNODE_SYSTEM_DIR = "data/mlnode/system"
-MLNODE_LOG_DIR = "data/mlnode/logs"
+MLNODE_LOG_DIR = "logs/mlnode"
 MLNODE_THRIFT_COMPRESSION_ENABLED = False
 # use for node management
 MLNODE_CLUSTER_NAME = "defaultCluster"
@@ -37,7 +37,7 @@ MLNODE_VERSION_INFO = "UNKNOWN"
 MLNODE_BUILD_INFO = "UNKNOWN"
 
 # MLNode log
-MLNODE_LOG_FILE_NAMES = ['log_mlnode_debug.log',
+MLNODE_LOG_FILE_NAMES = ['log_mlnode_all.log',
                          'log_mlnode_info.log',
                          'log_mlnode_warning.log',
                          'log_mlnode_error.log']

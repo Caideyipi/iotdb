@@ -21,6 +21,24 @@
 MLNODE_CONF="`dirname "$0"`/../conf"
 mln_inference_rpc_port=`sed '/^mln_inference_rpc_port=/!d;s/.*=//' ${MLNODE_CONF}/iotdb-mlnode.properties`
 
+# fetch parameters with names
+while getopts "i:t:r" opt; do
+  case $opt in
+    i)
+    ;;
+    r)
+    ;;
+    t) p_mln_remove_target="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    exit 1
+    ;;
+  esac
+done
+# 如果p_mln_remove_target存在的话取p_mln_remove_target冒号后面的值作为mln_inference_rpc_port
+if [ -n "$p_mln_remove_target" ]; then
+  mln_inference_rpc_port=${p_mln_remove_target#*:}
+fi
 
 echo "Check whether the rpc_port is used..., port is" $mln_inference_rpc_port
 

@@ -34,11 +34,15 @@ if [ $? -eq 1 ]; then
 fi
 
 # fetch parameters with names
-while getopts "i:r" opt; do
+while getopts "i:t:rn" opt; do
   case $opt in
     i) p_mln_interpreter_dir="$OPTARG"
     ;;
     r) p_mln_force_reinstall="$OPTARG"
+    ;;
+    t) p_mln_remove_target="$OPTARG"
+    ;;
+    n)
     ;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1
@@ -73,14 +77,21 @@ fi
 # Change the working directory to the parent directory
 cd "$SCRIPT_DIR/.."
 mln_mlnode_dir=$(dirname "$mln_interpreter_dir")/mlnode
-$mln_mlnode_dir remove
+
+
+if [ -z "$p_mln_remove_target" ]; then
+  echo No target MLNode set, use system.properties
+  $mln_mlnode_dir remove
+else
+  $mln_mlnode_dir remove $p_mln_remove_target
+fi
 
 if [ $? -eq 1 ]; then
     echo "Remove MLNode failed. Exiting..."
     exit 1
 fi
 
-bash $SCRIPT_DIR/stop-mlnode.sh
+bash $SCRIPT_DIR/stop-mlnode.sh $*
 
 # Remove system directory
 rm -rf $mln_system_dir

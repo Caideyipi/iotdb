@@ -34,11 +34,13 @@ fi
 
 
 # fetch parameters with names
-while getopts "i:r" opt; do
+while getopts "i:rn" opt; do
   case $opt in
     i) p_mln_interpreter_dir="$OPTARG"
     ;;
     r) p_mln_force_reinstall="$OPTARG"
+    ;;
+    n)
     ;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1
@@ -65,5 +67,6 @@ echo Script got parameter: mln_interpreter_dir: $mln_interpreter_dir
 # Change the working directory to the parent directory
 cd "$SCRIPT_DIR/.."
 mln_mlnode_dir=$(dirname "$mln_interpreter_dir")/mlnode
+echo Script got mlnode dir: mln_mlnode_dir: $mln_mlnode_dir
 echo Starting MLNode...
 $mln_mlnode_dir start

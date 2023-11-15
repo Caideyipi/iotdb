@@ -35,6 +35,11 @@ if "%aux:~0,2%"=="-r" (
     shift
     goto initial
 )
+if "%aux:~0,2%"=="-n" (
+    set mln_no_dependencies=--no-dependencies
+    shift
+    goto initial
+)
 if "%aux:~0,1%"=="-" (
    set nome=%aux:~1,250%
 ) else (
@@ -82,9 +87,9 @@ for %%i in (*.whl) do (
     @REM if mln_force_reinstall is 1 then force reinstall MLNode
     if %mln_force_reinstall% == 1 (
         echo Force reinstall %%i
-        %mln_interpreter_dir% -m pip install %%i --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
+        %mln_interpreter_dir% -m pip install %%i --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
     ) else (
-        %mln_interpreter_dir% -m pip install %%i -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
+        %mln_interpreter_dir% -m pip install %%i -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
     )
     if %errorlevel% == 0 (
         echo MLNode is installed successfully

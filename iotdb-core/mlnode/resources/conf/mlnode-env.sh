@@ -26,11 +26,15 @@ mln_force_reinstall=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # fetch parameters with names
-while getopts "i:r" opt; do
+while getopts "i:t:rn" opt; do
   case $opt in
     i) p_mln_interpreter_dir="$OPTARG"
     ;;
     r) p_mln_force_reinstall=1
+    ;;
+    t)
+    ;;
+    n) p_mln_no_dependencies="--no-dependencies"
     ;;
     \?) echo "Invalid option -$OPTARG" >&2
     exit 1
@@ -78,9 +82,9 @@ for i in *.whl; do
   # if mln_force_reinstall is 1 then force reinstall MLNode
   if [ $mln_force_reinstall -eq 1 ]; then
     echo Force reinstall $i
-    $mln_interpreter_dir -m pip install "$i" --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
+    $mln_interpreter_dir -m pip install "$i" --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
   else
-    $mln_interpreter_dir -m pip install "$i" -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location
+    $mln_interpreter_dir -m pip install "$i" -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
   fi
   if [ $? -eq 0 ]; then
     echo "MLNode is installed successfully"

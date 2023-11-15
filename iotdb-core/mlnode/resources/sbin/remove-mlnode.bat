@@ -30,10 +30,6 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_interpreter_dir" "%REMOVE_SCRIPT_DIR%\\..\\conf\\mlnode-env.bat"') do (
-    set _mln_interpreter_dir=%%a
-    goto :interpreter
-)
 
 :initial
 if "%1"=="" goto interpreter
@@ -46,6 +42,11 @@ if "%aux:~0,1%"=="-" (
 )
 shift
 goto initial
+
+for /f "tokens=2 delims==" %%a in ('findstr /i /c:"^mln_interpreter_dir" "%REMOVE_SCRIPT_DIR%\\..\\conf\\mlnode-env.bat"') do (
+    set _mln_interpreter_dir=%%a
+    goto :interpreter
+)
 
 :interpreter
 if "%i%"=="" (
@@ -72,14 +73,19 @@ cd %REMOVE_SCRIPT_DIR%\\..
 for %%i in ("%_mln_interpreter_dir%") do set "parent=%%~dpi"
 set mln_mlnode_dir=%parent%\\mlnode.exe
 
-%mln_mlnode_dir% remove
+if "%t%"=="" (
+    echo No target MLNode set, use system.properties
+    %mln_mlnode_dir% remove
+) else (
+    %mln_mlnode_dir% remove %t%
+)
 
 if %errorlevel% neq 0 (
     echo Remove MLNode failed. Exiting...
     exit /b 1
 )
 
-call %REMOVE_SCRIPT_DIR%\\stop-mlnode.bat
+call %REMOVE_SCRIPT_DIR%\\stop-mlnode.bat %*
 
 rd /s /q %_mln_system_dir%
 

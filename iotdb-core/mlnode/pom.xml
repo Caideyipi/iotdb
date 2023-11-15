@@ -178,13 +178,30 @@
                         </goals>
                         <configuration>
                             <target>
-                                <exec executable="python3" failonerror="false">
+                                <condition property="osFamily" value="windows">
+                                    <os family="windows"/>
+                                </condition>
+                                <condition property="osFamily" value="unix">
+                                    <os family="unix"/>
+                                </condition>
+                                <exec executable="python3" osfamily="unix" failonerror="false">
                                     <arg value="-m"/>
                                     <arg value="pip"/>
                                     <arg value="install"/>
                                     <arg value="poetry"/>
                                 </exec>
-                                <exec executable="python3">
+                                <exec executable="python" osfamily="windows" failonerror="false">
+                                    <arg value="-m"/>
+                                    <arg value="pip"/>
+                                    <arg value="install"/>
+                                    <arg value="poetry"/>
+                                </exec>
+                                <exec executable="python3" osfamily="unix">
+                                    <arg value="-m"/>
+                                    <arg value="poetry"/>
+                                    <arg value="build"/>
+                                </exec>
+                                <exec executable="python" osfamily="windows">
                                     <arg value="-m"/>
                                     <arg value="poetry"/>
                                     <arg value="build"/>
