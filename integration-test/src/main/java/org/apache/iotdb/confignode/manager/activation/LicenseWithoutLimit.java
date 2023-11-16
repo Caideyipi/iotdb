@@ -35,5 +35,6 @@ public class LicenseWithoutLimit extends License {
     this.sensorNumLimit = Long.MAX_VALUE;
     this.disconnectionFromActiveNodeTimeLimit = Long.MAX_VALUE;
     this.licenseSource = LicenseSource.FROM_FILE;
+    this.mlNodeNumLimit = 9999;
   }
 }
