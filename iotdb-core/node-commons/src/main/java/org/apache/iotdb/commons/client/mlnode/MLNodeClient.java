@@ -37,7 +37,7 @@ import org.apache.iotdb.mlnode.rpc.thrift.TRegisterModelResp;
 import org.apache.iotdb.mlnode.rpc.thrift.TWindowParams;
 import org.apache.iotdb.rpc.TConfigurationConst;
 import org.apache.iotdb.rpc.TSStatusCode;
-import org.apache.iotdb.tsfile.enums.TSDataType;
+import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 import org.apache.iotdb.tsfile.read.common.block.TsBlock;
 import org.apache.iotdb.tsfile.read.common.block.column.TsBlockSerde;
 

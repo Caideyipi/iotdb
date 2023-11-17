@@ -32,10 +32,10 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model.ModelIn
 import org.apache.iotdb.mlnode.rpc.thrift.TInferenceResp;
 import org.apache.iotdb.mlnode.rpc.thrift.TWindowParams;
 import org.apache.iotdb.rpc.TSStatusCode;
-import org.apache.iotdb.tsfile.access.ColumnBuilder;
-import org.apache.iotdb.tsfile.enums.TSDataType;
+import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 import org.apache.iotdb.tsfile.read.common.block.TsBlock;
 import org.apache.iotdb.tsfile.read.common.block.TsBlockBuilder;
+import org.apache.iotdb.tsfile.read.common.block.column.ColumnBuilder;
 import org.apache.iotdb.tsfile.read.common.block.column.TimeColumnBuilder;
 import org.apache.iotdb.tsfile.read.common.block.column.TsBlockSerde;
 
