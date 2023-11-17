@@ -180,6 +180,8 @@ public class ClusterConstant {
 
   public static final String DATA_NODE_NAME = "DataNode";
 
+  public static final String ML_NODE_NAME = "MLNode";
+
   public static final String LOCK_FILE_PATH =
       System.getProperty(USER_DIR) + File.separator + TARGET + File.separator + "lock-";
   public static final String TEMPLATE_NODE_PATH =

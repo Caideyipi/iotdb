@@ -244,8 +244,7 @@ class MLNodeDescriptor(object):
                 self.__config.set_mln_system_dir(file_configs['mln_system_dir'])
 
             if file_configs['mln_target_config_node_list'] is not None:
-                self.__config.set_mln_target_config_node_list(file_configs['mln_inference_rpc_address']
-                                                              + ':' + file_configs['mln_target_config_node_list'])
+                self.__config.set_mln_target_config_node_list(file_configs['mln_target_config_node_list'])
             # MLNODE_THRIFT_COMPRESSION_ENABLED
             if file_configs['mln_thrift_compression_enabled'] is not None:
                 self.__config.set_mln_thrift_compression_enabled(int(file_configs['mln_thrift_compression_enabled']))

@@ -112,3 +112,25 @@ integration-test-1c3d:
       - integration-test/target/cluster-logs
     expire_in: 1 day
 
+mlnode-test-1c1d1m:
+  stage: test
+  image: maven:3.8.6-openjdk-8-slim-lsof-python3
+  tags:
+    - mlnode
+  before_script:
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+  script:
+    - 'mvn clean package -DskipTests -pl iotdb-core/mlnode -am -P with-mlnode -s $MAVEN_SETTINGS_XML'
+    - 'mvn verify -P with-integration-tests -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DmlNodeMaxHeapSize=1024 -pl integration-test -am -PMLClusterIT -s $MAVEN_SETTINGS_XML'
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+  artifacts:
+    when: on_failure
+    name: mlnode-log
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/mlnode-logs
+    expire_in: 1 day

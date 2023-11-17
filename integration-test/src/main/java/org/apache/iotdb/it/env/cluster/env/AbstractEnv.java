@@ -38,6 +38,7 @@ import org.apache.iotdb.it.env.cluster.config.*;
 import org.apache.iotdb.it.env.cluster.node.AbstractNodeWrapper;
 import org.apache.iotdb.it.env.cluster.node.ConfigNodeWrapper;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
+import org.apache.iotdb.it.env.cluster.node.MLNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
 import org.apache.iotdb.itbase.env.BaseEnv;
 import org.apache.iotdb.itbase.env.BaseNodeWrapper;
@@ -74,6 +75,7 @@ public abstract class AbstractEnv implements BaseEnv {
   private final Random rand = new Random();
   protected List<ConfigNodeWrapper> configNodeWrapperList = Collections.emptyList();
   protected List<DataNodeWrapper> dataNodeWrapperList = Collections.emptyList();
+  protected List<MLNodeWrapper> mlNodeWrapperList = Collections.emptyList();
   protected String testMethodName = null;
   protected int index = 0;
   protected long startTime;
@@ -137,6 +139,11 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   protected void initEnvironment(int configNodesNum, int dataNodesNum, int testWorkingRetryCount) {
+    initEnvironment(configNodesNum, dataNodesNum, testWorkingRetryCount, false);
+  }
+
+  protected void initEnvironment(
+      int configNodesNum, int dataNodesNum, int testWorkingRetryCount, boolean addMLNode) {
     this.testWorkingRetryCount = testWorkingRetryCount;
     this.configNodeWrapperList = new ArrayList<>();
     this.dataNodeWrapperList = new ArrayList<>();
@@ -245,7 +252,42 @@ public abstract class AbstractEnv implements BaseEnv {
       throw new AssertionError();
     }
 
+    if (addMLNode) {
+      this.mlNodeWrapperList = new ArrayList<>();
+      startMLNode(seedConfigNode, testClassName);
+    }
+
     testWorkingNoUnknown();
+  }
+
+  private void startMLNode(String seedConfigNode, String testClassName) {
+    String mlNodeEndPoint;
+    MLNodeWrapper mlNodeWrapper =
+        new MLNodeWrapper(
+            seedConfigNode,
+            testClassName,
+            testMethodName,
+            EnvUtils.searchAvailablePorts(),
+            startTime);
+    mlNodeWrapperList.add(mlNodeWrapper);
+    mlNodeEndPoint = mlNodeWrapper.getIpAndPortString();
+    mlNodeWrapper.createNodeDir();
+    mlNodeWrapper.createLogDir();
+    RequestDelegate<Void> MLNodesDelegate =
+        new ParallelRequestDelegate<>(
+            Collections.singletonList(mlNodeEndPoint), NODE_START_TIMEOUT);
+
+    MLNodesDelegate.addRequest(
+        () -> {
+          mlNodeWrapper.start();
+          return null;
+        });
+
+    try {
+      MLNodesDelegate.requestAll();
+    } catch (SQLException e) {
+      logger.error("Start mlNodes failed", e);
+    }
   }
 
   public String getTestClassName() {
@@ -335,7 +377,9 @@ public abstract class AbstractEnv implements BaseEnv {
 
         // Check the number of nodes
         if (showClusterResp.getNodeStatus().size()
-            != configNodeWrapperList.size() + dataNodeWrapperList.size()) {
+            != configNodeWrapperList.size()
+                + dataNodeWrapperList.size()
+                + mlNodeWrapperList.size()) {
           flag = false;
         }
 
@@ -366,6 +410,14 @@ public abstract class AbstractEnv implements BaseEnv {
     for (AbstractNodeWrapper nodeWrapper :
         Stream.concat(this.dataNodeWrapperList.stream(), this.configNodeWrapperList.stream())
             .collect(Collectors.toList())) {
+      nodeWrapper.stop();
+      nodeWrapper.destroyDir();
+      String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());
+      if (!new File(lockPath).delete()) {
+        logger.error("Delete lock file {} failed", lockPath);
+      }
+    }
+    for (MLNodeWrapper nodeWrapper : this.mlNodeWrapperList) {
       nodeWrapper.stop();
       nodeWrapper.destroyDir();
       String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());
