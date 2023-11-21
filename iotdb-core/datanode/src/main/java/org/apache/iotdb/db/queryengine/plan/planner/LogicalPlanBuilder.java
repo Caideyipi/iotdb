@@ -136,7 +136,7 @@ import static org.apache.iotdb.db.utils.constant.SqlConstant.MAX_TIME;
 
 public class LogicalPlanBuilder {
 
-  private PlanNode root;
+  protected PlanNode root;
 
   private final MPPQueryContext context;
 
@@ -156,7 +156,7 @@ public class LogicalPlanBuilder {
     return this;
   }
 
-  private void updateTypeProvider(Collection<Expression> expressions) {
+  void updateTypeProvider(Collection<Expression> expressions) {
     if (expressions == null) {
       return;
     }
@@ -738,7 +738,7 @@ public class LogicalPlanBuilder {
     }
   }
 
-  private PlanNode convergeWithTimeJoin(List<PlanNode> sourceNodes, Ordering mergeOrder) {
+  protected PlanNode convergeWithTimeJoin(List<PlanNode> sourceNodes, Ordering mergeOrder) {
     PlanNode tmpNode;
     if (sourceNodes.size() == 1) {
       tmpNode = sourceNodes.get(0);
@@ -778,13 +778,16 @@ public class LogicalPlanBuilder {
             ? queryStatement.getRowOffset() + queryStatement.getRowLimit()
             : queryStatement.getRowLimit();
 
+    // 1. LIMIT and LIMIT_VALUE is smaller than 1000000,
+    // 2. `order by based on time` or `order by based on expression`,
+    // 3. no aggregation,
+    // when satisfy all above requirements use ToKNode.
     if (!queryStatement.isAggregationQuery()
         && queryStatement.hasLimit()
         && queryStatement.getOrderByComponent() != null
         && !queryStatement.isOrderByBasedOnDevice()
         && limitValue <= LIMIT_USE_TOP_K_FOR_ALIGN_BY_DEVICE) {
 
-      // order by time and order by expression with limit, can be optimized to TopK implementation
       TopKNode topKNode =
           new TopKNode(
               context.getQueryId().genPlanNodeId(),
@@ -795,7 +798,8 @@ public class LogicalPlanBuilder {
       // if value filter exists, need add a LIMIT-NODE as the child node of TopKNode
       long valueFilterLimit = queryStatement.hasWhere() ? limitValue : -1;
 
-      if ((queryStatement.isOrderByBasedOnTime() && !queryStatement.hasOrderByExpression())) {
+      // order by based on time, use TopKNode + SingleDeviceViewNode
+      if (queryStatement.isOrderByBasedOnTime() && !queryStatement.hasOrderByExpression()) {
         addSingleDeviceViewNodes(
             topKNode,
             deviceNameToSourceNodesMap,
@@ -803,6 +807,7 @@ public class LogicalPlanBuilder {
             deviceToMeasurementIndexesMap,
             valueFilterLimit);
       } else {
+        // order by based on expression, use TopKNode + DeviceViewNode
         topKNode.addChild(
             addDeviceViewNode(
                 orderByParameter,
@@ -814,9 +819,12 @@ public class LogicalPlanBuilder {
 
       this.root = topKNode;
     }
-    // order by time + no limit, device can be optimized by SingleDeviceViewNode and MergeSortNode
+    // 1. `order by based on time` + `no order by expression`,
+    // 2. no LIMIT or LIMIT_VALUE is larger than 1000000,
+    // when satisfy all above requirements use MergeSortNode.
     else if (queryStatement.isOrderByBasedOnTime() && !queryStatement.hasOrderByExpression()) {
       if (deviceNameToSourceNodesMap.size() == 1) {
+        // only one device, use DeviceViewNode, no need MergeSortNode
         this.root =
             addDeviceViewNode(
                 orderByParameter,
@@ -825,6 +833,7 @@ public class LogicalPlanBuilder {
                 deviceNameToSourceNodesMap,
                 -1);
       } else {
+        // otherwise use MergeSortNode + SingleDeviceViewNode
         MergeSortNode mergeSortNode =
             new MergeSortNode(
                 context.getQueryId().genPlanNodeId(), orderByParameter, outputColumnNames);
