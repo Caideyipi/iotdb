@@ -221,7 +221,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   static final Expression END_TIME_EXPRESSION =
       TimeSeriesOperand.constructColumnHeaderExpression(ENDTIME, TSDataType.INT64);
 
-  private final String INFERENCE_COLUMN_NAME = "output";
+  private static final String INFERENCE_COLUMN_NAME = "output";
 
   private final List<String> lastQueryColumnNames =
       new ArrayList<>(Arrays.asList("TIME", "TIMESERIES", "VALUE", "DATATYPE"));
@@ -1577,7 +1577,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   }
 
   // check if the result of SQL matches the input of model
-  private void checkInputShape(
+  private static void checkInputShape(
       Analysis analysis,
       ModelInformation modelInformation,
       List<Pair<Expression, String>> outputExpressions) {
@@ -1598,7 +1598,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     }
   }
 
-  private void checkInputType(
+  private static void checkInputType(
       Analysis analysis,
       ModelInformation modelInformation,
       List<Pair<Expression, String>> outputExpressions) {
