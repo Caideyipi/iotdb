@@ -60,7 +60,12 @@ echo Script got parameter: mln_interpreter_dir: %_mln_interpreter_dir%
 cd %START_SCRIPT_DIR%\\..
 for %%i in ("%_mln_interpreter_dir%") do set "parent=%%~dpi"
 set mln_mlnode_dir=%parent%\mlnode.exe
+set mln_mlnode_dir_new=%parent%\Scripts\\mlnode.exe
 echo Starting MLNode...
 %mln_mlnode_dir% start
+if %errorlevel% neq 0 (
+    echo mln_mlnode_dir_new is %mln_mlnode_dir_new%
+    %mln_mlnode_dir_new% start
+)
 
 pause

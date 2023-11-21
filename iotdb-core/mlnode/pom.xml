@@ -27,7 +27,6 @@
         <version>1.3.1-SNAPSHOT</version>
     </parent>
     <artifactId>iotdb-mlnode</artifactId>
-    <packaging>pom</packaging>
     <name>IoTDB: Core: MlNode</name>
     <dependencies>
         <!-- These dependencies are just added to ensure the other modules are built first -->
@@ -93,7 +92,33 @@
                     </filesets>
                 </configuration>
             </plugin>
-            <!-- fill thrift folder -->
+            <!-- generate git.properties to provide build info -->
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.basedir}/iotdb/conf/git.properties</generateGitPropertiesFilename>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.dirty$</includeOnlyProperty>
+                    </includeOnlyProperties>
+                    <commitIdGenerationMode>full</commitIdGenerationMode>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <offline>true</offline>
+                    <gitDescribe>
+                        <dirty>-dev</dirty>
+                    </gitDescribe>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- fill thrift and conf folder -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -158,6 +183,22 @@
                                     <includes>
                                         <include>LICENSE</include>
                                     </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-pom-properties</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <encoding>utf-8</encoding>
+                            <outputDirectory>${basedir}/iotdb/conf/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/target/maven-archiver/</directory>
                                 </resource>
                             </resources>
                         </configuration>

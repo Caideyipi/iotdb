@@ -17,17 +17,17 @@
 #
 import os
 
-from iotdb.thrift.common.ttypes import TEndPoint
-
 from iotdb.mlnode.constant import (MLNODE_CONF_DIRECTORY_NAME,
                                    MLNODE_CONF_FILE_NAME,
                                    MLNODE_MODELS_DIR, MLNODE_LOG_DIR, MLNODE_SYSTEM_DIR, MLNODE_INFERENCE_RPC_ADDRESS,
                                    MLNODE_INFERENCE_RPC_PORT, MLNODE_THRIFT_COMPRESSION_ENABLED,
                                    MLNODE_SYSTEM_FILE_NAME, MLNODE_CLUSTER_NAME, MLNODE_VERSION_INFO, MLNODE_BUILD_INFO,
-                                   MLNODE_CONF_GIT_FILE_NAME, MLNODE_CONF_POM_FILE_NAME)
+                                   MLNODE_CONF_GIT_FILE_NAME, MLNODE_CONF_POM_FILE_NAME, MLNODE_ROOT_DIR,
+                                   MLNODE_ROOT_CONF_DIRECTORY_NAME)
 from iotdb.mlnode.exception import BadNodeUrlError
 from iotdb.mlnode.log import logger, set_logger
 from iotdb.mlnode.util import parse_endpoint_url
+from iotdb.thrift.common.ttypes import TEndPoint
 
 
 class MLNodeConfig(object):
@@ -203,13 +203,17 @@ class MLNodeDescriptor(object):
             if system_configs['mlnode_id'] is not None:
                 self.__config.set_mlnode_id(int(system_configs['mlnode_id']))
 
-        git_file = os.path.join(MLNODE_CONF_DIRECTORY_NAME, MLNODE_CONF_GIT_FILE_NAME)
+        git_file = os.path.join(MLNODE_ROOT_DIR, MLNODE_ROOT_CONF_DIRECTORY_NAME, MLNODE_CONF_GIT_FILE_NAME)
         if os.path.exists(git_file):
             git_configs = self.load_properties(git_file)
             if git_configs['git.commit.id.abbrev'] is not None:
-                self.__config.set_build_info(git_configs['git.commit.id.abbrev'])
+                build_info = git_configs['git.commit.id.abbrev']
+                if git_configs['git.dirty'] is not None:
+                    if git_configs['git.dirty'] == "true":
+                        build_info += "-dev"
+                self.__config.set_build_info(build_info)
 
-        pom_file = os.path.join(MLNODE_CONF_DIRECTORY_NAME, MLNODE_CONF_POM_FILE_NAME)
+        pom_file = os.path.join(MLNODE_ROOT_DIR, MLNODE_ROOT_CONF_DIRECTORY_NAME, MLNODE_CONF_POM_FILE_NAME)
         if os.path.exists(pom_file):
             pom_configs = self.load_properties(pom_file)
             if pom_configs['version'] is not None:

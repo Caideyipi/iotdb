@@ -25,6 +25,9 @@
 @REM Set mln_force_reinstall to 1 to force reinstall MLNode
 set mln_force_reinstall=0
 
+@REM don't install dependencies online
+set mln_install_offline=0
+
 set ENV_SCRIPT_DIR=%~dp0
 
 :initial
@@ -72,6 +75,7 @@ if "%mln_interpreter_dir%"=="" (
 cd %ENV_SCRIPT_DIR%/../
 
 echo Confirming mlnode
+%mln_interpreter_dir% -m pip config set global.disable-pip-version-check true
 %mln_interpreter_dir% -m pip list | findstr /C:"apache-iotdb-mlnode" >nul
 if %errorlevel% == 0 (
     if %mln_force_reinstall% == 0 (
@@ -80,23 +84,45 @@ if %errorlevel% == 0 (
     )
 )
 
+set mln_only_mlnode=1
+@REM if $mln_install_offline is 1 then do not install dependencies
+if %mln_install_offline% == 1 (
+    @REM if offline and not -n, then install dependencies
+    if "%mln_no_dependencies%"=="" (
+        set mln_only_mlnode=0
+    ) else (
+        set mln_only_mlnode=1
+    )
+    set mln_no_dependencies=--no-dependencies
+    echo Installing MLNode offline----without dependencies...
+)
+
+if %mln_force_reinstall% == 1 (
+    set mln_force_reinstall=--force-reinstall
+) else (
+    set mln_force_reinstall=
+)
+
 echo Installing MLNode...
 @REM Print current work dir
 cd lib
-for %%i in (*.whl) do (
-    @REM if mln_force_reinstall is 1 then force reinstall MLNode
-    if %mln_force_reinstall% == 1 (
-        echo Force reinstall %%i
-        %mln_interpreter_dir% -m pip install %%i --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
-    ) else (
-        %mln_interpreter_dir% -m pip install %%i -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
+for %%i in (*.whl *.tar.gz) do (
+    echo %%i | findstr "mlnode" >nul && (
+        echo Installing MLNode body: %%i
+        %mln_interpreter_dir% -m pip install %%i %mln_force_reinstall% -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
+    ) || (
+        @REM if mln_only_mlnode is 0 then install dependencies
+        if %mln_only_mlnode% == 0 (
+            echo Installing dependencies: %%i
+            set mln_force_reinstall=--force-reinstall
+            %mln_interpreter_dir% -m pip install %%i %mln_force_reinstall% -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
+        )
     )
-    if %errorlevel% == 0 (
-        echo MLNode is installed successfully
-        cd ..
-        exit /b 0
+    if %errorlevel% == 1 (
+        echo Failed to install MLNode
+        exit /b 1
     )
 )
-
-echo Failed to install MLNode
-exit /b 1
+echo MLNode is installed successfully
+cd ..
+exit /b 0

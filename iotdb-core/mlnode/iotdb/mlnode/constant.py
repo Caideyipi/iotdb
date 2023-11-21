@@ -16,10 +16,13 @@
 # under the License.
 #
 import logging
+import inspect
+import os
 from enum import Enum
 from typing import List
 
 MLNODE_CONF_DIRECTORY_NAME = "conf"
+MLNODE_ROOT_CONF_DIRECTORY_NAME = "conf"
 MLNODE_CONF_FILE_NAME = "iotdb-mlnode.properties"
 MLNODE_CONF_GIT_FILE_NAME = "git.properties"
 MLNODE_CONF_POM_FILE_NAME = "pom.properties"
@@ -35,6 +38,7 @@ MLNODE_THRIFT_COMPRESSION_ENABLED = False
 MLNODE_CLUSTER_NAME = "defaultCluster"
 MLNODE_VERSION_INFO = "UNKNOWN"
 MLNODE_BUILD_INFO = "UNKNOWN"
+MLNODE_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 
 # MLNode log
 MLNODE_LOG_FILE_NAMES = ['log_mlnode_all.log',

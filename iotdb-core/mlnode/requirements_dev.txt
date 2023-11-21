@@ -18,7 +18,6 @@
 
 pandas>=1.3.5
 numpy>=1.21.4
-apache-iotdb
 poetry
 torch==2.0.0+cpu
 pylru~=1.2.1

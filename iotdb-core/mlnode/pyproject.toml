@@ -39,7 +39,7 @@ include = [
     "iotdb/thrift/confignode/*",
     "iotdb/thrift/datanode/*",
     "iotdb/thrift/mlnode/*",
-    "resources/conf/*"
+    "iotdb/conf/*",
 ]
 packages = [
     { include = "iotdb" }

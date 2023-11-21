@@ -23,20 +23,28 @@
 
 # Set mln_force_reinstall to 1 to force reinstall MLNode
 mln_force_reinstall=0
+
+# don't install dependencies online
+mln_install_offline=0
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # fetch parameters with names
 while getopts "i:t:rn" opt; do
   case $opt in
-    i) p_mln_interpreter_dir="$OPTARG"
+  i)
+    p_mln_interpreter_dir="$OPTARG"
     ;;
-    r) p_mln_force_reinstall=1
+  r)
+    p_mln_force_reinstall=1
     ;;
-    t)
+  t) ;;
+
+  n)
+    p_mln_no_dependencies="--no-dependencies"
     ;;
-    n) p_mln_no_dependencies="--no-dependencies"
-    ;;
-    \?) echo "Invalid option -$OPTARG" >&2
+  \?)
+    echo "Invalid option -$OPTARG" >&2
     exit 1
     ;;
   esac
@@ -68,6 +76,7 @@ echo "Calling venv to check: $mln_interpreter_dir"
 cd "$SCRIPT_DIR/.."
 
 echo "Confirming MLNode..."
+$mln_interpreter_dir -m pip config set global.disable-pip-version-check true
 $mln_interpreter_dir -m pip list | grep "apache-iotdb-mlnode" >/dev/null
 if [ $? -eq 0 ]; then
   if [ $mln_force_reinstall -eq 0 ]; then
@@ -76,21 +85,44 @@ if [ $? -eq 0 ]; then
   fi
 fi
 
+mln_only_mlnode=1
+
+# if $mln_install_offline is 1 then do not install dependencies
+if [ $mln_install_offline -eq 1 ]; then
+  # if offline and not -n, then install dependencies
+  if [ -z "$p_mln_no_dependencies" ]; then
+    mln_only_mlnode=0
+  else
+    mln_only_mlnode=1
+  fi
+  p_mln_no_dependencies="--no-dependencies"
+  echo "Installing MLNode offline----without dependencies..."
+fi
+
+if [ $mln_force_reinstall -eq 1 ]; then
+  p_mln_force_reinstall="--force-reinstall"
+else
+  p_mln_force_reinstall=""
+fi
+
 echo "Installing MLNode..."
 cd "$SCRIPT_DIR/../lib/"
-for i in *.whl; do
-  # if mln_force_reinstall is 1 then force reinstall MLNode
-  if [ $mln_force_reinstall -eq 1 ]; then
-    echo Force reinstall $i
-    $mln_interpreter_dir -m pip install "$i" --force-reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
+shopt -s nullglob
+for i in *.whl *.tar.gz; do
+  if [[ $i =~ "mlnode" ]]; then
+    echo Installing MLNode body: $i
+    $mln_interpreter_dir -m pip install "$i" $p_mln_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
   else
-    $mln_interpreter_dir -m pip install "$i" -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
+    # if mln_only_mlnode is 0 then install dependencies
+    if [ $mln_only_mlnode -eq 0 ]; then
+      echo Installing dependencies $i
+      $mln_interpreter_dir -m pip install "$i" $p_mln_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
+    fi
   fi
-  if [ $? -eq 0 ]; then
-    echo "MLNode is installed successfully"
-    exit 0
+  if [ $? -eq 1 ]; then
+    echo "Failed to install MLNode"
+    exit 1
   fi
 done
-
-echo "Failed to install MLNode"
-exit 1
+echo "MLNode is installed successfully"
+exit 0
