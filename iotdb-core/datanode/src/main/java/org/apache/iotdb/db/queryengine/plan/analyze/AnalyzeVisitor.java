@@ -258,7 +258,6 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     Analysis analysis = new Analysis();
     analysis.setLastLevelUseWildcard(queryStatement.isLastLevelUseWildcard());
 
-    long startTime = System.currentTimeMillis();
     try {
       // check for semantic errors
       queryStatement.semanticCheck();
@@ -267,8 +266,6 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       analyzeModelInference(analysis, queryStatement);
 
       ISchemaTree schemaTree = analyzeSchema(queryStatement, analysis, context);
-
-      logger.warn("--- [analyzeSchema] : {}ms", System.currentTimeMillis() - startTime);
 
       // If there is no leaf node in the schema tree, the query should be completed immediately
       if (schemaTree.isEmpty()) {
