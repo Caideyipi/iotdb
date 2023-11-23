@@ -393,15 +393,16 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       InferenceWindow window = queryStatement.getInferenceWindow();
       if (InferenceWindowType.HEAD == window.getType()) {
         long windowSize = ((HeadInferenceWindow) window).getWindowSize();
-        checkWindowSize(windowSize, modelInformation.getInputShape()[0]);
+        checkWindowSize(windowSize, modelInformation);
         if (queryStatement.hasLimit() && queryStatement.getRowLimit() < windowSize) {
           throw new SemanticException(
               "Limit in Sql should be larger than window size in inference");
         }
+        // optimize head window by limitNode
         queryStatement.setRowLimit(windowSize);
       } else if (InferenceWindowType.TAIL == window.getType()) {
         long windowSize = ((TailInferenceWindow) window).getWindowSize();
-        checkWindowSize(windowSize, modelInformation.getInputShape()[0]);
+        checkWindowSize(windowSize, modelInformation);
         InferenceWindowParameter inferenceWindowParameter =
             new BottomInferenceWindowParameter(windowSize);
         analysis
@@ -409,7 +410,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
             .setInferenceWindowParameter(inferenceWindowParameter);
       } else if (InferenceWindowType.COUNT == window.getType()) {
         CountInferenceWindow countInferenceWindow = (CountInferenceWindow) window;
-        checkWindowSize(countInferenceWindow.getInterval(), modelInformation.getInputShape()[0]);
+        checkWindowSize(countInferenceWindow.getInterval(), modelInformation);
         InferenceWindowParameter inferenceWindowParameter =
             new CountInferenceWindowParameter(
                 countInferenceWindow.getInterval(), countInferenceWindow.getStep());
@@ -427,11 +428,16 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     }
   }
 
-  private void checkWindowSize(long windowSize, long inputSize) {
-    if (inputSize != windowSize) {
+  private void checkWindowSize(long windowSize, ModelInformation modelInformation) {
+    if (modelInformation.isBuiltIn()) {
+      return;
+    }
+
+    if (modelInformation.getInputShape()[0] != windowSize) {
       throw new SemanticException(
           String.format(
-              "Window output %d is not equal to input size of model %d", windowSize, inputSize));
+              "Window output %d is not equal to input size of model %d",
+              windowSize, modelInformation.getInputShape()[0]));
     }
   }
 
@@ -1537,7 +1543,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     if (queryStatement.hasModelInference()) {
       ModelInformation modelInformation = analysis.getModelInformation();
       // check input
-      checkInputShape(analysis, modelInformation, outputExpressions);
+      checkInputShape(modelInformation, outputExpressions);
       checkInputType(analysis, modelInformation, outputExpressions);
 
       // set output
@@ -1575,9 +1581,12 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
   // check if the result of SQL matches the input of model
   private static void checkInputShape(
-      Analysis analysis,
-      ModelInformation modelInformation,
-      List<Pair<Expression, String>> outputExpressions) {
+      ModelInformation modelInformation, List<Pair<Expression, String>> outputExpressions) {
+    if (modelInformation.isBuiltIn()) {
+      modelInformation.setInputColumnSize(outputExpressions.size());
+      return;
+    }
+
     // check inputShape
     int[] inputShape = modelInformation.getInputShape();
     if (inputShape.length != 2) {
@@ -1599,7 +1608,24 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       Analysis analysis,
       ModelInformation modelInformation,
       List<Pair<Expression, String>> outputExpressions) {
-    // check inputType
+
+    if (modelInformation.isBuiltIn()) {
+      TSDataType[] inputType = new TSDataType[outputExpressions.size()];
+      for (int i = 0; i < outputExpressions.size(); i++) {
+        Expression inputExpression = outputExpressions.get(i).left;
+        TSDataType inputDataType = analysis.getType(inputExpression);
+        if (!inputDataType.isNumeric()) {
+          throw new SemanticException(
+              String.format(
+                  "The type of SQL result column [%s in %d] should be numeric when inference",
+                  inputDataType, i));
+        }
+        inputType[i] = inputDataType;
+      }
+      modelInformation.setInputDataType(inputType);
+      return;
+    }
+
     TSDataType[] inputType = modelInformation.getInputDataType();
     if (inputType.length != modelInformation.getInputShape()[1]) {
       throw new SemanticException(

@@ -165,7 +165,7 @@ public class InferenceOperator implements ProcessOperator {
         if (inferenceResp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
           String message =
               String.format(
-                  "Error occurred while executing forecast: %s",
+                  "Error occurred while executing inference:[%s]",
                   inferenceResp.getStatus().getMessage());
           throw new ModelInferenceProcessException(message);
         }
@@ -215,8 +215,10 @@ public class InferenceOperator implements ProcessOperator {
   }
 
   private TsBlock preProcess(TsBlock inputTsBlock) {
+    boolean notBuiltIn = !modelInferenceDescriptor.getModelInformation().isBuiltIn();
     if (windowType == null || windowType == InferenceWindowType.HEAD) {
-      if (totalRow != modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
+      if (notBuiltIn
+          && totalRow != modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
         throw new ModelInferenceProcessException(
             String.format(
                 "The number of rows %s in the input data does not match the model input %s. Try to use LIMIT in SQL or WINDOW in CALL INFERENCE",
@@ -224,19 +226,22 @@ public class InferenceOperator implements ProcessOperator {
       }
       return inputTsBlock;
     } else if (windowType == InferenceWindowType.COUNT) {
-      if (totalRow < modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
+      if (notBuiltIn
+          && totalRow < modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
         throw new ModelInferenceProcessException(
             String.format(
                 "The number of rows %s in the input data is less than the model input %s. ",
                 totalRow, modelInferenceDescriptor.getModelInformation().getInputShape()[0]));
       }
     } else if (windowType == InferenceWindowType.TAIL) {
-      if (totalRow < modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
+      if (notBuiltIn
+          && totalRow < modelInferenceDescriptor.getModelInformation().getInputShape()[0]) {
         throw new ModelInferenceProcessException(
             String.format(
                 "The number of rows %s in the input data is less than the model input %s. ",
                 totalRow, modelInferenceDescriptor.getModelInformation().getInputShape()[0]));
       }
+      // Tail window logic: get the latest data for inference
       long windowSize =
           (int)
               ((BottomInferenceWindowParameter)

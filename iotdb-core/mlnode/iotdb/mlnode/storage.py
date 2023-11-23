@@ -24,9 +24,10 @@ from typing import Dict, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
-import torch
 import torch.nn as nn
+import torch
 import yaml
+import torch._dynamo
 from pylru import lrucache
 from requests.adapters import HTTPAdapter
 
@@ -259,7 +260,7 @@ class ModelStorage(object):
                 self.__model_cache[file_path] = jit_model, model_config
                 return jit_model, model_config
 
-    def load_model_from_id(self, model_id: str):
+    def load_model_from_id(self, model_id: str, acceleration=False):
         """
         Returns:
             model: a ScriptModule contains model architecture and parameters, which can be deployed cross-platform
@@ -268,12 +269,23 @@ class ModelStorage(object):
         model_path = os.path.join(mln_models_dir, DEFAULT_MODEL_FILE_NAME)
         logger.debug(f"load model from {model_path}")
         if model_path in self.__model_cache:
-            return self.__model_cache[model_path]
+            model = self.__model_cache[model_path]
+            if isinstance(model, torch._dynamo.eval_frame.OptimizedModule) or not acceleration:
+                return model
+            else:
+                model = torch.compile(model)
+                self.__model_cache[model_path] = model
+                return model
         else:
             if not os.path.exists(model_path):
                 raise ModelNotExistError(model_path)
             else:
                 model = torch.jit.load(model_path)
+                if acceleration:
+                    try:
+                        model = torch.compile(model)
+                    except:
+                        logger.warning("acceleration failed, fallback to normal mode")
                 self.__model_cache[model_path] = model
                 return model
 

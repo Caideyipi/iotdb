@@ -88,3 +88,36 @@ class InvalidWindowArgumentError(_BaseError):
 class InferenceModelInternalError(_BaseError):
     def __init__(self, msg: str):
         self.message = "Inference model internal error: {0}".format(msg)
+
+
+class BuiltInModelNotSupportError(_BaseError):
+    def __init__(self, msg: str):
+        self.message = "Built-in model not support: {0}".format(msg)
+
+
+class WrongAttributeTypeError(_BaseError):
+    def __init__(self, attribute_name: str, expected_type: str):
+        self.message = "Wrong type for attribute: {0}, expected: {1}".format(attribute_name, expected_type)
+
+
+class NumericalRangeException(_BaseError):
+    def __init__(self, attribute_name: str, value, min_value, max_value):
+        self.message = "Attribute {0} expect value between {1} and {2}, got {3} instead." \
+            .format(attribute_name, min_value, max_value, value)
+
+
+class StringRangeException(_BaseError):
+    def __init__(self, attribute_name: str, value: str, expect_value):
+        self.message = "Attribute {0} expect value in {1}, got {2} instead." \
+            .format(attribute_name, expect_value, value)
+
+
+class ListRangeException(_BaseError):
+    def __init__(self, attribute_name: str, value: list, expected_type: str):
+        self.message = "Attribute {0} expect value type list[{1}], got {2} instead." \
+            .format(attribute_name, expected_type, value)
+
+
+class AttributeNotSupportError(_BaseError):
+    def __init__(self, model_name: str, attribute_name: str):
+        self.message = "Attribute {0} is not supported in model {1}".format(attribute_name, model_name)

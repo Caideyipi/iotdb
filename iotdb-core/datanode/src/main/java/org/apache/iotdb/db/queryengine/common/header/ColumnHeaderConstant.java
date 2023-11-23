@@ -46,6 +46,7 @@ public class ColumnHeaderConstant {
   public static final String COMPRESSION = "Compression";
   public static final String TAGS = "Tags";
   public static final String ATTRIBUTES = "Attributes";
+  public static final String NOTES = "Notes";
   public static final String DEADBAND = "Deadband";
   public static final String DEADBAND_PARAMETERS = "DeadbandParameters";
   public static final String IS_ALIGNED = "IsAligned";
@@ -98,6 +99,7 @@ public class ColumnHeaderConstant {
   public static final String TRIGGER_NAME = "TriggerName";
   public static final String EVENT = "Event";
   public static final String STATE = "State";
+  public static final String MODEL_TYPE = "ModelType";
   public static final String CONFIGS = "Configs";
   public static final String PATH_PATTERN = "PathPattern";
   public static final String CLASS_NAME = "ClassName";
@@ -463,9 +465,10 @@ public class ColumnHeaderConstant {
   public static final List<ColumnHeader> showModelsColumnHeaders =
       ImmutableList.of(
           new ColumnHeader(MODEL_ID, TSDataType.TEXT),
+          new ColumnHeader(MODEL_TYPE, TSDataType.TEXT),
           new ColumnHeader(STATE, TSDataType.TEXT),
           new ColumnHeader(CONFIGS, TSDataType.TEXT),
-          new ColumnHeader(ATTRIBUTES, TSDataType.TEXT));
+          new ColumnHeader(NOTES, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showTrialsColumnHeaders =
       ImmutableList.of(

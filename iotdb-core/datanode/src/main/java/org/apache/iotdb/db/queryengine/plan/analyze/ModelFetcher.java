@@ -63,7 +63,6 @@ public class ModelFetcher implements IModelFetcher {
         if (getModelInfoResp.modelInfo != null && getModelInfoResp.isSetMlNodeAddress()) {
           analysis.setModelInferenceDescriptor(
               new ModelInferenceDescriptor(
-                  modelName,
                   getModelInfoResp.mlNodeAddress,
                   ModelInformation.deserialize(getModelInfoResp.modelInfo)));
           return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());

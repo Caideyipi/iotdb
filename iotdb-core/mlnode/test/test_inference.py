@@ -18,11 +18,15 @@
 import string
 import os
 
+import numpy as np
 import pandas as pd
 import torch
 import random
 from torch import nn
-from iotdb.mlnode.inference import inference, process_data
+from sktime.forecasting.arima import ARIMA
+from sktime.annotation.hmm_learn import GaussianHMM
+from iotdb.mlnode.inference import inference_with_registered_model, process_data, create_built_in_model, \
+    inference_with_built_in_model
 from iotdb.mlnode.config import descriptor
 from iotdb.mlnode.exception import InferenceModelInternalError
 
@@ -46,6 +50,8 @@ class ExampleModel2(nn.Module):
 
 model = ExampleModel()
 model2 = ExampleModel2()
+
+inference_attributes = {}
 
 
 def test_process_data_with_bool():
@@ -111,7 +117,7 @@ def test_inference_with_multi_window():
     full_data = (data, time_stamp, type_list, column_name_list)
     window_interval = 10
     window_step = 5
-    outputs = inference(model_id, full_data, window_interval, window_step)
+    outputs = inference_with_registered_model(model_id, full_data, window_interval, window_step, inference_attributes)
     assert len(outputs) == 19
     for i in range(19):
         assert outputs[i].shape == (window_interval, 2)
@@ -135,7 +141,30 @@ def test_inference_with_single_window():
     full_data = (data, time_stamp, type_list, column_name_list)
     window_interval = 20
     window_step = float('inf')
-    outputs = inference(model_id, full_data, window_interval, window_step)
+    outputs = inference_with_registered_model(model_id, full_data, window_interval, window_step, inference_attributes)
+    assert len(outputs) == 1
+    assert outputs[0].shape == (window_interval, 2)
+
+def test_inference_with_acceleration():
+    model_id = ''.join(random.choice(string.ascii_letters) for x in range(10))
+    model_dir = os.path.join(
+        os.getcwd(),
+        descriptor.get_config().get_mln_models_dir(),
+        f'{model_id}')
+    model_path = os.path.join(model_dir, f'model.pt')
+    os.makedirs(model_dir)
+    torch.jit.save(torch.jit.script(model), model_path)
+
+    data = pd.DataFrame({'a': [random.random() for _ in range(100)], 'b': [
+        random.random() for _ in range(100)]})
+    time_stamp = pd.DataFrame({'time': [i for i in range(100)]})
+    type_list = ['FLOAT', 'FLOAT']
+    column_name_list = ['a', 'b']
+    full_data = (data, time_stamp, type_list, column_name_list)
+    window_interval = 20
+    window_step = float('inf')
+    outputs = inference_with_registered_model(model_id, full_data, window_interval, window_step,
+                                              {'acceleration': 'true'})
     assert len(outputs) == 1
     assert outputs[0].shape == (window_interval, 2)
 
@@ -160,7 +189,8 @@ def test_inference_with_invalid_window_interval():
     window_interval = 101
     window_step = 5
     try:
-        outputs = inference(model_id, full_data, window_interval, window_step)
+        outputs = inference_with_registered_model(model_id, full_data, window_interval, window_step,
+                                                  inference_attributes)
     except Exception as e:
         assert str(e) == "Invalid inference input: window_interval {0}, window_step {1}, dataset_length {2}".format(
             window_interval, window_step, 100)
@@ -186,7 +216,8 @@ def test_inference_with_none_window_interval():
     window_interval = None
     window_step = 5
     try:
-        outputs = inference(model_id, full_data, window_interval, window_step)
+        outputs = inference_with_registered_model(model_id, full_data, window_interval, window_step,
+                                                  inference_attributes)
     except Exception as e:
         assert str(e) == "Invalid inference input: window_interval {0}, window_step {1}, dataset_length {2}".format(
             window_interval, window_step, 100)
@@ -212,6 +243,57 @@ def test_inference_with_internal_error():
     window_interval = 20
     window_step = 5
     try:
-        outputs = inference(model_id, full_data, window_interval, window_step)
+        outputs = inference_with_registered_model(model_id, full_data, window_interval, window_step,
+                                                  inference_attributes)
     except Exception as e:
         assert isinstance(e, InferenceModelInternalError)
+
+
+def test_create_built_in_model():
+    arima, attributes = create_built_in_model('_arima', {})
+    assert isinstance(arima, ARIMA)
+    gaussion_hmm, attributes = create_built_in_model('_gaussianhmm', {})
+    assert isinstance(gaussion_hmm, GaussianHMM)
+
+
+def test_inference_with_built_in_model_forecasting():
+    data = [float(i) for i in range(100)]
+    data = pd.DataFrame({'a': data})
+    time_stamp = pd.DataFrame({'time': [i for i in range(100)]})
+    type_list = ['FLOAT']
+    column_name_list = ['a']
+    full_data = (data, time_stamp, type_list, column_name_list)
+
+    outputs = inference_with_built_in_model('_arima', full_data, {'predict_length': '10', 'order': '(1,1,1)'})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (10, 1)
+
+    outputs = inference_with_built_in_model('_exponentialsmoothing', full_data, {'predict_length': '10'})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (10, 1)
+
+    outputs = inference_with_built_in_model('_naiveforecaster', full_data, {'predict_length': '10'})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (10, 1)
+
+    outputs = inference_with_built_in_model('_stlforecaster', full_data, {'predict_length': '10'})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (10, 1)
+
+
+def test_inference_with_built_in_model_anomaly_detection():
+    data = [float(1) for _ in range(90)]
+    data.extend([float(10000) for _ in range(10)])
+    data = pd.DataFrame({'a': data})
+    time_stamp = pd.DataFrame({'time': [i for i in range(100)]})
+    type_list = ['FLOAT', 'FLOAT']
+    column_name_list = ['a', 'b']
+    full_data = (data, time_stamp, type_list, column_name_list)
+
+    outputs = inference_with_built_in_model('_gaussianhmm', full_data, {'n_components': '2', 'n_iter': '1000'})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (100, 1)
+
+    outputs = inference_with_built_in_model('_gmmhmm', full_data, {})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (100, 1)

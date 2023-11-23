@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model;
 
+import org.apache.iotdb.commons.model.ModelType;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeader;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.db.queryengine.common.header.DatasetHeader;
@@ -37,6 +38,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ShowModelsTask implements IConfigTask {
@@ -51,6 +53,7 @@ public class ShowModelsTask implements IConfigTask {
   private static final String OUTPUT_SHAPE = "outputShape:";
   private static final String INPUT_DATA_TYPE = "inputDataType:";
   private static final String OUTPUT_DATA_TYPE = "outputDataType:";
+  private static final String EMPTY_STRING = "";
 
   @Override
   public ListenableFuture<ConfigTaskResult> execute(IConfigTaskExecutor configTaskExecutor)
@@ -67,31 +70,39 @@ public class ShowModelsTask implements IConfigTask {
     TsBlockBuilder builder = new TsBlockBuilder(outputDataTypes);
     for (ByteBuffer modelInfo : modelInfoList) {
       String modelId = ReadWriteIOUtils.readString(modelInfo);
+      String modelType = ReadWriteIOUtils.readString(modelInfo);
       String state = ReadWriteIOUtils.readString(modelInfo);
-      String inputShape = ReadWriteIOUtils.readString(modelInfo);
-      String outputShape = ReadWriteIOUtils.readString(modelInfo);
-      String inputTypes = ReadWriteIOUtils.readString(modelInfo);
-      String outputTypes = ReadWriteIOUtils.readString(modelInfo);
-      String note = ReadWriteIOUtils.readString(modelInfo);
-
-      String config =
-          INPUT_SHAPE
-              + inputShape
-              + OUTPUT_SHAPE
-              + outputShape
-              + INPUT_DATA_TYPE
-              + inputTypes
-              + OUTPUT_DATA_TYPE
-              + outputTypes;
+      String note;
+      String config;
+      if (Objects.equals(modelType, ModelType.USER_DEFINED.toString())) {
+        String inputShape = ReadWriteIOUtils.readString(modelInfo);
+        String outputShape = ReadWriteIOUtils.readString(modelInfo);
+        String inputTypes = ReadWriteIOUtils.readString(modelInfo);
+        String outputTypes = ReadWriteIOUtils.readString(modelInfo);
+        note = ReadWriteIOUtils.readString(modelInfo);
+        config =
+            INPUT_SHAPE
+                + inputShape
+                + OUTPUT_SHAPE
+                + outputShape
+                + INPUT_DATA_TYPE
+                + inputTypes
+                + OUTPUT_DATA_TYPE
+                + outputTypes;
+      } else {
+        config = EMPTY_STRING;
+        note = "Built-in model in IoTDB";
+      }
 
       builder.getTimeColumnBuilder().writeLong(0L);
       builder.getColumnBuilder(0).writeBinary(BytesUtils.valueOf(modelId));
-      builder.getColumnBuilder(1).writeBinary(BytesUtils.valueOf(state));
-      builder.getColumnBuilder(2).writeBinary(BytesUtils.valueOf(config));
+      builder.getColumnBuilder(1).writeBinary(BytesUtils.valueOf(modelType));
+      builder.getColumnBuilder(2).writeBinary(BytesUtils.valueOf(state));
+      builder.getColumnBuilder(3).writeBinary(BytesUtils.valueOf(config));
       if (note != null) {
-        builder.getColumnBuilder(3).writeBinary(BytesUtils.valueOf(note));
+        builder.getColumnBuilder(4).writeBinary(BytesUtils.valueOf(note));
       } else {
-        builder.getColumnBuilder(3).writeBinary(BytesUtils.valueOf(""));
+        builder.getColumnBuilder(4).writeBinary(BytesUtils.valueOf(""));
       }
       builder.declarePosition();
     }

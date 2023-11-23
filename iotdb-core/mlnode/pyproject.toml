@@ -50,7 +50,7 @@ python = "^3.8"
 
 numpy = "^1.21.4"
 pandas = "^1.3.5"
-torch = "2.0.0+cpu"
+torch = "2.1.0"
 pylru = "^1.2.1"
 
 thrift = "^0.13.0"
@@ -58,6 +58,9 @@ dynaconf = "^3.1.11"
 requests = "^2.31.0"
 optuna = "^3.2.0"
 psutil = "^5.9.5"
+sktime = "^0.24.1"
+pmdarima = "^2.0.4"
+hmmlearn = "^0.3.0"
 
 [tool.poetry.scripts]
 mlnode = "iotdb.mlnode.script:main"

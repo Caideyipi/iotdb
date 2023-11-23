@@ -32,21 +32,24 @@ import java.util.Arrays;
 
 public class ModelInformation {
 
+  ModelType modelType;
+
   private final String modelName;
 
   private final int[] inputShape;
 
   private final int[] outputShape;
 
-  private final TSDataType[] inputDataType;
+  private TSDataType[] inputDataType;
 
-  private final TSDataType[] outputDataType;
+  private TSDataType[] outputDataType;
 
   private ModelStatus status = ModelStatus.INACTIVE;
 
   String attribute = "";
 
   public ModelInformation(
+      ModelType modelType,
       String modelName,
       int[] inputShape,
       int[] outputShape,
@@ -54,6 +57,7 @@ public class ModelInformation {
       TSDataType[] outputDataType,
       String attribute,
       ModelStatus status) {
+    this.modelType = modelType;
     this.modelName = modelName;
     this.inputShape = inputShape;
     this.outputShape = outputShape;
@@ -70,6 +74,7 @@ public class ModelInformation {
       TSDataType[] inputDataType,
       TSDataType[] outputDataType,
       String attribute) {
+    this.modelType = ModelType.USER_DEFINED;
     this.modelName = modelName;
     this.inputShape = inputShape;
     this.outputShape = outputShape;
@@ -79,12 +84,28 @@ public class ModelInformation {
   }
 
   public ModelInformation(String modelName, ModelStatus status) {
+    this.modelType = ModelType.USER_DEFINED;
     this.modelName = modelName;
     this.inputShape = new int[0];
     this.outputShape = new int[0];
     this.outputDataType = new TSDataType[0];
     this.inputDataType = new TSDataType[0];
     this.status = status;
+  }
+
+  // init built-in modelInformation
+  public ModelInformation(ModelType modelType, String modelName) {
+    this.modelType = modelType;
+    this.modelName = modelName;
+    this.inputShape = new int[2];
+    this.outputShape = new int[2];
+    this.inputDataType = new TSDataType[0];
+    this.outputDataType = new TSDataType[0];
+    this.status = ModelStatus.ACTIVE;
+  }
+
+  public boolean isBuiltIn() {
+    return modelType != ModelType.USER_DEFINED;
   }
 
   public boolean available() {
@@ -97,6 +118,32 @@ public class ModelInformation {
 
   public String getModelName() {
     return modelName;
+  }
+
+  // calculation modelType and outputColumn metadata for different built-in models
+  public void setInputColumnSize(int size) {
+    inputShape[1] = size;
+    if (modelType == ModelType.BUILT_IN_FORECAST) {
+      outputShape[1] = size;
+    } else if (modelType == ModelType.BUILT_IN_ANOMALY_DETECTION) {
+      outputShape[1] = 1;
+    }
+    if (modelType == ModelType.BUILT_IN_FORECAST) {
+      buildOutputDataTypeForBuiltInModel(TSDataType.DOUBLE, outputShape[1]);
+    } else if (modelType == ModelType.BUILT_IN_ANOMALY_DETECTION) {
+      buildOutputDataTypeForBuiltInModel(TSDataType.INT32, outputShape[1]);
+    }
+  }
+
+  public void setInputDataType(TSDataType[] inputDataType) {
+    this.inputDataType = inputDataType;
+  }
+
+  private void buildOutputDataTypeForBuiltInModel(TSDataType tsDataType, int num) {
+    outputDataType = new TSDataType[num];
+    for (int i = 0; i < num; i++) {
+      outputDataType[i] = tsDataType;
+    }
   }
 
   public int[] getInputShape() {
@@ -128,7 +175,7 @@ public class ModelInformation {
   }
 
   public void serialize(DataOutputStream stream) throws IOException {
-
+    ReadWriteIOUtils.write(modelType.ordinal(), stream);
     ReadWriteIOUtils.write(status.ordinal(), stream);
     ReadWriteIOUtils.write(modelName, stream);
     if (status == ModelStatus.UNAVAILABLE) {
@@ -153,6 +200,7 @@ public class ModelInformation {
   }
 
   public void serialize(FileOutputStream stream) throws IOException {
+    ReadWriteIOUtils.write(modelType.ordinal(), stream);
     ReadWriteIOUtils.write(status.ordinal(), stream);
     ReadWriteIOUtils.write(modelName, stream);
     if (status == ModelStatus.UNAVAILABLE) {
@@ -177,6 +225,7 @@ public class ModelInformation {
   }
 
   public void serialize(ByteBuffer byteBuffer) {
+    ReadWriteIOUtils.write(modelType.ordinal(), byteBuffer);
     ReadWriteIOUtils.write(status.ordinal(), byteBuffer);
     ReadWriteIOUtils.write(modelName, byteBuffer);
     if (status == ModelStatus.UNAVAILABLE) {
@@ -201,6 +250,7 @@ public class ModelInformation {
   }
 
   public static ModelInformation deserialize(ByteBuffer buffer) {
+    ModelType modelType = ModelType.values()[ReadWriteIOUtils.readInt(buffer)];
     ModelStatus status = ModelStatus.values()[ReadWriteIOUtils.readInt(buffer)];
     String modelName = ReadWriteIOUtils.readString(buffer);
     if (status == ModelStatus.UNAVAILABLE) {
@@ -230,10 +280,18 @@ public class ModelInformation {
     String attribute = ReadWriteIOUtils.readString(buffer);
 
     return new ModelInformation(
-        modelName, inputShape, outputShape, inputDataType, outputDataType, attribute, status);
+        modelType,
+        modelName,
+        inputShape,
+        outputShape,
+        inputDataType,
+        outputDataType,
+        attribute,
+        status);
   }
 
   public static ModelInformation deserialize(InputStream stream) throws IOException {
+    ModelType modelType = ModelType.values()[ReadWriteIOUtils.readInt(stream)];
     ModelStatus status = ModelStatus.values()[ReadWriteIOUtils.readInt(stream)];
     String modelName = ReadWriteIOUtils.readString(stream);
     if (status == ModelStatus.UNAVAILABLE) {
@@ -262,13 +320,21 @@ public class ModelInformation {
 
     String attribute = ReadWriteIOUtils.readString(stream);
     return new ModelInformation(
-        modelName, inputShape, outputShape, inputDataType, outputDataType, attribute, status);
+        modelType,
+        modelName,
+        inputShape,
+        outputShape,
+        inputDataType,
+        outputDataType,
+        attribute,
+        status);
   }
 
   public ByteBuffer serializeShowModelResult() throws IOException {
     PublicBAOS buffer = new PublicBAOS();
     DataOutputStream stream = new DataOutputStream(buffer);
     ReadWriteIOUtils.write(modelName, stream);
+    ReadWriteIOUtils.write(modelType.toString(), stream);
     ReadWriteIOUtils.write(status.toString(), stream);
     ReadWriteIOUtils.write(Arrays.toString(inputShape), stream);
     ReadWriteIOUtils.write(Arrays.toString(outputShape), stream);
@@ -285,6 +351,7 @@ public class ModelInformation {
     if (obj instanceof ModelInformation) {
       ModelInformation other = (ModelInformation) obj;
       return modelName.equals(other.modelName)
+          && modelType.equals(other.modelType)
           && Arrays.equals(inputShape, other.inputShape)
           && Arrays.equals(outputShape, other.outputShape)
           && Arrays.equals(inputDataType, other.inputDataType)

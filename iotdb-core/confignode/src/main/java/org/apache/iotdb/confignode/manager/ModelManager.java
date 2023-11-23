@@ -97,8 +97,19 @@ public class ModelManager {
       if (response.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return new TGetModelInfoResp(response.getStatus());
       }
-      response.setTargetMLNodeAddress(
-          configManager.getNodeManager().getRegisteredMLNode(response.getTargetMLNodeId()));
+      int mlNodeId = response.getTargetMLNodeId();
+      if (mlNodeId != 0) {
+        response.setTargetMLNodeAddress(
+            configManager.getNodeManager().getRegisteredMLNode(mlNodeId));
+      } else {
+        if (configManager.getNodeManager().getRegisteredMLNodes().isEmpty()) {
+          return new TGetModelInfoResp(
+              new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode())
+                  .setMessage("There is no MLNode available"));
+        }
+        response.setTargetMLNodeAddress(
+            configManager.getNodeManager().getRegisteredMLNodes().get(0));
+      }
       return response.convertToThriftResponse();
     } catch (ConsensusException e) {
       LOGGER.warn("Unexpected error happened while getting model: ", e);

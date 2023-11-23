@@ -35,22 +35,18 @@ import java.util.Objects;
 
 public class ModelInferenceDescriptor {
 
-  private final String modelName;
   private final TEndPoint targetMLNode;
   private final ModelInformation modelInformation;
   private List<String> outputColumnNames;
   private InferenceWindowParameter inferenceWindowParameter;
   private Map<String, String> inferenceAttributes;
 
-  public ModelInferenceDescriptor(
-      String modelName, TEndPoint targetMLNode, ModelInformation modelInformation) {
-    this.modelName = modelName;
+  public ModelInferenceDescriptor(TEndPoint targetMLNode, ModelInformation modelInformation) {
     this.targetMLNode = targetMLNode;
     this.modelInformation = modelInformation;
   }
 
   private ModelInferenceDescriptor(ByteBuffer buffer) {
-    this.modelName = ReadWriteIOUtils.readString(buffer);
     this.targetMLNode =
         new TEndPoint(ReadWriteIOUtils.readString(buffer), ReadWriteIOUtils.readInt(buffer));
     this.modelInformation = ModelInformation.deserialize(buffer);
@@ -106,7 +102,7 @@ public class ModelInferenceDescriptor {
   }
 
   public String getModelName() {
-    return modelName;
+    return modelInformation.getModelName();
   }
 
   public void setOutputColumnNames(List<String> outputColumnNames) {
@@ -118,7 +114,6 @@ public class ModelInferenceDescriptor {
   }
 
   public void serialize(ByteBuffer byteBuffer) {
-    ReadWriteIOUtils.write(modelName, byteBuffer);
     ReadWriteIOUtils.write(targetMLNode.ip, byteBuffer);
     ReadWriteIOUtils.write(targetMLNode.port, byteBuffer);
     modelInformation.serialize(byteBuffer);
@@ -148,7 +143,6 @@ public class ModelInferenceDescriptor {
   }
 
   public void serialize(DataOutputStream stream) throws IOException {
-    ReadWriteIOUtils.write(modelName, stream);
     ReadWriteIOUtils.write(targetMLNode.ip, stream);
     ReadWriteIOUtils.write(targetMLNode.port, stream);
     modelInformation.serialize(stream);
@@ -190,8 +184,7 @@ public class ModelInferenceDescriptor {
       return false;
     }
     ModelInferenceDescriptor that = (ModelInferenceDescriptor) o;
-    return modelName.equals(that.modelName)
-        && targetMLNode.equals(that.targetMLNode)
+    return targetMLNode.equals(that.targetMLNode)
         && modelInformation.equals(that.modelInformation)
         && outputColumnNames.equals(that.outputColumnNames)
         && inferenceWindowParameter.equals(that.inferenceWindowParameter)
@@ -201,7 +194,6 @@ public class ModelInferenceDescriptor {
   @Override
   public int hashCode() {
     return Objects.hash(
-        modelName,
         targetMLNode,
         modelInformation,
         outputColumnNames,

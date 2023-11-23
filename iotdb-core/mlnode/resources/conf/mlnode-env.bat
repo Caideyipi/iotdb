@@ -109,13 +109,13 @@ cd lib
 for %%i in (*.whl *.tar.gz) do (
     echo %%i | findstr "mlnode" >nul && (
         echo Installing MLNode body: %%i
-        %mln_interpreter_dir% -m pip install %%i %mln_force_reinstall% -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
+        %mln_interpreter_dir% -m pip install %%i %mln_force_reinstall% -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
     ) || (
         @REM if mln_only_mlnode is 0 then install dependencies
         if %mln_only_mlnode% == 0 (
             echo Installing dependencies: %%i
             set mln_force_reinstall=--force-reinstall
-            %mln_interpreter_dir% -m pip install %%i %mln_force_reinstall% -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/torch_stable.html
+            %mln_interpreter_dir% -m pip install %%i %mln_force_reinstall% -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location %mln_no_dependencies% --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
         )
     )
     if %errorlevel% == 1 (

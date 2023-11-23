@@ -113,10 +113,6 @@ BLOCKED
     : B L O C K E D
     ;
 
-BOTTOM
-    : B O T T O M
-    ;
-
 BOUNDARY
     : B O U N D A R Y
     ;

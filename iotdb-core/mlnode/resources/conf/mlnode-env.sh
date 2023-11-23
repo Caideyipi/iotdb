@@ -111,12 +111,12 @@ shopt -s nullglob
 for i in *.whl *.tar.gz; do
   if [[ $i =~ "mlnode" ]]; then
     echo Installing MLNode body: $i
-    $mln_interpreter_dir -m pip install "$i" $p_mln_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
+    $mln_interpreter_dir -m pip install "$i" $p_mln_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
   else
     # if mln_only_mlnode is 0 then install dependencies
     if [ $mln_only_mlnode -eq 0 ]; then
       echo Installing dependencies $i
-      $mln_interpreter_dir -m pip install "$i" $p_mln_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/torch_stable.html
+      $mln_interpreter_dir -m pip install "$i" $p_mln_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_mln_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
     fi
   fi
   if [ $? -eq 1 ]; then

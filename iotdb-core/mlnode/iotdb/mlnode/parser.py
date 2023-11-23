@@ -82,7 +82,7 @@ def parse_task_options(options) -> TaskOptions:
 
 
 def parse_inference_config(config_dict):
-    '''
+    """
     Args:
         config_dict: dict
             - configs: dict
@@ -94,7 +94,7 @@ def parse_inference_config(config_dict):
     Returns:
         configs: TConfigs
         attributes: str
-    '''
+    """
     configs = config_dict['configs']
 
     # check if input_shape and output_shape are two-dimensional array
@@ -156,6 +156,9 @@ def parse_inference_request(req: TInferenceReq):
     data = convert_to_df(column_name_list, type_list, column_name_index, [binary_dataset])
     time_stamp, data = data[data.columns[0:1]], data[data.columns[1:]]
     full_data = (data, time_stamp, type_list, column_name_list)
+    inference_attributes = req.inferenceAttributes
+    if inference_attributes is None:
+        inference_attributes = {}
 
     window_params = req.windowParams
     if window_params is None:
@@ -165,7 +168,7 @@ def parse_inference_request(req: TInferenceReq):
     else:
         window_step = window_params.windowStep
         window_interval = window_params.windowInterval
-    return req.modelId, full_data, window_interval, window_step
+    return req.modelId, full_data, window_interval, window_step, inference_attributes
 
 
 def str2bool(value):

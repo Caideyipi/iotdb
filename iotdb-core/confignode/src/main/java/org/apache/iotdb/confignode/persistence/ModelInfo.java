@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.commons.model.ModelStatus;
 import org.apache.iotdb.commons.model.ModelTable;
+import org.apache.iotdb.commons.model.ModelType;
 import org.apache.iotdb.commons.snapshot.SnapshotProcessor;
 import org.apache.iotdb.confignode.consensus.request.read.model.GetModelInfoPlan;
 import org.apache.iotdb.confignode.consensus.request.read.model.ShowModelPlan;
@@ -48,9 +49,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -66,6 +69,19 @@ public class ModelInfo implements SnapshotProcessor {
   private final Map<String, List<Integer>> modelNameToNodes;
 
   private final ReadWriteLock modelTableLock = new ReentrantReadWriteLock();
+
+  private static final Set<String> builtInForecastModel = new HashSet<>();
+
+  private static final Set<String> builtInAnomalyDetectionModel = new HashSet<>();
+
+  static {
+    builtInForecastModel.add("_ARIMA");
+    builtInForecastModel.add("_NaiveForecaster");
+    builtInForecastModel.add("_STLForecaster");
+    builtInForecastModel.add("_ExponentialSmoothing");
+    builtInAnomalyDetectionModel.add("_GaussianHMM");
+    builtInAnomalyDetectionModel.add("_GMMHMM");
+  }
 
   public ModelInfo() {
     this.modelTable = new ModelTable();
@@ -159,18 +175,41 @@ public class ModelInfo implements SnapshotProcessor {
     return modelNameToNodes.getOrDefault(modelName, Collections.emptyList());
   }
 
+  private ModelInformation getModelByName(String modelName) {
+    ModelType modelType = checkModelType(modelName);
+    if (modelType != ModelType.USER_DEFINED) {
+      if (modelType == ModelType.BUILT_IN_FORECAST && builtInForecastModel.contains(modelName)) {
+        return new ModelInformation(ModelType.BUILT_IN_FORECAST, modelName);
+      } else if (modelType == ModelType.BUILT_IN_ANOMALY_DETECTION
+          && builtInAnomalyDetectionModel.contains(modelName)) {
+        return new ModelInformation(ModelType.BUILT_IN_ANOMALY_DETECTION, modelName);
+      }
+    } else {
+      return modelTable.getModelInformationById(modelName);
+    }
+    return null;
+  }
+
   public ModelTableResp showModel(ShowModelPlan plan) {
     acquireModelTableReadLock();
     try {
       ModelTableResp modelTableResp =
           new ModelTableResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
       if (plan.isSetModelName()) {
-        ModelInformation modelInformation = modelTable.getModelInformationById(plan.getModelName());
+        ModelInformation modelInformation = getModelByName(plan.getModelName());
         if (modelInformation != null) {
           modelTableResp.addModelInformation(modelInformation);
         }
       } else {
         modelTableResp.addModelInformation(modelTable.getAllModelInformation());
+        for (String modelName : builtInForecastModel) {
+          modelTableResp.addModelInformation(
+              new ModelInformation(ModelType.BUILT_IN_FORECAST, modelName));
+        }
+        for (String modelName : builtInAnomalyDetectionModel) {
+          modelTableResp.addModelInformation(
+              new ModelInformation(ModelType.BUILT_IN_ANOMALY_DETECTION, modelName));
+        }
       }
       return modelTableResp;
     } catch (IOException e) {
@@ -183,13 +222,55 @@ public class ModelInfo implements SnapshotProcessor {
     }
   }
 
+  private boolean containsBuiltInModelName(Set<String> builtInModelSet, String modelName) {
+    // ignore the case
+    for (String builtInModelName : builtInModelSet) {
+      if (builtInModelName.equalsIgnoreCase(modelName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private ModelType checkModelType(String modelName) {
+    if (containsBuiltInModelName(builtInForecastModel, modelName)) {
+      return ModelType.BUILT_IN_FORECAST;
+    } else if (containsBuiltInModelName(builtInAnomalyDetectionModel, modelName)) {
+      return ModelType.BUILT_IN_ANOMALY_DETECTION;
+    } else {
+      return ModelType.USER_DEFINED;
+    }
+  }
+
+  private int getAvailableMLNodeForModel(String modelName, ModelType modelType) {
+    if (modelType == ModelType.USER_DEFINED) {
+      List<Integer> mlNodeIds = modelNameToNodes.get(modelName);
+      if (mlNodeIds != null) {
+        return mlNodeIds.get(0);
+      }
+    } else {
+      // any MLNode is fine for built-in model
+      // 0 is always the nodeId for configNode, so it's fine to use 0 as special value
+      return 0;
+    }
+    return -1;
+  }
+
   // This method will be used by dataNode to get schema of the model for inference
   public GetModelInfoResp getModelInfo(GetModelInfoPlan plan) {
     acquireModelTableReadLock();
     try {
       String modelName = plan.getModelId();
       GetModelInfoResp getModelInfoResp;
-      ModelInformation modelInformation = modelTable.getModelInformationById(modelName);
+      ModelInformation modelInformation;
+      ModelType modelType;
+      // check if it's a built-in model
+      if ((modelType = checkModelType(modelName)) != ModelType.USER_DEFINED) {
+        modelInformation = new ModelInformation(modelType, modelName);
+      } else {
+        modelInformation = modelTable.getModelInformationById(modelName);
+      }
+
       if (modelInformation != null) {
         getModelInfoResp =
             new GetModelInfoResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
@@ -204,9 +285,14 @@ public class ModelInfo implements SnapshotProcessor {
       modelInformation.serialize(stream);
       getModelInfoResp.setModelInfo(ByteBuffer.wrap(buffer.getBuf(), 0, buffer.size()));
       // select the nodeId to process the task, currently we default use the first one.
-      List<Integer> mlNodeIds = modelNameToNodes.get(modelName);
-      if (mlNodeIds != null) {
-        getModelInfoResp.setTargetMLNodeId(mlNodeIds.get(0));
+      int mlNodeId = getAvailableMLNodeForModel(modelName, modelType);
+      if (mlNodeId == -1) {
+        TSStatus errorStatus = new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode());
+        errorStatus.setMessage(String.format("There is no MLNode with %s available", modelName));
+        getModelInfoResp = new GetModelInfoResp(errorStatus);
+        return getModelInfoResp;
+      } else {
+        getModelInfoResp.setTargetMLNodeId(mlNodeId);
       }
       return getModelInfoResp;
     } catch (IOException e) {

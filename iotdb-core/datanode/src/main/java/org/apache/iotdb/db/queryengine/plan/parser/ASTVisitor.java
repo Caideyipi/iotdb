@@ -1234,7 +1234,14 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   @Override
   public Statement visitCreateModel(IoTDBSqlParser.CreateModelContext ctx) {
     CreateModelStatement createModelStatement = new CreateModelStatement();
-    createModelStatement.setModelName(parseIdentifier(ctx.modelName.getText()));
+    String modelName = ctx.modelName.getText();
+    if (modelName.length() < 2 || modelName.length() > 64) {
+      throw new SemanticException("Model name should be 2-64 characters");
+    }
+    if (modelName.startsWith("_")) {
+      throw new SemanticException("Model name should not start with '_'");
+    }
+    createModelStatement.setModelName(parseIdentifier(modelName));
     createModelStatement.setUri(ctx.modelUri.getText());
     return createModelStatement;
   }

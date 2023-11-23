@@ -75,8 +75,8 @@ class TSStatusCode(Enum):
         return self.value
 
 
-class TaskType(Enum):
-    FORECAST = "forecast"
+# class TaskType(Enum):
+#     FORECAST = "forecast"
 
 
 class OptionsKey(Enum):
@@ -134,3 +134,112 @@ class ModelInputName(Enum):
     TIME_STAMP_X = "time_stamp_x"
     TIME_STAMP_Y = "time_stamp_y"
     DEC_INP = "dec_inp"
+
+
+# built-in sktime model attributes
+class TaskType(Enum):
+    FORECAST = "forecast"
+    ANOMALY_DETECTION = "anomaly_detection"
+
+    def name(self) -> str:
+        return self.value
+
+
+class BuiltInModelType(Enum):
+    # forecast models
+    ARIMA = "_arima"
+    EXPONENTIAL_SMOOTHING = "_exponentialsmoothing"
+    NAIVE_FORECASTER = "_naiveforecaster"
+    STL_FORECASTER = "_stlforecaster"
+
+    # anomaly detection models
+    GAUSSIAN_HMM = "_gaussianhmm"
+    GMM_HMM = "_gmmhmm"
+
+    @classmethod
+    def values(cls) -> List[str]:
+        values = []
+        for item in list(cls):
+            values.append(item.value)
+        return values
+
+
+class AttributeName(Enum):
+    # forecast Attribute
+    PREDICT_LENGTH = "predict_length"
+
+    # NaiveForecaster
+    STRATEGY = 'strategy'
+    SP = 'sp'
+
+    # STLForecaster
+    # SP = 'sp'
+    SEASONAL = 'seasonal'
+    SEASONAL_DEG = 'seasonal_deg'
+    TREND_DEG = 'trend_deg'
+    LOW_PASS_DEG = 'low_pass_deg'
+    SEASONAL_JUMP = 'seasonal_jump'
+    TREND_JUMP = 'trend_jump'
+    LOSS_PASS_JUMP = 'low_pass_jump'
+
+    # ExponentialSmoothing
+    DAMPED_TREND = 'damped_trend'
+    INITIALIZATION_METHOD = 'initialization_method'
+    OPTIMIZED = 'optimized'
+    REMOVE_BIAS = 'remove_bias'
+    USE_BRUTE = 'use_brute'
+
+    # Arima
+    ORDER = "order"
+    SEASONAL_ORDER = "seasonal_order"
+    METHOD = "method"
+    MAXITER = "maxiter"
+    SUPPRESS_WARNINGS = "suppress_warnings"
+    OUT_OF_SAMPLE_SIZE = "out_of_sample_size"
+    SCORING = "scoring"
+    WITH_INTERCEPT = "with_intercept"
+    TIME_VARYING_REGRESSION = "time_varying_regression"
+    ENFORCE_STATIONARITY = "enforce_stationarity"
+    ENFORCE_INVERTIBILITY = "enforce_invertibility"
+    SIMPLE_DIFFERENCING = "simple_differencing"
+    MEASUREMENT_ERROR = "measurement_error"
+    MLE_REGRESSION = "mle_regression"
+    HAMILTON_REPRESENTATION = "hamilton_representation"
+    CONCENTRATE_SCALE = "concentrate_scale"
+
+    # GAUSSIAN_HMM
+    N_COMPONENTS = "n_components"
+    COVARIANCE_TYPE = "covariance_type"
+    MIN_COVAR = "min_covar"
+    STARTPROB_PRIOR = "startprob_prior"
+    TRANSMAT_PRIOR = "transmat_prior"
+    MEANS_PRIOR = "means_prior"
+    MEANS_WEIGHT = "means_weight"
+    COVARS_PRIOR = "covars_prior"
+    COVARS_WEIGHT = "covars_weight"
+    ALGORITHM = "algorithm"
+    N_ITER = "n_iter"
+    TOL = "tol"
+    PARAMS = "params"
+    INIT_PARAMS = "init_params"
+    IMPLEMENTATION = "implementation"
+
+    # GMMHMM
+    # N_COMPONENTS = "n_components"
+    N_MIX = "n_mix"
+    # MIN_COVAR = "min_covar"
+    # STARTPROB_PRIOR = "startprob_prior"
+    # TRANSMAT_PRIOR = "transmat_prior"
+    WEIGHTS_PRIOR = "weights_prior"
+    # MEANS_PRIOR = "means_prior"
+    # MEANS_WEIGHT = "means_weight"
+    # ALGORITHM = "algorithm"
+    # COVARIANCE_TYPE = "covariance_type"
+    # N_ITER = "n_iter"
+    # TOL = "tol"
+    # INIT_PARAMS = "init_params"
+    # PARAMS = "params"
+    # IMPLEMENTATION = "implementation"
+
+    def name(self) -> str:
+        return self.value

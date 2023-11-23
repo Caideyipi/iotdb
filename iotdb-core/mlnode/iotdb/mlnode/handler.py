@@ -31,7 +31,7 @@ from iotdb.mlnode.constant import TaskType, TSStatusCode
 from iotdb.mlnode.dataset.dataset import TsForecastDataset
 from iotdb.mlnode.dataset.factory import create_dataset
 from iotdb.mlnode.exception import InvaildUriError, BadConfigValueError
-from iotdb.mlnode.inference import inference
+from iotdb.mlnode.inference import inference_with_registered_model, inference_with_built_in_model
 from iotdb.mlnode.log import logger
 from iotdb.mlnode.parser import (ForecastTaskOptions,
                                  parse_task_options, parse_inference_request)
@@ -115,11 +115,17 @@ class MLNodeRPCServiceHandler(IMLNodeRPCService.Iface):
 
     def inference(self, req: TInferenceReq):
         logger.info(f"infer {req.modelId}")
-        model_id, full_data, window_interval, window_step = parse_inference_request(
+        model_id, full_data, window_interval, window_step, inference_attributes = parse_inference_request(
             req)
         try:
-            inference_results = inference(
-                model_id, full_data, window_interval, window_step)
+            if model_id.startswith('_'):
+                # built-in models
+                inference_results = inference_with_built_in_model(
+                    model_id, full_data, inference_attributes)
+            else:
+                # user-registered models
+                inference_results = inference_with_registered_model(
+                    model_id, full_data, window_interval, window_step, inference_attributes)
             for i in range(len(inference_results)):
                 inference_results[i] = convert_to_binary(inference_results[i])
             return TInferenceResp(
@@ -128,6 +134,7 @@ class MLNodeRPCServiceHandler(IMLNodeRPCService.Iface):
                 inference_results)
         except Exception as e:
             logger.warning(e)
+            inference_results = []
             return TInferenceResp(get_status(TSStatusCode.MLNODE_INTERNAL_ERROR, str(e)), inference_results)
 
     def getMLHeartbeat(self, req: TMlHeartbeatReq):
