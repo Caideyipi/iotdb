@@ -77,7 +77,7 @@ import java.util.stream.Collectors;
 
 public class IoTDBDescriptor {
 
-  private static final Logger logger = LoggerFactory.getLogger(IoTDBDescriptor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(IoTDBDescriptor.class);
 
   private final CommonDescriptor commonDescriptor = CommonDescriptor.getInstance();
 
@@ -121,7 +121,7 @@ public class IoTDBDescriptor {
       if (uri != null) {
         return uri;
       }
-      logger.warn(
+      LOGGER.warn(
           "Cannot find IOTDB_HOME or IOTDB_CONF environment variable when loading "
               + "config file {}, use default configuration",
           configFileName);
@@ -154,39 +154,39 @@ public class IoTDBDescriptor {
     Properties commonProperties = new Properties();
     if (url != null) {
       try (InputStream inputStream = url.openStream()) {
-        logger.info("Start to read config file {}", url);
+        LOGGER.info("Start to read config file {}", url);
         commonProperties.load(inputStream);
       } catch (FileNotFoundException e) {
-        logger.error("Fail to find config file {}, reject DataNode startup.", url, e);
+        LOGGER.error("Fail to find config file {}, reject DataNode startup.", url, e);
         System.exit(-1);
       } catch (IOException e) {
-        logger.error("Cannot load config file, reject DataNode startup.", e);
+        LOGGER.error("Cannot load config file, reject DataNode startup.", e);
         System.exit(-1);
       } catch (Exception e) {
-        logger.error("Incorrect format in config file, reject DataNode startup.", e);
+        LOGGER.error("Incorrect format in config file, reject DataNode startup.", e);
         System.exit(-1);
       }
     } else {
-      logger.warn(
+      LOGGER.warn(
           "Couldn't load the configuration {} from any of the known sources.",
           CommonConfig.CONFIG_NAME);
     }
     url = getPropsUrl(IoTDBConfig.CONFIG_NAME);
     if (url != null) {
       try (InputStream inputStream = url.openStream()) {
-        logger.info("Start to read config file {}", url);
+        LOGGER.info("Start to read config file {}", url);
         Properties properties = new Properties();
         properties.load(inputStream);
         commonProperties.putAll(properties);
         loadProperties(commonProperties);
       } catch (FileNotFoundException e) {
-        logger.error("Fail to find config file {}, reject DataNode startup.", url, e);
+        LOGGER.error("Fail to find config file {}, reject DataNode startup.", url, e);
         System.exit(-1);
       } catch (IOException e) {
-        logger.error("Cannot load config file, reject DataNode startup.", e);
+        LOGGER.error("Cannot load config file, reject DataNode startup.", e);
         System.exit(-1);
       } catch (Exception e) {
-        logger.error("Incorrect format in config file, reject DataNode startup.", e);
+        LOGGER.error("Incorrect format in config file, reject DataNode startup.", e);
         System.exit(-1);
       } finally {
         // update all data seriesPath
@@ -199,7 +199,7 @@ public class IoTDBDescriptor {
                 conf.getClusterName(), NodeType.DATANODE, SchemaConstant.SYSTEM_DATABASE);
       }
     } else {
-      logger.warn(
+      LOGGER.warn(
           "Couldn't load the configuration {} from any of the known sources.",
           IoTDBConfig.CONFIG_NAME);
     }
@@ -239,7 +239,7 @@ public class IoTDBDescriptor {
       conf.setCoreClientNumForEachNode(
           Integer.parseInt(
               properties.getProperty("dn_core_connection_for_internal_service").trim()));
-      logger.warn(
+      LOGGER.warn(
           "The parameter dn_core_connection_for_internal_service is out of date. Please rename it to dn_core_client_count_for_each_node_in_client_manager.");
     }
     conf.setCoreClientNumForEachNode(
@@ -254,7 +254,7 @@ public class IoTDBDescriptor {
       conf.setMaxClientNumForEachNode(
           Integer.parseInt(
               properties.getProperty("dn_max_connection_for_internal_service").trim()));
-      logger.warn(
+      LOGGER.warn(
           "The parameter dn_max_connection_for_internal_service is out of date. Please rename it to dn_max_client_count_for_each_node_in_client_manager.");
     }
     conf.setMaxClientNumForEachNode(
@@ -392,7 +392,7 @@ public class IoTDBDescriptor {
         (Boolean.parseBoolean(
             properties.getProperty(
                 "enable_mem_control", Boolean.toString(conf.isEnableMemControl())))));
-    logger.info("IoTDB enable memory control: {}", conf.isEnableMemControl());
+    LOGGER.info("IoTDB enable memory control: {}", conf.isEnableMemControl());
 
     long memTableSizeThreshold =
         Long.parseLong(
@@ -1103,7 +1103,7 @@ public class IoTDBDescriptor {
                 "migrate_thread_count", String.valueOf(conf.getMigrateThreadCount())));
     if (migrationThreadCount <= 0) {
       migrationThreadCount = conf.getMigrateThreadCount();
-      logger.warn(
+      LOGGER.warn(
           "migrate_thread_count cannot be less than 0, iotdb will use default value {}.",
           migrationThreadCount);
     }
@@ -1124,7 +1124,7 @@ public class IoTDBDescriptor {
       moveThresholds[i] = Double.parseDouble(moveThresholdsStr[i]);
       if (moveThresholds[i] <= 0 || moveThresholds[i] >= 1) {
         moveThresholds[i] = 0.15;
-        logger.warn(
+        LOGGER.warn(
             "It's meaningless to set dn_default_space_move_thresholds out of range (0.0, 1.0), iotdb will use default value {}.",
             moveThresholds[i]);
       }
@@ -1163,7 +1163,7 @@ public class IoTDBDescriptor {
                 String.valueOf(conf.getCachePageSizeInKb())));
     if (cachePageSizeInKb <= 0) {
       cachePageSizeInKb = conf.getCachePageSizeInKb();
-      logger.warn(
+      LOGGER.warn(
           "remote_tsfile_cache_page_size_in_kb cannot be less than 0, iotdb will use default value {}.",
           cachePageSizeInKb);
     }
@@ -1176,7 +1176,7 @@ public class IoTDBDescriptor {
                 String.valueOf(conf.getCacheMaxDiskUsageInMb())));
     if (cacheMaxDiskUsageInMb <= 0) {
       cacheMaxDiskUsageInMb = conf.getCacheMaxDiskUsageInMb();
-      logger.warn(
+      LOGGER.warn(
           "remote_tsfile_cache_max_disk_usage_in_mb cannot be less than 0, iotdb will use default value {}.",
           cacheMaxDiskUsageInMb);
     }
@@ -1189,7 +1189,7 @@ public class IoTDBDescriptor {
       double[] moveThresholds = new double[tierNum];
       Arrays.fill(moveThresholds, 0.15);
       conf.setSpaceMoveThresholds(moveThresholds);
-      logger.warn(
+      LOGGER.warn(
           "dn_default_space_move_thresholds should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
           Arrays.toString(moveThresholds));
     }
@@ -1197,7 +1197,7 @@ public class IoTDBDescriptor {
       long[] tierTTLs = new long[tierNum];
       Arrays.fill(tierTTLs, Long.MAX_VALUE);
       commonDescriptor.getConfig().setTierTTLInMs(tierTTLs);
-      logger.warn(
+      LOGGER.warn(
           "default_ttl_in_ms should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
           Arrays.toString(tierTTLs));
     }
@@ -1253,7 +1253,7 @@ public class IoTDBDescriptor {
             properties.getProperty(
                 "compaction_thread_count", Integer.toString(conf.getCompactionThreadCount())));
     if (newConfigCompactionThreadCount <= 0) {
-      logger.error("compaction_thread_count must greater than 0");
+      LOGGER.error("compaction_thread_count must greater than 0");
       return false;
     }
     if (newConfigCompactionThreadCount == conf.getCompactionThreadCount()) {
@@ -1272,7 +1272,7 @@ public class IoTDBDescriptor {
             properties.getProperty(
                 "sub_compaction_thread_count", Integer.toString(conf.getSubCompactionTaskNum())));
     if (newConfigSubtaskNum <= 0) {
-      logger.error("sub_compaction_thread_count must greater than 0");
+      LOGGER.error("sub_compaction_thread_count must greater than 0");
       return false;
     }
     if (newConfigSubtaskNum == conf.getSubCompactionTaskNum()) {
@@ -1316,7 +1316,7 @@ public class IoTDBDescriptor {
             || newConfigEnableUnseqSpaceCompaction;
 
     if (!isCompactionEnabled && compactionEnabledInNewConfig) {
-      logger.error("Compaction cannot start in current status.");
+      LOGGER.error("Compaction cannot start in current status.");
       return;
     }
 
@@ -1478,7 +1478,7 @@ public class IoTDBDescriptor {
                         TSFileDescriptor.getInstance().getConfig().getPageSizeInByte()))));
     if (TSFileDescriptor.getInstance().getConfig().getPageSizeInByte()
         > TSFileDescriptor.getInstance().getConfig().getGroupSizeInByte()) {
-      logger.warn("page_size is greater than group size, will set it as the same with group size");
+      LOGGER.warn("page_size is greater than group size, will set it as the same with group size");
       TSFileDescriptor.getInstance()
           .getConfig()
           .setPageSizeInByte(TSFileDescriptor.getInstance().getConfig().getGroupSizeInByte());
@@ -1569,7 +1569,7 @@ public class IoTDBDescriptor {
     if (properties.getProperty(IoTDBConstant.MQTT_HOST_NAME) != null) {
       conf.setMqttHost(properties.getProperty(IoTDBConstant.MQTT_HOST_NAME));
     } else {
-      logger.info("MQTT host is not configured, will use dn_rpc_address.");
+      LOGGER.info("MQTT host is not configured, will use dn_rpc_address.");
       conf.setMqttHost(
           properties.getProperty(IoTDBConstant.DN_RPC_ADDRESS, conf.getRpcAddress().trim()));
     }
@@ -1771,38 +1771,38 @@ public class IoTDBDescriptor {
   public void loadHotModifiedProps() throws QueryProcessException {
     URL url = getPropsUrl(CommonConfig.CONFIG_NAME);
     if (url == null) {
-      logger.warn("Couldn't load the configuration from any of the known sources.");
+      LOGGER.warn("Couldn't load the configuration from any of the known sources.");
       return;
     }
 
     Properties commonProperties = new Properties();
     try (InputStream inputStream = url.openStream()) {
-      logger.info("Start to reload config file {}", url);
+      LOGGER.info("Start to reload config file {}", url);
       commonProperties.load(inputStream);
     } catch (Exception e) {
-      logger.warn("Fail to reload config file {}", url, e);
+      LOGGER.warn("Fail to reload config file {}", url, e);
       throw new QueryProcessException(
           String.format("Fail to reload config file %s because %s", url, e.getMessage()));
     }
 
     url = getPropsUrl(IoTDBConfig.CONFIG_NAME);
     if (url == null) {
-      logger.warn("Couldn't load the configuration from any of the known sources.");
+      LOGGER.warn("Couldn't load the configuration from any of the known sources.");
       return;
     }
     try (InputStream inputStream = url.openStream()) {
-      logger.info("Start to reload config file {}", url);
+      LOGGER.info("Start to reload config file {}", url);
       Properties properties = new Properties();
       properties.load(inputStream);
       commonProperties.putAll(properties);
       loadHotModifiedProps(commonProperties);
     } catch (Exception e) {
-      logger.warn("Fail to reload config file {}", url, e);
+      LOGGER.warn("Fail to reload config file {}", url, e);
       throw new QueryProcessException(
           String.format("Fail to reload config file %s because %s", url, e.getMessage()));
     }
     ReloadLevel reloadLevel = MetricConfigDescriptor.getInstance().loadHotProps(commonProperties);
-    logger.info("Reload metric service in level {}", reloadLevel);
+    LOGGER.info("Reload metric service in level {}", reloadLevel);
     if (reloadLevel == ReloadLevel.RESTART_INTERNAL_REPORTER) {
       IoTDBInternalReporter internalReporter;
       if (MetricConfigDescriptor.getInstance().getMetricConfig().getInternalReportType()
@@ -1823,7 +1823,7 @@ public class IoTDBDescriptor {
       memoryAllocateProportion =
           properties.getProperty("storage_query_schema_consensus_free_memory_proportion");
       if (memoryAllocateProportion != null) {
-        logger.warn(
+        LOGGER.warn(
             "The parameter storage_query_schema_consensus_free_memory_proportion is deprecated since v1.2.3, "
                 + "please use datanode_memory_proportion instead.");
       }
@@ -1861,11 +1861,11 @@ public class IoTDBDescriptor {
       }
     }
 
-    logger.info("initial allocateMemoryForRead = {}", conf.getAllocateMemoryForRead());
-    logger.info("initial allocateMemoryForWrite = {}", conf.getAllocateMemoryForStorageEngine());
-    logger.info("initial allocateMemoryForSchema = {}", conf.getAllocateMemoryForSchema());
-    logger.info("initial allocateMemoryForConsensus = {}", conf.getAllocateMemoryForConsensus());
-    logger.info("initial allocateMemoryForPipe = {}", conf.getAllocateMemoryForPipe());
+    LOGGER.info("initial allocateMemoryForRead = {}", conf.getAllocateMemoryForRead());
+    LOGGER.info("initial allocateMemoryForWrite = {}", conf.getAllocateMemoryForStorageEngine());
+    LOGGER.info("initial allocateMemoryForSchema = {}", conf.getAllocateMemoryForSchema());
+    LOGGER.info("initial allocateMemoryForConsensus = {}", conf.getAllocateMemoryForConsensus());
+    LOGGER.info("initial allocateMemoryForPipe = {}", conf.getAllocateMemoryForPipe());
 
     initSchemaMemoryAllocate(properties);
     initStorageEngineAllocate(properties);
@@ -2030,15 +2030,15 @@ public class IoTDBDescriptor {
 
     conf.setAllocateMemoryForSchemaRegion(
         schemaMemoryTotal * conf.getSchemaMemoryProportion()[0] / proportionSum);
-    logger.info("allocateMemoryForSchemaRegion = {}", conf.getAllocateMemoryForSchemaRegion());
+    LOGGER.info("allocateMemoryForSchemaRegion = {}", conf.getAllocateMemoryForSchemaRegion());
 
     conf.setAllocateMemoryForSchemaCache(
         schemaMemoryTotal * conf.getSchemaMemoryProportion()[1] / proportionSum);
-    logger.info("allocateMemoryForSchemaCache = {}", conf.getAllocateMemoryForSchemaCache());
+    LOGGER.info("allocateMemoryForSchemaCache = {}", conf.getAllocateMemoryForSchemaCache());
 
     conf.setAllocateMemoryForPartitionCache(
         schemaMemoryTotal * conf.getSchemaMemoryProportion()[2] / proportionSum);
-    logger.info("allocateMemoryForPartitionCache = {}", conf.getAllocateMemoryForPartitionCache());
+    LOGGER.info("allocateMemoryForPartitionCache = {}", conf.getAllocateMemoryForPartitionCache());
   }
 
   @SuppressWarnings("squid:S3518") // "proportionSum" can't be zero
@@ -2174,7 +2174,7 @@ public class IoTDBDescriptor {
     String configNodeUrls = properties.getProperty(IoTDBConstant.DN_SEED_CONFIG_NODE);
     if (configNodeUrls == null) {
       configNodeUrls = properties.getProperty(IoTDBConstant.DN_TARGET_CONFIG_NODE_LIST);
-      logger.warn(
+      LOGGER.warn(
           "The parameter dn_target_config_node_list has been abandoned, "
               + "only the first ConfigNode address will be used to join in the cluster. "
               + "Please use dn_seed_config_node instead.");
@@ -2184,7 +2184,7 @@ public class IoTDBDescriptor {
         configNodeUrls = configNodeUrls.trim();
         conf.setSeedConfigNode(NodeUrlUtils.parseTEndPointUrls(configNodeUrls).get(0));
       } catch (BadNodeUrlException e) {
-        logger.error("ConfigNodes are set in wrong format, please set them like 127.0.0.1:10710");
+        LOGGER.error("ConfigNodes are set in wrong format, please set them like 127.0.0.1:10710");
       }
     } else {
       throw new IOException(
