@@ -112,7 +112,7 @@ public class ColumnHeaderConstant {
   // show cluster status
   public static final String NODE_TYPE_CONFIG_NODE = "ConfigNode";
   public static final String NODE_TYPE_DATA_NODE = "DataNode";
-  public static final String NODE_TYPE_ML_NODE = "MLNode";
+  public static final String NODE_TYPE_AI_NODE = "AINode";
   public static final String COLUMN_CLUSTER_NAME = "ClusterName";
   public static final String CONFIG_NODE_CONSENSUS_PROTOCOL_CLASS =
       "ConfigNodeConsensusProtocolClass";
@@ -308,7 +308,7 @@ public class ColumnHeaderConstant {
           new ColumnHeader(ROLE, TSDataType.TEXT),
           new ColumnHeader(CREATE_TIME, TSDataType.TEXT));
 
-  public static final List<ColumnHeader> showMLNodesColumnHeaders =
+  public static final List<ColumnHeader> showAINodesColumnHeaders =
       ImmutableList.of(
           new ColumnHeader(NODE_ID, TSDataType.INT32),
           new ColumnHeader(STATUS, TSDataType.TEXT),

@@ -53,8 +53,8 @@ public class License {
   public static final String DEVICE_NUM_LIMIT_NAME = "DN3";
   public static final String SENSOR_NUM_LIMIT_NAME = "DN4";
 
-  // MLNode fields
-  public static final String MLNODE_NUM_LIMIT_NAME = "ML1";
+  // AINode fields
+  public static final String AINODE_NUM_LIMIT_NAME = "ML1";
 
   // activate info
   protected long licenseIssueTimestamp = 0;
@@ -64,7 +64,7 @@ public class License {
   protected long deviceNumLimit = 0;
   protected long sensorNumLimit = 0;
   protected long disconnectionFromActiveNodeTimeLimit = 0;
-  protected short mlNodeNumLimit = 0;
+  protected short aiNodeNumLimit = 0;
 
   // other info
   protected enum LicenseSource {
@@ -113,8 +113,8 @@ public class License {
     return this.disconnectionFromActiveNodeTimeLimit;
   }
 
-  public short getMLNodeNumLimit() {
-    return this.mlNodeNumLimit;
+  public short getAINodeNumLimit() {
+    return this.aiNodeNumLimit;
   }
 
   // endregion
@@ -128,7 +128,7 @@ public class License {
     deviceNumLimit = 0;
     sensorNumLimit = 0;
     disconnectionFromActiveNodeTimeLimit = 0;
-    mlNodeNumLimit = 0;
+    aiNodeNumLimit = 0;
     // other
     licenseSource = LicenseSource.UNKNOWN;
   }
@@ -149,7 +149,7 @@ public class License {
       newLicense.sensorNumLimit = getLong(SENSOR_NUM_LIMIT_NAME, properties);
       newLicense.disconnectionFromActiveNodeTimeLimit =
           getLong(DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME, properties);
-      newLicense.mlNodeNumLimit = (short) getLong(MLNODE_NUM_LIMIT_NAME, properties);
+      newLicense.aiNodeNumLimit = (short) getLong(AINODE_NUM_LIMIT_NAME, properties);
     } catch (LicenseException | NumberFormatException e) {
       logger.error("License parse error", e);
       return;
@@ -180,7 +180,7 @@ public class License {
     newLicense.sensorNumLimit = license.sensorNumLimit;
     newLicense.disconnectionFromActiveNodeTimeLimit =
         license.getDisconnectionFromActiveNodeTimeLimit();
-    newLicense.mlNodeNumLimit = license.getMlNodeNumLimit();
+    newLicense.aiNodeNumLimit = license.getAiNodeNumLimit();
 
     ActivateStatus oldActivateStatus = this.getActivateStatus();
 
@@ -251,7 +251,7 @@ public class License {
         "disconnectionFromActiveNodeTimeLimit",
         this.disconnectionFromActiveNodeTimeLimit,
         anotherLicense.disconnectionFromActiveNodeTimeLimit);
-    logFieldDifference("mlNodeNumLimit", this.mlNodeNumLimit, anotherLicense.mlNodeNumLimit);
+    logFieldDifference("aiNodeNumLimit", this.aiNodeNumLimit, anotherLicense.aiNodeNumLimit);
   }
 
   // show difference between old license and new license
@@ -263,7 +263,7 @@ public class License {
     this.deviceNumLimit = anotherLicense.deviceNumLimit;
     this.sensorNumLimit = anotherLicense.sensorNumLimit;
     this.disconnectionFromActiveNodeTimeLimit = anotherLicense.disconnectionFromActiveNodeTimeLimit;
-    this.mlNodeNumLimit = anotherLicense.mlNodeNumLimit;
+    this.aiNodeNumLimit = anotherLicense.aiNodeNumLimit;
   }
 
   public TLicense toTLicense() {
@@ -275,7 +275,7 @@ public class License {
         this.getDeviceNumLimit(),
         this.getSensorNumLimit(),
         this.getDisconnectionFromActiveNodeTimeLimit(),
-        this.getMLNodeNumLimit());
+        this.getAINodeNumLimit());
   }
 
   // endregion

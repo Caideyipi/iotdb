@@ -355,7 +355,7 @@ public class InternalPage extends SchemaPage implements ISegment<Integer, Intege
           mPtr = compoundPointer(pk, Short.MIN_VALUE);
           mKey = key;
         } else {
-          // vi for virtual index of the above virtual array, ai for actual index of existed keys
+          // vi for virtual index of the above virtual array, AI for actual index of existed keys
           ai = vi > pos ? vi - 1 : vi;
           mPtr = getPointerByIndex(ai);
           mKey = getKeyByIndex(ai);

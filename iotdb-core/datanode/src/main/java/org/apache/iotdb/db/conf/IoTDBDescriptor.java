@@ -279,17 +279,17 @@ public class IoTDBDescriptor {
                 .getProperty(IoTDBConstant.DN_RPC_PORT, Integer.toString(conf.getRpcPort()))
                 .trim()));
 
-    conf.setEnableMLNodeService(
+    conf.setEnableAINodeService(
         Boolean.parseBoolean(
             properties
                 .getProperty(
-                    "enable_mlnode_rpc_service", Boolean.toString(conf.isEnableMLNodeService()))
+                    "enable_ainode_rpc_service", Boolean.toString(conf.isEnableAINodeService()))
                 .trim()));
 
-    conf.setMLNodePort(
+    conf.setAINodePort(
         Integer.parseInt(
             properties
-                .getProperty("mlnode_rpc_port", Integer.toString(conf.getMLNodePort()))
+                .getProperty("ainode_rpc_port", Integer.toString(conf.getAINodePort()))
                 .trim()));
 
     conf.setBufferedArraysMemoryProportion(

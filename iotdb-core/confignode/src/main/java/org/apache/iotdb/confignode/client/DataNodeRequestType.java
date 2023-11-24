@@ -102,7 +102,7 @@ public enum DataNodeRequestType {
   // TODO Need to migrate to Node Maintenance
   KILL_QUERY_INSTANCE,
 
-  // ML Model
+  // AI Model
   DELETE_MODEL_METRICS,
 
   // Quota

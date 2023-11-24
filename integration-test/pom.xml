@@ -538,7 +538,7 @@
                 <integrationTest.launchNodeInSameJVM>false</integrationTest.launchNodeInSameJVM>
                 <integrationTest.randomSelectWriteNode>false</integrationTest.randomSelectWriteNode>
                 <integrationTest.readAndVerifyWithMultiNode>false</integrationTest.readAndVerifyWithMultiNode>
-                <integrationTest.testEnv>ML</integrationTest.testEnv>
+                <integrationTest.testEnv>AI</integrationTest.testEnv>
             </properties>
         </profile>
     </profiles>

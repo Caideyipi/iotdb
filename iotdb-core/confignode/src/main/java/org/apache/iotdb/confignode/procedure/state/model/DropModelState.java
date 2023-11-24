@@ -20,6 +20,6 @@
 package org.apache.iotdb.confignode.procedure.state.model;
 
 public enum DropModelState {
-  ML_NODE_DROPPED,
+  AI_NODE_DROPPED,
   CONFIG_NODE_DROPPED
 }

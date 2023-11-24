@@ -40,9 +40,9 @@
     </modules>
     <profiles>
         <profile>
-            <id>with-mlnode</id>
+            <id>with-ainode</id>
             <modules>
-                <module>mlnode</module>
+                <module>ainode</module>
             </modules>
         </profile>
     </profiles>

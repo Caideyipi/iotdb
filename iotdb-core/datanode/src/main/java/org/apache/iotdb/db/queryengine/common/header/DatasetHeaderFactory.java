@@ -111,8 +111,8 @@ public class DatasetHeaderFactory {
     return new DatasetHeader(ColumnHeaderConstant.showRegionColumnHeaders, true);
   }
 
-  public static DatasetHeader getShowMLNodesHeader() {
-    return new DatasetHeader(ColumnHeaderConstant.showMLNodesColumnHeaders, true);
+  public static DatasetHeader getShowAINodesHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showAINodesColumnHeaders, true);
   }
 
   public static DatasetHeader getShowDataNodesHeader() {

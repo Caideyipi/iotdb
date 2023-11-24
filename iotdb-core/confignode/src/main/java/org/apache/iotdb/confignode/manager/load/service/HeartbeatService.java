@@ -19,19 +19,20 @@
 
 package org.apache.iotdb.confignode.manager.load.service;
 
+import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatReq;
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
 import org.apache.iotdb.commons.pipe.config.PipeConfig;
+import org.apache.iotdb.confignode.client.async.AsyncAINodeHeartbeatClientPool;
 import org.apache.iotdb.confignode.client.async.AsyncConfigNodeHeartbeatClientPool;
 import org.apache.iotdb.confignode.client.async.AsyncDataNodeHeartbeatClientPool;
-import org.apache.iotdb.confignode.client.async.AsyncMLNodeHeartbeatClientPool;
+import org.apache.iotdb.confignode.client.async.handlers.heartbeat.AINodeHeartbeatHandler;
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.ConfigNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.DataNodeHeartbeatHandler;
-import org.apache.iotdb.confignode.client.async.handlers.heartbeat.MLNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.activation.License;
@@ -40,7 +41,6 @@ import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
-import org.apache.iotdb.mlnode.rpc.thrift.TMlHeartbeatReq;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeActivation;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatReq;
 import org.apache.iotdb.tsfile.utils.Pair;
@@ -121,8 +121,8 @@ public class HeartbeatService {
                 // Send heartbeat requests to all the registered DataNodes
                 pingRegisteredDataNodes(
                     genHeartbeatReq(), getNodeManager().getRegisteredDataNodes());
-                // Send heartbeat requests to all the registered MLNodes
-                pingRegisteredMLNodes(genMLHeartbeatReq(), getNodeManager().getRegisteredMLNodes());
+                // Send heartbeat requests to all the registered AINodes
+                pingRegisteredAINodes(genMLHeartbeatReq(), getNodeManager().getRegisteredAINodes());
               }
             });
   }
@@ -171,12 +171,12 @@ public class HeartbeatService {
     return req;
   }
 
-  private TMlHeartbeatReq genMLHeartbeatReq() {
+  private TAIHeartbeatReq genMLHeartbeatReq() {
     /* Generate heartbeat request */
-    TMlHeartbeatReq heartbeatReq = new TMlHeartbeatReq();
+    TAIHeartbeatReq heartbeatReq = new TAIHeartbeatReq();
     heartbeatReq.setHeartbeatTimestamp(System.currentTimeMillis());
 
-    // We sample MLNode's load in every 10 heartbeat loop
+    // We sample AINode's load in every 10 heartbeat loop
     heartbeatReq.setNeedSamplingLoad(heartbeatCounter.get() % 10 == 0);
 
     return heartbeatReq;
@@ -231,19 +231,19 @@ public class HeartbeatService {
   }
 
   /**
-   * Send heartbeat requests to all the Registered MLNodes.
+   * Send heartbeat requests to all the Registered AINodes.
    *
-   * @param registeredMLNodes DataNodes that registered in cluster
+   * @param registeredAINodes DataNodes that registered in cluster
    */
-  private void pingRegisteredMLNodes(
-      TMlHeartbeatReq heartbeatReq, List<TMLNodeConfiguration> registeredMLNodes) {
+  private void pingRegisteredAINodes(
+      TAIHeartbeatReq heartbeatReq, List<TAINodeConfiguration> registeredAINodes) {
     // Send heartbeat requests
-    for (TMLNodeConfiguration mlNodeInfo : registeredMLNodes) {
-      MLNodeHeartbeatHandler handler =
-          new MLNodeHeartbeatHandler(mlNodeInfo.getLocation().getMlNodeId(), loadCache);
-      AsyncMLNodeHeartbeatClientPool.getInstance()
-          .getMLNodeHeartBeat(
-              mlNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
+    for (TAINodeConfiguration aiNodeInfo : registeredAINodes) {
+      AINodeHeartbeatHandler handler =
+          new AINodeHeartbeatHandler(aiNodeInfo.getLocation().getAiNodeId(), loadCache);
+      AsyncAINodeHeartbeatClientPool.getInstance()
+          .getAINodeHeartBeat(
+              aiNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
     }
   }
 

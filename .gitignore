@@ -44,8 +44,8 @@ tsfile-jdbc/src/main/resources/output/queryRes.csv
 !iotdb-client/client-cpp/src/test/CMakeLists.txt
 !example/rest-client-c-example/CMakeLists.txt
 !example/client-cpp-example/src/CMakeLists.txt
-!iotdb-core/mlnode/requirements.txt
-!iotdb-core/mlnode/requirements_dev.txt
+!iotdb-core/ainode/requirements.txt
+!iotdb-core/ainode/requirements_dev.txt
 
 
 *.jar
@@ -121,7 +121,7 @@ Makefile
 
 # Exclude copied license
 iotdb-client/client-py/LICENSE
-iotdb-core/mlnode/LICENSE
+iotdb-core/ainode/LICENSE
 
 # ANTLR
 iotdb-core/antlr/gen/

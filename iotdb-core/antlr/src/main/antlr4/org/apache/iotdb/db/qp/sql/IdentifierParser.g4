@@ -135,7 +135,7 @@ keyWords
     | MERGE
     | METADATA
     | MIGRATE
-    | MLNODES
+    | AINODES
     | MODEL
     | MODELS
     | NAN

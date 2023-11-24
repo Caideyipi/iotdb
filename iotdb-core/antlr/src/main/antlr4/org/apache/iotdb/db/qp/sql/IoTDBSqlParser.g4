@@ -59,9 +59,9 @@ ddlStatement
     // CQ
     | createContinuousQuery | dropContinuousQuery | showContinuousQueries
     // Cluster
-    | showVariables | showCluster | showRegions | showDataNodes | showConfigNodes | showMLNodes
+    | showVariables | showCluster | showRegions | showDataNodes | showConfigNodes | showAINodes
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
-    // ML Model
+    // AI Model
     | createModel | dropModel | showModels | showTrials | callInference
     // Quota
     | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
@@ -477,9 +477,9 @@ showConfigNodes
     : SHOW CONFIGNODES
     ;
 
-// ---- Show ML Nodes
-showMLNodes
-    : SHOW MLNODES
+// ---- Show AI Nodes
+showAINodes
+    : SHOW AINODES
     ;
 
 // ---- Get Region Id
@@ -587,7 +587,7 @@ showPipePlugins
     : SHOW PIPEPLUGINS
     ;
 
-// ML Model =========================================================================================
+// AI Model =========================================================================================
 // ---- Create Model
 createModel
     : CREATE MODEL modelName=identifier USING URI modelUri=STRING_LITERAL

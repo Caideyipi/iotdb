@@ -132,8 +132,8 @@ public class CommonConfig {
   /** Disk Monitor. */
   private double diskSpaceWarningThreshold = 0.05;
 
-  /** Ip and port of target ML node. */
-  private TEndPoint targetMLNodeEndPoint = new TEndPoint("127.0.0.1", 10810);
+  /** Ip and port of target AI node. */
+  private TEndPoint targetAINodeEndPoint = new TEndPoint("127.0.0.1", 10810);
 
   /** Time partition interval in milliseconds. */
   private long timePartitionInterval = 604_800_000;
@@ -498,12 +498,12 @@ public class CommonConfig {
     logger.info("DataNode's activation status changed: unactivated -> activated.");
   }
 
-  public TEndPoint getTargetMLNodeEndPoint() {
-    return targetMLNodeEndPoint;
+  public TEndPoint getTargetAINodeEndPoint() {
+    return targetAINodeEndPoint;
   }
 
-  public void setTargetMLNodeEndPoint(TEndPoint targetMLNodeEndPoint) {
-    this.targetMLNodeEndPoint = targetMLNodeEndPoint;
+  public void setTargetAINodeEndPoint(TEndPoint targetAINodeEndPoint) {
+    this.targetAINodeEndPoint = targetAINodeEndPoint;
   }
 
   public int getTTimePartitionSlotTransmitLimit() {

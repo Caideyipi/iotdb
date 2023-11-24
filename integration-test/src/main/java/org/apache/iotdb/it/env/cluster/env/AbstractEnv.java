@@ -35,10 +35,10 @@ import org.apache.iotdb.isession.pool.ISessionPool;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.EnvUtils;
 import org.apache.iotdb.it.env.cluster.config.*;
+import org.apache.iotdb.it.env.cluster.node.AINodeWrapper;
 import org.apache.iotdb.it.env.cluster.node.AbstractNodeWrapper;
 import org.apache.iotdb.it.env.cluster.node.ConfigNodeWrapper;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
-import org.apache.iotdb.it.env.cluster.node.MLNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
 import org.apache.iotdb.itbase.env.BaseEnv;
 import org.apache.iotdb.itbase.env.BaseNodeWrapper;
@@ -75,7 +75,7 @@ public abstract class AbstractEnv implements BaseEnv {
   private final Random rand = new Random();
   protected List<ConfigNodeWrapper> configNodeWrapperList = Collections.emptyList();
   protected List<DataNodeWrapper> dataNodeWrapperList = Collections.emptyList();
-  protected List<MLNodeWrapper> mlNodeWrapperList = Collections.emptyList();
+  protected List<AINodeWrapper> aiNodeWrapperList = Collections.emptyList();
   protected String testMethodName = null;
   protected int index = 0;
   protected long startTime;
@@ -143,7 +143,7 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   protected void initEnvironment(
-      int configNodesNum, int dataNodesNum, int testWorkingRetryCount, boolean addMLNode) {
+      int configNodesNum, int dataNodesNum, int testWorkingRetryCount, boolean addAINode) {
     this.testWorkingRetryCount = testWorkingRetryCount;
     this.configNodeWrapperList = new ArrayList<>();
     this.dataNodeWrapperList = new ArrayList<>();
@@ -252,41 +252,41 @@ public abstract class AbstractEnv implements BaseEnv {
       throw new AssertionError();
     }
 
-    if (addMLNode) {
-      this.mlNodeWrapperList = new ArrayList<>();
-      startMLNode(seedConfigNode, testClassName);
+    if (addAINode) {
+      this.aiNodeWrapperList = new ArrayList<>();
+      startAINode(seedConfigNode, testClassName);
     }
 
     testWorkingNoUnknown();
   }
 
-  private void startMLNode(String seedConfigNode, String testClassName) {
-    String mlNodeEndPoint;
-    MLNodeWrapper mlNodeWrapper =
-        new MLNodeWrapper(
+  private void startAINode(String seedConfigNode, String testClassName) {
+    String aiNodeEndPoint;
+    AINodeWrapper aiNodeWrapper =
+        new AINodeWrapper(
             seedConfigNode,
             testClassName,
             testMethodName,
             EnvUtils.searchAvailablePorts(),
             startTime);
-    mlNodeWrapperList.add(mlNodeWrapper);
-    mlNodeEndPoint = mlNodeWrapper.getIpAndPortString();
-    mlNodeWrapper.createNodeDir();
-    mlNodeWrapper.createLogDir();
-    RequestDelegate<Void> MLNodesDelegate =
+    aiNodeWrapperList.add(aiNodeWrapper);
+    aiNodeEndPoint = aiNodeWrapper.getIpAndPortString();
+    aiNodeWrapper.createNodeDir();
+    aiNodeWrapper.createLogDir();
+    RequestDelegate<Void> AINodesDelegate =
         new ParallelRequestDelegate<>(
-            Collections.singletonList(mlNodeEndPoint), NODE_START_TIMEOUT);
+            Collections.singletonList(aiNodeEndPoint), NODE_START_TIMEOUT);
 
-    MLNodesDelegate.addRequest(
+    AINodesDelegate.addRequest(
         () -> {
-          mlNodeWrapper.start();
+          aiNodeWrapper.start();
           return null;
         });
 
     try {
-      MLNodesDelegate.requestAll();
+      AINodesDelegate.requestAll();
     } catch (SQLException e) {
-      logger.error("Start mlNodes failed", e);
+      logger.error("Start aiNodes failed", e);
     }
   }
 
@@ -379,7 +379,7 @@ public abstract class AbstractEnv implements BaseEnv {
         if (showClusterResp.getNodeStatus().size()
             != configNodeWrapperList.size()
                 + dataNodeWrapperList.size()
-                + mlNodeWrapperList.size()) {
+                + aiNodeWrapperList.size()) {
           flag = false;
         }
 
@@ -417,7 +417,7 @@ public abstract class AbstractEnv implements BaseEnv {
         logger.error("Delete lock file {} failed", lockPath);
       }
     }
-    for (MLNodeWrapper nodeWrapper : this.mlNodeWrapperList) {
+    for (AINodeWrapper nodeWrapper : this.aiNodeWrapperList) {
       nodeWrapper.stop();
       nodeWrapper.destroyDir();
       String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());

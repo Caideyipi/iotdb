@@ -26,7 +26,7 @@ import org.apache.iotdb.commons.consensus.ConfigRegionId;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
-import org.apache.iotdb.db.exception.mlnode.ModelNotFoundException;
+import org.apache.iotdb.db.exception.ainode.ModelNotFoundException;
 import org.apache.iotdb.db.exception.sql.StatementAnalyzeException;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
@@ -60,10 +60,10 @@ public class ModelFetcher implements IModelFetcher {
         configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TGetModelInfoResp getModelInfoResp = client.getModelInfo(new TGetModelInfoReq(modelName));
       if (getModelInfoResp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        if (getModelInfoResp.modelInfo != null && getModelInfoResp.isSetMlNodeAddress()) {
+        if (getModelInfoResp.modelInfo != null && getModelInfoResp.isSetAiNodeAddress()) {
           analysis.setModelInferenceDescriptor(
               new ModelInferenceDescriptor(
-                  getModelInfoResp.mlNodeAddress,
+                  getModelInfoResp.aiNodeAddress,
                   ModelInformation.deserialize(getModelInfoResp.modelInfo)));
           return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
         } else {

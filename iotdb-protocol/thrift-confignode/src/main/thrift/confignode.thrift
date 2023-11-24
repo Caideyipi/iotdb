@@ -522,7 +522,7 @@ struct TShowClusterResp {
   1: required common.TSStatus status
   2: required list<common.TConfigNodeLocation> configNodeList
   3: required list<common.TDataNodeLocation> dataNodeList
-  4: required list<common.TMLNodeLocation> mlNodeList
+  4: required list<common.TAINodeLocation> aiNodeList
   5: required map<i32, string> nodeStatus
   6: required map<i32, TNodeVersionInfo> nodeVersionInfo
   7: required map<i32, TNodeActivateInfo> nodeActivateInfo
@@ -553,8 +553,8 @@ struct TDataNodeInfo {
   7: optional i32 cpuCoreNum
 }
 
-struct TMLNodeInfo{
-  1: required i32 mlNodeId
+struct TAINodeInfo{
+  1: required i32 aiNodeId
   2: required string status
   3: required string internalAddress
   4: required i32 internalPort
@@ -565,9 +565,9 @@ struct TShowDataNodesResp {
   2: optional list<TDataNodeInfo> dataNodesInfoList
 }
 
-struct TShowMLNodesResp {
+struct TShowAINodesResp {
   1: required common.TSStatus status
-  2: optional list<TMLNodeInfo> mlNodesInfoList
+  2: optional list<TAINodeInfo> aiNodesInfoList
 }
 
 // Show confignodes
@@ -840,7 +840,7 @@ struct TUpdateModelStateReq {
 struct TGetModelInfoResp {
   1: required common.TSStatus status
   2: optional binary modelInfo
-  3: optional common.TEndPoint mlNodeAddress
+  3: optional common.TEndPoint aiNodeAddress
 }
 
 // ====================================================
@@ -870,33 +870,33 @@ struct TLicenseContentResp {
 }
 
 // ====================================================
-// MlNode
+// AINode
 // ====================================================
-struct TMLNodeRegisterReq{
+struct TAINodeRegisterReq{
   1: required string clusterName
-  2: required common.TMLNodeConfiguration mlNodeConfiguration
+  2: required common.TAINodeConfiguration aiNodeConfiguration
   3: optional TNodeVersionInfo versionInfo
 }
 
-struct TMLNodeRegisterResp{
+struct TAINodeRegisterResp{
   1: required common.TSStatus status
   2: required list<common.TConfigNodeLocation> configNodeList
-  3: optional i32 mlNodeId
+  3: optional i32 aiNodeId
 }
 
-struct TMLNodeRestartReq{
+struct TAINodeRestartReq{
   1: required string clusterName
-  2: required common.TMLNodeConfiguration mlNodeConfiguration
+  2: required common.TAINodeConfiguration aiNodeConfiguration
   3: optional TNodeVersionInfo versionInfo
 }
 
-struct TMLNodeRestartResp{
+struct TAINodeRestartResp{
   1: required common.TSStatus status
   2: required list<common.TConfigNodeLocation> configNodeList
 }
 
-struct TMLNodeRemoveReq{
-  1: required common.TMLNodeLocation mlNodeLocation
+struct TAINodeRemoveReq{
+  1: required common.TAINodeLocation aiNodeLocation
 }
 
 service IConfigNodeRPCService {
@@ -924,15 +924,15 @@ service IConfigNodeRPCService {
   TDataNodeRestartResp restartDataNode(TDataNodeRestartReq req)
 
   /**
-  * node management for mlnode, it's similar to datanode above
+  * node management for ainode, it's similar to datanode above
   */
-  TMLNodeRegisterResp registerMLNode(TMLNodeRegisterReq req)
+  TAINodeRegisterResp registerAINode(TAINodeRegisterReq req)
 
-  TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req)
+  TAINodeRestartResp restartAINode(TAINodeRestartReq req)
 
-  common.TSStatus removeMLNode(TMLNodeRemoveReq req)
+  common.TSStatus removeAINode(TAINodeRemoveReq req)
 
-  TShowMLNodesResp showMLNodes()
+  TShowAINodesResp showAINodes()
 
   /**
    * Get system configurations. i.e. configurations that is not associated with the DataNodeId
@@ -1477,7 +1477,7 @@ service IConfigNodeRPCService {
   TShowCQResp showCQ()
 
   // ====================================================
-  // ML Model
+  // AI Model
   // ====================================================
 
   /**

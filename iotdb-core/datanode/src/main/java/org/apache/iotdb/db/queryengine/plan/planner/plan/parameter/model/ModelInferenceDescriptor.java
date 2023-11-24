@@ -21,7 +21,7 @@ package org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model;
 
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.commons.model.ModelInformation;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindowParameter;
+import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.InferenceWindowParameter;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.DataOutputStream;
@@ -35,19 +35,19 @@ import java.util.Objects;
 
 public class ModelInferenceDescriptor {
 
-  private final TEndPoint targetMLNode;
+  private final TEndPoint targetAINode;
   private final ModelInformation modelInformation;
   private List<String> outputColumnNames;
   private InferenceWindowParameter inferenceWindowParameter;
   private Map<String, String> inferenceAttributes;
 
-  public ModelInferenceDescriptor(TEndPoint targetMLNode, ModelInformation modelInformation) {
-    this.targetMLNode = targetMLNode;
+  public ModelInferenceDescriptor(TEndPoint targetAINode, ModelInformation modelInformation) {
+    this.targetAINode = targetAINode;
     this.modelInformation = modelInformation;
   }
 
   private ModelInferenceDescriptor(ByteBuffer buffer) {
-    this.targetMLNode =
+    this.targetAINode =
         new TEndPoint(ReadWriteIOUtils.readString(buffer), ReadWriteIOUtils.readInt(buffer));
     this.modelInformation = ModelInformation.deserialize(buffer);
     int outputColumnNamesSize = ReadWriteIOUtils.readInt(buffer);
@@ -97,8 +97,8 @@ public class ModelInferenceDescriptor {
     return modelInformation;
   }
 
-  public TEndPoint getTargetMLNode() {
-    return targetMLNode;
+  public TEndPoint getTargetAINode() {
+    return targetAINode;
   }
 
   public String getModelName() {
@@ -114,8 +114,8 @@ public class ModelInferenceDescriptor {
   }
 
   public void serialize(ByteBuffer byteBuffer) {
-    ReadWriteIOUtils.write(targetMLNode.ip, byteBuffer);
-    ReadWriteIOUtils.write(targetMLNode.port, byteBuffer);
+    ReadWriteIOUtils.write(targetAINode.ip, byteBuffer);
+    ReadWriteIOUtils.write(targetAINode.port, byteBuffer);
     modelInformation.serialize(byteBuffer);
     if (outputColumnNames == null) {
       ReadWriteIOUtils.write(0, byteBuffer);
@@ -143,8 +143,8 @@ public class ModelInferenceDescriptor {
   }
 
   public void serialize(DataOutputStream stream) throws IOException {
-    ReadWriteIOUtils.write(targetMLNode.ip, stream);
-    ReadWriteIOUtils.write(targetMLNode.port, stream);
+    ReadWriteIOUtils.write(targetAINode.ip, stream);
+    ReadWriteIOUtils.write(targetAINode.port, stream);
     modelInformation.serialize(stream);
     if (outputColumnNames == null) {
       ReadWriteIOUtils.write(0, stream);
@@ -184,7 +184,7 @@ public class ModelInferenceDescriptor {
       return false;
     }
     ModelInferenceDescriptor that = (ModelInferenceDescriptor) o;
-    return targetMLNode.equals(that.targetMLNode)
+    return targetAINode.equals(that.targetAINode)
         && modelInformation.equals(that.modelInformation)
         && outputColumnNames.equals(that.outputColumnNames)
         && inferenceWindowParameter.equals(that.inferenceWindowParameter)
@@ -194,7 +194,7 @@ public class ModelInferenceDescriptor {
   @Override
   public int hashCode() {
     return Objects.hash(
-        targetMLNode,
+        targetAINode,
         modelInformation,
         outputColumnNames,
         inferenceWindowParameter,

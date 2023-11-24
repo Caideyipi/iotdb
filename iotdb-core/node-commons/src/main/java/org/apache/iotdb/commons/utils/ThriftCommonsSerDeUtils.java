@@ -18,12 +18,12 @@
  */
 package org.apache.iotdb.commons.utils;
 
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupId;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSchemaNode;
 import org.apache.iotdb.common.rpc.thrift.TSeriesPartitionSlot;
@@ -162,61 +162,61 @@ public class ThriftCommonsSerDeUtils {
     return dataNodeInfo;
   }
 
-  public static void serializeTMLNodeInfo(
-      TMLNodeConfiguration mlNodeInfo, DataOutputStream stream) {
+  public static void serializeTAINodeInfo(
+      TAINodeConfiguration aiNodeInfo, DataOutputStream stream) {
     try {
-      mlNodeInfo.write(generateWriteProtocol(stream));
+      aiNodeInfo.write(generateWriteProtocol(stream));
     } catch (TException e) {
-      throw new ThriftSerDeException("Write TMLNodeInfo failed: ", e);
+      throw new ThriftSerDeException("Write TAINodeInfo failed: ", e);
     }
   }
 
-  public static TMLNodeConfiguration deserializeTMLNodeInfo(ByteBuffer buffer) {
-    TMLNodeConfiguration mlNodeInfo = new TMLNodeConfiguration();
+  public static TAINodeConfiguration deserializeTAINodeInfo(ByteBuffer buffer) {
+    TAINodeConfiguration aiNodeInfo = new TAINodeConfiguration();
     try {
-      mlNodeInfo.read(generateReadProtocol(buffer));
+      aiNodeInfo.read(generateReadProtocol(buffer));
     } catch (TException e) {
-      throw new ThriftSerDeException("Read TMLNodeInfo failed: ", e);
+      throw new ThriftSerDeException("Read TAINodeInfo failed: ", e);
     }
-    return mlNodeInfo;
+    return aiNodeInfo;
   }
 
-  public static void serializeTMLNodeConfiguration(
-      TMLNodeConfiguration mlNodeConfiguration, DataOutputStream stream) {
+  public static void serializeTAINodeConfiguration(
+      TAINodeConfiguration aiNodeConfiguration, DataOutputStream stream) {
     try {
-      mlNodeConfiguration.write(generateWriteProtocol(stream));
+      aiNodeConfiguration.write(generateWriteProtocol(stream));
     } catch (TException e) {
       throw new ThriftSerDeException("Write TDataNodeConfiguration failed: ", e);
     }
   }
 
-  public static TMLNodeConfiguration deserializeTMLNodeConfiguration(ByteBuffer buffer) {
-    TMLNodeConfiguration mlNodeConfiguration = new TMLNodeConfiguration();
+  public static TAINodeConfiguration deserializeTAINodeConfiguration(ByteBuffer buffer) {
+    TAINodeConfiguration aiNodeConfiguration = new TAINodeConfiguration();
     try {
-      mlNodeConfiguration.read(generateReadProtocol(buffer));
+      aiNodeConfiguration.read(generateReadProtocol(buffer));
     } catch (TException e) {
-      throw new ThriftSerDeException("Read TMLNodeConfiguration failed: ", e);
+      throw new ThriftSerDeException("Read TAINodeConfiguration failed: ", e);
     }
-    return mlNodeConfiguration;
+    return aiNodeConfiguration;
   }
 
-  public static void serializeTMLNodeLocation(
-      TMLNodeLocation mlNodeLocation, DataOutputStream stream) {
+  public static void serializeTAINodeLocation(
+      TAINodeLocation aiNodeLocation, DataOutputStream stream) {
     try {
-      mlNodeLocation.write(generateWriteProtocol(stream));
+      aiNodeLocation.write(generateWriteProtocol(stream));
     } catch (TException e) {
-      throw new ThriftSerDeException("Write TMLNodeLocation failed: ", e);
+      throw new ThriftSerDeException("Write TAINodeLocation failed: ", e);
     }
   }
 
-  public static TMLNodeLocation deserializeTMLNodeLocation(ByteBuffer buffer) {
-    TMLNodeLocation mlNodeLocation = new TMLNodeLocation();
+  public static TAINodeLocation deserializeTAINodeLocation(ByteBuffer buffer) {
+    TAINodeLocation aiNodeLocation = new TAINodeLocation();
     try {
-      mlNodeLocation.read(generateReadProtocol(buffer));
+      aiNodeLocation.read(generateReadProtocol(buffer));
     } catch (TException e) {
       throw new ThriftSerDeException("Read TDataNodeLocation failed: ", e);
     }
-    return mlNodeLocation;
+    return aiNodeLocation;
   }
 
   public static void serializeTSeriesPartitionSlot(

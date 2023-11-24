@@ -19,8 +19,8 @@
 
 package org.apache.iotdb.confignode.consensus.response.model;
 
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
 import org.apache.iotdb.consensus.common.DataSet;
@@ -32,8 +32,8 @@ public class GetModelInfoResp implements DataSet {
   private final TSStatus status;
   private ByteBuffer serializedModelInformation;
 
-  private int targetMLNodeId;
-  private TEndPoint targetMLNodeAddress;
+  private int targetAINodeId;
+  private TEndPoint targetAINodeAddress;
 
   public TSStatus getStatus() {
     return status;
@@ -47,25 +47,25 @@ public class GetModelInfoResp implements DataSet {
     this.serializedModelInformation = serializedModelInformation;
   }
 
-  public int getTargetMLNodeId() {
-    return targetMLNodeId;
+  public int getTargetAINodeId() {
+    return targetAINodeId;
   }
 
-  public void setTargetMLNodeId(int targetMLNodeId) {
-    this.targetMLNodeId = targetMLNodeId;
+  public void setTargetAINodeId(int targetAINodeId) {
+    this.targetAINodeId = targetAINodeId;
   }
 
-  public void setTargetMLNodeAddress(TMLNodeConfiguration mlNodeConfiguration) {
-    if (mlNodeConfiguration.getLocation() == null) {
+  public void setTargetAINodeAddress(TAINodeConfiguration aiNodeConfiguration) {
+    if (aiNodeConfiguration.getLocation() == null) {
       return;
     }
-    this.targetMLNodeAddress = mlNodeConfiguration.getLocation().getInternalEndPoint();
+    this.targetAINodeAddress = aiNodeConfiguration.getLocation().getInternalEndPoint();
   }
 
   public TGetModelInfoResp convertToThriftResponse() {
     TGetModelInfoResp resp = new TGetModelInfoResp(status);
     resp.setModelInfo(serializedModelInformation);
-    resp.setMlNodeAddress(targetMLNodeAddress);
+    resp.setAiNodeAddress(targetAINodeAddress);
     return resp;
   }
 }

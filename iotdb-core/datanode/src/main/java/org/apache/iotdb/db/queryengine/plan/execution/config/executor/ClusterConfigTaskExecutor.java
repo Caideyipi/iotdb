@@ -79,12 +79,12 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
-import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeInfo;
@@ -133,7 +133,7 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowRegion
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTTLTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTriggersTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariablesTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowMLNodesTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowAINodesTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.ShowNodesInSchemaTemplateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.ShowPathSetTemplateTask;
@@ -162,7 +162,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowDatabaseState
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.DropPipeStatement;
@@ -2200,12 +2200,12 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> showMLNodes(ShowMLNodesStatement showMLNodesStatement) {
+  public SettableFuture<ConfigTaskResult> showAINodes(ShowAINodesStatement showAINodesStatement) {
     SettableFuture<ConfigTaskResult> future = SettableFuture.create();
-    TShowMLNodesResp resp = new TShowMLNodesResp();
+    TShowAINodesResp resp = new TShowAINodesResp();
     try (ConfigNodeClient client =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      resp = client.showMLNodes();
+      resp = client.showAINodes();
       if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(resp.getStatus().message, resp.getStatus().code));
         return future;
@@ -2213,7 +2213,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
     } catch (ClientManagerException | TException e) {
       future.setException(e);
     }
-    ShowMLNodesTask.buildTsBlock(resp, future);
+    ShowAINodesTask.buildTsBlock(resp, future);
     return future;
   }
 

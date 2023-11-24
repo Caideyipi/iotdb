@@ -432,8 +432,8 @@ public class IoTDBConfig {
   /** Compact the unsequence files into the overlapped sequence files */
   private boolean enableCrossSpaceCompaction = true;
 
-  /** Enable the service for MLNode */
-  private boolean enableMLNodeService = false;
+  /** Enable the service for AINode */
+  private boolean enableAINodeService = false;
 
   /** Insert the non overlapped unsequence files into sequence space */
   private boolean enableInsertionCrossSpaceCompaction = false;
@@ -864,8 +864,8 @@ public class IoTDBConfig {
   /** Internal port for coordinator */
   private int internalPort = 10730;
 
-  /** Port for MLNode */
-  private int mlNodePort = 10780;
+  /** Port for AINode */
+  private int aiNodePort = 10780;
 
   /** Internal port for dataRegion consensus protocol */
   private int dataRegionConsensusPort = 10760;
@@ -2681,12 +2681,12 @@ public class IoTDBConfig {
     this.enableCrossSpaceCompaction = enableCrossSpaceCompaction;
   }
 
-  public boolean isEnableMLNodeService() {
-    return enableMLNodeService;
+  public boolean isEnableAINodeService() {
+    return enableAINodeService;
   }
 
-  public void setEnableMLNodeService(boolean enableMLNodeService) {
-    this.enableMLNodeService = enableMLNodeService;
+  public void setEnableAINodeService(boolean enableAINodeService) {
+    this.enableAINodeService = enableAINodeService;
   }
 
   public boolean isEnableInsertionCrossSpaceCompaction() {
@@ -2930,12 +2930,12 @@ public class IoTDBConfig {
     this.internalPort = internalPort;
   }
 
-  public int getMLNodePort() {
-    return mlNodePort;
+  public int getAINodePort() {
+    return aiNodePort;
   }
 
-  public void setMLNodePort(int mlNodePort) {
-    this.mlNodePort = mlNodePort;
+  public void setAINodePort(int aiNodePort) {
+    this.aiNodePort = aiNodePort;
   }
 
   public int getDataRegionConsensusPort() {

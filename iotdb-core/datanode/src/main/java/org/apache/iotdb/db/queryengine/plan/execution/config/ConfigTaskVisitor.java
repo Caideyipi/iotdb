@@ -53,7 +53,7 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariab
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.UnSetTTLTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.CreateModelTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.DropModelTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowMLNodesTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowAINodesTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.AlterSchemaTemplateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.template.CreateSchemaTemplateTask;
@@ -115,7 +115,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStat
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
@@ -514,7 +514,7 @@ public class ConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQueryCon
     return new ShowThrottleQuotaTask(showThrottleQuotaStatement);
   }
 
-  /** ML Model Management */
+  /** AI Model Management */
   @Override
   public IConfigTask visitCreateModel(
       CreateModelStatement createModelStatement, MPPQueryContext context) {
@@ -534,8 +534,8 @@ public class ConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQueryCon
   }
 
   @Override
-  public IConfigTask visitShowMLNodes(
-      ShowMLNodesStatement showMLNodesStatement, MPPQueryContext context) {
-    return new ShowMLNodesTask(showMLNodesStatement);
+  public IConfigTask visitShowAINodes(
+      ShowAINodesStatement showAINodesStatement, MPPQueryContext context) {
+    return new ShowAINodesTask(showAINodesStatement);
   }
 }

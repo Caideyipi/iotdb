@@ -49,6 +49,9 @@ import org.apache.iotdb.confignode.consensus.request.read.template.GetTemplateSe
 import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTriggerJarPlan;
 import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTriggerLocationPlan;
 import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTriggerTablePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RegisterAINodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.UpdateAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.ApplyConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateVersionInfoPlan;
@@ -69,9 +72,6 @@ import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNo
 import org.apache.iotdb.confignode.consensus.request.write.datanode.UpdateDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.function.CreateFunctionPlan;
 import org.apache.iotdb.confignode.consensus.request.write.function.DropFunctionPlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RegisterMLNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.UpdateMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.CreateModelPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelInNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelPlan;
@@ -304,12 +304,12 @@ public class ConfigPlanExecutor {
         return nodeInfo.removeDataNode((RemoveDataNodePlan) physicalPlan);
       case UpdateDataNodeConfiguration:
         return nodeInfo.updateDataNode((UpdateDataNodePlan) physicalPlan);
-      case RegisterMLNode:
-        return nodeInfo.registerMLNode((RegisterMLNodePlan) physicalPlan);
-      case UpdateMLNodeConfiguration:
-        return nodeInfo.updateMLNode((UpdateMLNodePlan) physicalPlan);
-      case RemoveMLNode:
-        return nodeInfo.removeMLNode((RemoveMLNodePlan) physicalPlan);
+      case RegisterAINode:
+        return nodeInfo.registerAINode((RegisterAINodePlan) physicalPlan);
+      case UpdateAINodeConfiguration:
+        return nodeInfo.updateAINode((UpdateAINodePlan) physicalPlan);
+      case RemoveAINode:
+        return nodeInfo.removeAINode((RemoveAINodePlan) physicalPlan);
       case CreateDatabase:
         TSStatus status = clusterSchemaInfo.createDatabase((DatabaseSchemaPlan) physicalPlan);
         if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {

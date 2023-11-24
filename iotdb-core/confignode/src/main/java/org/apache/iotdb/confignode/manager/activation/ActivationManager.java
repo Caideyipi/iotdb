@@ -635,7 +635,7 @@ public class ActivationManager {
     properties.setProperty(License.DEVICE_NUM_LIMIT_NAME, String.valueOf(Long.MAX_VALUE));
     properties.setProperty(License.SENSOR_NUM_LIMIT_NAME, String.valueOf(Long.MAX_VALUE));
     properties.setProperty(License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME, "10000");
-    properties.setProperty(License.MLNODE_NUM_LIMIT_NAME, "9999");
+    properties.setProperty(License.AINODE_NUM_LIMIT_NAME, "9999");
     return properties;
   }
 }

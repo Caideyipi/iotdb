@@ -75,7 +75,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStat
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
@@ -267,7 +267,7 @@ public abstract class StatementVisitor<R, C> {
     return visitStatement(alterLogicalViewStatement, context);
   }
 
-  // ML Model
+  // AI Model
   public R visitCreateModel(CreateModelStatement createModelStatement, C context) {
     return visitStatement(createModelStatement, context);
   }
@@ -426,8 +426,8 @@ public abstract class StatementVisitor<R, C> {
     return visitStatement(showConfigNodesStatement, context);
   }
 
-  public R visitShowMLNodes(ShowMLNodesStatement showMLNodesStatement, C context) {
-    return visitStatement(showMLNodesStatement, context);
+  public R visitShowAINodes(ShowAINodesStatement showAINodesStatement, C context) {
+    return visitStatement(showAINodesStatement, context);
   }
 
   public R visitShowVersion(ShowVersionStatement showVersionStatement, C context) {

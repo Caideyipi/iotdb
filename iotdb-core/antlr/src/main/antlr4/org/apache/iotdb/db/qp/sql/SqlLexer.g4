@@ -446,8 +446,8 @@ MIGRATE
     : M I G R A T E
     ;
 
-MLNODES
-    : M L N O D E S
+AINODES
+    : A I N O D E S
     ;
 
 MODEL

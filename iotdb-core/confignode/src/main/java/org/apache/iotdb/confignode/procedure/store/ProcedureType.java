@@ -58,10 +58,10 @@ public enum ProcedureType {
   UNSET_TEMPLATE_PROCEDURE((short) 701),
   SET_TEMPLATE_PROCEDURE((short) 702),
 
-  /** Ml Model */
+  /** AI Model */
   CREATE_MODEL_PROCEDURE((short) 800),
   DROP_MODEL_PROCEDURE((short) 801),
-  REMOVE_ML_NODE_PROCEDURE((short) 802),
+  REMOVE_AI_NODE_PROCEDURE((short) 802),
 
   /** Pipe Plugin */
   CREATE_PIPE_PLUGIN_PROCEDURE((short) 900),

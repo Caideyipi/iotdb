@@ -122,7 +122,7 @@ public class UDFManagementService {
 
     String errorMessage =
         String.format(
-            "Failed to register UDF %s(%s), because the given function name conflicts with the ML model inference function name",
+            "Failed to register UDF %s(%s), because the given function name conflicts with the AI model inference function name",
             functionName, className);
 
     LOGGER.warn(errorMessage);

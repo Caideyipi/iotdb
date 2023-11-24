@@ -19,11 +19,11 @@
 
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
+import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatResp;
 import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
-import org.apache.iotdb.mlnode.rpc.thrift.TMLHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
 
 public class NodeHeartbeatSample {
@@ -77,11 +77,11 @@ public class NodeHeartbeatSample {
     this.statusReason = null;
   }
 
-  /** Constructor for MLNode sample. */
-  public NodeHeartbeatSample(TMLHeartbeatResp heartbeatResp, long receiveTimestamp) {
+  /** Constructor for AINode sample. */
+  public NodeHeartbeatSample(TAIHeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
     this.receiveTimestamp = receiveTimestamp;
-    this.activateStatus = ActivateStatus.UNKNOWN; // TODO: mlnode激活
+    this.activateStatus = ActivateStatus.UNKNOWN; // TODO: ainode激活
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
 

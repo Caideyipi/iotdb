@@ -19,12 +19,12 @@
 
 package org.apache.iotdb.confignode.manager.node;
 
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
@@ -62,7 +62,7 @@ public class ClusterNodeStartUtils {
     } else if (NodeType.DataNode.equals(nodeType)) {
       return IoTDBConstant.DATA_NODE_CONF_FILE_NAME;
     } else {
-      return IoTDBConstant.ML_NODE_CONF_FILE_NAME;
+      return IoTDBConstant.AI_NODE_CONF_FILE_NAME;
     }
   }
 
@@ -103,12 +103,12 @@ public class ClusterNodeStartUtils {
                   configManager.getNodeManager().getRegisteredConfigNodes());
         }
         break;
-      case MLNode:
-        if (nodeLocation instanceof TMLNodeLocation) {
+      case AINode:
+        if (nodeLocation instanceof TAINodeLocation) {
           conflictEndPoints =
-              checkConflictTEndPointForNewMLNode(
-                  (TMLNodeLocation) nodeLocation,
-                  configManager.getNodeManager().getRegisteredMLNodes());
+              checkConflictTEndPointForNewAINode(
+                  (TAINodeLocation) nodeLocation,
+                  configManager.getNodeManager().getRegisteredAINodes());
         }
         break;
       case DataNode:
@@ -196,12 +196,12 @@ public class ClusterNodeStartUtils {
                   configManager.getNodeManager().getRegisteredConfigNodes());
         }
         break;
-      case MLNode:
-        if (nodeLocation instanceof TMLNodeLocation) {
+      case AINode:
+        if (nodeLocation instanceof TAINodeLocation) {
           matchedNodeLocation =
-              matchRegisteredMLNode(
-                  (TMLNodeLocation) nodeLocation,
-                  configManager.getNodeManager().getRegisteredMLNodes());
+              matchRegisteredAINode(
+                  (TAINodeLocation) nodeLocation,
+                  configManager.getNodeManager().getRegisteredAINodes());
         }
         break;
       case DataNode:
@@ -243,10 +243,10 @@ public class ClusterNodeStartUtils {
           acceptRestart = false;
         }
         break;
-      case MLNode:
+      case AINode:
         updatedTEndPoints =
-            checkUpdatedTEndPointOfMLNode(
-                (TMLNodeLocation) nodeLocation, (TMLNodeLocation) matchedNodeLocation);
+            checkUpdatedTEndPointOfAINode(
+                (TAINodeLocation) nodeLocation, (TAINodeLocation) matchedNodeLocation);
         if (!updatedTEndPoints.isEmpty()) {
           acceptRestart = false;
         }
@@ -352,19 +352,19 @@ public class ClusterNodeStartUtils {
   /**
    * Check if there exist conflict TEndPoints on the DataNode to be registered.
    *
-   * @param newMLNodeLocation The TDataNodeLocation of the DataNode to be registered
-   * @param registeredMLNodes All registered DataNodes
+   * @param newAINodeLocation The TDataNodeLocation of the DataNode to be registered
+   * @param registeredAINodes All registered DataNodes
    * @return The conflict TEndPoints if exist
    */
-  public static List<TEndPoint> checkConflictTEndPointForNewMLNode(
-      TMLNodeLocation newMLNodeLocation, List<TMLNodeConfiguration> registeredMLNodes) {
+  public static List<TEndPoint> checkConflictTEndPointForNewAINode(
+      TAINodeLocation newAINodeLocation, List<TAINodeConfiguration> registeredAINodes) {
     Set<TEndPoint> conflictEndPointSet = new HashSet<>();
-    for (TMLNodeConfiguration registeredMLNode : registeredMLNodes) {
-      TMLNodeLocation registeredLocation = registeredMLNode.getLocation();
+    for (TAINodeConfiguration registeredAINode : registeredAINodes) {
+      TAINodeLocation registeredLocation = registeredAINode.getLocation();
       if (registeredLocation
           .getInternalEndPoint()
-          .equals(newMLNodeLocation.getInternalEndPoint())) {
-        conflictEndPointSet.add(newMLNodeLocation.getInternalEndPoint());
+          .equals(newAINodeLocation.getInternalEndPoint())) {
+        conflictEndPointSet.add(newAINodeLocation.getInternalEndPoint());
       }
     }
 
@@ -408,17 +408,17 @@ public class ClusterNodeStartUtils {
   }
 
   /**
-   * Check if there exists a registered MLNode who has the same index of the given one.
+   * Check if there exists a registered AINode who has the same index of the given one.
    *
-   * @param mlNodeLocation The given MLNode
-   * @param registeredMLNodes Registered MLNodes
-   * @return The MLNodeLocation who has the same index of the given one, null otherwise.
+   * @param aiNodeLocation The given AINode
+   * @param registeredAINodes Registered AINodes
+   * @return The AINodeLocation who has the same index of the given one, null otherwise.
    */
-  public static TMLNodeLocation matchRegisteredMLNode(
-      TMLNodeLocation mlNodeLocation, List<TMLNodeConfiguration> registeredMLNodes) {
-    for (TMLNodeConfiguration registeredMLNode : registeredMLNodes) {
-      if (registeredMLNode.getLocation().getMlNodeId() == mlNodeLocation.getMlNodeId()) {
-        return registeredMLNode.getLocation();
+  public static TAINodeLocation matchRegisteredAINode(
+      TAINodeLocation aiNodeLocation, List<TAINodeConfiguration> registeredAINodes) {
+    for (TAINodeConfiguration registeredAINode : registeredAINodes) {
+      if (registeredAINode.getLocation().getAiNodeId() == aiNodeLocation.getAiNodeId()) {
+        return registeredAINode.getLocation();
       }
     }
 
@@ -479,14 +479,14 @@ public class ClusterNodeStartUtils {
   }
 
   /**
-   * Check if some TEndPoints of the specified MLNode have updated.
+   * Check if some TEndPoints of the specified AINode have updated.
    *
    * @param restartLocation The location of restart DataNode
    * @param recordLocation The record DataNode location
    * @return The set of TEndPoints that have modified.
    */
-  public static Set<Integer> checkUpdatedTEndPointOfMLNode(
-      TMLNodeLocation restartLocation, TMLNodeLocation recordLocation) {
+  public static Set<Integer> checkUpdatedTEndPointOfAINode(
+      TAINodeLocation restartLocation, TAINodeLocation recordLocation) {
     Set<Integer> updatedTEndPoints = new HashSet<>();
     if (!recordLocation.getInternalEndPoint().equals(restartLocation.getInternalEndPoint())) {
       updatedTEndPoints.add(0);

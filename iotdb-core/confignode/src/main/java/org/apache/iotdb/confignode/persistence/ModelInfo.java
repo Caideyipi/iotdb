@@ -81,6 +81,7 @@ public class ModelInfo implements SnapshotProcessor {
     builtInForecastModel.add("_ExponentialSmoothing");
     builtInAnomalyDetectionModel.add("_GaussianHMM");
     builtInAnomalyDetectionModel.add("_GMMHMM");
+    builtInAnomalyDetectionModel.add("_Stray");
   }
 
   public ModelInfo() {
@@ -136,18 +137,18 @@ public class ModelInfo implements SnapshotProcessor {
     }
   }
 
-  public TSStatus dropModelInNode(int mlNodeId) {
+  public TSStatus dropModelInNode(int aiNodeId) {
     acquireModelTableWriteLock();
     try {
       for (Map.Entry<String, List<Integer>> entry : modelNameToNodes.entrySet()) {
-        entry.getValue().remove(Integer.valueOf(mlNodeId));
+        entry.getValue().remove(Integer.valueOf(aiNodeId));
         // if list is empty, remove this model totally
         if (entry.getValue().isEmpty()) {
           modelTable.removeModel(entry.getKey());
           modelNameToNodes.remove(entry.getKey());
         }
       }
-      // currently, we only have one MLNode at a time, so we can just clear failed model.
+      // currently, we only have one AINode at a time, so we can just clear failed model.
       modelTable.clearFailedModel();
       return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
     } finally {
@@ -242,14 +243,14 @@ public class ModelInfo implements SnapshotProcessor {
     }
   }
 
-  private int getAvailableMLNodeForModel(String modelName, ModelType modelType) {
+  private int getAvailableAINodeForModel(String modelName, ModelType modelType) {
     if (modelType == ModelType.USER_DEFINED) {
-      List<Integer> mlNodeIds = modelNameToNodes.get(modelName);
-      if (mlNodeIds != null) {
-        return mlNodeIds.get(0);
+      List<Integer> aiNodeIds = modelNameToNodes.get(modelName);
+      if (aiNodeIds != null) {
+        return aiNodeIds.get(0);
       }
     } else {
-      // any MLNode is fine for built-in model
+      // any AINode is fine for built-in model
       // 0 is always the nodeId for configNode, so it's fine to use 0 as special value
       return 0;
     }
@@ -285,14 +286,14 @@ public class ModelInfo implements SnapshotProcessor {
       modelInformation.serialize(stream);
       getModelInfoResp.setModelInfo(ByteBuffer.wrap(buffer.getBuf(), 0, buffer.size()));
       // select the nodeId to process the task, currently we default use the first one.
-      int mlNodeId = getAvailableMLNodeForModel(modelName, modelType);
-      if (mlNodeId == -1) {
+      int aiNodeId = getAvailableAINodeForModel(modelName, modelType);
+      if (aiNodeId == -1) {
         TSStatus errorStatus = new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode());
-        errorStatus.setMessage(String.format("There is no MLNode with %s available", modelName));
+        errorStatus.setMessage(String.format("There is no AINode with %s available", modelName));
         getModelInfoResp = new GetModelInfoResp(errorStatus);
         return getModelInfoResp;
       } else {
-        getModelInfoResp.setTargetMLNodeId(mlNodeId);
+        getModelInfoResp.setTargetAINodeId(aiNodeId);
       }
       return getModelInfoResp;
     } catch (IOException e) {

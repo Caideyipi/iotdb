@@ -45,7 +45,7 @@ public class ConfigNodeConstant {
       "Executed failed, check usage: <Node-id>/<internal_address>:<internal_port>";
 
   public static final String REMOVE_DATANODE_PROCESS = "[REMOVE_DATANODE_PROCESS]";
-  public static final String REMOVE_MLNODE_PROCESS = "[REMOVE_MLNODE_PROCESS]";
+  public static final String REMOVE_AINODE_PROCESS = "[REMOVE_AINODE_PROCESS]";
   public static final String REGION_MIGRATE_PROCESS = "[REGION_MIGRATE_PROCESS]";
 
   public static final String IOTDB_FOREGROUND = "iotdb-foreground";

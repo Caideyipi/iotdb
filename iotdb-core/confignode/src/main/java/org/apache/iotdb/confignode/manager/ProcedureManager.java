@@ -37,9 +37,9 @@ import org.apache.iotdb.commons.utils.StatusUtils;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.consensus.request.auth.AuthorPlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.procedure.UpdateProcedurePlan;
 import org.apache.iotdb.confignode.consensus.request.write.region.CreateRegionGroupsPlan;
 import org.apache.iotdb.confignode.manager.partition.PartitionManager;
@@ -51,9 +51,9 @@ import org.apache.iotdb.confignode.procedure.impl.cq.CreateCQProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.CreateModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.DropModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.AddConfigNodeProcedure;
+import org.apache.iotdb.confignode.procedure.impl.node.RemoveAINodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.RemoveConfigNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.RemoveDataNodeProcedure;
-import org.apache.iotdb.confignode.procedure.impl.node.RemoveMLNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.plugin.CreatePipePluginProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.plugin.DropPipePluginProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.runtime.PipeHandleLeaderChangeProcedure;
@@ -500,10 +500,10 @@ public class ProcedureManager {
     return true;
   }
 
-  public boolean removeMLNode(RemoveMLNodePlan removeMLNodePlan) {
-    this.executor.submitProcedure(new RemoveMLNodeProcedure(removeMLNodePlan.getMlNodeLocation()));
+  public boolean removeAINode(RemoveAINodePlan removeAINodePlan) {
+    this.executor.submitProcedure(new RemoveAINodeProcedure(removeAINodePlan.getAINodeLocation()));
     LOGGER.info(
-        "Submit RemoveMLNodeProcedure successfully, {}", removeMLNodePlan.getMlNodeLocation());
+        "Submit RemoveAINodeProcedure successfully, {}", removeAINodePlan.getAINodeLocation());
     return true;
   }
 

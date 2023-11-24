@@ -679,7 +679,7 @@ public class IoTDBActivationIT {
 
   // endregion
 
-  // region MLNode Tests
+  // region AINode Tests
 
   // endregion
 

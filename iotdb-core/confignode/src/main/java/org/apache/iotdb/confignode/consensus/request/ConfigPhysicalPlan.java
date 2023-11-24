@@ -52,6 +52,9 @@ import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTransferrin
 import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTriggerJarPlan;
 import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTriggerLocationPlan;
 import org.apache.iotdb.confignode.consensus.request.read.trigger.GetTriggerTablePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RegisterAINodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.UpdateAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.ApplyConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateVersionInfoPlan;
@@ -73,9 +76,6 @@ import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNo
 import org.apache.iotdb.confignode.consensus.request.write.datanode.UpdateDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.function.CreateFunctionPlan;
 import org.apache.iotdb.confignode.consensus.request.write.function.DropFunctionPlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RegisterMLNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.UpdateMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.CreateModelPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.UpdateModelInfoPlan;
@@ -188,14 +188,14 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
         case RemoveDataNode:
           plan = new RemoveDataNodePlan();
           break;
-        case RegisterMLNode:
-          plan = new RegisterMLNodePlan();
+        case RegisterAINode:
+          plan = new RegisterAINodePlan();
           break;
-        case RemoveMLNode:
-          plan = new RemoveMLNodePlan();
+        case RemoveAINode:
+          plan = new RemoveAINodePlan();
           break;
-        case UpdateMLNodeConfiguration:
-          plan = new UpdateMLNodePlan();
+        case UpdateAINodeConfiguration:
+          plan = new UpdateAINodePlan();
           break;
         case GetDataNodeConfiguration:
           plan = new GetDataNodeConfigurationPlan();

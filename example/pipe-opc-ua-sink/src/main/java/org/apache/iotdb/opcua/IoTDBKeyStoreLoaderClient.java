@@ -41,7 +41,7 @@ class IoTDBKeyStoreLoaderClient {
   private static final Pattern IP_ADDR_PATTERN =
       Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
-  private static final String CLIENT_ALIAS = "client-ai";
+  private static final String CLIENT_ALIAS = "client-AI";
   private static final char[] PASSWORD = "root".toCharArray();
 
   private X509Certificate[] clientCertificateChain;

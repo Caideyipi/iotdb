@@ -35,10 +35,10 @@ public enum ConfigPhysicalPlanType {
   RemoveDataNode((short) 102),
   UpdateDataNodeConfiguration((short) 103),
 
-  /** MLNode. */
-  RegisterMLNode((short) 104),
-  UpdateMLNodeConfiguration((short) 105),
-  RemoveMLNode((short) 106),
+  /** AINode. */
+  RegisterAINode((short) 104),
+  UpdateAINodeConfiguration((short) 105),
+  RemoveAINode((short) 106),
 
   /** Database. */
   CreateDatabase((short) 200),
@@ -184,7 +184,7 @@ public enum ConfigPhysicalPlanType {
   UPDATE_CQ_LAST_EXEC_TIME((short) 1103),
   SHOW_CQ((short) 1104),
 
-  /** Ml model. */
+  /** AI model. */
   CreateModel((short) 1200),
   UpdateModelInfo((short) 1201),
   UpdateModelState((short) 1202),

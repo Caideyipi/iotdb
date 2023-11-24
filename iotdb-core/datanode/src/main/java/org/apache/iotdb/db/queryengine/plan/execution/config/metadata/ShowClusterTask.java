@@ -42,9 +42,9 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_AI_NODE;
 import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_CONFIG_NODE;
 import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_DATA_NODE;
-import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_ML_NODE;
 
 public class ShowClusterTask implements IConfigTask {
 
@@ -145,20 +145,20 @@ public class ShowClusterTask implements IConfigTask {
                     clusterNodeInfos.getNodeVersionInfo().get(e.getDataNodeId()),
                     clusterNodeInfos.getNodeActivateInfo().get(e.getDataNodeId())));
 
-    if (clusterNodeInfos.getMlNodeList() != null) {
+    if (clusterNodeInfos.getAiNodeList() != null) {
       clusterNodeInfos
-          .getMlNodeList()
+          .getAiNodeList()
           .forEach(
               e ->
                   buildTsBlock(
                       builder,
-                      e.getMlNodeId(),
-                      NODE_TYPE_ML_NODE,
-                      clusterNodeInfos.getNodeStatus().get(e.getMlNodeId()),
+                      e.getAiNodeId(),
+                      NODE_TYPE_AI_NODE,
+                      clusterNodeInfos.getNodeStatus().get(e.getAiNodeId()),
                       e.getInternalEndPoint().getIp(),
                       e.getInternalEndPoint().getPort(),
-                      clusterNodeInfos.getNodeVersionInfo().get(e.getMlNodeId()),
-                      clusterNodeInfos.getNodeActivateInfo().get(e.getMlNodeId())));
+                      clusterNodeInfos.getNodeVersionInfo().get(e.getAiNodeId()),
+                      clusterNodeInfos.getNodeActivateInfo().get(e.getAiNodeId())));
     }
     DatasetHeader datasetHeader = DatasetHeaderFactory.getShowClusterHeader();
     future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS, builder.build(), datasetHeader));

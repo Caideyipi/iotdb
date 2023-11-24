@@ -26,7 +26,7 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.execution.operator.window.WindowType;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.InferenceWindow;
 import org.apache.iotdb.db.queryengine.plan.analyze.ExpressionAnalyzer;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.expression.leaf.TimeSeriesOperand;
@@ -136,7 +136,7 @@ public class QueryStatement extends AuthorityInformationStatement {
   // we can skip the query
   private boolean isResultSetEmpty = false;
 
-  // [IoTDB-ML] used for model inference, which will be removed in the future
+  // [IoTDB-AI] used for model inference, which will be removed in the future
   private String modelName;
   private boolean hasModelInference = false;
   private InferenceWindow inferenceWindow = null;
@@ -185,7 +185,7 @@ public class QueryStatement extends AuthorityInformationStatement {
     return inferenceAttribute != null;
   }
 
-  // [IoTDB-ML] END
+  // [IoTDB-AI] END
 
   public QueryStatement() {
     this.statementType = StatementType.QUERY;

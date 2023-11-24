@@ -97,18 +97,18 @@ public class ModelManager {
       if (response.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return new TGetModelInfoResp(response.getStatus());
       }
-      int mlNodeId = response.getTargetMLNodeId();
-      if (mlNodeId != 0) {
-        response.setTargetMLNodeAddress(
-            configManager.getNodeManager().getRegisteredMLNode(mlNodeId));
+      int aiNodeId = response.getTargetAINodeId();
+      if (aiNodeId != 0) {
+        response.setTargetAINodeAddress(
+            configManager.getNodeManager().getRegisteredAINode(aiNodeId));
       } else {
-        if (configManager.getNodeManager().getRegisteredMLNodes().isEmpty()) {
+        if (configManager.getNodeManager().getRegisteredAINodes().isEmpty()) {
           return new TGetModelInfoResp(
               new TSStatus(TSStatusCode.GET_MODEL_INFO_ERROR.getStatusCode())
-                  .setMessage("There is no MLNode available"));
+                  .setMessage("There is no AINode available"));
         }
-        response.setTargetMLNodeAddress(
-            configManager.getNodeManager().getRegisteredMLNodes().get(0));
+        response.setTargetAINodeAddress(
+            configManager.getNodeManager().getRegisteredAINodes().get(0));
       }
       return response.convertToThriftResponse();
     } catch (ConsensusException e) {

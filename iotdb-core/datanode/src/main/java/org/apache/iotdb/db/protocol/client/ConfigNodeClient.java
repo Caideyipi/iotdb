@@ -34,6 +34,11 @@ import org.apache.iotdb.commons.client.property.ThriftClientProperty;
 import org.apache.iotdb.commons.client.sync.SyncThriftClientWithErrorHandler;
 import org.apache.iotdb.commons.consensus.ConfigRegionId;
 import org.apache.iotdb.confignode.rpc.thrift.IConfigNodeRPCService;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterResp;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRemoveReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAddConsensusGroupReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterSchemaTemplateReq;
@@ -102,11 +107,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterResp;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRemoveReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPipeSinkInfo;
@@ -121,12 +121,12 @@ import org.apache.iotdb.confignode.rpc.thrift.TSetDataReplicationFactorReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaReplicationFactorReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetTimePartitionIntervalReq;
+import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
-import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
@@ -406,24 +406,24 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   }
 
   @Override
-  public TMLNodeRegisterResp registerMLNode(TMLNodeRegisterReq req) throws TException {
-    throw new UnsupportedOperationException("RegisterMLNode method is not supported in datanode");
+  public TAINodeRegisterResp registerAINode(TAINodeRegisterReq req) throws TException {
+    throw new UnsupportedOperationException("RegisterAINode method is not supported in datanode");
   }
 
   @Override
-  public TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req) throws TException {
-    throw new UnsupportedOperationException("RestartMLNode method is not supported in datanode");
+  public TAINodeRestartResp restartAINode(TAINodeRestartReq req) throws TException {
+    throw new UnsupportedOperationException("RestartAINode method is not supported in datanode");
   }
 
   @Override
-  public TSStatus removeMLNode(TMLNodeRemoveReq req) throws TException {
-    throw new UnsupportedOperationException("RemoveMLNode method is not supported in datanode");
+  public TSStatus removeAINode(TAINodeRemoveReq req) throws TException {
+    throw new UnsupportedOperationException("RemoveAINode method is not supported in datanode");
   }
 
   @Override
-  public TShowMLNodesResp showMLNodes() throws TException {
+  public TShowAINodesResp showAINodes() throws TException {
     return executeRemoteCallWithRetry(
-        () -> client.showMLNodes(), resp -> !updateConfigNodeLeader(resp.status));
+        () -> client.showAINodes(), resp -> !updateConfigNodeLeader(resp.status));
   }
 
   @Override

@@ -443,7 +443,7 @@ struct TExecuteCQ {
 }
 
 // ====================================================
-// ML Node
+// AI Node
 // ====================================================
 struct TDeleteModelMetricsReq {
   1: required string modelId
@@ -861,7 +861,7 @@ service MPPDataExchangeService {
   void onEndOfDataBlockEvent(TEndOfDataBlockEvent e);
 }
 
-service IMLNodeInternalRPCService{
+service IAINodeInternalRPCService{
  /**
   * Fecth the data of the specified time series
   */

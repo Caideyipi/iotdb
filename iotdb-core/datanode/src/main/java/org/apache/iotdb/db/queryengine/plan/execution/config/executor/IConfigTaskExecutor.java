@@ -44,7 +44,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowDatabaseState
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.DropPipeStatement;
@@ -217,5 +217,5 @@ public interface IConfigTaskExecutor {
 
   SettableFuture<ConfigTaskResult> showModels(String modelName);
 
-  SettableFuture<ConfigTaskResult> showMLNodes(ShowMLNodesStatement showMLNodesStatement);
+  SettableFuture<ConfigTaskResult> showAINodes(ShowAINodesStatement showAINodesStatement);
 }

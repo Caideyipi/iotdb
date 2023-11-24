@@ -33,6 +33,7 @@ import org.apache.iotdb.confignode.consensus.request.read.datanode.GetDataNodeCo
 import org.apache.iotdb.confignode.consensus.request.read.partition.GetDataPartitionPlan;
 import org.apache.iotdb.confignode.consensus.request.read.partition.GetOrCreateDataPartitionPlan;
 import org.apache.iotdb.confignode.consensus.request.read.region.GetRegionInfoListPlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.DatabaseSchemaPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetDataReplicationFactorPlan;
@@ -40,7 +41,6 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetSchemaRep
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.cq.CQManager;
@@ -49,6 +49,9 @@ import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.manager.partition.PartitionManager;
 import org.apache.iotdb.confignode.manager.pipe.PipeManager;
 import org.apache.iotdb.confignode.manager.schema.ClusterSchemaManager;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeRegisterReq;
@@ -93,9 +96,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionMigrateResultReportReq;
@@ -104,12 +104,12 @@ import org.apache.iotdb.confignode.rpc.thrift.TSchemaNodeManagementResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaPartitionTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSetDataNodeStatusReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaTemplateReq;
+import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
-import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
@@ -255,28 +255,28 @@ public interface IManager {
   DataSet removeDataNode(RemoveDataNodePlan removeDataNodePlan);
 
   /**
-   * Register MLNode
+   * Register AINode
    *
-   * @param req TMLNodeRegisterReq
-   * @return MLNodeConfigurationDataSet
+   * @param req TAINodeRegisterReq
+   * @return AINodeConfigurationDataSet
    */
-  DataSet registerMLNode(TMLNodeRegisterReq req);
+  DataSet registerAINode(TAINodeRegisterReq req);
 
   /**
-   * Restart MLNode.
+   * Restart AINode.
    *
-   * @param req TMLNodeRestartReq
-   * @return SUCCESS_STATUS if allow MLNode to restart, REJECT_START otherwise
+   * @param req TAINodeRestartReq
+   * @return SUCCESS_STATUS if allow AINode to restart, REJECT_START otherwise
    */
-  TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req);
+  TAINodeRestartResp restartAINode(TAINodeRestartReq req);
 
   /**
-   * Remove MLNode.
+   * Remove AINode.
    *
-   * @param removeMLNodePlan RemoveMLNodePlan
-   * @return MLNodeToStatusResp
+   * @param removeAINodePlan RemoveAINodePlan
+   * @return AINodeToStatusResp
    */
-  TSStatus removeMLNode(RemoveMLNodePlan removeMLNodePlan);
+  TSStatus removeAINode(RemoveAINodePlan removeAINodePlan);
 
   /**
    * Report that the specified DataNode will be shutdown.
@@ -520,8 +520,8 @@ public interface IManager {
   /** Show (data/schemaengine) regions. */
   DataSet showRegion(GetRegionInfoListPlan getRegionInfoListPlan);
 
-  /** Show MLNodes. */
-  TShowMLNodesResp showMLNodes();
+  /** Show AINodes. */
+  TShowAINodesResp showAINodes();
 
   /** Show DataNodes. */
   TShowDataNodesResp showDataNodes();

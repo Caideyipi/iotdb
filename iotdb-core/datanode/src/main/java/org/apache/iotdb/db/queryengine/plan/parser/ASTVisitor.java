@@ -49,10 +49,10 @@ import org.apache.iotdb.db.qp.sql.IoTDBSqlParser.ShowFunctionsContext;
 import org.apache.iotdb.db.qp.sql.IoTDBSqlParserBaseVisitor;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.db.queryengine.execution.operator.window.WindowType;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.CountInferenceWindow;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.HeadInferenceWindow;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.InferenceWindow;
-import org.apache.iotdb.db.queryengine.execution.operator.window.mlnode.TailInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.CountInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.HeadInferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.InferenceWindow;
+import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.TailInferenceWindow;
 import org.apache.iotdb.db.queryengine.plan.analyze.ExpressionAnalyzer;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.expression.ExpressionType;
@@ -160,7 +160,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStat
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowMLNodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
@@ -3319,8 +3319,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   }
 
   @Override
-  public Statement visitShowMLNodes(IoTDBSqlParser.ShowMLNodesContext ctx) {
-    return new ShowMLNodesStatement();
+  public Statement visitShowAINodes(IoTDBSqlParser.ShowAINodesContext ctx) {
+    return new ShowAINodesStatement();
   }
 
   // device template

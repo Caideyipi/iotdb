@@ -208,11 +208,11 @@ public class CommonDescriptor {
     String endPointUrl =
         properties.getProperty(
             "target_ml_node_endpoint",
-            NodeUrlUtils.convertTEndPointUrl(config.getTargetMLNodeEndPoint()));
+            NodeUrlUtils.convertTEndPointUrl(config.getTargetAINodeEndPoint()));
 
     loadPipeProps(properties);
 
-    config.setTargetMLNodeEndPoint(NodeUrlUtils.parseTEndPointUrl(endPointUrl));
+    config.setTargetAINodeEndPoint(NodeUrlUtils.parseTEndPointUrl(endPointUrl));
 
     config.setSchemaEngineMode(
         properties.getProperty("schema_engine_mode", String.valueOf(config.getSchemaEngineMode())));

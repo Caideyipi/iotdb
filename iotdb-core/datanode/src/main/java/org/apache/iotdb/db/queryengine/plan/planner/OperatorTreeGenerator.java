@@ -109,7 +109,6 @@ import org.apache.iotdb.db.queryengine.execution.operator.process.last.LastQuery
 import org.apache.iotdb.db.queryengine.execution.operator.process.last.LastQueryUtil;
 import org.apache.iotdb.db.queryengine.execution.operator.process.last.UpdateLastCacheOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.process.last.UpdateViewPathLastCacheOperator;
-import org.apache.iotdb.db.queryengine.execution.operator.process.ml.InferenceOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.CountGroupByLevelMergeOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.CountGroupByLevelScanOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.CountMergeOperator;
@@ -1722,7 +1721,9 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
             .addOperatorContext(
                 context.getNextOperatorId(),
                 node.getPlanNodeId(),
-                InferenceOperator.class.getSimpleName());
+                org.apache.iotdb.db.queryengine.execution.operator.process.AI.InferenceOperator
+                    .class
+                    .getSimpleName());
 
     ModelInferenceDescriptor modelInferenceDescriptor = node.getModelInferenceDescriptor();
     ModelInformation modelInformation = modelInferenceDescriptor.getModelInformation();
@@ -1735,7 +1736,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
         calculateSize(inputShape[0], inputTypes) + TimeColumn.SIZE_IN_BYTES_PER_POSITION;
     long maxReturnSize = calculateSize(outputShape[0], outputTypes);
 
-    return new InferenceOperator(
+    return new org.apache.iotdb.db.queryengine.execution.operator.process.AI.InferenceOperator(
         operatorContext,
         child,
         modelInferenceDescriptor,

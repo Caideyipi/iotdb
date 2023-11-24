@@ -19,13 +19,13 @@
 
 package org.apache.iotdb.confignode.manager;
 
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupId;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TFlushReq;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.common.rpc.thrift.TSeriesPartitionSlot;
@@ -61,6 +61,7 @@ import org.apache.iotdb.confignode.consensus.request.read.partition.GetOrCreateD
 import org.apache.iotdb.confignode.consensus.request.read.partition.GetOrCreateSchemaPartitionPlan;
 import org.apache.iotdb.confignode.consensus.request.read.partition.GetSchemaPartitionPlan;
 import org.apache.iotdb.confignode.consensus.request.read.region.GetRegionInfoListPlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.DatabaseSchemaPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetDataReplicationFactorPlan;
@@ -68,8 +69,8 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetSchemaRep
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CreateSchemaTemplatePlan;
+import org.apache.iotdb.confignode.consensus.response.ainode.AINodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
 import org.apache.iotdb.confignode.consensus.response.database.CountDatabaseResp;
 import org.apache.iotdb.confignode.consensus.response.database.DatabaseSchemaResp;
@@ -77,7 +78,6 @@ import org.apache.iotdb.confignode.consensus.response.datanode.ConfigurationResp
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeConfigurationResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeToStatusResp;
-import org.apache.iotdb.confignode.consensus.response.mlnode.MLNodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.partition.DataPartitionResp;
 import org.apache.iotdb.confignode.consensus.response.partition.RegionInfoListResp;
 import org.apache.iotdb.confignode.consensus.response.partition.SchemaNodeManagementResp;
@@ -109,6 +109,9 @@ import org.apache.iotdb.confignode.persistence.partition.PartitionInfo;
 import org.apache.iotdb.confignode.persistence.pipe.PipeInfo;
 import org.apache.iotdb.confignode.persistence.quota.QuotaInfo;
 import org.apache.iotdb.confignode.persistence.schema.ClusterSchemaInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
@@ -156,9 +159,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRegisterReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartReq;
-import org.apache.iotdb.confignode.rpc.thrift.TMLNodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
@@ -169,12 +169,12 @@ import org.apache.iotdb.confignode.rpc.thrift.TSchemaNodeManagementResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaPartitionTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSetDataNodeStatusReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaTemplateReq;
+import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
-import org.apache.iotdb.confignode.rpc.thrift.TShowMLNodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowModelResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
@@ -251,7 +251,7 @@ public class ConfigManager implements IManager {
   /** CQ. */
   private final CQManager cqManager;
 
-  /** ML Model. */
+  /** AI Model. */
   private final ModelManager modelManager;
 
   /** Pipe */
@@ -415,50 +415,50 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  public DataSet registerMLNode(TMLNodeRegisterReq req) {
+  public DataSet registerAINode(TAINodeRegisterReq req) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       status =
           ClusterNodeStartUtils.confirmNodeRegistration(
-              NodeType.MLNode,
+              NodeType.AINode,
               req.getClusterName(),
-              req.getMlNodeConfiguration().getLocation(),
+              req.getAiNodeConfiguration().getLocation(),
               this);
       if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        return nodeManager.registerMLNode(req);
+        return nodeManager.registerAINode(req);
       }
     }
-    MLNodeRegisterResp resp = new MLNodeRegisterResp();
+    AINodeRegisterResp resp = new AINodeRegisterResp();
     resp.setStatus(status);
     resp.setConfigNodeList(getNodeManager().getRegisteredConfigNodes());
     return resp;
   }
 
   @Override
-  public TMLNodeRestartResp restartMLNode(TMLNodeRestartReq req) {
+  public TAINodeRestartResp restartAINode(TAINodeRestartReq req) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       status =
           ClusterNodeStartUtils.confirmNodeRestart(
-              NodeType.MLNode,
+              NodeType.AINode,
               req.getClusterName(),
-              req.getMlNodeConfiguration().getLocation().getMlNodeId(),
-              req.getMlNodeConfiguration().getLocation(),
+              req.getAiNodeConfiguration().getLocation().getAiNodeId(),
+              req.getAiNodeConfiguration().getLocation(),
               this);
       if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        return nodeManager.updateMLNodeIfNecessary(req);
+        return nodeManager.updateAINodeIfNecessary(req);
       }
     }
-    return new TMLNodeRestartResp()
+    return new TAINodeRestartResp()
         .setStatus(status)
         .setConfigNodeList(getNodeManager().getRegisteredConfigNodes());
   }
 
   @Override
-  public TSStatus removeMLNode(RemoveMLNodePlan removeMLNodePlan) {
+  public TSStatus removeAINode(RemoveAINodePlan removeAINodePlan) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      return nodeManager.removeMLNode(removeMLNodePlan);
+      return nodeManager.removeAINode(removeAINodePlan);
     } else {
       return status;
     }
@@ -514,10 +514,10 @@ public class ConfigManager implements IManager {
               .map(TDataNodeConfiguration::getLocation)
               .sorted(Comparator.comparingInt(TDataNodeLocation::getDataNodeId))
               .collect(Collectors.toList());
-      List<TMLNodeLocation> mlNodeInfoLocations =
-          getNodeManager().getRegisteredMLNodes().stream()
-              .map(TMLNodeConfiguration::getLocation)
-              .sorted(Comparator.comparingInt(TMLNodeLocation::getMlNodeId))
+      List<TAINodeLocation> aiNodeInfoLocations =
+          getNodeManager().getRegisteredAINodes().stream()
+              .map(TAINodeConfiguration::getLocation)
+              .sorted(Comparator.comparingInt(TAINodeLocation::getAiNodeId))
               .collect(Collectors.toList());
       Map<Integer, TNodeVersionInfo> nodeVersionInfo = getNodeManager().getNodeVersionInfo();
       Map<Integer, String> nodeStatus = getLoadManager().getNodeStatusWithReason();
@@ -529,9 +529,9 @@ public class ConfigManager implements IManager {
           dataNodeLocation ->
               nodeStatus.putIfAbsent(
                   dataNodeLocation.getDataNodeId(), NodeStatus.Unknown.toString()));
-      mlNodeInfoLocations.forEach(
-          mlNodeLocation ->
-              nodeStatus.putIfAbsent(mlNodeLocation.getMlNodeId(), NodeStatus.Unknown.toString()));
+      aiNodeInfoLocations.forEach(
+          aiNodeLocation ->
+              nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
 
       // prepare nodeActivateInfo
       Map<Integer, TNodeActivateInfo> nodeActivateInfo = getLoadManager().getNodeActivateStatus();
@@ -553,7 +553,7 @@ public class ConfigManager implements IManager {
           status,
           configNodeLocations,
           dataNodeLocations,
-          mlNodeInfoLocations,
+          aiNodeInfoLocations,
           nodeStatus,
           nodeVersionInfo,
           nodeActivateInfo);
@@ -1534,11 +1534,11 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  public TShowMLNodesResp showMLNodes() {
+  public TShowAINodesResp showAINodes() {
     TSStatus status = confirmLeader();
-    TShowMLNodesResp resp = new TShowMLNodesResp();
+    TShowAINodesResp resp = new TShowAINodesResp();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      return resp.setMlNodesInfoList(nodeManager.getRegisteredMLNodeInfoList())
+      return resp.setAiNodesInfoList(nodeManager.getRegisteredAINodeInfoList())
           .setStatus(StatusUtils.OK);
     } else {
       return resp.setStatus(status);
@@ -2019,9 +2019,9 @@ public class ConfigManager implements IManager {
   @Override
   public TSStatus createModel(TCreateModelReq req) {
     TSStatus status = confirmLeader();
-    if (nodeManager.getRegisteredMLNodes().isEmpty()) {
-      return new TSStatus(TSStatusCode.NO_REGISTERED_ML_NODE_ERROR.getStatusCode())
-          .setMessage("There is no available MLNode! Try to start one.");
+    if (nodeManager.getRegisteredAINodes().isEmpty()) {
+      return new TSStatus(TSStatusCode.NO_REGISTERED_AI_NODE_ERROR.getStatusCode())
+          .setMessage("There is no available AINode! Try to start one.");
     }
     return status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
         ? modelManager.createModel(req)

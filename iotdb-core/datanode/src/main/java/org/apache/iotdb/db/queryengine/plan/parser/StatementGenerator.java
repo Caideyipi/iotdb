@@ -115,7 +115,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.MULTI_LEVEL_PATH_WILDCARD;
-import static org.apache.iotdb.db.protocol.thrift.impl.MLNodeRPCServiceImpl.ML_METRICS_PATH_PREFIX;
+import static org.apache.iotdb.db.protocol.thrift.impl.AINodeRPCServiceImpl.AI_METRICS_PATH_PREFIX;
 
 /** Convert SQL and RPC requests to {@link Statement}. */
 public class StatementGenerator {
@@ -864,7 +864,7 @@ public class StatementGenerator {
   public static InsertRowStatement createStatement(TRecordModelMetricsReq recordModelMetricsReq)
       throws IllegalPathException {
     String path =
-        ML_METRICS_PATH_PREFIX
+        AI_METRICS_PATH_PREFIX
             + TsFileConstant.PATH_SEPARATOR
             + recordModelMetricsReq.getModelId()
             + TsFileConstant.PATH_SEPARATOR
@@ -889,7 +889,7 @@ public class StatementGenerator {
   public static DeleteTimeSeriesStatement createStatement(TDeleteModelMetricsReq req)
       throws IllegalPathException {
     String path =
-        ML_METRICS_PATH_PREFIX
+        AI_METRICS_PATH_PREFIX
             + TsFileConstant.PATH_SEPARATOR
             + req.getModelId()
             + TsFileConstant.PATH_SEPARATOR

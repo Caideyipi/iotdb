@@ -19,8 +19,8 @@
 
 package org.apache.iotdb.it.env;
 
+import org.apache.iotdb.it.env.cluster.env.AIEnv;
 import org.apache.iotdb.it.env.cluster.env.Cluster1Env;
-import org.apache.iotdb.it.env.cluster.env.MLEnv;
 import org.apache.iotdb.it.env.cluster.env.SimpleEnv;
 import org.apache.iotdb.it.env.remote.env.RemoteServerEnv;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
@@ -53,8 +53,8 @@ public class EnvFactory {
           case Remote:
             env = new RemoteServerEnv();
             break;
-          case ML:
-            env = new MLEnv();
+          case AI:
+            env = new AIEnv();
             break;
           case MultiCluster:
             logger.warn(

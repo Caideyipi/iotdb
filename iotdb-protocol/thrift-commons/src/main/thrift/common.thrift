@@ -84,8 +84,8 @@ struct TDataNodeLocation {
   6: required TEndPoint schemaRegionConsensusEndPoint
 }
 
-struct TMLNodeLocation{
-  1: required i32 mlNodeId
+struct TAINodeLocation{
+  1: required i32 aiNodeId
   2: required TEndPoint internalEndPoint
 }
 
@@ -94,8 +94,8 @@ struct TDataNodeConfiguration {
   2: required TNodeResource resource
 }
 
-struct TMLNodeConfiguration{
-  1: required TMLNodeLocation location
+struct TAINodeConfiguration{
+  1: required TAINodeLocation location
   2: required TNodeResource resource
 }
 
@@ -183,7 +183,7 @@ struct TLicense {
     6: required i64 deviceNumLimit
     7: required i64 sensorNumLimit
     8: required i64 disconnectionFromActiveNodeTimeLimit
-    9: required i16 mlNodeNumLimit
+    9: required i16 aiNodeNumLimit
 }
 
 struct TLoadSample {
@@ -221,7 +221,7 @@ enum TAggregationType {
   VAR_SAMP
 }
 
-// for MLNode
+// for AINode
 enum TrainingState {
   PENDING,
   RUNNING,

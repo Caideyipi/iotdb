@@ -19,11 +19,11 @@
 
 package org.apache.iotdb.confignode.procedure.impl.model;
 
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
-import org.apache.iotdb.commons.client.mlnode.MLNodeClient;
-import org.apache.iotdb.commons.client.mlnode.MLNodeClientManager;
-import org.apache.iotdb.commons.exception.mlnode.LoadModelException;
+import org.apache.iotdb.commons.client.ainode.AINodeClient;
+import org.apache.iotdb.commons.client.ainode.AINodeClientManager;
+import org.apache.iotdb.commons.exception.ainode.LoadModelException;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.commons.model.ModelStatus;
 import org.apache.iotdb.commons.model.exception.ModelManagementException;
@@ -60,7 +60,7 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
 
   private ModelInformation modelInformation = null;
 
-  private List<Integer> mlNodeIds;
+  private List<Integer> aiNodeIds;
 
   private String loadErrorMsg = "";
 
@@ -72,7 +72,7 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
     super();
     this.modelName = modelName;
     this.uri = uri;
-    this.mlNodeIds = new ArrayList<>();
+    this.aiNodeIds = new ArrayList<>();
   }
 
   @Override
@@ -135,35 +135,35 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
       if (!modelInformation.equals(receiveModelInfo)) {
         throw new ModelManagementException(
             String.format(
-                "Failed to load model [%s] on ML Nodes, model information is not equal in different nodes",
+                "Failed to load model [%s] on AI Nodes, model information is not equal in different nodes",
                 modelName));
       }
     }
   }
 
   private void loadModel(ConfigNodeProcedureEnv env) {
-    for (TMLNodeConfiguration curNodeConfig :
-        env.getConfigManager().getNodeManager().getRegisteredMLNodes()) {
-      try (MLNodeClient client =
-          MLNodeClientManager.getInstance()
+    for (TAINodeConfiguration curNodeConfig :
+        env.getConfigManager().getNodeManager().getRegisteredAINodes()) {
+      try (AINodeClient client =
+          AINodeClientManager.getInstance()
               .borrowClient(curNodeConfig.getLocation().getInternalEndPoint())) {
         ModelInformation resp = client.registerModel(modelName, uri);
         checkModelInformationEquals(resp);
-        mlNodeIds.add(curNodeConfig.getLocation().mlNodeId);
+        aiNodeIds.add(curNodeConfig.getLocation().aiNodeId);
       } catch (LoadModelException e) {
         LOGGER.warn(e.getMessage());
         loadErrorMsg = e.getMessage();
       } catch (Exception e) {
         LOGGER.warn(
-            "Failed to load model on MLNode {} from ConfigNode",
+            "Failed to load model on AINode {} from ConfigNode",
             curNodeConfig.getLocation().getInternalEndPoint());
         loadErrorMsg = e.getMessage();
       }
     }
 
-    if (mlNodeIds.isEmpty()) {
+    if (aiNodeIds.isEmpty()) {
       throw new ModelManagementException(
-          String.format("CREATE MODEL [%s] failed on all MLNodes:[%s]", modelName, loadErrorMsg));
+          String.format("CREATE MODEL [%s] failed on all AINodes:[%s]", modelName, loadErrorMsg));
     }
   }
 
@@ -175,7 +175,7 @@ public class CreateModelProcedure extends AbstractNodeProcedure<CreateModelState
       TSStatus response =
           configManager
               .getConsensusManager()
-              .write(new UpdateModelInfoPlan(modelName, modelInformation, mlNodeIds));
+              .write(new UpdateModelInfoPlan(modelName, modelInformation, aiNodeIds));
       if (response.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         throw new ModelManagementException(
             String.format(

@@ -1,6 +1,6 @@
-# This workflow is just for checking whether modifications works for the MLNode
+# This workflow is just for checking whether modifications works for the AINode
 
-name: MLNode
+name: AINode
 
 on:
   push:
@@ -51,8 +51,8 @@ jobs:
         run: |
           docker build . -f docker/src/main/Dockerfile-1c1d -t "iotdb:dev"
           docker images
-      - name: Confirm MLNode environment
-        run: cd iotdb-core/mlnode && pip install -r requirements_dev.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && poetry build && pip install dist/apache_iotdb_mlnode-1.0.0-py3-none-any.whl
+      - name: Confirm AINode environment
+        run: cd iotdb-core/ainode && pip install -r requirements_dev.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && poetry build && pip install dist/apache_iotdb_ainode-1.0.0-py3-none-any.whl
       - name: Integration test
         shell: bash
         run: |

@@ -605,9 +605,9 @@ public class DataNode implements DataNodeMBean {
   protected void setUpRPCService() throws StartupException {
     // Start InternalRPCService to indicate that the current DataNode can accept cluster scheduling
     registerManager.register(DataNodeInternalRPCService.getInstance());
-    // Start InternalRPCService to indicate that the current DataNode can accept request from MLNode
-    if (config.isEnableMLNodeService()) {
-      registerManager.register(MLNodeRPCService.getInstance());
+    // Start InternalRPCService to indicate that the current DataNode can accept request from AINode
+    if (config.isEnableAINodeService()) {
+      registerManager.register(AINodeRPCService.getInstance());
     }
 
     // Notice: During the period between starting the internal RPC service

@@ -20,8 +20,8 @@
 package org.apache.iotdb.confignode.procedure.impl.model;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
-import org.apache.iotdb.commons.client.mlnode.MLNodeClient;
-import org.apache.iotdb.commons.client.mlnode.MLNodeClientManager;
+import org.apache.iotdb.commons.client.ainode.AINodeClient;
+import org.apache.iotdb.commons.client.ainode.AINodeClientManager;
 import org.apache.iotdb.commons.model.exception.ModelManagementException;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelPlan;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
@@ -67,9 +67,9 @@ public class DropModelProcedure extends AbstractNodeProcedure<DropModelState> {
     }
     try {
       switch (state) {
-        case ML_NODE_DROPPED:
-          LOGGER.info("Start to drop model [{}] on ML Nodes", modelName);
-          dropModelOnMLNode(env);
+        case AI_NODE_DROPPED:
+          LOGGER.info("Start to drop model [{}] on AI Nodes", modelName);
+          dropModelOnAINode(env);
           setNextState(CONFIG_NODE_DROPPED);
           break;
         case CONFIG_NODE_DROPPED:
@@ -98,31 +98,31 @@ public class DropModelProcedure extends AbstractNodeProcedure<DropModelState> {
     return Flow.HAS_MORE_STATE;
   }
 
-  private void dropModelOnMLNode(ConfigNodeProcedureEnv env) {
-    LOGGER.info("Start to drop model file [{}] on Ml Node", modelName);
+  private void dropModelOnAINode(ConfigNodeProcedureEnv env) {
+    LOGGER.info("Start to drop model file [{}] on AI Node", modelName);
 
     List<Integer> nodeIds =
         env.getConfigManager().getModelManager().getModelDistributions(modelName);
     for (Integer nodeId : nodeIds) {
-      try (MLNodeClient client =
-          MLNodeClientManager.getInstance()
+      try (AINodeClient client =
+          AINodeClientManager.getInstance()
               .borrowClient(
                   env.getConfigManager()
                       .getNodeManager()
-                      .getRegisteredMLNode(nodeId)
+                      .getRegisteredAINode(nodeId)
                       .getLocation()
                       .getInternalEndPoint())) {
         TSStatus status = client.deleteModel(modelName);
         if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
           LOGGER.warn(
-              "Failed to drop model [{}] on MLNode [{}], status: {}",
+              "Failed to drop model [{}] on AINode [{}], status: {}",
               modelName,
               nodeId,
               status.getMessage());
         }
       } catch (Exception e) {
         LOGGER.warn(
-            "Failed to drop model [{}] on MLNode [{}], status: {}",
+            "Failed to drop model [{}] on AINode [{}], status: {}",
             modelName,
             nodeId,
             e.getMessage());
@@ -140,7 +140,7 @@ public class DropModelProcedure extends AbstractNodeProcedure<DropModelState> {
     } catch (Exception e) {
       throw new ModelManagementException(
           String.format(
-              "Fail to start training model [%s] on ML Node: %s", modelName, e.getMessage()));
+              "Fail to start training model [%s] on AI Node: %s", modelName, e.getMessage()));
     }
   }
 
@@ -162,7 +162,7 @@ public class DropModelProcedure extends AbstractNodeProcedure<DropModelState> {
 
   @Override
   protected DropModelState getInitialState() {
-    return DropModelState.ML_NODE_DROPPED;
+    return DropModelState.AI_NODE_DROPPED;
   }
 
   @Override

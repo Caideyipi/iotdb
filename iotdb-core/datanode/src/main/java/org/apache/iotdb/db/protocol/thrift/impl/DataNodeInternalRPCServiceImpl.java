@@ -1104,7 +1104,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     IClientSession session = new InternalClientSession(req.getModelId());
     SESSION_MANAGER.registerSession(session);
     SESSION_MANAGER.supplySession(
-        session, "MLNode", TimeZone.getDefault().getID(), ClientVersion.V_1_0);
+        session, "AINode", TimeZone.getDefault().getID(), ClientVersion.V_1_0);
 
     try {
       DeleteTimeSeriesStatement deleteTimeSeriesStatement = StatementGenerator.createStatement(req);

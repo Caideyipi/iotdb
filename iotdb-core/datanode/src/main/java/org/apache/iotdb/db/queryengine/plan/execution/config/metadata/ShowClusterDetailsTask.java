@@ -41,9 +41,9 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_AI_NODE;
 import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_CONFIG_NODE;
 import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_DATA_NODE;
-import static org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant.NODE_TYPE_ML_NODE;
 
 public class ShowClusterDetailsTask implements IConfigTask {
 
@@ -105,7 +105,7 @@ public class ShowClusterDetailsTask implements IConfigTask {
     builder.declarePosition();
   }
 
-  private static void buildMLNodeTsBlock(
+  private static void buildAINodeTsBlock(
       TsBlockBuilder builder,
       int nodeId,
       String nodeStatus,
@@ -117,7 +117,7 @@ public class ShowClusterDetailsTask implements IConfigTask {
     builder.getColumnBuilder(0).writeInt(nodeId);
     builder
         .getColumnBuilder(1)
-        .writeBinary(new Binary(NODE_TYPE_ML_NODE, TSFileConfig.STRING_CHARSET));
+        .writeBinary(new Binary(NODE_TYPE_AI_NODE, TSFileConfig.STRING_CHARSET));
     if (nodeStatus == null) {
       builder.getColumnBuilder(2).appendNull();
     } else {
@@ -261,16 +261,16 @@ public class ShowClusterDetailsTask implements IConfigTask {
                     clusterNodeInfos.getNodeVersionInfo().get(e.getDataNodeId())));
 
     clusterNodeInfos
-        .getMlNodeList()
+        .getAiNodeList()
         .forEach(
             e ->
-                buildMLNodeTsBlock(
+                buildAINodeTsBlock(
                     builder,
-                    e.getMlNodeId(),
-                    clusterNodeInfos.getNodeStatus().get(e.getMlNodeId()),
+                    e.getAiNodeId(),
+                    clusterNodeInfos.getNodeStatus().get(e.getAiNodeId()),
                     e.getInternalEndPoint().getIp(),
                     e.getInternalEndPoint().getPort(),
-                    clusterNodeInfos.getNodeVersionInfo().get(e.getMlNodeId())));
+                    clusterNodeInfos.getNodeVersionInfo().get(e.getAiNodeId())));
 
     DatasetHeader datasetHeader = DatasetHeaderFactory.getShowClusterDetailsHeader();
     future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS, builder.build(), datasetHeader));

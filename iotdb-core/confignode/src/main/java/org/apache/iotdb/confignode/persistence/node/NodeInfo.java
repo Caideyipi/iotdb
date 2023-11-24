@@ -19,24 +19,24 @@
 
 package org.apache.iotdb.confignode.persistence.node;
 
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TMLNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.snapshot.SnapshotProcessor;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.conf.SystemPropertiesUtils;
 import org.apache.iotdb.confignode.consensus.request.read.datanode.GetDataNodeConfigurationPlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RegisterAINodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
+import org.apache.iotdb.confignode.consensus.request.write.ainode.UpdateAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.ApplyConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateVersionInfoPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RegisterDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.UpdateDataNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RegisterMLNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.RemoveMLNodePlan;
-import org.apache.iotdb.confignode.consensus.request.write.mlnode.UpdateMLNodePlan;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeConfigurationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -67,8 +67,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.apache.iotdb.confignode.conf.ConfigNodeConstant.REMOVE_AINODE_PROCESS;
 import static org.apache.iotdb.confignode.conf.ConfigNodeConstant.REMOVE_DATANODE_PROCESS;
-import static org.apache.iotdb.confignode.conf.ConfigNodeConstant.REMOVE_MLNODE_PROCESS;
 
 /**
  * The {@link NodeInfo} stores cluster node information.
@@ -96,8 +96,8 @@ public class NodeInfo implements SnapshotProcessor {
   private final ReentrantReadWriteLock dataNodeInfoReadWriteLock;
   private final Map<Integer, TDataNodeConfiguration> registeredDataNodes;
 
-  private final ReentrantReadWriteLock mlNodeInfoReadWriteLock;
-  private final Map<Integer, TMLNodeConfiguration> registeredMLNodes;
+  private final ReentrantReadWriteLock aiNodeInfoReadWriteLock;
+  private final Map<Integer, TAINodeConfiguration> registeredAINodes;
 
   private final ReentrantReadWriteLock versionInfoReadWriteLock;
   private final Map<Integer, TNodeVersionInfo> nodeVersionInfo;
@@ -113,8 +113,8 @@ public class NodeInfo implements SnapshotProcessor {
     this.dataNodeInfoReadWriteLock = new ReentrantReadWriteLock();
     this.registeredDataNodes = new ConcurrentHashMap<>();
 
-    this.mlNodeInfoReadWriteLock = new ReentrantReadWriteLock();
-    this.registeredMLNodes = new ConcurrentHashMap<>();
+    this.aiNodeInfoReadWriteLock = new ReentrantReadWriteLock();
+    this.registeredAINodes = new ConcurrentHashMap<>();
 
     this.nodeVersionInfo = new ConcurrentHashMap<>();
     this.versionInfoReadWriteLock = new ReentrantReadWriteLock();
@@ -301,44 +301,44 @@ public class NodeInfo implements SnapshotProcessor {
     return result;
   }
 
-  public List<TMLNodeConfiguration> getRegisteredMLNodes() {
-    List<TMLNodeConfiguration> result;
-    mlNodeInfoReadWriteLock.readLock().lock();
+  public List<TAINodeConfiguration> getRegisteredAINodes() {
+    List<TAINodeConfiguration> result;
+    aiNodeInfoReadWriteLock.readLock().lock();
     try {
-      result = new ArrayList<>(registeredMLNodes.values());
+      result = new ArrayList<>(registeredAINodes.values());
     } finally {
-      mlNodeInfoReadWriteLock.readLock().unlock();
+      aiNodeInfoReadWriteLock.readLock().unlock();
     }
     return result;
   }
 
-  public TMLNodeConfiguration getRegisteredMLNode(int mlNodeId) {
-    mlNodeInfoReadWriteLock.readLock().lock();
+  public TAINodeConfiguration getRegisteredAINode(int aiNodeId) {
+    aiNodeInfoReadWriteLock.readLock().lock();
     try {
-      return registeredMLNodes.getOrDefault(mlNodeId, new TMLNodeConfiguration()).deepCopy();
+      return registeredAINodes.getOrDefault(aiNodeId, new TAINodeConfiguration()).deepCopy();
     } finally {
-      mlNodeInfoReadWriteLock.readLock().unlock();
+      aiNodeInfoReadWriteLock.readLock().unlock();
     }
   }
 
   /** Return the number of registered DataNodes. */
-  public int getRegisteredMLNodeCount() {
+  public int getRegisteredAINodeCount() {
     int result;
-    mlNodeInfoReadWriteLock.readLock().lock();
+    aiNodeInfoReadWriteLock.readLock().lock();
     try {
-      result = registeredMLNodes.size();
+      result = registeredAINodes.size();
     } finally {
-      mlNodeInfoReadWriteLock.readLock().unlock();
+      aiNodeInfoReadWriteLock.readLock().unlock();
     }
     return result;
   }
 
-  public boolean containsMLNode(int mlNodeId) {
-    mlNodeInfoReadWriteLock.readLock().lock();
+  public boolean containsAINode(int aiNodeId) {
+    aiNodeInfoReadWriteLock.readLock().lock();
     try {
-      return registeredMLNodes.containsKey(mlNodeId);
+      return registeredAINodes.containsKey(aiNodeId);
     } finally {
-      mlNodeInfoReadWriteLock.readLock().unlock();
+      aiNodeInfoReadWriteLock.readLock().unlock();
     }
   }
   /**
@@ -412,40 +412,40 @@ public class NodeInfo implements SnapshotProcessor {
   }
 
   /**
-   * Persist MLNode info.
+   * Persist AINode info.
    *
-   * @param registerMLNodePlan RegisterMLNodePlan
+   * @param registerAINodePlan RegisterAINodePlan
    * @return {@link TSStatusCode#SUCCESS_STATUS}
    */
-  public TSStatus registerMLNode(RegisterMLNodePlan registerMLNodePlan) {
+  public TSStatus registerAINode(RegisterAINodePlan registerAINodePlan) {
     TSStatus result;
-    TMLNodeConfiguration info = registerMLNodePlan.getMLNodeConfiguration();
-    mlNodeInfoReadWriteLock.writeLock().lock();
+    TAINodeConfiguration info = registerAINodePlan.getAINodeConfiguration();
+    aiNodeInfoReadWriteLock.writeLock().lock();
     try {
       synchronized (nextNodeId) {
-        if (nextNodeId.get() < info.getLocation().getMlNodeId()) {
-          nextNodeId.set(info.getLocation().getMlNodeId());
+        if (nextNodeId.get() < info.getLocation().getAiNodeId()) {
+          nextNodeId.set(info.getLocation().getAiNodeId());
         }
       }
-      registeredMLNodes.put(info.getLocation().getMlNodeId(), info);
+      registeredAINodes.put(info.getLocation().getAiNodeId(), info);
       result = new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
     } finally {
-      mlNodeInfoReadWriteLock.writeLock().unlock();
+      aiNodeInfoReadWriteLock.writeLock().unlock();
     }
     return result;
   }
 
   /**
-   * Update the specified MLNode‘s location.
+   * Update the specified AINode‘s location.
    *
-   * @param updateMLNodePlan UpdateMLNodePlan
-   * @return {@link TSStatusCode#SUCCESS_STATUS} if update MLNode info successfully.
+   * @param updateAINodePlan UpdateAINodePlan
+   * @return {@link TSStatusCode#SUCCESS_STATUS} if update AINode info successfully.
    */
-  public TSStatus updateMLNode(UpdateMLNodePlan updateMLNodePlan) {
+  public TSStatus updateAINode(UpdateAINodePlan updateAINodePlan) {
     dataNodeInfoReadWriteLock.writeLock().lock();
     try {
-      TMLNodeConfiguration newConfiguration = updateMLNodePlan.getMlNodeConfiguration();
-      registeredMLNodes.replace(newConfiguration.getLocation().getMlNodeId(), newConfiguration);
+      TAINodeConfiguration newConfiguration = updateAINodePlan.getAINodeConfiguration();
+      registeredAINodes.replace(newConfiguration.getLocation().getAiNodeId(), newConfiguration);
     } finally {
       dataNodeInfoReadWriteLock.writeLock().unlock();
     }
@@ -458,27 +458,27 @@ public class NodeInfo implements SnapshotProcessor {
    * @param req RemoveDataNodePlan
    * @return {@link TSStatus}
    */
-  public TSStatus removeMLNode(RemoveMLNodePlan req) {
+  public TSStatus removeAINode(RemoveAINodePlan req) {
     LOGGER.info(
-        "{}, There are {} ml nodes in cluster before executed RemoveMLNodePlan",
-        REMOVE_MLNODE_PROCESS,
-        registeredMLNodes.size());
+        "{}, There are {} AI nodes in cluster before executed RemoveAINodePlan",
+        REMOVE_AINODE_PROCESS,
+        registeredAINodes.size());
 
-    mlNodeInfoReadWriteLock.writeLock().lock();
+    aiNodeInfoReadWriteLock.writeLock().lock();
     versionInfoReadWriteLock.writeLock().lock();
-    TMLNodeLocation removedMLNode = req.getMlNodeLocation();
+    TAINodeLocation removedAINode = req.getAINodeLocation();
     try {
-      registeredMLNodes.remove(removedMLNode.getMlNodeId());
-      nodeVersionInfo.remove(removedMLNode.getMlNodeId());
-      LOGGER.info("Removed the MLNode {} from cluster", removedMLNode);
+      registeredAINodes.remove(removedAINode.getAiNodeId());
+      nodeVersionInfo.remove(removedAINode.getAiNodeId());
+      LOGGER.info("Removed the AINode {} from cluster", removedAINode);
     } finally {
       versionInfoReadWriteLock.writeLock().unlock();
-      mlNodeInfoReadWriteLock.writeLock().unlock();
+      aiNodeInfoReadWriteLock.writeLock().unlock();
     }
     LOGGER.info(
-        "{}, There are {} ml nodes in cluster after executed RemoveMLNodePlan",
-        REMOVE_MLNODE_PROCESS,
-        registeredMLNodes.size());
+        "{}, There are {} AI nodes in cluster after executed RemoveAINodePlan",
+        REMOVE_AINODE_PROCESS,
+        registeredAINodes.size());
     return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
   }
 
@@ -579,7 +579,7 @@ public class NodeInfo implements SnapshotProcessor {
 
       serializeRegisteredDataNode(fileOutputStream, protocol);
 
-      serializeRegisteredMLNode(fileOutputStream, protocol);
+      serializeRegisteredAINode(fileOutputStream, protocol);
 
       serializeVersionInfo(fileOutputStream);
 
@@ -623,10 +623,10 @@ public class NodeInfo implements SnapshotProcessor {
     }
   }
 
-  private void serializeRegisteredMLNode(OutputStream outputStream, TProtocol protocol)
+  private void serializeRegisteredAINode(OutputStream outputStream, TProtocol protocol)
       throws IOException, TException {
-    ReadWriteIOUtils.write(registeredMLNodes.size(), outputStream);
-    for (Entry<Integer, TMLNodeConfiguration> entry : registeredMLNodes.entrySet()) {
+    ReadWriteIOUtils.write(registeredAINodes.size(), outputStream);
+    for (Entry<Integer, TAINodeConfiguration> entry : registeredAINodes.entrySet()) {
       ReadWriteIOUtils.write(entry.getKey(), outputStream);
       entry.getValue().write(protocol);
     }
@@ -654,7 +654,7 @@ public class NodeInfo implements SnapshotProcessor {
 
     configNodeInfoReadWriteLock.writeLock().lock();
     dataNodeInfoReadWriteLock.writeLock().lock();
-    mlNodeInfoReadWriteLock.writeLock().lock();
+    aiNodeInfoReadWriteLock.writeLock().lock();
     versionInfoReadWriteLock.writeLock().lock();
 
     try (FileInputStream fileInputStream = new FileInputStream(snapshotFile);
@@ -669,13 +669,13 @@ public class NodeInfo implements SnapshotProcessor {
 
       deserializeRegisteredDataNode(fileInputStream, protocol);
 
-      deserializeRegisteredMLNode(fileInputStream, protocol);
+      deserializeRegisteredAINode(fileInputStream, protocol);
 
       deserializeBuildInfo(fileInputStream);
 
     } finally {
       versionInfoReadWriteLock.writeLock().unlock();
-      mlNodeInfoReadWriteLock.writeLock().unlock();
+      aiNodeInfoReadWriteLock.writeLock().unlock();
       dataNodeInfoReadWriteLock.writeLock().unlock();
       configNodeInfoReadWriteLock.writeLock().unlock();
     }
@@ -705,14 +705,14 @@ public class NodeInfo implements SnapshotProcessor {
     }
   }
 
-  private void deserializeRegisteredMLNode(InputStream inputStream, TProtocol protocol)
+  private void deserializeRegisteredAINode(InputStream inputStream, TProtocol protocol)
       throws IOException, TException {
     int size = ReadWriteIOUtils.readInt(inputStream);
     while (size > 0) {
-      int mlNodeId = ReadWriteIOUtils.readInt(inputStream);
-      TMLNodeConfiguration mlNodeInfo = new TMLNodeConfiguration();
-      mlNodeInfo.read(protocol);
-      registeredMLNodes.put(mlNodeId, mlNodeInfo);
+      int aiNodeId = ReadWriteIOUtils.readInt(inputStream);
+      TAINodeConfiguration aiNodeInfo = new TAINodeConfiguration();
+      aiNodeInfo.read(protocol);
+      registeredAINodes.put(aiNodeId, aiNodeInfo);
       size--;
     }
   }

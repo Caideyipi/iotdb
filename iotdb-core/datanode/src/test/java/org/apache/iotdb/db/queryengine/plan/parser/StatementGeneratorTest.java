@@ -423,7 +423,7 @@ public class StatementGeneratorTest {
     TDeleteModelMetricsReq req = new TDeleteModelMetricsReq("model");
     DeleteTimeSeriesStatement statement = StatementGenerator.createStatement(req);
     assertEquals(
-        Collections.singletonList(new PartialPath("root.__system.ml.exp.model.**")),
+        Collections.singletonList(new PartialPath("root.__system.AI.exp.model.**")),
         statement.getPaths());
   }
 
