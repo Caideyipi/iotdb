@@ -320,7 +320,7 @@ public class NodeManager {
     LOGGER.info(
         "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
         license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
-        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getTotalCpuCoreCount());
+        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
 
     return resp;
   }
@@ -350,7 +350,7 @@ public class NodeManager {
       return resp;
     }
     // check DataNode's cpu core num limit
-    int clusterCpuCores = nodeInfo.getTotalCpuCoreCount();
+    int clusterCpuCores = nodeInfo.getDataNodeTotalCpuCoreCount();
     int newNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
     int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
     if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
