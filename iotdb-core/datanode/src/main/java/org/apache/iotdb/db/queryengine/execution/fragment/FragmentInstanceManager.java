@@ -158,7 +158,7 @@ public class FragmentInstanceManager {
                                 stateMachine,
                                 instance.getSessionInfo(),
                                 dataRegion,
-                                instance.getTimeFilter(),
+                                instance.getGlobalTimePredicate(),
                                 dataNodeQueryContextMap));
 
                 try {
