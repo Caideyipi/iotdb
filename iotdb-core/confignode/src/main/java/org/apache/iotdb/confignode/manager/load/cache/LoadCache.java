@@ -43,7 +43,7 @@ import org.apache.iotdb.confignode.manager.load.cache.route.RegionRouteCache;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
-import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatResp;
 import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.slf4j.Logger;
@@ -154,7 +154,7 @@ public class LoadCache {
    * @param nodeId the id of the DataNode
    * @param resp the latest heartbeat response
    */
-  public void cacheDataNodeHeartbeatSample(int nodeId, THeartbeatResp resp) {
+  public void cacheDataNodeHeartbeatSample(int nodeId, TDataNodeHeartbeatResp resp) {
     long receiveTime = System.currentTimeMillis();
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new DataNodeHeartbeatCache(nodeId))

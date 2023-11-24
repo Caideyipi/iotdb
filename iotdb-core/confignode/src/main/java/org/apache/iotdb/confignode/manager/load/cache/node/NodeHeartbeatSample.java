@@ -24,7 +24,7 @@ import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
-import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatResp;
 
 public class NodeHeartbeatSample {
 
@@ -49,7 +49,7 @@ public class NodeHeartbeatSample {
   }
 
   /** Constructor for DataNode sample. */
-  public NodeHeartbeatSample(THeartbeatResp heartbeatResp, long receiveTimestamp) {
+  public NodeHeartbeatSample(TDataNodeHeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
     this.receiveTimestamp = receiveTimestamp;
     if (heartbeatResp.getActivateStatus() == null) {
@@ -81,7 +81,7 @@ public class NodeHeartbeatSample {
   public NodeHeartbeatSample(TAIHeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
     this.receiveTimestamp = receiveTimestamp;
-    this.activateStatus = ActivateStatus.UNKNOWN; // TODO: ainode激活
+    this.activateStatus = ActivateStatus.UNKNOWN;
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
 
@@ -129,7 +129,7 @@ public class NodeHeartbeatSample {
   public static NodeHeartbeatSample generateDefaultSample(NodeStatus status) {
     long currentTime = System.currentTimeMillis();
     return new NodeHeartbeatSample(
-        new THeartbeatResp(currentTime, status.getStatus())
+        new TDataNodeHeartbeatResp(currentTime, status.getStatus())
             .setStatusReason(null)
             .setActivateStatus(ActivateStatus.UNKNOWN.toString()),
         currentTime);

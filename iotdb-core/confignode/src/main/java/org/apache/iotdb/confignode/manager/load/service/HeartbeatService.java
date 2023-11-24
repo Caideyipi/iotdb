@@ -42,7 +42,7 @@ import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCa
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeActivation;
-import org.apache.iotdb.mpp.rpc.thrift.THeartbeatReq;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatReq;
 import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.slf4j.Logger;
@@ -127,9 +127,9 @@ public class HeartbeatService {
             });
   }
 
-  private THeartbeatReq genHeartbeatReq() {
+  private TDataNodeHeartbeatReq genHeartbeatReq() {
     /* Generate heartbeat request */
-    THeartbeatReq heartbeatReq = new THeartbeatReq();
+    TDataNodeHeartbeatReq heartbeatReq = new TDataNodeHeartbeatReq();
     heartbeatReq.setHeartbeatTimestamp(System.currentTimeMillis());
     // Always sample RegionGroups' leadership as the Region heartbeat
     heartbeatReq.setNeedJudgeLeader(true);
@@ -210,7 +210,7 @@ public class HeartbeatService {
    * @param registeredDataNodes DataNodes that registered in cluster
    */
   private void pingRegisteredDataNodes(
-      THeartbeatReq heartbeatReq, List<TDataNodeConfiguration> registeredDataNodes) {
+      TDataNodeHeartbeatReq heartbeatReq, List<TDataNodeConfiguration> registeredDataNodes) {
     // Send heartbeat requests
     for (TDataNodeConfiguration dataNodeInfo : registeredDataNodes) {
       DataNodeHeartbeatHandler handler =

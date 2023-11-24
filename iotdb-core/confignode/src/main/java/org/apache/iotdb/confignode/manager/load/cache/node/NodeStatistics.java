@@ -21,7 +21,7 @@ package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.license.ActivateStatus;
-import org.apache.iotdb.mpp.rpc.thrift.THeartbeatResp;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatResp;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.IOException;
@@ -115,7 +115,7 @@ public class NodeStatistics {
   public NodeHeartbeatSample convertToNodeHeartbeatSample() {
     long currentTime = System.currentTimeMillis();
     return new NodeHeartbeatSample(
-        new THeartbeatResp(currentTime, status.getStatus())
+        new TDataNodeHeartbeatResp(currentTime, status.getStatus())
             .setStatusReason(statusReason)
             .setActivateStatus(ActivateStatus.UNKNOWN.toString()),
         currentTime);
