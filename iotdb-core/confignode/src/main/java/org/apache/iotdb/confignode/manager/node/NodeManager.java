@@ -662,6 +662,15 @@ public class NodeManager {
   /**
    * Only leader use this interface.
    *
+   * @return The number of registered Nodes
+   */
+  public int getRegisteredNodeCount() {
+    return nodeInfo.getRegisteredNodeCount();
+  }
+
+  /**
+   * Only leader use this interface.
+   *
    * @return The number of registered DataNodes
    */
   public int getRegisteredDataNodeCount() {
