@@ -24,12 +24,15 @@ import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.activation.License;
+import org.apache.iotdb.confignode.manager.load.cache.node.ActivationStatusCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
-import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.consensus.ConsensusFactory;
+import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.ClusterConstant;
+import org.apache.iotdb.it.env.cluster.node.ConfigNodeWrapper;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
@@ -74,6 +77,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_ACTIVATED;
@@ -158,10 +162,12 @@ public class IoTDBActivationIT {
 
       // delete license file
       leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
-      testGoIntoUnactivated(leaderClient, 1, 1);
+      testPassiveUnactivated(leaderClient, 1, 1);
     } catch (AssertionError | Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -179,6 +185,7 @@ public class IoTDBActivationIT {
       testStatusWithRetry(
           leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED));
 
+      // register a datanode
       EnvFactory.getEnv().registerNewDataNode(true);
       testStatusWithRetry(
           leaderClient,
@@ -186,23 +193,14 @@ public class IoTDBActivationIT {
 
       // deactivate leader
       leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
-      testGoIntoUnactivated(leaderClient, 3, 1);
+      testPassiveUnactivated(leaderClient, 3, 1);
 
-      // activate follower
-      int leaderIndex = EnvFactory.getEnv().getLeaderConfigNodeIndex();
-      int followerIndex = -1;
-      for (int configNodeId = 0;
-          configNodeId < EnvFactory.getEnv().getConfigNodeWrapperList().size();
-          configNodeId++) {
-        if (configNodeId != leaderIndex) {
-          followerIndex = configNodeId;
-          break;
-        }
-      }
-      Assert.assertNotEquals(-1, followerIndex);
+      // activate a follower
       SyncConfigNodeIServiceClient followerClient =
-          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(followerIndex);
+          (SyncConfigNodeIServiceClient)
+              EnvFactory.getEnv().getConfigNodeConnection(getAnyFollowerIndex());
       followerClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      waitToMakeSureLicenseHasBeenReloaded();
       testStatusWithRetry(
           leaderClient,
           Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
@@ -211,6 +209,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -229,6 +229,7 @@ public class IoTDBActivationIT {
         client.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
         client.close();
       }
+      waitToMakeSureLicenseHasBeenReloaded();
       EnvFactory.getEnv().registerNewDataNode(true);
       testStatusWithRetry(
           leaderClient,
@@ -256,10 +257,12 @@ public class IoTDBActivationIT {
       testStatusWithRetry(
           leaderClient,
           Arrays.asList(PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
-      testGoIntoUnactivated(leaderClient, 3, 1);
+      testPassiveUnactivated(leaderClient, 3, 1);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Ignore // This test has been covered by licenseModifyParallelTest
@@ -336,7 +339,7 @@ public class IoTDBActivationIT {
             client.close();
           }
           logger.info("deactivate all configNodes");
-          testGoIntoUnactivated(leaderClient, 5, 0);
+          testPassiveUnactivated(leaderClient, 5, 0);
           statusCountMap = new HashMap<>(initStatusCountMap);
         }
         if (i % 10 == 0) {
@@ -346,6 +349,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -367,14 +372,14 @@ public class IoTDBActivationIT {
       SyncConfigNodeIServiceClient client1 =
           (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(1);
 
+      // activate both two cn
       client0.setLicenseFile(LICENSE_FILE_NAME, license0);
       client1.setLicenseFile(LICENSE_FILE_NAME, license0);
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
 
+      // update license of one of them
       client0.setLicenseFile(LICENSE_FILE_NAME, license1); // expect cn1 -> PASSIVE
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED));
-      //      Assert.assertTrue(client0.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
-      //      Assert.assertTrue(client1.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
 
       client1.setLicenseFile(LICENSE_FILE_NAME, license0);
       testStatusFalse(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
@@ -382,16 +387,15 @@ public class IoTDBActivationIT {
       client1.setLicenseFile(LICENSE_FILE_NAME, license2); // expect cn0 -> PASSIVE, cn1 -> ACTIVE
       waitToMakeSureLicenseHasBeenReloaded();
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED));
-      //      Assert.assertNull(client0.getLicenseFile(LICENSE_FILE_NAME).message);
-      //      Assert.assertTrue(client1.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
 
       client0.setLicenseFile(LICENSE_FILE_NAME, license2); // expect cn0 -> ACTIVE
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
-      //      Assert.assertTrue(client0.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
-      //      Assert.assertTrue(client1.getLicenseFile(LICENSE_FILE_NAME).message.length() > 0);
+
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -506,7 +510,7 @@ public class IoTDBActivationIT {
           runInParallel(setRandomly);
           waitToMakeSureLicenseHasBeenReloaded();
           if (activeActivatedNum == 0) {
-            testGoIntoUnactivated(leaderClient, configNodeNum, 0);
+            testPassiveUnactivated(leaderClient, configNodeNum, 0);
           } else {
             List<ActivateStatus> expectation = new ArrayList<>();
             for (int j = 0; j < activeActivatedNum; j++) {
@@ -523,6 +527,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -560,6 +566,111 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
+  }
+
+  @Test
+  public void activeFollowerDisconnectionTest() {
+    EnvFactory.getEnv().initClusterEnvironment(3, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      final int followerIndex = getAnyFollowerIndex();
+      final SyncConfigNodeIServiceClient followerClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(followerIndex);
+      final ConfigNodeWrapper followerWrapper =
+          EnvFactory.getEnv().getConfigNodeWrapper(followerIndex);
+
+      /* ******** test active follower disconnection ******** */
+
+      // activate a follower
+      followerClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(
+          leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED));
+
+      // stop this follower
+      followerWrapper.stop();
+      Thread.sleep(ActivationStatusCache.EXPIRE_TIMEOUT);
+      //      testStatusWithRetry(
+      //          leaderClient, Arrays.asList(PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, UNKNOWN));
+      //      Thread.sleep(10000);
+      testStatusWithRetry(
+          leaderClient, Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNKNOWN));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    allCheckPass();
+  }
+
+  @Test
+  public void activeLeaderDisconnectionTest() {
+    EnvFactory.getEnv().initClusterEnvironment(5, 0);
+    try {
+      final int leaderIndex = EnvFactory.getEnv().getLeaderConfigNodeIndex();
+      SyncConfigNodeIServiceClient leaderClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection();
+      ConfigNodeWrapper leaderWrapper = EnvFactory.getEnv().getConfigNodeWrapper(leaderIndex);
+
+      /* ******** test active leader disconnection ******** */
+
+      // activate the leader
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(
+              ACTIVE_ACTIVATED,
+              PASSIVE_ACTIVATED,
+              PASSIVE_ACTIVATED,
+              PASSIVE_ACTIVATED,
+              PASSIVE_ACTIVATED));
+
+      // stop the leader
+      final int oldLeaderIndex = EnvFactory.getEnv().getLeaderConfigNodeIndex();
+      leaderWrapper.stop();
+      Thread.sleep(10000);
+      leaderClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection();
+      leaderWrapper =
+          EnvFactory.getEnv().getConfigNodeWrapper(EnvFactory.getEnv().getLeaderConfigNodeIndex());
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(
+              PASSIVE_UNACTIVATED,
+              PASSIVE_UNACTIVATED,
+              PASSIVE_UNACTIVATED,
+              PASSIVE_UNACTIVATED,
+              UNKNOWN));
+
+      // activate a follower
+      int followerIndex = 0;
+      while (followerIndex == oldLeaderIndex
+          || followerIndex == EnvFactory.getEnv().getLeaderConfigNodeIndex()) {
+        followerIndex++;
+        followerIndex %= 5;
+      }
+      SyncConfigNodeIServiceClient followerClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getConfigNodeConnection(followerIndex);
+      followerClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(
+              ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, UNKNOWN));
+
+      // stop the new leader (which is passive activated)
+      leaderWrapper.stop();
+      Thread.sleep(10000);
+      leaderClient =
+          (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection();
+      testStatusWithRetry(
+          leaderClient,
+          Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, UNKNOWN, UNKNOWN));
+
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    allCheckPass();
   }
 
   // endregion
@@ -588,7 +699,7 @@ public class IoTDBActivationIT {
 
       // 2. set license, then first datanode start success
       leaderClient.deleteLicenseFile(LICENSE_FILE_NAME);
-      testGoIntoUnactivated(leaderClient, 1, 0);
+      testPassiveUnactivated(leaderClient, 1, 0);
       leaderClient.setLicenseFile(LICENSE_FILE_NAME, nodeNumLimit1License);
       testStatusWithRetry(leaderClient, Collections.singletonList(ACTIVE_ACTIVATED));
       dataNodeWrappers.get(0).start();
@@ -605,6 +716,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -629,6 +742,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -675,6 +790,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   // endregion
@@ -696,9 +813,16 @@ public class IoTDBActivationIT {
       ResultSet resultSet = statement.executeQuery("show cluster");
       while (resultSet.next()) {
         // must contain "ActivateStatus" column, and this column must contain valid value
-        ActivateStatus.valueOf(resultSet.getString("ActivateStatus"));
+        ActivateStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
+      }
+      resultSet = statement.executeQuery("show cluster details");
+      while (resultSet.next()) {
+        // must contain "ActivateStatus" column, and this column must contain valid value
+        ActivateStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
       }
     }
+
+    allCheckPass();
   }
 
   @Test
@@ -721,11 +845,11 @@ public class IoTDBActivationIT {
       Connection connection = EnvFactory.getEnv().getConnection();
 
       // old DataNode can restart
-      testGoIntoUnactivated(leaderClient, 2, 1);
+      testPassiveUnactivated(leaderClient, 2, 1);
       EnvFactory.getEnv().getDataNodeWrapper(0).stop();
       testStatusWithRetry(
           leaderClient,
-          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNKNOWN),
+          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED),
           BaseNodeCache.HEARTBEAT_TIMEOUT_TIME + TimeUnit.SECONDS.toMillis(2));
       EnvFactory.getEnv().getDataNodeWrapper(0).start();
       testPassiveUnactivated(leaderClient, 2, 1);
@@ -737,7 +861,7 @@ public class IoTDBActivationIT {
           Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNACTIVATED, UNACTIVATED),
           "New DataNode started success, which should not happen");
 
-      // not allow manually set system status to running
+      // not allow manually set system status to Running
       Statement statement = connection.createStatement();
       boolean pass = false;
       try {
@@ -750,6 +874,8 @@ public class IoTDBActivationIT {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    allCheckPass();
   }
 
   // endregion
@@ -764,11 +890,11 @@ public class IoTDBActivationIT {
     }
   }
 
-  private String mapToString(Map<Integer, TNodeActivateInfo> map) {
+  private <K, V> String mapToString(Map<K, V> map) {
     StringBuilder builder = new StringBuilder();
     builder.append("{");
-    for (Map.Entry<Integer, TNodeActivateInfo> entry : map.entrySet()) {
-      builder.append(entry.getKey()).append(":").append(entry.getValue().getStatus()).append(", ");
+    for (Map.Entry<K, V> entry : map.entrySet()) {
+      builder.append(entry.getKey()).append(":").append(entry.getValue().toString()).append(", ");
     }
     builder.append("}");
     return builder.toString();
@@ -818,9 +944,9 @@ public class IoTDBActivationIT {
       throws Exception {
     long startTime = System.currentTimeMillis();
     while (true) {
-      TShowClusterResp resp = null;
+      TGetAllActivationStatusResp resp = null;
       try {
-        resp = leaderClient.showCluster();
+        resp = leaderClient.getAllActivationStatus();
       } catch (TException ignored) {
 
       }
@@ -828,18 +954,19 @@ public class IoTDBActivationIT {
           && TSStatusCode.SUCCESS_STATUS.getStatusCode() == resp.status.getCode()
           && compareLists(
               expectation,
-              resp.getNodeActivateInfo().values().stream()
-                  .map(activateInfo -> ActivateStatus.valueOf(activateInfo.getStatus()))
+              resp.getActivationStatusMap().values().stream()
+                  .map(ActivateStatus::valueOf)
                   .collect(Collectors.toList()))) {
         String errMsg =
             "Test fail because cluster goes into the undesirable state: "
-                + mapToString(resp.nodeActivateInfo)
+                + mapToString(resp.getActivationStatusMap())
                 + ".\n"
                 + failMessage;
         logger.error(errMsg);
         throw new Exception(errMsg);
       }
       if (System.currentTimeMillis() - startTime > 5000) {
+        logger.info("check pass");
         return;
       }
       try {
@@ -856,9 +983,9 @@ public class IoTDBActivationIT {
     logger.info("expect {}", listToString(expectation));
     long startTime = System.currentTimeMillis();
     while (true) {
-      TShowClusterResp resp = null;
+      TGetAllActivationStatusResp resp = null;
       try {
-        resp = client.showCluster();
+        resp = client.getAllActivationStatus();
       } catch (TException ignored) {
 
       }
@@ -866,9 +993,10 @@ public class IoTDBActivationIT {
           && TSStatusCode.SUCCESS_STATUS.getStatusCode() == resp.status.getCode()
           && compareLists(
               expectation,
-              resp.getNodeActivateInfo().values().stream()
-                  .map(activateInfo -> ActivateStatus.valueOf(activateInfo.getStatus()))
+              resp.getActivationStatusMap().values().stream()
+                  .map(ActivateStatus::valueOf)
                   .collect(Collectors.toList()))) {
+        logger.info("check pass");
         break;
       }
       if (System.currentTimeMillis() - startTime > timeLimit) {
@@ -882,7 +1010,7 @@ public class IoTDBActivationIT {
             .append("\n");
 
         if (resp != null) {
-          errBuilder.append("Actual state is ").append(mapToString(resp.nodeActivateInfo));
+          errBuilder.append("Actual state is ").append(mapToString(resp.getActivationStatusMap()));
         } else {
           errBuilder.append("Actual state is unknown, because last resp is null");
         }
@@ -1018,6 +1146,18 @@ public class IoTDBActivationIT {
       result.add(numbers[i]);
     }
     return result;
+  }
+
+  private static int getAnyFollowerIndex() throws IOException, InterruptedException {
+    final int leaderIndex = EnvFactory.getEnv().getLeaderConfigNodeIndex();
+    return IntStream.range(0, EnvFactory.getEnv().getConfigNodeWrapperList().size())
+        .filter(x -> x != leaderIndex)
+        .findAny()
+        .getAsInt();
+  }
+
+  private static void allCheckPass() {
+    logger.info("all check pass");
   }
 
   // endregion

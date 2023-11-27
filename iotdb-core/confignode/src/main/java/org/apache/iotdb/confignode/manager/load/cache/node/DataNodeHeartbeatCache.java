@@ -72,8 +72,7 @@ public class DataNodeHeartbeatCache extends BaseNodeCache {
     // TODO: Construct load score module
     long loadScore = NodeStatus.isNormalStatus(status) ? 0 : Long.MAX_VALUE;
 
-    NodeStatistics newStatistics =
-        new NodeStatistics(loadScore, activateStatus, status, statusReason);
+    NodeStatistics newStatistics = new NodeStatistics(loadScore, status, statusReason);
     if (!currentStatistics.get().equals(newStatistics)) {
       // Update the current NodeStatistics if necessary
       currentStatistics.set(newStatistics);

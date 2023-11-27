@@ -35,11 +35,14 @@ import org.apache.iotdb.confignode.client.async.handlers.heartbeat.ConfigNodeHea
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.DataNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.IManager;
+import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.activation.License;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
+import org.apache.iotdb.confignode.manager.load.LoadManager;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
+import org.apache.iotdb.confignode.rpc.thrift.TActivationControl;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeActivation;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatReq;
@@ -164,10 +167,25 @@ public class HeartbeatService {
   private TConfigNodeHeartbeatReq genConfigNodeHeartbeatReq() {
     TConfigNodeHeartbeatReq req = new TConfigNodeHeartbeatReq();
     req.setTimestamp(System.currentTimeMillis());
-    License license = configManager.getActivationManager().getLicense();
-    if (configManager.getActivationManager().activeNodeExistForLeader()) {
-      req.setLicence(license.toTLicense());
+    ActivationManager activationManager = configManager.getActivationManager();
+    License license = activationManager.getLicense();
+    LoadManager loadManager = configManager.getLoadManager();
+    loadManager.updateActivationStatusCache();
+    if (loadManager.someConfigNodeNotSentHeartbeatYet()) {
+      if (configManager.getActivationManager().activeNodeExistForLeader()) {
+        req.setLicence(license.toTLicense());
+      }
+    } else {
+      if (activationManager.isActive() || loadManager.activeNodeLive()) {
+        req.setLicence(license.toTLicense());
+      } else if (loadManager.activeNodeDisconnect()) {
+        // do nothing
+      } else {
+        req.setActivationControl(TActivationControl.ALL_LICENSE_FILE_DELETED);
+        activationManager.giveUpLicenseBecauseLeaderBelieveThereIsNoActiveNodeInCluster();
+      }
     }
+
     return req;
   }
 

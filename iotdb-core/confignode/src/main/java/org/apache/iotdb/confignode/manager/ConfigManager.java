@@ -534,10 +534,11 @@ public class ConfigManager implements IManager {
               nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
 
       // prepare nodeActivateInfo
-      Map<Integer, TNodeActivateInfo> nodeActivateInfo = getLoadManager().getNodeActivateStatus();
+      Map<Integer, TNodeActivateInfo> nodeActivateInfo =
+          getLoadManager().getNodeSimplifiedActivateStatus();
       nodeActivateInfo.put(
           CONF.getConfigNodeId(),
-          new TNodeActivateInfo(activationManager.getActivateStatus().toString()));
+          new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
       configNodeLocations.forEach(
           configNodeLocation ->
               nodeActivateInfo.putIfAbsent(
@@ -548,6 +549,11 @@ public class ConfigManager implements IManager {
               nodeActivateInfo.putIfAbsent(
                   dataNodeInfoLocation.getDataNodeId(),
                   new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+      aiNodeInfoLocations.forEach(
+          aiNodeInfoLocation ->
+              nodeActivateInfo.put(
+                  aiNodeInfoLocation.getAiNodeId(),
+                  new TNodeActivateInfo(ActivateStatus.ACTIVATED.toSimpleString())));
 
       return new TShowClusterResp(
           status,

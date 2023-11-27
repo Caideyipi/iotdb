@@ -35,8 +35,6 @@ public class NodeStatistics {
   // For guiding queries, the higher the score the higher the load
   private long loadScore;
 
-  private ActivateStatus activateStatus = ActivateStatus.UNKNOWN;
-
   // The current status of the Node
   private NodeStatus status;
   // The reason why lead to the current NodeStatus (for showing cluster)
@@ -47,20 +45,14 @@ public class NodeStatistics {
     // Empty constructor
   }
 
-  public NodeStatistics(
-      long loadScore, ActivateStatus activateStatus, NodeStatus status, String statusReason) {
+  public NodeStatistics(long loadScore, NodeStatus status, String statusReason) {
     this.loadScore = loadScore;
-    this.activateStatus = activateStatus;
     this.status = status;
     this.statusReason = statusReason;
   }
 
   public long getLoadScore() {
     return loadScore;
-  }
-
-  public ActivateStatus getActivateStatus() {
-    return activateStatus;
   }
 
   public NodeStatus getStatus() {
@@ -105,11 +97,11 @@ public class NodeStatistics {
   }
 
   public static NodeStatistics generateDefaultNodeStatistics() {
-    return new NodeStatistics(Long.MAX_VALUE, ActivateStatus.UNKNOWN, NodeStatus.Unknown, null);
+    return new NodeStatistics(Long.MAX_VALUE, NodeStatus.Unknown, null);
   }
 
   public NodeStatistics deepCopy() {
-    return new NodeStatistics(loadScore, activateStatus, status, statusReason);
+    return new NodeStatistics(loadScore, status, statusReason);
   }
 
   public NodeHeartbeatSample convertToNodeHeartbeatSample() {
@@ -131,7 +123,6 @@ public class NodeStatistics {
     }
     NodeStatistics that = (NodeStatistics) o;
     return loadScore == that.loadScore
-        && activateStatus == that.activateStatus
         && status == that.status
         && Objects.equals(statusReason, that.statusReason);
   }
@@ -146,8 +137,6 @@ public class NodeStatistics {
     return "NodeStatistics{"
         + "loadScore="
         + loadScore
-        + ", activateStatus="
-        + activateStatus
         + ", status="
         + status
         + ", statusReason='"

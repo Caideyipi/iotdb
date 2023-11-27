@@ -20,7 +20,6 @@
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.commons.cluster.NodeStatus;
-import org.apache.iotdb.commons.license.ActivateStatus;
 
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -138,10 +137,6 @@ public abstract class BaseNodeCache {
     return statistics.getStatusReason() == null
         ? statistics.getStatus().getStatus()
         : statistics.getStatus().getStatus() + "(" + statistics.getStatusReason() + ")";
-  }
-
-  public ActivateStatus getNodeActivateStatus() {
-    return currentStatistics.get().getActivateStatus();
   }
 
   public NodeStatistics getStatistics() {

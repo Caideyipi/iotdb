@@ -17,23 +17,27 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation.SystemInfo;
+package org.apache.iotdb.confignode.manager.activation.systeminfo;
 
 import org.slf4j.Logger;
 
 import java.io.IOException;
 
 public abstract class SystemInfoGetter implements ISystemInfoGetter {
-  abstract String getCPUIdImpl() throws IOException;
 
   abstract Logger getLogger();
+
+  private static final String GET_SYSTEM_INFO_FAIL = "Get system info fail.";
+
+  abstract String getCPUIdImpl() throws IOException;
 
   public String getCPUId() {
     try {
       return getCPUIdImpl();
     } catch (Exception e) {
-      getLogger().warn("Get cpu id fail: ", e);
-      return "";
+      //      getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      //      return "";
+      throw new RuntimeException();
     }
   }
 
@@ -43,8 +47,9 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getMainBoardIdImpl();
     } catch (Exception e) {
-      getLogger().warn("Get main board id fail", e);
-      return "";
+      //      getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      //      return "";
+      throw new RuntimeException(e);
     }
   }
 
@@ -54,8 +59,9 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getSystemUUIDImpl();
     } catch (Exception e) {
-      getLogger().warn("Get system UUID fail", e);
-      return "";
+      //      getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      //      return "";
+      throw new RuntimeException(e);
     }
   }
 }

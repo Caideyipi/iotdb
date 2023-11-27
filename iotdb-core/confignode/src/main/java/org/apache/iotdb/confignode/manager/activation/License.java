@@ -26,7 +26,6 @@ import org.apache.iotdb.commons.license.ActivateStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -70,12 +69,15 @@ public class License {
   protected enum LicenseSource {
     FROM_FILE,
     FROM_REMOTE,
-    UNKNOWN
+    UNKNOWN,
+    NO_LICENSE
   }
 
   protected LicenseSource licenseSource = LicenseSource.UNKNOWN;
 
   private final Runnable onLicenseChange;
+
+  private ActivateStatus oldActivateStatus = ActivateStatus.UNKNOWN;
 
   // endregion
 
@@ -119,7 +121,10 @@ public class License {
 
   // endregion
 
-  public void reset() {
+  public boolean reset() {
+    if (licenseSource.equals(LicenseSource.NO_LICENSE)) {
+      return false;
+    }
     // activate info
     licenseIssueTimestamp = 0;
     licenseExpireTimestamp = 0;
@@ -130,12 +135,15 @@ public class License {
     disconnectionFromActiveNodeTimeLimit = 0;
     aiNodeNumLimit = 0;
     // other
-    licenseSource = LicenseSource.UNKNOWN;
+    licenseSource = LicenseSource.NO_LICENSE;
+    // done
+    logActivateStatus(true);
+    return true;
   }
 
   // region load method
 
-  public void loadFromProperties(Properties properties) {
+  public void loadFromProperties(Properties properties) throws LicenseException {
     // try load properties
     License newLicense = new License(null);
     // activate info
@@ -155,22 +163,18 @@ public class License {
       return;
     }
 
-    ActivateStatus oldActivateStatus = this.getActivateStatus();
-
     // compare and copy
     this.logLicenseDifferences(newLicense);
     this.copyFrom(newLicense);
     this.licenseSource = LicenseSource.FROM_FILE;
 
     // if activate status change, log
-    if (oldActivateStatus != this.getActivateStatus()) {
-      showActivateStatusChange(oldActivateStatus);
-    }
+    logActivateStatus(false);
 
     this.onLicenseChange.run();
   }
 
-  public void loadFromTLicense(TLicense license) {
+  public void loadFromTLicense(TLicense license) throws LicenseException {
     License newLicense = new License(null);
     newLicense.licenseIssueTimestamp = license.licenseIssueTimestamp;
     newLicense.licenseExpireTimestamp = license.getExpireTimestamp();
@@ -182,17 +186,13 @@ public class License {
         license.getDisconnectionFromActiveNodeTimeLimit();
     newLicense.aiNodeNumLimit = license.getAiNodeNumLimit();
 
-    ActivateStatus oldActivateStatus = this.getActivateStatus();
-
     // compare and copy
     this.logLicenseDifferences(newLicense);
     this.copyFrom(newLicense);
     this.licenseSource = LicenseSource.FROM_REMOTE;
 
     // if activate status change, log
-    if (oldActivateStatus != this.getActivateStatus()) {
-      showActivateStatusChange(oldActivateStatus);
-    }
+    logActivateStatus(false);
 
     this.onLicenseChange.run();
   }
@@ -213,27 +213,34 @@ public class License {
     }
   }
 
-  private void showActivateStatusChange(ActivateStatus oldActivateStatus) {
-    logger.info(
-        "ConfigNode activate status change: {} -> {}", oldActivateStatus, this.getActivateStatus());
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    long nowTimestamp = System.currentTimeMillis();
-    String expireTimeString = dateFormat.format(licenseExpireTimestamp);
-    String nowTimeString = dateFormat.format(nowTimestamp);
-    logger.info(
-        "<expireTime {}> {} <now {}>",
-        expireTimeString,
-        licenseExpireTimestamp > nowTimestamp ? ">" : " is earlier than ",
-        nowTimeString);
+  void logActivateStatus(boolean onlyForStatusChange) {
+    ActivateStatus nowActivateStatus = getActivateStatus();
+    if (onlyForStatusChange) {
+      if (!nowActivateStatus.equals(oldActivateStatus)) {
+        logger.info(
+            "ConfigNode's activation status change: {} -> {}",
+            oldActivateStatus,
+            nowActivateStatus);
+      }
+    } else {
+      logger.info(
+          "ConfigNode's activation status is {}; Previous status is {}",
+          nowActivateStatus,
+          oldActivateStatus);
+    }
+    oldActivateStatus = nowActivateStatus;
   }
 
-  private void logFieldDifference(String name, Object mine, Object another) {
+  private void logFieldDifference(String name, Object mine, Object another)
+      throws LicenseException {
     if (!Objects.equals(mine, another)) {
-      logger.info("{}: {} -> {}", name, mine, another);
+      String rawContent = String.format("%s: %s -> %s", name, mine, another);
+      String encryptedContent = RSA.publicEncrypt(rawContent);
+      logger.info(encryptedContent);
     }
   }
 
-  private void logLicenseDifferences(License anotherLicense) {
+  private void logLicenseDifferences(License anotherLicense) throws LicenseException {
     logFieldDifference(
         "licenseIssueTimestamp", this.licenseIssueTimestamp, anotherLicense.licenseIssueTimestamp);
     logFieldDifference(

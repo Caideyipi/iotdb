@@ -20,7 +20,7 @@ package com.timecho.iotdb.isession.pool;
 
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
-import org.apache.iotdb.service.rpc.thrift.TLicenseInfoResp;
+import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
 import java.util.Set;
@@ -31,7 +31,7 @@ public interface ISessionPool extends org.apache.iotdb.isession.pool.ISessionPoo
   void updateWhiteList(Set<String> ipSet)
       throws IoTDBConnectionException, StatementExecutionException;
 
-  TLicenseInfoResp getLicenseInfo() throws IoTDBConnectionException, StatementExecutionException;
+  LicenseInfoResp getLicenseInfo() throws IoTDBConnectionException, StatementExecutionException;
 
   /**
    * Queries the total number of points of a specified database. If the dataset parameter is empty

@@ -20,7 +20,6 @@
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.commons.cluster.NodeStatus;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +31,7 @@ public class ConfigNodeHeartbeatCache extends BaseNodeCache {
       ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId();
 
   public static final NodeStatistics CURRENT_NODE_STATISTICS =
-      new NodeStatistics(0, ActivateStatus.UNKNOWN, NodeStatus.Running, null);
+      new NodeStatistics(0, NodeStatus.Running, null);
 
   /** Constructor for create ConfigNodeHeartbeatCache with default NodeStatistics. */
   public ConfigNodeHeartbeatCache(int configNodeId) {
@@ -63,13 +62,11 @@ public class ConfigNodeHeartbeatCache extends BaseNodeCache {
 
     // Update Node status
     NodeStatus status = null;
-    ActivateStatus activateStatus = ActivateStatus.UNKNOWN;
     // TODO: Optimize judge logic
     if (System.currentTimeMillis() - lastSendTime > HEARTBEAT_TIMEOUT_TIME) {
       status = NodeStatus.Unknown;
     } else if (lastSample != null) {
       status = lastSample.getStatus();
-      activateStatus = lastSample.getActivateStatus();
     }
 
     /* Update loadScore */
@@ -77,7 +74,7 @@ public class ConfigNodeHeartbeatCache extends BaseNodeCache {
     // TODO: Construct load score module
     long loadScore = NodeStatus.isNormalStatus(status) ? 0 : Long.MAX_VALUE;
 
-    NodeStatistics newStatistics = new NodeStatistics(loadScore, activateStatus, status, null);
+    NodeStatistics newStatistics = new NodeStatistics(loadScore, status, null);
     if (!currentStatistics.get().equals(newStatistics)) {
       // Update the current NodeStatistics if necessary
       currentStatistics.set(newStatistics);

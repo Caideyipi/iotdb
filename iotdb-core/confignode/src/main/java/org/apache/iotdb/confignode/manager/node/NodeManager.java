@@ -348,6 +348,14 @@ public class NodeManager {
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
+    } else {
+      String message =
+          String.format(
+              "DataNode register node num check pass. "
+                  + "After the successful register of this datanode, "
+                  + "the remaining quota for node num will be set to %d.",
+              license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
+      LOGGER.info(message);
     }
     // check DataNode's cpu core num limit
     int clusterCpuCores = nodeInfo.getDataNodeTotalCpuCoreCount();
@@ -356,11 +364,22 @@ public class NodeManager {
     if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
       String message =
           String.format(
-              "Deny DataNode registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
+              "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
               clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
+    } else {
+      String message =
+          String.format(
+              "DataNode register cpu core num check pass. "
+                  + "After the successful register of this datanode, "
+                  + "the remaining quota for cpu cores will be set to z. (%d - %d - %d = %d)",
+              cpuCoreLimit,
+              clusterCpuCores,
+              newNodeCpuCores,
+              cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
+      LOGGER.info(message);
     }
     resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     return resp;
@@ -368,6 +387,10 @@ public class NodeManager {
 
   public TDataNodeRestartResp updateDataNodeIfNecessary(TDataNodeRestartReq req) {
     int nodeId = req.getDataNodeConfiguration().getLocation().getDataNodeId();
+    TDataNodeRestartResp checkResp = updateDataNodeActivationCheck(req);
+    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != checkResp.status.getCode()) {
+      return checkResp;
+    }
     TDataNodeConfiguration dataNodeConfiguration = getRegisteredDataNode(nodeId);
     if (!req.getDataNodeConfiguration().equals(dataNodeConfiguration)) {
       // Update DataNodeConfiguration when modified during restart
@@ -395,6 +418,48 @@ public class NodeManager {
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_RESTART);
     resp.setConfigNodeList(getRegisteredConfigNodes());
     resp.setRuntimeConfiguration(getRuntimeConfiguration());
+    return resp;
+  }
+
+  private TDataNodeRestartResp updateDataNodeActivationCheck(TDataNodeRestartReq req) {
+    License license = configManager.getActivationManager().getLicense();
+    TDataNodeRestartResp resp = new TDataNodeRestartResp();
+    // check DataNode's cpu core num limit
+    final int previousNodeCpuCores =
+        nodeInfo.getDataNodeCpuCoreCount(
+            req.getDataNodeConfiguration().getLocation().getDataNodeId());
+    final int restartNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
+    if (previousNodeCpuCores <= restartNodeCpuCores) {
+      resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+      return resp;
+    }
+    final int clusterCpuCoresExceptThisNode =
+        nodeInfo.getDataNodeTotalCpuCoreCount() - previousNodeCpuCores;
+    final int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
+    if (clusterCpuCoresExceptThisNode + restartNodeCpuCores > cpuCoreLimit) {
+      String message =
+          String.format(
+              "Deny DataNode's restart: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + restartDataNodeCores = allCores, greater than limit)",
+              clusterCpuCoresExceptThisNode,
+              restartNodeCpuCores,
+              clusterCpuCoresExceptThisNode + restartNodeCpuCores,
+              cpuCoreLimit);
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    } else {
+      String message =
+          String.format(
+              "DataNode restart cpu core num check pass. "
+                  + "After the successful restart of this datanode, "
+                  + "the remaining quota for cpu cores will be set to z (%d - %d - %d = %d)",
+              cpuCoreLimit,
+              clusterCpuCoresExceptThisNode,
+              restartNodeCpuCores,
+              cpuCoreLimit - clusterCpuCoresExceptThisNode - restartNodeCpuCores);
+      LOGGER.info(message);
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     return resp;
   }
 

@@ -357,7 +357,8 @@ public class ColumnHeaderConstant {
           new ColumnHeader(SCHEMA_CONSENSUS_PORT, TSDataType.TEXT),
           new ColumnHeader(DATA_CONSENSUS_PORT, TSDataType.TEXT),
           new ColumnHeader(VERSION, TSDataType.TEXT),
-          new ColumnHeader(BUILD_INFO, TSDataType.TEXT));
+          new ColumnHeader(BUILD_INFO, TSDataType.TEXT),
+          new ColumnHeader(ACTIVATE_STATUS, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showVariablesColumnHeaders =
       ImmutableList.of(

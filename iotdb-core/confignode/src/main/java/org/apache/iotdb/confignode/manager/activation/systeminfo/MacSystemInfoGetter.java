@@ -17,13 +17,34 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation.SystemInfo;
+package org.apache.iotdb.confignode.manager.activation.systeminfo;
 
-public interface ISystemInfoGetter {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-  String getCPUId();
+import static cn.hutool.system.oshi.OshiUtil.getSystem;
 
-  String getMainBoardId();
+public class MacSystemInfoGetter extends SystemInfoGetter {
 
-  String getSystemUUID();
+  private static final Logger logger = LoggerFactory.getLogger(MacSystemInfoGetter.class);
+
+  @Override
+  Logger getLogger() {
+    return logger;
+  }
+
+  @Override
+  String getCPUIdImpl() {
+    return "";
+  }
+
+  @Override
+  String getMainBoardIdImpl() {
+    return getSystem().getBaseboard().getSerialNumber();
+  }
+
+  @Override
+  String getSystemUUIDImpl() {
+    return getSystem().getHardwareUUID();
+  }
 }

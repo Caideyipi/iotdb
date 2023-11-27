@@ -44,9 +44,7 @@ public class ConfigNodeHeartbeatHandler implements AsyncMethodCallback<TConfigNo
   @Override
   public void onComplete(TConfigNodeHeartbeatResp resp) {
     loadCache.cacheConfigNodeHeartbeatSample(nodeId, resp);
-    if (resp.license != null) {
-      configManager.getActivationManager().loadRemoteLicense(resp.getLicense());
-    }
+    configManager.getActivationManager().tryLoadRemoteLicense(resp.getLicense());
   }
 
   @Override

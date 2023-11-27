@@ -38,8 +38,31 @@ public enum ActivateStatus {
     this.status = status;
   }
 
+  public boolean isActive() {
+    return ACTIVE_ACTIVATED.equals(this) || ACTIVE_UNACTIVATED.equals(this);
+  }
+
   @Override
   public String toString() {
     return this.status;
+  }
+
+  public String toSimpleString() {
+    switch (this) {
+      case ACTIVE_ACTIVATED:
+      case ACTIVATED:
+        return "ACTIVATED";
+      case PASSIVE_ACTIVATED:
+        return "ACTIVATED(W)";
+      case ACTIVE_UNACTIVATED:
+      case PASSIVE_UNACTIVATED:
+      case UNACTIVATED:
+        return "UNACTIVATED";
+      case UNKNOWN:
+        return UNKNOWN.toString();
+      default:
+        throw new UnsupportedOperationException(
+            String.format("toSimpleString() not adapted %s yet", this));
+    }
   }
 }

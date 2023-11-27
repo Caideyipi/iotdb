@@ -46,7 +46,7 @@ public class ActivationManagerWithoutAnyLimit extends ActivationManager {
 
   /** Override this method in order to make sure license won't be reloaded. */
   @Override
-  public void loadRemoteLicense(TLicense remoteLicense) {
+  public void tryLoadRemoteLicense(TLicense remoteLicense) {
     // do nothing
   }
 

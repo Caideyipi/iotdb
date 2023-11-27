@@ -27,10 +27,12 @@ import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.cluster.RegionStatus;
+import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.AINodeHeartbeatCache;
+import org.apache.iotdb.confignode.manager.load.cache.node.ActivationStatusCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.DataNodeHeartbeatCache;
@@ -71,6 +73,7 @@ public class LoadCache {
 
   // Map<NodeId, INodeCache>
   private final Map<Integer, BaseNodeCache> nodeCacheMap;
+  private final Map<Integer, ActivationStatusCache> activationStatusCacheMap;
   // Map<RegionGroupId, RegionGroupCache>
   private final Map<TConsensusGroupId, RegionGroupCache> regionGroupCacheMap;
   // Map<RegionGroupId, RegionRouteCache>
@@ -78,6 +81,7 @@ public class LoadCache {
 
   public LoadCache() {
     this.nodeCacheMap = new ConcurrentHashMap<>();
+    this.activationStatusCacheMap = new ConcurrentHashMap<>();
     this.regionGroupCacheMap = new ConcurrentHashMap<>();
     this.regionRouteCacheMap = new ConcurrentHashMap<>();
   }
@@ -142,10 +146,19 @@ public class LoadCache {
    * @param resp the heartbeat response
    */
   public void cacheConfigNodeHeartbeatSample(int nodeId, TConfigNodeHeartbeatResp resp) {
-    long receiveTime = System.currentTimeMillis();
+    final long receiveTime = System.currentTimeMillis();
+    if (resp.isSetActivateStatus()) {
+      activationStatusCacheMap.put(
+          nodeId,
+          new ActivationStatusCache(receiveTime, ActivateStatus.valueOf(resp.activateStatus)));
+    }
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new ConfigNodeHeartbeatCache(nodeId))
         .cacheHeartbeatSample(new NodeHeartbeatSample(resp, receiveTime));
+  }
+
+  public Map<Integer, ActivationStatusCache> getActivationStatusCacheMap() {
+    return activationStatusCacheMap;
   }
 
   /**
@@ -156,6 +169,11 @@ public class LoadCache {
    */
   public void cacheDataNodeHeartbeatSample(int nodeId, TDataNodeHeartbeatResp resp) {
     long receiveTime = System.currentTimeMillis();
+    if (resp.isSetActivateStatus()) {
+      activationStatusCacheMap.put(
+          nodeId,
+          new ActivationStatusCache(receiveTime, ActivateStatus.valueOf(resp.activateStatus)));
+    }
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new DataNodeHeartbeatCache(nodeId))
         .cacheHeartbeatSample(new NodeHeartbeatSample(resp, receiveTime));
@@ -294,12 +312,32 @@ public class LoadCache {
    *
    * @return Map<NodeId, Node activation info
    */
-  public Map<Integer, TNodeActivateInfo> getNodeActivateStatus() {
-    return nodeCacheMap.entrySet().stream()
+  public Map<Integer, TNodeActivateInfo> getNodeSimplifiedActivateStatus() {
+    return activationStatusCacheMap.entrySet().stream()
         .collect(
             Collectors.toMap(
                 Map.Entry::getKey,
-                e -> new TNodeActivateInfo(e.getValue().getNodeActivateStatus().toString())));
+                e -> {
+                  ActivateStatus status = e.getValue().getActivateStatus();
+                  if (e.getValue().tooOld()) {
+                    status = ActivateStatus.UNKNOWN;
+                  }
+                  return new TNodeActivateInfo(status.toSimpleString());
+                }));
+  }
+
+  public Map<Integer, String> getNodeActivateStatus() {
+    return activationStatusCacheMap.entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                Map.Entry::getKey,
+                e -> {
+                  ActivateStatus status = e.getValue().getActivateStatus();
+                  if (e.getValue().tooOld()) {
+                    status = ActivateStatus.UNKNOWN;
+                  }
+                  return status.toString();
+                }));
   }
 
   /**

@@ -28,10 +28,10 @@ import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.ConfigManager;
-import org.apache.iotdb.confignode.manager.activation.SystemInfo.ISystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.SystemInfo.LinuxSystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.SystemInfo.MacSystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.SystemInfo.WindowsSystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.systeminfo.ISystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.systeminfo.LinuxSystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.systeminfo.MacSystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.systeminfo.WindowsSystemInfoGetter;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -118,12 +118,11 @@ public class ActivationManager {
           License.INTERNAL_PORT_NAME,
           () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
           License.IS_SEED_CONFIGNODE_NODE_NAME,
-          () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()),
-          License.CLUSTER_NAME_NAME,
-          () -> this.configNodeDescriptor.getConf().getClusterName());
+          () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()));
 
   /** In some situation (like not root user) we cannot get cpu id or main board id. */
-  private final ImmutableSet<String> systemInfoAllowEmpty = ImmutableSet.of("cpu", "mdb", "uuid");
+  private final ImmutableSet<String> systemInfoAllowEmpty =
+      ImmutableSet.of(License.CPU_ID_NAME, License.MAIN_BOARD_ID_NAME, License.SYSTEM_UUID_NAME);
 
   ReentrantLock loadLock = new ReentrantLock();
 
@@ -191,7 +190,7 @@ public class ActivationManager {
     File file = new File(LICENSE_FILE_PATH);
     if (file.exists()) {
       logger.info("License file detected during ConfigNode's starting.");
-      loadLicenseFromFile();
+      tryLoadLicenseFromFile();
     } else {
       logger.info("License file not detected during ConfigNode's starting.");
     }
@@ -214,7 +213,7 @@ public class ActivationManager {
     public void onFileCreate(File file) {
       if (LICENSE_FILE_NAME.equals(file.getName())) {
         logger.info("license file creation detected");
-        loadLicenseFromFile();
+        tryLoadLicenseFromFile();
       }
     }
 
@@ -222,7 +221,7 @@ public class ActivationManager {
     public void onFileChange(File file) {
       if (LICENSE_FILE_NAME.equals(file.getName())) {
         logger.info("license file modification detected");
-        loadLicenseFromFile();
+        tryLoadLicenseFromFile();
       }
     }
 
@@ -231,7 +230,7 @@ public class ActivationManager {
       if (LICENSE_FILE_NAME.equals(file.getName())) {
         logger.info("license file deletion detected");
         license.licenseFileNotExistOrInvalid();
-        showActivateStatus();
+        license.logActivateStatus(false);
       }
     }
   }
@@ -296,7 +295,7 @@ public class ActivationManager {
               disconnectionStr,
               msSinceLastTimeHeardActiveNode(),
               disconnectionLimitStr);
-          giveUpLicense();
+          giveUpLicense("active node disconnection time limit exceeded");
         } else if (disconnectionLimit * 0.9 < timeRemain) {
           // Has good connection with active node, or I'm an active node. Do nothing.
         } else if (timeRemain < ONE_HOUR) {
@@ -384,13 +383,9 @@ public class ActivationManager {
     String timeRemainStr =
         DateTimeUtils.convertMillisecondToDurationStr(license.licenseExpireTimestamp - now);
     logger.warn(
-        "License will expire at {}, there is {} remain. Cluster will only allow reading when the time comes. Contact Timecho for more information.",
+        "License will expire at {}, there is {} left. Cluster will only allow reading when the time comes. Contact Timecho for more information.",
         expirationTimeStr,
         timeRemainStr);
-  }
-
-  private void showActivateStatus() {
-    logger.info("activate status: {}", license.getActivateStatus());
   }
 
   // If in passive activated state, calculate how much time still remain
@@ -398,33 +393,32 @@ public class ActivationManager {
     return license.getDisconnectionFromActiveNodeTimeLimit() - msSinceLastTimeHeardActiveNode();
   }
 
-  protected void loadLicenseFromFile() {
+  protected void tryLoadLicenseFromFile() {
     Properties properties = new Properties();
     try (FileReader fileReader = new FileReader(LICENSE_FILE_PATH);
-        AutoCloseableLock autoCloseableLock = AutoCloseableLock.acquire(loadLock)) {
+        AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
       StringBuilder builder = new StringBuilder();
       int data;
       while ((data = fileReader.read()) != -1) {
         builder.append((char) data);
       }
-      String licenseContent = builder.toString();
-      licenseContent = decrypt(licenseContent);
-      logger.info("Loading license: \n{}", licenseContent);
+      final String encryptedLicenseContent = builder.toString();
+      logger.info("Loading license: \n{}", encryptedLicenseContent);
+      String licenseContent = decrypt(encryptedLicenseContent);
       properties.load(new StringReader(licenseContent));
       if (!verifyAllSystemInfo(properties)) {
-        throw new LicenseException("This license is not allowed to activate this ConfigNode");
+        throw new LicenseException("This license is not allowed to activate this ConfigNode.");
       }
       license.loadFromProperties(properties);
-      logger.info("Load license success");
-      showActivateStatus();
+      logger.info("Load license success.");
     } catch (LicenseException | IOException e) {
-      logger.error("Load license fail", e);
+      logger.error("Load license fail.", e);
       license.licenseFileNotExistOrInvalid();
     }
   }
 
-  public void loadRemoteLicense(TLicense remoteLicense) {
-    try (AutoCloseableLock autoCloseableLock = AutoCloseableLock.acquire(loadLock)) {
+  public void tryLoadRemoteLicense(TLicense remoteLicense) {
+    try (AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
       if (remoteLicense == null) {
         // do nothing
       } else if (remoteLicense.licenseIssueTimestamp < this.license.getLicenseIssueTimestamp()) {
@@ -441,18 +435,31 @@ public class ActivationManager {
         // remote license is the same, just update my lastTimeHeardActiveNode
         this.heardActiveNode();
       } else {
+        logger.info("Loading remote license...");
         this.heardActiveNode();
-        this.license.loadFromTLicense(remoteLicense);
+        try {
+          this.license.loadFromTLicense(remoteLicense);
+        } catch (LicenseException e) {
+          logger.error("Loading remote license fail.", e);
+          return;
+        }
         logger.info("License updated because receive remote license");
-        showActivateStatus();
       }
     }
   }
 
-  private void giveUpLicense() {
-    license.reset();
-    logger.info("License has been reset");
-    showActivateStatus();
+  public void giveUpLicense(String reason) {
+    try (AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
+      if (license.reset()) {
+        logger.warn("License has been given up, because {}", reason);
+      }
+    }
+  }
+
+  public void giveUpLicenseBecauseLeaderBelieveThereIsNoActiveNodeInCluster() {
+    if (!license.isActive()) {
+      giveUpLicense("there is no active node in cluster");
+    }
   }
 
   public License getLicense() {
@@ -472,7 +479,7 @@ public class ActivationManager {
   }
 
   public void heardActiveNode() {
-    lastTimeHeardActiveNode.set(System.currentTimeMillis());
+    this.lastTimeHeardActiveNode.set(System.currentTimeMillis());
   }
 
   /**
@@ -496,10 +503,10 @@ public class ActivationManager {
    */
   public void generateSystemInfoFile() {
     Properties systemInfoProperties = new Properties();
-    for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
-      systemInfoProperties.setProperty(entry.getKey(), entry.getValue().get());
-    }
     try (FileOutputStream fos = new FileOutputStream(SYSTEM_INFO_FILE_PATH)) {
+      for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
+        systemInfoProperties.setProperty(entry.getKey(), entry.getValue().get());
+      }
       StringWriter stringWriter = new StringWriter();
       systemInfoProperties.store(stringWriter, null);
       String beforeEncrypt = stringWriter.toString();
@@ -512,40 +519,49 @@ public class ActivationManager {
       fos.getFD().sync();
       logger.info("{} file generated successfully.", SYSTEM_INFO_FILE_PATH);
     } catch (Exception e) {
-      logger.error("{} file generated fail.", SYSTEM_INFO_FILE_PATH, e);
-      throw new RuntimeException(e);
+      logger.error("{} file generated fail.", SYSTEM_INFO_FILE_PATH);
     }
   }
 
-  public boolean verifyAllSystemInfo(Properties licenseProperties) {
-    for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
-      if (!verifySystemInfo(
-          licenseProperties,
-          entry.getKey(),
-          entry.getValue().get(),
-          systemInfoAllowEmpty.contains(entry.getKey()))) {
-        return false;
+  public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
+    try {
+      for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
+        if (!verifySystemInfo(
+            licenseProperties,
+            entry.getKey(),
+            entry.getValue().get(),
+            systemInfoAllowEmpty.contains(entry.getKey()))) {
+          return false;
+        }
       }
+    } catch (Exception ignored) {
+      logger.error("Verify system info fail.");
+      return false;
     }
     return true;
   }
 
   private boolean verifySystemInfo(
-      Properties licenseProperties, String key, String expectedValue, boolean allowEmpty) {
+      Properties licenseProperties, String key, String systemActualValue, boolean allowEmpty)
+      throws LicenseException {
     if (!licenseProperties.containsKey(key)) {
-      logger.error("License does not contain the \"{}\" field", key);
+      String errorMessage = String.format("License does not contain the \"%s\" field.", key);
+      logErrorEncrypted(errorMessage);
       return false;
     }
     if (licenseProperties.get(key).equals("") && allowEmpty) {
-      logger.warn("License's \"{}\" field is empty, and this field is allowed to be empty.", key);
+      String warnMessage =
+          String.format(
+              "License's \"%s\" field is empty, and this field is allowed to be empty.", key);
+      logWarnEncrypted(warnMessage);
       return true;
     }
-    if (!licenseProperties.get(key).equals(expectedValue)) {
-      logger.error(
-          "License's \"{}\" field has unexpected value \"{}\", expect \"{}\"",
-          key,
-          licenseProperties.get(key),
-          expectedValue);
+    if (!licenseProperties.get(key).equals(systemActualValue)) {
+      String errorMessage =
+          String.format(
+              "License's \"%s\" field has value \"%s\", but system's actual value is \"%s\". To make this license work, these two parameters must be the same.",
+              key, licenseProperties.get(key), systemActualValue);
+      logErrorEncrypted(errorMessage);
       return false;
     }
     return true;
@@ -623,6 +639,23 @@ public class ActivationManager {
   protected String decrypt(String src) throws LicenseException {
     return RSA.publicDecrypt(src);
   }
+
+  protected void logInfoEncrypted(String raw) throws LicenseException {
+    String encrypted = encrypt(raw);
+    logger.info(encrypted);
+  }
+
+  protected void logWarnEncrypted(String raw) throws LicenseException {
+    String encrypted = encrypt(raw);
+    logger.warn(encrypted);
+  }
+
+  protected void logErrorEncrypted(String raw) throws LicenseException {
+    String encrypted = encrypt(raw);
+    logger.error(encrypted);
+  }
+
+  // endregion
 
   // region helpers
   @TestOnly

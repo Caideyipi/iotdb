@@ -874,6 +874,11 @@ enum TActivationControl {
   ALL_LICENSE_FILE_DELETED
 }
 
+struct TGetAllActivationStatusResp {
+  1: required common.TSStatus status
+  2: optional map<i32, string> activationStatusMap
+}
+
 // ====================================================
 // AINode
 // ====================================================
@@ -1510,7 +1515,7 @@ service IConfigNodeRPCService {
   TGetModelInfoResp getModelInfo(TGetModelInfoReq req)
 
   // ======================================================
-  // License
+  // Activation
   // ======================================================
   common.TSStatus setLicenseFile(1:string fileName, 2:string licenseContent)
 
@@ -1521,6 +1526,8 @@ service IConfigNodeRPCService {
   TLicenseContentResp getLicenseContent()
 
   common.TSStatus getActivateStatus()
+
+  TGetAllActivationStatusResp getAllActivationStatus()
 
   // ======================================================
   // Quota

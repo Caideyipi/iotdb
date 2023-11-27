@@ -39,11 +39,13 @@ import org.apache.iotdb.confignode.manager.load.balancer.PartitionBalancer;
 import org.apache.iotdb.confignode.manager.load.balancer.RegionBalancer;
 import org.apache.iotdb.confignode.manager.load.balancer.RouteBalancer;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
+import org.apache.iotdb.confignode.manager.load.cache.node.ActivationStatusCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionHeartbeatSample;
 import org.apache.iotdb.confignode.manager.load.service.HeartbeatService;
 import org.apache.iotdb.confignode.manager.load.service.StatisticsService;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
+import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TTimeSlotList;
 
@@ -52,7 +54,10 @@ import com.google.common.eventbus.EventBus;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * The LoadManager at ConfigNodeGroup-Leader is active. It proactively implements the cluster
@@ -200,7 +205,11 @@ public class LoadManager {
    *
    * @return Map<NodeId, Node activation info
    */
-  public Map<Integer, TNodeActivateInfo> getNodeActivateStatus() {
+  public Map<Integer, TNodeActivateInfo> getNodeSimplifiedActivateStatus() {
+    return loadCache.getNodeSimplifiedActivateStatus();
+  }
+
+  public Map<Integer, String> getNodeActivateStatus() {
     return loadCache.getNodeActivateStatus();
   }
 
@@ -277,6 +286,42 @@ public class LoadManager {
   /** Remove the specified Node's cache. */
   public void removeNodeCache(int nodeId) {
     loadCache.removeNodeCache(nodeId);
+  }
+
+  /** Check if there is any active node keep living. */
+  public boolean activeNodeLive() {
+    return loadCache.getActivationStatusCacheMap().values().stream()
+        .anyMatch(cache -> !cache.tooOld() && cache.isActive());
+  }
+
+  /** Check if there is any active node disconnects. */
+  public boolean activeNodeDisconnect() {
+    return loadCache.getActivationStatusCacheMap().values().stream()
+        .anyMatch(cache -> cache.tooOld() && cache.isActive());
+  }
+
+  public boolean someConfigNodeNotSentHeartbeatYet() {
+    return loadCache.getActivationStatusCacheMap().values().stream().anyMatch(Objects::isNull);
+  }
+
+  public void updateActivationStatusCache() {
+    Set<Integer> configNodeIdSet =
+        configManager.getNodeManager().getRegisteredConfigNodeInfoList().stream()
+            .filter(
+                info ->
+                    !info.status.startsWith(
+                        NodeStatus.Removing.getStatus())) // Not in Removing status
+            .map(TConfigNodeInfo::getConfigNodeId)
+            .collect(Collectors.toSet());
+    // Put if absent
+    configNodeIdSet.forEach(
+        id -> loadCache.getActivationStatusCacheMap().putIfAbsent(id, new ActivationStatusCache()));
+    // Remove if present
+    for (Integer cnId : loadCache.getActivationStatusCacheMap().keySet()) {
+      if (!configNodeIdSet.contains(cnId)) {
+        loadCache.getActivationStatusCacheMap().remove(cnId);
+      }
+    }
   }
 
   /**
