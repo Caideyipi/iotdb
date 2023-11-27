@@ -248,14 +248,6 @@ def test_inference_with_internal_error():
     except Exception as e:
         assert isinstance(e, InferenceModelInternalError)
 
-
-def test_create_built_in_model():
-    arima, attributes = create_built_in_model('_arima', {})
-    assert isinstance(arima, ARIMA)
-    gaussion_hmm, attributes = create_built_in_model('_gaussianhmm', {})
-    assert isinstance(gaussion_hmm, GaussianHMM)
-
-
 def test_inference_with_built_in_model_forecasting():
     data = [float(i) for i in range(100)]
     data = pd.DataFrame({'a': data})
@@ -295,5 +287,9 @@ def test_inference_with_built_in_model_anomaly_detection():
     assert outputs[0].shape == (100, 1)
 
     outputs = inference_with_built_in_model('_gmmhmm', full_data, {})
+    assert len(outputs) == 1
+    assert outputs[0].shape == (100, 1)
+
+    outputs = inference_with_built_in_model('_stray', full_data, {})
     assert len(outputs) == 1
     assert outputs[0].shape == (100, 1)

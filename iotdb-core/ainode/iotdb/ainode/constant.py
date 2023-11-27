@@ -75,8 +75,8 @@ class TSStatusCode(Enum):
         return self.value
 
 
-# class TaskType(Enum):
-#     FORECAST = "forecast"
+class TaskType(Enum):
+    FORECAST = "forecast"
 
 
 class OptionsKey(Enum):
@@ -136,15 +136,6 @@ class ModelInputName(Enum):
     DEC_INP = "dec_inp"
 
 
-# built-in sktime model attributes
-class TaskType(Enum):
-    FORECAST = "forecast"
-    ANOMALY_DETECTION = "anomaly_detection"
-
-    def name(self) -> str:
-        return self.value
-
-
 class BuiltInModelType(Enum):
     # forecast models
     ARIMA = "_arima"
@@ -155,6 +146,7 @@ class BuiltInModelType(Enum):
     # anomaly detection models
     GAUSSIAN_HMM = "_gaussianhmm"
     GMM_HMM = "_gmmhmm"
+    STRAY = "_stray"
 
     @classmethod
     def values(cls) -> List[str]:
@@ -231,6 +223,7 @@ class AttributeName(Enum):
     # STARTPROB_PRIOR = "startprob_prior"
     # TRANSMAT_PRIOR = "transmat_prior"
     WEIGHTS_PRIOR = "weights_prior"
+
     # MEANS_PRIOR = "means_prior"
     # MEANS_WEIGHT = "means_weight"
     # ALGORITHM = "algorithm"
@@ -240,6 +233,15 @@ class AttributeName(Enum):
     # INIT_PARAMS = "init_params"
     # PARAMS = "params"
     # IMPLEMENTATION = "implementation"
+
+    # STRAY
+    ALPHA = "alpha"
+    K = "k"
+    KNN_ALGORITHM = "knn_algorithm"
+    P = "p"
+    SIZE_THRESHOLD = "size_threshold"
+    OUTLIER_TAIL = "outlier_tail"
+
 
     def name(self) -> str:
         return self.value

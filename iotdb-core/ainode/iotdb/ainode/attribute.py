@@ -610,6 +610,44 @@ gmmhmm_attribute_map = {
     )
 }
 
+# STRAY
+stray_attribute_map = {
+    AttributeName.ALPHA.value: FloatAttribute(
+        name=AttributeName.ALPHA.value,
+        default_value=0.01,
+        default_low=-1e10,
+        default_high=1e10,
+    ),
+    AttributeName.K.value: IntAttribute(
+        name=AttributeName.K.value,
+        default_value=10,
+        default_low=1,
+        default_high=5000
+    ),
+    AttributeName.KNN_ALGORITHM.value: StringAttribute(
+        name=AttributeName.KNN_ALGORITHM.value,
+        default_value="brute",
+        value_choices=["brute", "kd_tree", "ball_tree", "auto"],
+    ),
+    AttributeName.P.value: FloatAttribute(
+        name=AttributeName.P.value,
+        default_value=0.5,
+        default_low=-1e10,
+        default_high=1e10,
+    ),
+    AttributeName.SIZE_THRESHOLD.value: IntAttribute(
+        name=AttributeName.SIZE_THRESHOLD.value,
+        default_value=50,
+        default_low=1,
+        default_high=5000
+    ),
+    AttributeName.OUTLIER_TAIL.value: StringAttribute(
+        name=AttributeName.OUTLIER_TAIL.value,
+        default_value="max",
+        value_choices=["min", "max"],
+    ),
+}
+
 
 def get_model_attributes(model_id: str):
     attribute_map = None
@@ -625,16 +663,8 @@ def get_model_attributes(model_id: str):
         attribute_map = gmmhmm_attribute_map
     elif model_id == BuiltInModelType.GAUSSIAN_HMM.value:
         attribute_map = gaussian_hmm_attribute_map
+    elif model_id == BuiltInModelType.STRAY.value:
+        attribute_map = stray_attribute_map
     else:
         raise BuiltInModelNotSupportError(model_id)
     return attribute_map
-
-
-def get_task_type(model_id: str):
-    if model_id in [BuiltInModelType.ARIMA.value, BuiltInModelType.EXPONENTIAL_SMOOTHING.value,
-                    BuiltInModelType.NAIVE_FORECASTER.value, BuiltInModelType.STL_FORECASTER.value]:
-        return TaskType.FORECAST.value
-    elif model_id in [BuiltInModelType.GAUSSIAN_HMM.value, BuiltInModelType.GMM_HMM.value]:
-        return TaskType.ANOMALY_DETECTION.value
-    else:
-        raise BuiltInModelNotSupportError(model_id)
