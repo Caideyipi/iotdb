@@ -1340,7 +1340,8 @@ public class LogicalPlanBuilder {
       List<String> storageGroupList,
       PathPatternTree patternTree,
       Map<Integer, Template> templateMap,
-      boolean withTags) {
+      boolean withTags,
+      boolean withTemplate) {
     PartialPath storageGroupPath;
     for (String storageGroup : storageGroupList) {
       try {
@@ -1358,7 +1359,8 @@ public class LogicalPlanBuilder {
                 storageGroupPath,
                 overlappedPatternTree,
                 templateMap,
-                withTags));
+                withTags,
+                withTemplate));
       } catch (IllegalPathException e) {
         // definitely won't happen
         throw new RuntimeException(e);
