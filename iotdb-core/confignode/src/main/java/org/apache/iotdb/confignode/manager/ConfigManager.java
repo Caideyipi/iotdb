@@ -1218,7 +1218,7 @@ public class ConfigManager implements IManager {
     }
 
     if (clusterParameters.getSeriesPartitionSlotNum() != CONF.getSeriesSlotNum()) {
-      return errorStatus.setMessage(errorPrefix + "series_partition_slot_num" + errorSuffix);
+      return errorStatus.setMessage(errorPrefix + "series_slot_num" + errorSuffix);
     }
     if (!clusterParameters
         .getSeriesPartitionExecutorClass()
