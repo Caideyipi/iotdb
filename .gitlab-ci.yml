@@ -134,3 +134,28 @@ mlnode-test-1c1d1m:
       - integration-test/target/cluster-logs
       - integration-test/target/ainode-logs
     expire_in: 1 day
+
+pipe-it-2-clusters:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+  script:
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2'
+  parallel:
+    matrix:
+      - CLUSTER1: [HighPerformanceMode]
+        CLUSTER2: [HighPerformanceMode]
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+  artifacts:
+    when: on_failure
+    name: pipeIT-log
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/pipeIT-logs
+    expire_in: 1 day
