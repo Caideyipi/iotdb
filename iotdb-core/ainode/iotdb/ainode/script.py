@@ -38,8 +38,12 @@ def main():
         return
     command = arguments[1]
     if command == 'start':
-        server = AINode()
-        server.start()
+        try:
+            server = AINode()
+            server.start()
+        except Exception as e:
+            logger.error("Start AINode failed, because of: {}".format(e))
+            sys.exit(1)
     elif command == 'remove':
         try:
             logger.info("Removing AINode...")

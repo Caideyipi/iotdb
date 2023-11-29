@@ -18,13 +18,9 @@
 import os
 import sys
 import threading
-import time
 from datetime import datetime
 
 import psutil
-from iotdb.thrift.common.ttypes import TAINodeConfiguration, TAINodeLocation, TEndPoint, TNodeResource
-from iotdb.thrift.confignode.ttypes import TNodeVersionInfo
-from iotdb.thrift.ainode import IAINodeRPCService
 from thrift.protocol import TCompactProtocol, TBinaryProtocol
 from thrift.server import TServer
 from thrift.transport import TSocket, TTransport
@@ -34,10 +30,14 @@ from iotdb.ainode.config import descriptor
 from iotdb.ainode.constant import AINODE_SYSTEM_FILE_NAME
 from iotdb.ainode.handler import AINodeRPCServiceHandler
 from iotdb.ainode.log import logger
+from iotdb.thrift.ainode import IAINodeRPCService
+from iotdb.thrift.common.ttypes import TAINodeConfiguration, TAINodeLocation, TEndPoint, TNodeResource
+from iotdb.thrift.confignode.ttypes import TNodeVersionInfo
 
 
 class RPCService(threading.Thread):
     def __init__(self):
+        self.exit_code = 0
         super().__init__()
         processor = IAINodeRPCService.Processor(handler=AINodeRPCServiceHandler())
         transport = TSocket.TServerSocket(host=descriptor.get_config().get_ain_inference_rpc_address(),
@@ -52,7 +52,11 @@ class RPCService(threading.Thread):
 
     def run(self) -> None:
         logger.info("The RPC service thread begin to run...")
-        self.__pool_server.serve()
+        try:
+            self.__pool_server.serve()
+        except Exception as e:
+            self.exit_code = 1
+            logger.error(e)
 
 
 class AINode(object):
@@ -111,9 +115,10 @@ class AINode(object):
                 sys.exit(1)
 
         self.__rpc_service.start()
+        self.__rpc_service.join(1)
+        if self.__rpc_service.exit_code != 0:
+            return
 
-        # sleep 100ms for waiting the rpc server start.
-        time.sleep(0.1)
         logger.info('IoTDB-AINode has successfully started.')
 
     @staticmethod

@@ -2182,6 +2182,8 @@ public class IoTDBDescriptor {
     if (configNodeUrls != null) {
       try {
         configNodeUrls = configNodeUrls.trim();
+        // For compatibility reasons, we still use the parsing method for multiple nodes,
+        // but only use the first config node url
         conf.setSeedConfigNode(NodeUrlUtils.parseTEndPointUrls(configNodeUrls).get(0));
       } catch (BadNodeUrlException e) {
         LOGGER.error("ConfigNodes are set in wrong format, please set them like 127.0.0.1:10710");

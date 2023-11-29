@@ -195,8 +195,7 @@ public class AINodeWrapper implements BaseNodeWrapper {
           filePrefix + File.separator + CONFIG_PATH + File.separator + PROPERTIES_FILE;
 
       // set attribute
-      replaceAttribute(
-          "ain_target_config_node_list", this.seedConfigNode, propertiesFile, stdoutFile);
+      replaceAttribute("ain_seed_config_node", this.seedConfigNode, propertiesFile, stdoutFile);
       replaceAttribute(
           "ain_inference_rpc_port", Integer.toString(getPort()), propertiesFile, stdoutFile);
 

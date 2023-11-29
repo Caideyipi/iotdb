@@ -247,8 +247,8 @@ class AINodeDescriptor(object):
             if file_configs['ain_system_dir'] is not None:
                 self.__config.set_ain_system_dir(file_configs['ain_system_dir'])
 
-            if file_configs['ain_target_config_node_list'] is not None:
-                self.__config.set_ain_target_config_node_list(file_configs['ain_target_config_node_list'])
+            if file_configs['ain_seed_config_node'] is not None:
+                self.__config.set_ain_target_config_node_list(file_configs['ain_seed_config_node'])
             # AINODE_THRIFT_COMPRESSION_ENABLED
             if file_configs['ain_thrift_compression_enabled'] is not None:
                 self.__config.set_ain_thrift_compression_enabled(int(file_configs['ain_thrift_compression_enabled']))
