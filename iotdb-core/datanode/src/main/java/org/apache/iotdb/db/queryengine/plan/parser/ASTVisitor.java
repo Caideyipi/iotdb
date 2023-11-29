@@ -1231,16 +1231,21 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   }
 
   // Create Model =====================================================================
+  public static void validateModelName(String modelName) {
+    if (modelName.length() < 2 || modelName.length() > 64) {
+      throw new SemanticException("Model name should be 2-64 characters");
+    } else if (modelName.startsWith("_")) {
+      throw new SemanticException("Model name should not start with '_'");
+    } else if (!modelName.matches("^[-\\w]*$")) {
+      throw new SemanticException("ModelName can only contain letters, numbers, and underscores");
+    }
+  }
+
   @Override
   public Statement visitCreateModel(IoTDBSqlParser.CreateModelContext ctx) {
     CreateModelStatement createModelStatement = new CreateModelStatement();
     String modelName = ctx.modelName.getText();
-    if (modelName.length() < 2 || modelName.length() > 64) {
-      throw new SemanticException("Model name should be 2-64 characters");
-    }
-    if (modelName.startsWith("_")) {
-      throw new SemanticException("Model name should not start with '_'");
-    }
+    validateModelName(modelName);
     createModelStatement.setModelName(parseIdentifier(modelName));
     createModelStatement.setUri(ctx.modelUri.getText());
     return createModelStatement;

@@ -21,6 +21,7 @@ package org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ml;
 
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNodeId;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNodeType;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanVisitor;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.SingleChildProcessNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model.ModelInferenceDescriptor;
@@ -83,12 +84,14 @@ public class InferenceNode extends SingleChildProcessNode {
 
   @Override
   protected void serializeAttributes(ByteBuffer byteBuffer) {
+    PlanNodeType.INFERENCE.serialize(byteBuffer);
     modelInferenceDescriptor.serialize(byteBuffer);
     ReadWriteIOUtils.writeStringList(targetColumnNames, byteBuffer);
   }
 
   @Override
   protected void serializeAttributes(DataOutputStream stream) throws IOException {
+    PlanNodeType.INFERENCE.serialize(stream);
     modelInferenceDescriptor.serialize(stream);
     ReadWriteIOUtils.writeStringList(targetColumnNames, stream);
   }

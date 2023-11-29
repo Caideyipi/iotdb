@@ -96,7 +96,7 @@ public class ModelInferenceIT {
     try (Connection connection = EnvFactory.getEnv().getConnection();
         Statement statement = connection.createStatement()) {
 
-      try (ResultSet resultSet = statement.executeQuery(sql)) {
+      try (ResultSet ignored = statement.executeQuery(sql)) {
         fail("There should be an exception");
       }
     } catch (SQLException e) {
@@ -119,9 +119,9 @@ public class ModelInferenceIT {
           String modelType = resultSet.getString(2);
           String status = resultSet.getString(3);
 
-          assertEquals(modelName, "identity");
-          assertEquals(modelType, "USER_DEFINED");
-          assertEquals(status, "ACTIVE");
+          assertEquals("identity", modelName);
+          assertEquals("USER_DEFINED", modelType);
+          assertEquals("ACTIVE", status);
           count++;
         }
         assertEquals(1, count);
@@ -210,5 +210,11 @@ public class ModelInferenceIT {
   public void errorTest4() {
     String sql = "CALL INFERENCE(identity, \"select s0,s1,s2 from root.AI.data\", window=head(2))";
     errorTest(sql, "701: Window output 2 is not equal to input size of model 7");
+  }
+
+  @Test
+  public void errorTest5() {
+    String sql = "CREATE MODEL 中文 USING URI \"" + modelPath + "\"";
+    errorTest(sql, "701: ModelName can only contain letters, numbers, and underscores");
   }
 }

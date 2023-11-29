@@ -184,7 +184,7 @@ public enum PlanNodeType {
   LOGICAL_VIEW_SCHEMA_SCAN((short) 77),
   ALTER_LOGICAL_VIEW((short) 78),
   PIPE_ENRICHED_INSERT((short) 79),
-  FORECAST((short) 80),
+  INFERENCE((short) 80),
   LAST_QUERY_TRANSFORM((short) 81),
   TOP_K((short) 82);
 
