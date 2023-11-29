@@ -30,6 +30,7 @@ import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.partition.DataPartitionTable;
 import org.apache.iotdb.commons.partition.SchemaPartitionTable;
+import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.consensus.request.write.region.CreateRegionGroupsPlan;
 import org.apache.iotdb.confignode.exception.DatabaseNotExistsException;
 import org.apache.iotdb.confignode.exception.NoAvailableRegionGroupException;
@@ -54,7 +55,6 @@ import com.google.common.eventbus.EventBus;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -301,7 +301,11 @@ public class LoadManager {
   }
 
   public boolean someConfigNodeNotSentHeartbeatYet() {
-    return loadCache.getActivationStatusCacheMap().values().stream().anyMatch(Objects::isNull);
+    return loadCache.getActivationStatusCacheMap().entrySet().stream()
+        .anyMatch(
+            entry ->
+                entry.getKey() != ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId()
+                    && entry.getValue().isFake());
   }
 
   public void updateActivationStatusCache() {

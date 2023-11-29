@@ -275,46 +275,49 @@ public class ActivationManager {
   private void activeNodeMonitorService() {
     long lastTimeWarnDisconnection = 0;
     while (true) {
-      long now = System.currentTimeMillis();
-      if (this.license.isActive()) {
-        this.lastTimeHeardActiveNode.set(System.currentTimeMillis());
-      }
-      final long disconnectionLimit = license.getDisconnectionFromActiveNodeTimeLimit();
-      if (this.license.isActivated()) {
-        // Active node related task
-        long timeRemain = passiveActiveTimeRemain();
-        final String disconnectionStr =
-            DateTimeUtils.convertMillisecondToDurationStr(msSinceLastTimeHeardActiveNode());
-        final String remainStr =
-            DateTimeUtils.convertMillisecondToDurationStr(passiveActiveTimeRemain());
-        final String disconnectionLimitStr =
-            DateTimeUtils.convertMillisecondToDurationStr(disconnectionLimit);
-        if (timeRemain < 0) {
-          logger.warn(
-              "This ConfigNode has disconnected from all active ConfigNodes for {} ({} ms), exceeds the disconnection time limit {}. License will be given up now.",
-              disconnectionStr,
-              msSinceLastTimeHeardActiveNode(),
-              disconnectionLimitStr);
-          giveUpLicense("active node disconnection time limit exceeded");
-        } else if (disconnectionLimit * 0.9 < timeRemain) {
-          // Has good connection with active node, or I'm an active node. Do nothing.
-        } else if (timeRemain < ONE_HOUR) {
-          // Remaining time is less than 1 hour, warning every minute.
-          if (now - lastTimeWarnDisconnection > ONE_MINUTE) {
-            disconnectionWarn(remainStr);
-            lastTimeWarnDisconnection = now;
-          }
-        } else if (ONE_HOUR < timeRemain && timeRemain < ONE_DAY) {
-          // Remaining time is less than 1 day. Warning every hour.
-          if (now - lastTimeWarnDisconnection > ONE_HOUR) {
-            disconnectionWarn(remainStr);
-            lastTimeWarnDisconnection = now;
-          }
-        } else {
-          // Remaining time is more than 1 day. Warning every day.
-          if (now - lastTimeWarnDisconnection > ONE_DAY) {
-            disconnectionWarn(remainStr);
-            lastTimeWarnDisconnection = now;
+      try (AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
+        checkSystemTimeAndIssueTime();
+        long now = System.currentTimeMillis();
+        if (this.license.isActive()) {
+          this.lastTimeHeardActiveNode.set(System.currentTimeMillis());
+        }
+        final long disconnectionLimit = license.getDisconnectionFromActiveNodeTimeLimit();
+        if (this.license.isActivated()) {
+          // Active node related task
+          long timeRemain = passiveActiveTimeRemain();
+          final String disconnectionStr =
+              DateTimeUtils.convertMillisecondToDurationStr(msSinceLastTimeHeardActiveNode());
+          final String remainStr =
+              DateTimeUtils.convertMillisecondToDurationStr(passiveActiveTimeRemain());
+          final String disconnectionLimitStr =
+              DateTimeUtils.convertMillisecondToDurationStr(disconnectionLimit);
+          if (timeRemain < 0) {
+            logger.warn(
+                "This ConfigNode has disconnected from all active ConfigNodes for {} ({} ms), exceeds the disconnection time limit {}. License will be given up now.",
+                disconnectionStr,
+                msSinceLastTimeHeardActiveNode(),
+                disconnectionLimitStr);
+            giveUpLicense("active node disconnection time limit exceeded");
+          } else if (disconnectionLimit * 0.9 < timeRemain) {
+            // Has good connection with active node, or I'm an active node. Do nothing.
+          } else if (timeRemain < ONE_HOUR) {
+            // Remaining time is less than 1 hour, warning every minute.
+            if (now - lastTimeWarnDisconnection > ONE_MINUTE) {
+              disconnectionWarn(remainStr);
+              lastTimeWarnDisconnection = now;
+            }
+          } else if (ONE_HOUR < timeRemain && timeRemain < ONE_DAY) {
+            // Remaining time is less than 1 day. Warning every hour.
+            if (now - lastTimeWarnDisconnection > ONE_HOUR) {
+              disconnectionWarn(remainStr);
+              lastTimeWarnDisconnection = now;
+            }
+          } else {
+            // Remaining time is more than 1 day. Warning every day.
+            if (now - lastTimeWarnDisconnection > ONE_DAY) {
+              disconnectionWarn(remainStr);
+              lastTimeWarnDisconnection = now;
+            }
           }
         }
       }
@@ -411,6 +414,7 @@ public class ActivationManager {
       }
       license.loadFromProperties(properties);
       logger.info("Load license success.");
+      checkSystemTimeAndIssueTime();
     } catch (LicenseException | IOException e) {
       logger.error("Load license fail.", e);
       license.licenseFileNotExistOrInvalid();
@@ -444,21 +448,22 @@ public class ActivationManager {
           return;
         }
         logger.info("License updated because receive remote license");
+        checkSystemTimeAndIssueTime();
       }
     }
   }
 
   public void giveUpLicense(String reason) {
-    try (AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
-      if (license.reset()) {
-        logger.warn("License has been given up, because {}", reason);
-      }
+    if (license.reset()) {
+      logger.warn("License has been given up, because {}", reason);
     }
   }
 
   public void giveUpLicenseBecauseLeaderBelieveThereIsNoActiveNodeInCluster() {
-    if (!license.isActive()) {
-      giveUpLicense("there is no active node in cluster");
+    try (AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
+      if (!license.isActive()) {
+        giveUpLicense("there is no active node in cluster");
+      }
     }
   }
 
@@ -653,6 +658,17 @@ public class ActivationManager {
   protected void logErrorEncrypted(String raw) throws LicenseException {
     String encrypted = encrypt(raw);
     logger.error(encrypted);
+  }
+
+  private void checkSystemTimeAndIssueTime() {
+    long now = System.currentTimeMillis();
+    boolean good =
+        now >= license.licenseIssueTimestamp || license.licenseIssueTimestamp - now < ONE_DAY;
+    if (!good) {
+      logger.error(
+          "System time anomaly detected. Please check whether the system time is consistent with current actual time.");
+      giveUpLicense("system time anomaly detected");
+    }
   }
 
   // endregion

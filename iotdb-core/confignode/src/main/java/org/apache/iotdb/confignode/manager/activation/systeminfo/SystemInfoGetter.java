@@ -27,7 +27,9 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
 
   abstract Logger getLogger();
 
-  private static final String GET_SYSTEM_INFO_FAIL = "Get system info fail.";
+  private static final String GET_SYSTEM_INFO_FAIL_WARN = "Get system info fail.";
+  private static final String GET_SYSTEM_INFO_FAIL_ERROR =
+      "Get system info fail, maybe you are not using root user. Exception message: {}";
 
   abstract String getCPUIdImpl() throws IOException;
 
@@ -37,6 +39,7 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     } catch (Exception e) {
       //      getLogger().warn(GET_SYSTEM_INFO_FAIL);
       //      return "";
+      getLogger().error(GET_SYSTEM_INFO_FAIL_ERROR, e.getMessage());
       throw new RuntimeException();
     }
   }
@@ -49,6 +52,7 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     } catch (Exception e) {
       //      getLogger().warn(GET_SYSTEM_INFO_FAIL);
       //      return "";
+      getLogger().error(GET_SYSTEM_INFO_FAIL_ERROR, e.getMessage());
       throw new RuntimeException(e);
     }
   }
@@ -61,6 +65,7 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     } catch (Exception e) {
       //      getLogger().warn(GET_SYSTEM_INFO_FAIL);
       //      return "";
+      getLogger().error(GET_SYSTEM_INFO_FAIL_ERROR, e.getMessage());
       throw new RuntimeException(e);
     }
   }

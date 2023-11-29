@@ -41,6 +41,14 @@ public class ActivationStatusCache {
     return activateStatus;
   }
 
+  /**
+   * When the timestamp is 0, it indicates that this cache does not come from a real heartbeat but
+   * is just used as a placeholder.
+   */
+  public boolean isFake() {
+    return timestamp == 0;
+  }
+
   public boolean isActive() {
     return activateStatus.isActive();
   }

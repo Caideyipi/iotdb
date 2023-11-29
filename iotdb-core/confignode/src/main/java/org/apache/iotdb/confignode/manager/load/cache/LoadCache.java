@@ -137,6 +137,7 @@ public class LoadCache {
   public void clearHeartbeatCache() {
     nodeCacheMap.clear();
     regionGroupCacheMap.clear();
+    activationStatusCacheMap.clear();
   }
 
   /**

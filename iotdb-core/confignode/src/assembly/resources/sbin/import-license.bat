@@ -55,5 +55,4 @@ echo - - - - - - - - - -
 echo %activation_code% > "%IOTDB_HOME%\activation\license"
 echo License has been stored to %IOTDB_HOME%\activation\license
 
-echo This ConfigNode's activation process has completed.
-echo After activating other ConfigNodes, please start the cluster and use 'show cluster' to verify whether the activation is successful.
+echo Import completed. Please start cluster and execute `show cluster` to verify activation status.
