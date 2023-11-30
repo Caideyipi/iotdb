@@ -374,7 +374,7 @@ public class NodeManager {
           String.format(
               "DataNode register cpu core num check pass. "
                   + "After the successful register of this datanode, "
-                  + "the remaining quota for cpu cores will be set to z. (%d - %d - %d = %d)",
+                  + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
               cpuCoreLimit,
               clusterCpuCores,
               newNodeCpuCores,
@@ -424,12 +424,17 @@ public class NodeManager {
   private TDataNodeRestartResp updateDataNodeActivationCheck(TDataNodeRestartReq req) {
     License license = configManager.getActivationManager().getLicense();
     TDataNodeRestartResp resp = new TDataNodeRestartResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
     // check DataNode's cpu core num limit
     final int previousNodeCpuCores =
         nodeInfo.getDataNodeCpuCoreCount(
             req.getDataNodeConfiguration().getLocation().getDataNodeId());
     final int restartNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
-    if (previousNodeCpuCores <= restartNodeCpuCores) {
+    if (restartNodeCpuCores <= previousNodeCpuCores) {
+      LOGGER.info(
+          "cpu core num is less or equal, {} <= {}, check pass.",
+          restartNodeCpuCores,
+          previousNodeCpuCores);
       resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
       return resp;
     }
@@ -452,7 +457,7 @@ public class NodeManager {
           String.format(
               "DataNode restart cpu core num check pass. "
                   + "After the successful restart of this datanode, "
-                  + "the remaining quota for cpu cores will be set to z (%d - %d - %d = %d)",
+                  + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
               cpuCoreLimit,
               clusterCpuCoresExceptThisNode,
               restartNodeCpuCores,

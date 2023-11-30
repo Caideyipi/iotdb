@@ -55,4 +55,4 @@ echo - - - - - - - - - -
 echo %activation_code% > "%IOTDB_HOME%\activation\license"
 echo License has been stored to %IOTDB_HOME%\activation\license
 
-echo Import completed. Please start cluster and execute `show cluster` to verify activation status.
+echo Import completed. Please start cluster and execute 'show cluster' to verify activation status.

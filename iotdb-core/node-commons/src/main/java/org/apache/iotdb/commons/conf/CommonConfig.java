@@ -122,6 +122,7 @@ public class CommonConfig {
   private volatile NodeStatus status = NodeStatus.Running;
 
   private NodeStatus lastStatus = NodeStatus.Unknown;
+  private String lastStatusReason = "";
 
   private volatile boolean isStopping = false;
 
@@ -477,6 +478,7 @@ public class CommonConfig {
       return;
     }
     this.lastStatus = this.status;
+    this.lastStatusReason = this.statusReason;
     this.status = NodeStatus.ReadOnly;
     this.statusReason = ActivateStatus.UNACTIVATED.toString();
     logger.warn(
@@ -494,7 +496,7 @@ public class CommonConfig {
       return;
     }
     this.status = this.lastStatus;
-    this.statusReason = ActivateStatus.ACTIVATED.toString();
+    this.statusReason = this.lastStatusReason;
     logger.info("DataNode's activation status changed: unactivated -> activated.");
   }
 
