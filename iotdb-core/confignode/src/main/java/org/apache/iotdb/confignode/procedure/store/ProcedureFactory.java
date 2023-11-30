@@ -24,6 +24,7 @@ import org.apache.iotdb.confignode.procedure.impl.cq.CreateCQProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.CreateModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.DropModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.AddConfigNodeProcedure;
+import org.apache.iotdb.confignode.procedure.impl.node.RemoveAINodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.RemoveConfigNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.node.RemoveDataNodeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.pipe.plugin.CreatePipePluginProcedure;
@@ -169,6 +170,9 @@ public class ProcedureFactory implements IProcedureFactory {
       case AUTH_OPERATE_PROCEDURE:
         procedure = new AuthOperationProcedure();
         break;
+      case REMOVE_AI_NODE_PROCEDURE:
+        procedure = new RemoveAINodeProcedure();
+        break;
       default:
         LOGGER.error("unknown Procedure type: " + typeCode);
         throw new IOException("unknown Procedure type: " + typeCode);
@@ -186,6 +190,8 @@ public class ProcedureFactory implements IProcedureFactory {
       return ProcedureType.REMOVE_CONFIG_NODE_PROCEDURE;
     } else if (procedure instanceof RemoveDataNodeProcedure) {
       return ProcedureType.REMOVE_DATA_NODE_PROCEDURE;
+    } else if (procedure instanceof RemoveAINodeProcedure) {
+      return ProcedureType.REMOVE_AI_NODE_PROCEDURE;
     } else if (procedure instanceof RegionMigrateProcedure) {
       return ProcedureType.REGION_MIGRATE_PROCEDURE;
     } else if (procedure instanceof CreateRegionGroupsProcedure) {

@@ -77,6 +77,7 @@ import org.apache.iotdb.confignode.consensus.request.write.datanode.UpdateDataNo
 import org.apache.iotdb.confignode.consensus.request.write.function.CreateFunctionPlan;
 import org.apache.iotdb.confignode.consensus.request.write.function.DropFunctionPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.CreateModelPlan;
+import org.apache.iotdb.confignode.consensus.request.write.model.DropModelInNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.UpdateModelInfoPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.UpdateModelStatePlan;
@@ -490,6 +491,9 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
           break;
         case ShowModel:
           plan = new ShowModelPlan();
+          break;
+        case DropModelInNode:
+          plan = new DropModelInNodePlan();
           break;
         case ShowTrial:
           plan = new ShowTrialPlan();

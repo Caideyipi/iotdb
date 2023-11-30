@@ -19,15 +19,6 @@ import time
 from typing import Dict, List
 
 import pandas as pd
-from iotdb.thrift.common.ttypes import TEndPoint, TrainingState, TSStatus, TAINodeLocation, TAINodeConfiguration
-from iotdb.thrift.confignode import IConfigNodeRPCService
-from iotdb.thrift.confignode.ttypes import (TUpdateModelInfoReq,
-                                            TUpdateModelStateReq, TAINodeRemoveReq, TNodeVersionInfo,
-                                            TAINodeRegisterReq, TAINodeRestartReq)
-from iotdb.thrift.datanode import IAINodeInternalRPCService
-from iotdb.thrift.datanode.ttypes import (TFetchMoreDataReq,
-                                          TFetchTimeseriesReq,
-                                          TRecordModelMetricsReq)
 from thrift.Thrift import TException
 from thrift.protocol import TCompactProtocol, TBinaryProtocol
 from thrift.transport import TSocket, TTransport
@@ -37,6 +28,15 @@ from iotdb.ainode.config import descriptor
 from iotdb.ainode.constant import TSStatusCode
 from iotdb.ainode.log import logger
 from iotdb.ainode.util import verify_success
+from iotdb.thrift.common.ttypes import TEndPoint, TrainingState, TSStatus, TAINodeLocation, TAINodeConfiguration
+from iotdb.thrift.confignode import IConfigNodeRPCService
+from iotdb.thrift.confignode.ttypes import (TUpdateModelInfoReq,
+                                            TUpdateModelStateReq, TAINodeRemoveReq, TNodeVersionInfo,
+                                            TAINodeRegisterReq, TAINodeRestartReq)
+from iotdb.thrift.datanode import IAINodeInternalRPCService
+from iotdb.thrift.datanode.ttypes import (TFetchMoreDataReq,
+                                          TFetchTimeseriesReq,
+                                          TRecordModelMetricsReq)
 
 
 class ClientManager(object):
@@ -152,7 +152,7 @@ class ConfigNodeClient(object):
 
         self.__MSG_RECONNECTION_FAIL = "Fail to connect to any config node. Please check status of ConfigNodes"
         self.__RETRY_NUM = 5
-        self.__RETRY_INTERVAL_MS = 1000
+        self.__RETRY_INTERVAL_MS = 1
 
         self.__try_to_connect()
 
@@ -216,7 +216,7 @@ class ConfigNodeClient(object):
         pass
 
     def __update_config_node_leader(self, status: TSStatus) -> bool:
-        if status.code == TSStatusCode.REDIRECTION_RECOMMEND:
+        if status.code == TSStatusCode.REDIRECTION_RECOMMEND.get_status_code():
             if status.redirectNode is not None:
                 self.__config_leader = status.redirectNode
             else:
@@ -284,10 +284,10 @@ class ConfigNodeClient(object):
         for _ in range(0, self.__RETRY_NUM):
             try:
                 resp = self.__client.registerAINode(req)
-                if resp.status.code != TSStatusCode.SUCCESS_STATUS.get_status_code():
-                    raise RuntimeError(f"Failed to register AINode to ConfigNode, status: {resp.status}")
-                self.__config_nodes = resp.configNodeList
-                return resp.aiNodeId
+                if not self.__update_config_node_leader(resp.status):
+                    verify_success(resp.status, "An error occurs when calling node_register()")
+                    self.__config_nodes = resp.configNodeList
+                    return resp.aiNodeId
             except TTransport.TException:
                 logger.warning("Failed to connect to ConfigNode {} from AINode when executing node_register()",
                                self.__config_leader)
@@ -307,10 +307,10 @@ class ConfigNodeClient(object):
         for _ in range(0, self.__RETRY_NUM):
             try:
                 resp = self.__client.restartAINode(req)
-                if resp.status.code != TSStatusCode.SUCCESS_STATUS.get_status_code():
-                    raise RuntimeError(f"Failed to restart AINode to ConfigNode, status: {resp.status}")
-                self.__config_nodes = resp.configNodeList
-                return resp.status
+                if not self.__update_config_node_leader(resp.status):
+                    verify_success(resp.status, "An error occurs when calling node_restart()")
+                    self.__config_nodes = resp.configNodeList
+                    return resp.status
             except TTransport.TException:
                 logger.warning("Failed to connect to ConfigNode {} from AINode when executing node_restart()",
                                self.__config_leader)
@@ -326,9 +326,9 @@ class ConfigNodeClient(object):
         for _ in range(0, self.__RETRY_NUM):
             try:
                 status = self.__client.removeAINode(req)
-                if status.code != TSStatusCode.SUCCESS_STATUS.get_status_code():
-                    raise RuntimeError(f"Failed to remove AINode to ConfigNode, status: {status}")
-                return status
+                if not self.__update_config_node_leader(status):
+                    verify_success(status, "An error occurs when calling node_restart()")
+                    return status
             except TTransport.TException:
                 logger.warning("Failed to connect to ConfigNode {} from AINode when executing node_remove()",
                                self.__config_leader)

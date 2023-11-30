@@ -52,6 +52,10 @@ public class RemoveAINodeProcedure extends AbstractNodeProcedure<RemoveAINodeSta
     this.removedAINode = removedAINode;
   }
 
+  public RemoveAINodeProcedure() {
+    super();
+  }
+
   @Override
   protected Flow executeFromState(ConfigNodeProcedureEnv env, RemoveAINodeState state)
       throws ProcedureSuspendedException, ProcedureYieldException, InterruptedException {

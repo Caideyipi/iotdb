@@ -31,6 +31,10 @@ public class DropModelInNodePlan extends ConfigPhysicalPlan {
 
   private int nodeId;
 
+  public DropModelInNodePlan() {
+    super(ConfigPhysicalPlanType.DropModelInNode);
+  }
+
   public DropModelInNodePlan(int nodeId) {
     super(ConfigPhysicalPlanType.DropModelInNode);
     this.nodeId = nodeId;
