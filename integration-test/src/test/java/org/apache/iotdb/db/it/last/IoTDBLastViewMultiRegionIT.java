@@ -120,6 +120,23 @@ public class IoTDBLastViewMultiRegionIT {
   }
 
   @Test
+  public void lastViewSameMeasurementsTest() {
+    String[] expectedHeader =
+        new String[] {TIMESTAMP_STR, TIMESEIRES_STR, VALUE_STR, DATA_TYPE_STR};
+
+    String[] retArray =
+        new String[] {
+          "1,root.sg.d3.s2,1.0,DOUBLE,",
+          "2,root.sg.d4.vs2,102.0,DOUBLE,",
+          "106048000000,root.sg.d4.vs1,10000,INT32,",
+        };
+    resultSetEqualTest(
+        "select last s2, s2, vs1, vs1, vs2, vs2 from root.** order by time",
+        expectedHeader,
+        retArray);
+  }
+
+  @Test
   public void showLatestTest() {
     String[] expectedHeader =
         new String[] {
