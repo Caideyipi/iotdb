@@ -47,6 +47,7 @@ import org.apache.iotdb.db.queryengine.execution.operator.AggregationUtil;
 import org.apache.iotdb.db.queryengine.execution.operator.Operator;
 import org.apache.iotdb.db.queryengine.execution.operator.OperatorContext;
 import org.apache.iotdb.db.queryengine.execution.operator.process.AggregationOperator;
+import org.apache.iotdb.db.queryengine.execution.operator.process.ColumnInjectOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.process.DeviceViewIntoOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.process.DeviceViewOperator;
 import org.apache.iotdb.db.queryengine.execution.operator.process.FillOperator;
@@ -165,6 +166,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metedata.read.Sche
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metedata.read.TimeSeriesCountNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metedata.read.TimeSeriesSchemaScanNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.AggregationNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ColumnInjectNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceViewIntoNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceViewNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ExchangeNode;
@@ -223,6 +225,12 @@ import org.apache.iotdb.db.queryengine.statistics.StatisticsManager;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.leaf.LeafColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.udf.UDTFContext;
+import org.apache.iotdb.db.utils.columngenerator.ColumnGenerator;
+import org.apache.iotdb.db.utils.columngenerator.ColumnGeneratorType;
+import org.apache.iotdb.db.utils.columngenerator.SlidingTimeColumnGenerator;
+import org.apache.iotdb.db.utils.columngenerator.parameter.ColumnGeneratorParameter;
+import org.apache.iotdb.db.utils.columngenerator.parameter.SlidingTimeColumnGeneratorParameter;
+import org.apache.iotdb.tsfile.common.conf.TSFileDescriptor;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 import org.apache.iotdb.tsfile.read.TimeValuePair;
 import org.apache.iotdb.tsfile.read.common.block.TsBlockBuilder;
@@ -407,6 +415,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
             node.getPlanNodeId(),
             seriesPath,
             node.getScanOrder(),
+            node.isOutputEndTime(),
             scanOptionsBuilder.build(),
             operatorContext,
             aggregators,
@@ -490,6 +499,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
             node.getPlanNodeId(),
             seriesPath,
             node.getScanOrder(),
+            node.isOutputEndTime(),
             scanOptionsBuilder.build(),
             operatorContext,
             aggregators,
@@ -1339,7 +1349,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
             aggregationDescriptors, timeRangeIterator, context.getTypeProvider());
 
     return new AggregationOperator(
-        operatorContext, aggregators, timeRangeIterator, children, maxReturnSize);
+        operatorContext, aggregators, timeRangeIterator, children, false, maxReturnSize);
   }
 
   @Override
@@ -1455,6 +1465,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
         timeRangeIterator,
         child,
         ascending,
+        node.isOutputEndTime(),
         groupByTimeParameter,
         maxReturnSize);
   }
@@ -1628,7 +1639,12 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
               aggregationDescriptors, timeRangeIterator, context.getTypeProvider());
 
       return new AggregationOperator(
-          operatorContext, aggregators, timeRangeIterator, children, maxReturnSize);
+          operatorContext,
+          aggregators,
+          timeRangeIterator,
+          children,
+          node.isOutputEndTime(),
+          maxReturnSize);
     }
   }
 
@@ -2884,5 +2900,44 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
     }
     context.setExchangeSumNum(finalExchangeNum);
     return parentPipelineChildren;
+  }
+
+  @Override
+  public Operator visitColumnInject(ColumnInjectNode node, LocalExecutionPlanContext context) {
+    final OperatorContext operatorContext =
+        context
+            .getDriverContext()
+            .addOperatorContext(
+                context.getNextOperatorId(),
+                node.getPlanNodeId(),
+                ColumnInjectNode.class.getSimpleName());
+
+    Operator childOperator = node.getChild().accept(this, context);
+    ColumnGeneratorParameter parameter = node.getColumnGeneratorParameter();
+    ColumnGenerator columnGenerator = genColumnGeneratorAccordingToParameter(parameter);
+    long maxExtraColumnSize = 0;
+    for (TSDataType dataType : node.getGeneratedColumnTypes()) {
+      maxExtraColumnSize += getOutputColumnSizePerLine(dataType);
+    }
+    maxExtraColumnSize *= TSFileDescriptor.getInstance().getConfig().getMaxTsBlockLineNumber();
+
+    return new ColumnInjectOperator(
+        operatorContext, childOperator, columnGenerator, node.getTargetIndex(), maxExtraColumnSize);
+  }
+
+  private ColumnGenerator genColumnGeneratorAccordingToParameter(
+      ColumnGeneratorParameter columnGeneratorParameter) {
+    ColumnGeneratorType type = columnGeneratorParameter.getGeneratorType();
+    if (type == ColumnGeneratorType.SLIDING_TIME) {
+      SlidingTimeColumnGeneratorParameter slidingTimeColumnGeneratorParameter =
+          (SlidingTimeColumnGeneratorParameter) columnGeneratorParameter;
+      return new SlidingTimeColumnGenerator(
+          initTimeRangeIterator(
+              slidingTimeColumnGeneratorParameter.getGroupByTimeParameter(),
+              slidingTimeColumnGeneratorParameter.isAscending(),
+              false));
+    } else {
+      throw new UnsupportedOperationException("Unsupported column generator type: " + type);
+    }
   }
 }

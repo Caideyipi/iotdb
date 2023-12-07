@@ -57,6 +57,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metedata.write.vie
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metedata.write.view.DeleteLogicalViewNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metedata.write.view.RollbackLogicalViewBlackListNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.AggregationNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ColumnInjectNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceMergeNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceViewIntoNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceViewNode;
@@ -186,7 +187,8 @@ public enum PlanNodeType {
   PIPE_ENRICHED_INSERT((short) 79),
   INFERENCE((short) 80),
   LAST_QUERY_TRANSFORM((short) 81),
-  TOP_K((short) 82);
+  TOP_K((short) 82),
+  COLUMN_INJECT((short) 83);
 
   public static final int BYTES = Short.BYTES;
 
@@ -401,6 +403,8 @@ public enum PlanNodeType {
         return LastQueryTransformNode.deserialize(buffer);
       case 82:
         return TopKNode.deserialize(buffer);
+      case 83:
+        return ColumnInjectNode.deserialize(buffer);
       default:
         throw new IllegalArgumentException("Invalid node type: " + nodeType);
     }

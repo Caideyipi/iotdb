@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.partition.DataPartition;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.AggregationNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.ColumnInjectNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceMergeNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceViewIntoNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.process.DeviceViewNode;
@@ -483,6 +484,18 @@ public class PlanGraphPrinter extends PlanVisitor<List<String>, PlanGraphPrinter
     for (String outputColumnName : node.getOutputColumnNames()) {
       boxValue.add(String.format("  %s", outputColumnName));
     }
+    return render(node, boxValue, context);
+  }
+
+  @Override
+  public List<String> visitColumnInject(ColumnInjectNode node, GraphContext context) {
+    List<String> boxValue = new ArrayList<>();
+    boxValue.add(String.format("ColumnInject-%s", node.getPlanNodeId().getId()));
+    boxValue.add(String.format("TargetIndex: %d", node.getTargetIndex()));
+    boxValue.add(
+        String.format(
+            "ColumnGeneratorParameterType: %s",
+            node.getColumnGeneratorParameter().getGeneratorType()));
     return render(node, boxValue, context);
   }
 
