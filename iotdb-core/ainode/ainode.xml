@@ -25,11 +25,6 @@
         <format>dir</format>
         <format>zip</format>
     </formats>
-    <dependencySets>
-        <dependencySet>
-            <outputDirectory>lib</outputDirectory>
-        </dependencySet>
-    </dependencySets>
     <files>
         <file>
             <source>README.md</source>
