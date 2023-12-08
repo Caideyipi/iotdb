@@ -226,6 +226,10 @@ public class IoTDBConstant {
   // default base dir, stores all IoTDB runtime files
   public static final String DEFAULT_BASE_DIR = "data" + File.separator + DN_ROLE;
 
+  // .env file name
+  public static final String ENV_FILE_NAME = ".env";
+  public static final String NODE_UUID_IN_ENV_FILE = "node_uuid";
+
   // data folder name
   public static final String DATA_FOLDER_NAME = "data";
   public static final String SEQUENCE_FOLDER_NAME = "sequence";

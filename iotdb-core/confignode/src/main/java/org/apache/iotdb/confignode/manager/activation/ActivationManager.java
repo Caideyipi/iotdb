@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
+import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.utils.TestOnly;
@@ -58,11 +59,14 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+
+import static org.apache.iotdb.commons.conf.IoTDBConstant.NODE_UUID_IN_ENV_FILE;
 
 public class ActivationManager {
   static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
@@ -75,6 +79,8 @@ public class ActivationManager {
       ACTIVATION_DIR_PATH + File.separatorChar + LICENSE_FILE_NAME;
   public static final String SYSTEM_INFO_FILE_PATH =
       ACTIVATION_DIR_PATH + File.separatorChar + "system_info";
+  public static final String ENV_FILE_PATH =
+      HOME_PATH + File.separatorChar + IoTDBConstant.ENV_FILE_NAME;
 
   // region Time
   private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
@@ -502,6 +508,32 @@ public class ActivationManager {
   }
 
   /**
+   * Generate IOTDB_HOME/.env if file not exists, set node UUID into it if node UUID not exists.
+   *
+   * @return node UUID
+   */
+  public static String getOrGenerateNodeUUID() throws IOException {
+    File envFile = new File(ENV_FILE_PATH);
+    if (envFile.createNewFile()) {
+      // Do nothing, don't print log here
+    }
+    Properties envProperties = new Properties();
+    try (FileReader reader = new FileReader(envFile)) {
+      envProperties.load(reader);
+    }
+    if (envProperties.containsKey(NODE_UUID_IN_ENV_FILE)) {
+      return String.valueOf(envProperties.get(NODE_UUID_IN_ENV_FILE));
+    }
+    final String uuid = String.valueOf(UUID.randomUUID());
+    envProperties.put(NODE_UUID_IN_ENV_FILE, uuid);
+    try (FileOutputStream fos = new FileOutputStream(envFile)) {
+      envProperties.store(fos, null);
+      fos.getFD().sync();
+    }
+    return uuid;
+  }
+
+  /**
    * This function should be called at the end of ConfigNode's launching. The existence of
    * system_info file will be treated as a signal, which means timecho-ConfigNode has started
    * successfully.
@@ -511,6 +543,9 @@ public class ActivationManager {
     try (FileOutputStream fos = new FileOutputStream(SYSTEM_INFO_FILE_PATH)) {
       for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
         systemInfoProperties.setProperty(entry.getKey(), entry.getValue().get());
+      }
+      if (systemInfoProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()) {
+        systemInfoProperties.setProperty(License.NODE_UUID_NAME, getOrGenerateNodeUUID());
       }
       StringWriter stringWriter = new StringWriter();
       systemInfoProperties.store(stringWriter, null);
@@ -538,6 +573,11 @@ public class ActivationManager {
             systemInfoAllowEmpty.contains(entry.getKey()))) {
           return false;
         }
+      }
+      if (licenseProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()
+          && !verifySystemInfo(
+              licenseProperties, License.NODE_UUID_NAME, getOrGenerateNodeUUID(), false)) {
+        return false;
       }
     } catch (Exception ignored) {
       logger.error("Verify system info fail.");

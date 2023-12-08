@@ -45,6 +45,7 @@ public class License {
   public static final String INTERNAL_PORT_NAME = "S5";
   public static final String IS_SEED_CONFIGNODE_NODE_NAME = "S6";
   public static final String CLUSTER_NAME_NAME = "S7";
+  public static final String NODE_UUID_NAME = "S8";
 
   // DataNode fields
   public static final String DATANODE_NUM_LIMIT_NAME = "DN1";
