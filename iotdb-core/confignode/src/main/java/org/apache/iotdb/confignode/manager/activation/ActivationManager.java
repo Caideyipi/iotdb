@@ -71,16 +71,17 @@ import static org.apache.iotdb.commons.conf.IoTDBConstant.NODE_UUID_IN_ENV_FILE;
 public class ActivationManager {
   static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
 
-  private static final String HOME_PATH =
+  private static final String CONFIGNODE_HOME_PATH =
       System.getProperty("CONFIGNODE_HOME") == null ? "." : System.getProperty("CONFIGNODE_HOME");
-  public static final String ACTIVATION_DIR_PATH = HOME_PATH + File.separatorChar + "activation";
+  public static final String ACTIVATION_DIR_PATH =
+      CONFIGNODE_HOME_PATH + File.separatorChar + "activation";
   public static final String LICENSE_FILE_NAME = "license";
   public static final String LICENSE_FILE_PATH =
       ACTIVATION_DIR_PATH + File.separatorChar + LICENSE_FILE_NAME;
   public static final String SYSTEM_INFO_FILE_PATH =
       ACTIVATION_DIR_PATH + File.separatorChar + "system_info";
   public static final String ENV_FILE_PATH =
-      HOME_PATH + File.separatorChar + IoTDBConstant.ENV_FILE_NAME;
+      CONFIGNODE_HOME_PATH + File.separatorChar + IoTDBConstant.ENV_FILE_NAME;
 
   // region Time
   private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
@@ -125,7 +126,6 @@ public class ActivationManager {
           () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
           License.IS_SEED_CONFIGNODE_NODE_NAME,
           () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()));
-
   /** In some situation (like not root user) we cannot get cpu id or main board id. */
   private final ImmutableSet<String> systemInfoAllowEmpty =
       ImmutableSet.of(License.CPU_ID_NAME, License.MAIN_BOARD_ID_NAME, License.SYSTEM_UUID_NAME);
@@ -135,7 +135,7 @@ public class ActivationManager {
   public ActivationManager(ConfigManager configManager) throws LicenseException {
     initLicense(configManager);
 
-    setSystemInfoGetter();
+    systemInfoGetter = generateSystemInfoGetter();
 
     createActivationDir();
 
@@ -160,18 +160,17 @@ public class ActivationManager {
                         license.getDeviceNumLimit(), license.getSensorNumLimit()));
   }
 
-  private void setSystemInfoGetter() {
+  static ISystemInfoGetter generateSystemInfoGetter() {
     OsInfo osInfo = SystemUtil.getOsInfo();
     if (osInfo.isWindows()) {
-      systemInfoGetter = new WindowsSystemInfoGetter();
+      return new WindowsSystemInfoGetter();
     } else if (osInfo.isMac()) {
-      systemInfoGetter = new MacSystemInfoGetter();
+      return new MacSystemInfoGetter();
     } else if (osInfo.isLinux()) {
-      systemInfoGetter = new LinuxSystemInfoGetter();
-    } else {
-      logger.warn("OS {} is not officially supported, will be treated as Linux", osInfo.getName());
-      systemInfoGetter = new LinuxSystemInfoGetter();
+      return new LinuxSystemInfoGetter();
     }
+    logger.warn("OS {} is not officially supported, will be treated as Linux", osInfo.getName());
+    return new LinuxSystemInfoGetter();
   }
 
   private void createActivationDir() throws LicenseException {
@@ -418,7 +417,7 @@ public class ActivationManager {
       if (!verifyAllSystemInfo(properties)) {
         throw new LicenseException("This license is not allowed to activate this ConfigNode.");
       }
-      license.loadFromProperties(properties);
+      license.loadFromProperties(properties, true);
       logger.info("Load license success.");
       checkSystemTimeAndIssueTime();
     } catch (LicenseException | IOException e) {
@@ -533,6 +532,21 @@ public class ActivationManager {
     return uuid;
   }
 
+  public static String getNodeUUID() throws IOException, LicenseException {
+    File envFile = new File(ENV_FILE_PATH);
+    if (!envFile.exists()) {
+      throw new LicenseException();
+    }
+    Properties envProperties = new Properties();
+    try (FileReader reader = new FileReader(envFile)) {
+      envProperties.load(reader);
+    }
+    if (!envProperties.containsKey(NODE_UUID_IN_ENV_FILE)) {
+      throw new LicenseException();
+    }
+    return String.valueOf(envProperties.get(NODE_UUID_IN_ENV_FILE));
+  }
+
   /**
    * This function should be called at the end of ConfigNode's launching. The existence of
    * system_info file will be treated as a signal, which means timecho-ConfigNode has started
@@ -602,10 +616,11 @@ public class ActivationManager {
       return true;
     }
     if (!licenseProperties.get(key).equals(systemActualValue)) {
+      String licenseValue = String.valueOf(licenseProperties.get(key));
       String errorMessage =
           String.format(
               "License's \"%s\" field has value \"%s\", but system's actual value is \"%s\". To make this license work, these two parameters must be the same.",
-              key, licenseProperties.get(key), systemActualValue);
+              key, licenseValue, systemActualValue);
       logErrorEncrypted(errorMessage);
       return false;
     }
@@ -701,14 +716,16 @@ public class ActivationManager {
   }
 
   private void checkSystemTimeAndIssueTime() {
-    long now = System.currentTimeMillis();
-    boolean good =
-        now >= license.licenseIssueTimestamp || license.licenseIssueTimestamp - now < ONE_DAY;
-    if (!good) {
+    if (!checkSystemTimeAndIssueTimeImpl(this.license)) {
       logger.error(
           "System time anomaly detected. Please check whether the system time is consistent with current actual time.");
       giveUpLicense("system time anomaly detected");
     }
+  }
+
+  static boolean checkSystemTimeAndIssueTimeImpl(License license) {
+    long now = System.currentTimeMillis();
+    return now >= license.licenseIssueTimestamp || license.licenseIssueTimestamp - now < ONE_DAY;
   }
 
   // endregion

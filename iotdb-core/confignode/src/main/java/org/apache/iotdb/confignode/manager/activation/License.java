@@ -144,7 +144,7 @@ public class License {
 
   // region load method
 
-  public void loadFromProperties(Properties properties) throws LicenseException {
+  public void loadFromProperties(Properties properties, boolean needLog) throws LicenseException {
     // try load properties
     License newLicense = new License(null);
     // activate info
@@ -165,12 +165,16 @@ public class License {
     }
 
     // compare and copy
-    this.logLicenseDifferences(newLicense);
+    if (needLog) {
+      this.logLicenseDifferences(newLicense);
+    }
     this.copyFrom(newLicense);
     this.licenseSource = LicenseSource.FROM_FILE;
 
     // if activate status change, log
-    logActivateStatus(false);
+    if (needLog) {
+      logActivateStatus(false);
+    }
 
     this.onLicenseChange.run();
   }
