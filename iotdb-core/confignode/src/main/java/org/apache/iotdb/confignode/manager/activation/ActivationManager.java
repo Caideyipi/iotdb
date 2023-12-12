@@ -32,6 +32,7 @@ import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.activation.systeminfo.ISystemInfoGetter;
 import org.apache.iotdb.confignode.manager.activation.systeminfo.LinuxSystemInfoGetter;
 import org.apache.iotdb.confignode.manager.activation.systeminfo.MacSystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.systeminfo.SystemInfoGetter;
 import org.apache.iotdb.confignode.manager.activation.systeminfo.WindowsSystemInfoGetter;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -160,7 +161,7 @@ public class ActivationManager {
                         license.getDeviceNumLimit(), license.getSensorNumLimit()));
   }
 
-  static ISystemInfoGetter generateSystemInfoGetter() {
+  static SystemInfoGetter generateSystemInfoGetter() {
     OsInfo osInfo = SystemUtil.getOsInfo();
     if (osInfo.isWindows()) {
       return new WindowsSystemInfoGetter();

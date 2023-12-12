@@ -21,7 +21,7 @@ package org.apache.iotdb.confignode.manager.activation;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.ISystemInfoGetter;
+import org.apache.iotdb.confignode.manager.activation.systeminfo.SystemInfoGetter;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -43,6 +43,8 @@ public class ActivationVerifier {
   private static final int SUCCESS_CODE = 0;
   private static final int FAIL_CODE = 1;
   private static final int UNABLE_TO_VERIFY_CODE = 2;
+  private static final String LOAD_FAIL_MESSAGE =
+      "License verification failed. Please check your license.";
   private static final String FAIL_MESSAGE =
       "License verification failed. Please contact Timecho for more information.";
   private static final String UNABLE_TO_VERIFY_MESSAGE =
@@ -76,7 +78,7 @@ public class ActivationVerifier {
       encryptedLicenseContent = stringBuilder.toString();
       licenseProperties.load(new StringReader(RSA.publicDecrypt(encryptedLicenseContent)));
     } catch (Exception e) {
-      errorThenExit("Load license fail.");
+      errorThenExit(LOAD_FAIL_MESSAGE);
     }
     return licenseProperties;
   }
@@ -119,7 +121,8 @@ public class ActivationVerifier {
   }
 
   private static void checkSystemInfo(Properties systemProperties, Properties licenseProperties) {
-    ISystemInfoGetter systemInfoGetter = ActivationManager.generateSystemInfoGetter();
+    SystemInfoGetter systemInfoGetter = ActivationManager.generateSystemInfoGetter();
+    systemInfoGetter.setLogEnabled(false);
     ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
         ImmutableMap.of(
             License.CPU_ID_NAME,

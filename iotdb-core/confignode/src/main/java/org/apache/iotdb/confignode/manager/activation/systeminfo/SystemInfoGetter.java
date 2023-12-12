@@ -25,9 +25,15 @@ import java.io.IOException;
 
 public abstract class SystemInfoGetter implements ISystemInfoGetter {
 
+  private boolean logEnabled = true;
+
   abstract Logger getLogger();
 
   private static final String GET_SYSTEM_INFO_FAIL = "Get system info fail.";
+
+  public void setLogEnabled(boolean logEnabled) {
+    this.logEnabled = logEnabled;
+  }
 
   abstract String getCPUIdImpl() throws IOException;
 
@@ -35,7 +41,9 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getCPUIdImpl();
     } catch (Exception e) {
-      getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      if (logEnabled) {
+        getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      }
       return "";
     }
   }
@@ -46,7 +54,9 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getMainBoardIdImpl();
     } catch (Exception e) {
-      getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      if (logEnabled) {
+        getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      }
       return "";
     }
   }
@@ -57,7 +67,9 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getSystemUUIDImpl();
     } catch (Exception e) {
-      getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      if (logEnabled) {
+        getLogger().warn(GET_SYSTEM_INFO_FAIL);
+      }
       return "";
     }
   }
