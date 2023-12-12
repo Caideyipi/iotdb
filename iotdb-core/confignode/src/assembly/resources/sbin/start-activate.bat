@@ -23,6 +23,8 @@ pushd %~dp0..
 if NOT DEFINED CONFIGNODE_HOME set CONFIGNODE_HOME=%cd%
 popd
 
+if NOT DEFINED CONFIGNODE_CONF set CONFIGNODE_CONF=%CONFIGNODE_HOME%/conf
+
 set "LICENSE_PATH=%CONFIGNODE_HOME%\activation\license"
 
 if exist "%LICENSE_PATH%" (
@@ -47,8 +49,6 @@ echo.
 echo Please enter license:
 set /p activation_code=
 
-echo - - - - - - - - - -
-
 echo %activation_code% >"%LICENSE_PATH%"
 timeout /t 1 >nul
 echo - - - - - - - - - -
@@ -61,10 +61,7 @@ set "main_class=org.apache.iotdb.confignode.manager.activation.ActivationVerifie
 set "iotdb_params=-DCONFIGNODE_CONF=%CONFIGNODE_CONF%"
 set "iotdb_params=%iotdb_params% -DCONFIGNODE_HOME=%CONFIGNODE_HOME%"
 
-set "CLASSPATH="
-for %%f in ("%CONFIGNODE_HOME%\lib\*.jar") do (
-  set "CLASSPATH=%CLASSPATH%;%%f"
-)
+set CLASSPATH="%CONFIGNODE_HOME%\lib\*"
 
 java %iotdb_params% -cp "%CLASSPATH%" "%main_class%" "%LICENSE_PATH%"
 
