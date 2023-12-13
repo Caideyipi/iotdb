@@ -56,6 +56,15 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${basedir}/resources</directory>
+                <includes>
+                    <include>pyproject.toml</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -201,6 +210,45 @@
                                     <directory>${basedir}/target/maven-archiver/</directory>
                                 </resource>
                             </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-pyproject-toml</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <encoding>utf-8</encoding>
+                            <outputDirectory>${basedir}/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/target/classes/</directory>
+                                    <includes>
+                                        <include>pyproject.toml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>write-ai-node-version</id>
+                        <goals>
+                            <goal>regex-property</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <name>ainode_version</name>
+                            <regex>-SNAPSHOT</regex>
+                            <value>${project.version}</value>
+                            <replacement>\.dev</replacement>
+                            <failIfNoMatch>false</failIfNoMatch>
                         </configuration>
                     </execution>
                 </executions>
