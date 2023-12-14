@@ -1560,6 +1560,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
     try {
       PipeAgent.plugin().validate(createPipeStatement);
     } catch (Exception e) {
+      LOGGER.info("Failed to validate pipe statement, because {}", e.getMessage(), e);
       future.setException(
           new IoTDBException(e.getMessage(), TSStatusCode.PIPE_ERROR.getStatusCode()));
       return future;
