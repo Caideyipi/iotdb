@@ -529,6 +529,11 @@ struct TShowClusterResp {
   7: required map<i32, TNodeActivateInfo> nodeActivateInfo
 }
 
+struct TGetClusterIdResp {
+  1: required common.TSStatus status
+  2: required string clusterId
+}
+
 struct TNodeVersionInfo {
   1: required string version;
   2: required string buildInfo;
@@ -910,6 +915,15 @@ struct TAINodeRemoveReq{
 }
 
 service IConfigNodeRPCService {
+
+  // ======================================================
+  // Cluster
+  // ======================================================
+
+  /**
+   * Get cluster ID
+   */
+  TGetClusterIdResp getClusterId()
 
   // ======================================================
   // DataNode

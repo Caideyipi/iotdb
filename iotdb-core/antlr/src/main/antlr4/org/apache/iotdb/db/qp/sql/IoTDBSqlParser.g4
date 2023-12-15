@@ -59,7 +59,7 @@ ddlStatement
     // CQ
     | createContinuousQuery | dropContinuousQuery | showContinuousQueries
     // Cluster
-    | showVariables | showCluster | showRegions | showDataNodes | showConfigNodes | showAINodes
+    | showVariables | showCluster | showClusterId | showRegions | showDataNodes | showConfigNodes | showAINodes
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
     // AI Model
     | createModel | dropModel | showModels | showTrials | callInference
@@ -460,6 +460,12 @@ showVariables
 showCluster
     : SHOW CLUSTER (DETAILS)?
     ;
+
+// ---- Show Cluster Id
+showClusterId
+    : SHOW CLUSTERID
+    ;
+
 
 // ---- Show Regions
 showRegions
