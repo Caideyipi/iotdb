@@ -207,7 +207,6 @@ public enum ConfigPhysicalPlanType {
 
   /** Pipe Task. */
   CreatePipeV2((short) 1500),
-  /** START PIPE & STOP PIPE. */
   SetPipeStatusV2((short) 1501),
   DropPipeV2((short) 1502),
   ShowPipeV2((short) 1503),
@@ -215,6 +214,9 @@ public enum ConfigPhysicalPlanType {
   /** Pipe Runtime. */
   PipeHandleLeaderChange((short) 1600),
   PipeHandleMetaChange((short) 1601),
+
+  /** Pipe PayLoad. */
+  PipeEnriched((short) 1700),
   ;
 
   private final short planType;

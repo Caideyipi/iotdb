@@ -80,7 +80,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TDropCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropFunctionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipePluginReq;
-import org.apache.iotdb.confignode.rpc.thrift.TDropPipeSinkReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropTriggerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllPipeInfoResp;
@@ -96,8 +95,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPipePluginTableResp;
-import org.apache.iotdb.confignode.rpc.thrift.TGetPipeSinkReq;
-import org.apache.iotdb.confignode.rpc.thrift.TGetPipeSinkResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetRegionIdReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetRegionIdResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetSeriesSlotListReq;
@@ -111,7 +108,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
-import org.apache.iotdb.confignode.rpc.thrift.TPipeSinkInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionMigrateResultReportReq;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionRouteMapResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaNodeManagementReq;
@@ -154,6 +150,7 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -890,24 +887,6 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   }
 
   @Override
-  public TSStatus createPipeSink(TPipeSinkInfo req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.createPipeSink(req), status -> !updateConfigNodeLeader(status));
-  }
-
-  @Override
-  public TSStatus dropPipeSink(TDropPipeSinkReq req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.dropPipeSink(req), status -> !updateConfigNodeLeader(status));
-  }
-
-  @Override
-  public TGetPipeSinkResp getPipeSink(TGetPipeSinkReq req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.getPipeSink(req), resp -> !updateConfigNodeLeader(resp.status));
-  }
-
-  @Override
   public TSStatus createPipe(TCreatePipeReq req) throws TException {
     return executeRemoteCallWithRetry(
         () -> client.createPipe(req), status -> !updateConfigNodeLeader(status));
@@ -941,6 +920,13 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TGetAllPipeInfoResp getAllPipeInfo() throws TException {
     return executeRemoteCallWithRetry(
         () -> client.getAllPipeInfo(), resp -> !updateConfigNodeLeader(resp.status));
+  }
+
+  @Override
+  public TSStatus executeSyncCommand(ByteBuffer configPhysicalPlanBinary) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.executeSyncCommand(configPhysicalPlanBinary),
+        status -> !updateConfigNodeLeader(status));
   }
 
   @Override
