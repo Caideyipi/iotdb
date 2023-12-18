@@ -95,7 +95,7 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
         statement.execute(sql);
       }
       Set<String> standard =
-          new HashSet<>(Arrays.asList("root.db.d01,false,", "root.db.d02,true,"));
+          new HashSet<>(Arrays.asList("root.db.d01,false,null,", "root.db.d02,true,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 2. create views under these devices and the alignment remain unchanged
@@ -107,7 +107,7 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       for (String sql : sqls) {
         statement.execute(sql);
       }
-      standard = new HashSet<>(Arrays.asList("root.db.d01,false,", "root.db.d02,true,"));
+      standard = new HashSet<>(Arrays.asList("root.db.d01,false,null,", "root.db.d02,true,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 3. create view and auto create device, the alignment of these devices are null
@@ -122,10 +122,10 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       standard =
           new HashSet<>(
               Arrays.asList(
-                  "root.db.d01,false,",
-                  "root.db.d02,true,",
-                  "root.db.d03,null,",
-                  "root.db.d04,null,"));
+                  "root.db.d01,false,null,",
+                  "root.db.d02,true,null,",
+                  "root.db.d03,null,null,",
+                  "root.db.d04,null,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 4. create time series under those devices who just have views, and alignment should be
@@ -141,10 +141,10 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       standard =
           new HashSet<>(
               Arrays.asList(
-                  "root.db.d01,false,",
-                  "root.db.d02,true,",
-                  "root.db.d03,false,",
-                  "root.db.d04,true,"));
+                  "root.db.d01,false,null,",
+                  "root.db.d02,true,null,",
+                  "root.db.d03,false,null,",
+                  "root.db.d04,true,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 5. delete all non-view time series created at last step, and the alignment of devices
@@ -161,10 +161,10 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       standard =
           new HashSet<>(
               Arrays.asList(
-                  "root.db.d01,false,",
-                  "root.db.d02,true,",
-                  "root.db.d03,null,",
-                  "root.db.d04,null,"));
+                  "root.db.d01,false,null,",
+                  "root.db.d02,true,null,",
+                  "root.db.d03,null,null,",
+                  "root.db.d04,null,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
     } // end of try
   }
@@ -181,7 +181,7 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       for (String sql : sqls) {
         statement.execute(sql);
       }
-      Set<String> standard = new HashSet<>(Collections.singletonList("root.db.d01,false,"));
+      Set<String> standard = new HashSet<>(Collections.singletonList("root.db.d01,false,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 2. create view and auto create device, the alignment of these devices are null
@@ -195,7 +195,8 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       }
       standard =
           new HashSet<>(
-              Arrays.asList("root.db.d01,false,", "root.db.d05,null,", "root.db.d06,null,"));
+              Arrays.asList(
+                  "root.db.d01,false,null,", "root.db.d05,null,null,", "root.db.d06,null,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 3. insert data under those devices who have only views, the alignment should be true
@@ -210,7 +211,8 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       }
       standard =
           new HashSet<>(
-              Arrays.asList("root.db.d01,false,", "root.db.d05,false,", "root.db.d06,true,"));
+              Arrays.asList(
+                  "root.db.d01,false,null,", "root.db.d05,false,null,", "root.db.d06,true,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
 
       // step 4. delete all auto created timeseries at last step, and the alignment of devices
@@ -222,7 +224,8 @@ public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
       }
       standard =
           new HashSet<>(
-              Arrays.asList("root.db.d01,false,", "root.db.d05,null,", "root.db.d06,null,"));
+              Arrays.asList(
+                  "root.db.d01,false,null,", "root.db.d05,null,null,", "root.db.d06,null,null,"));
       validateResultSetAndStandard(statement.executeQuery(showDevicesSQL), standard);
     } // end of try
   }
