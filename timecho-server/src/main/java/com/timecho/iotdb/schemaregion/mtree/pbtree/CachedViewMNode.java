@@ -24,7 +24,8 @@ import org.apache.iotdb.commons.schema.node.role.IDeviceMNode;
 import org.apache.iotdb.commons.schema.node.utils.IMNodeContainer;
 import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.mnode.info.LogicalViewInfo;
-import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.cache.CacheEntry;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.lock.LockEntry;
+import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.memory.cache.CacheEntry;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.ICachedMNode;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.basic.CachedBasicMNode;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.container.CachedMNodeContainer;
@@ -47,6 +48,16 @@ public class CachedViewMNode extends AbstractMeasurementMNode<ICachedMNode, Cach
   @Override
   public void setCacheEntry(CacheEntry cacheEntry) {
     basicMNode.setCacheEntry(cacheEntry);
+  }
+
+  @Override
+  public LockEntry getLockEntry() {
+    return basicMNode.getLockEntry();
+  }
+
+  @Override
+  public void setLockEntry(LockEntry lockEntry) {
+    basicMNode.setLockEntry(lockEntry);
   }
 
   @Override
