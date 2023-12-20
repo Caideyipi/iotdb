@@ -38,6 +38,7 @@ import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResourceStatus;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +65,10 @@ public class MigrationTaskManager implements IService {
   private final AtomicInteger migrationTasksNum = new AtomicInteger(0);
   /** single thread to schedule */
   private ScheduledExecutorService scheduler;
-  /** single thread to sync syncingBuffer to disk */
+  /** workers to migrate files */
   private ExecutorService workers;
+  /** object storage upload rate limiter, KB/s */
+  private RateLimiter objectStorageUploadRateLimiter;
 
   @Override
   public void start() throws StartupException {
@@ -76,6 +79,9 @@ public class MigrationTaskManager implements IService {
     // metrics
     MetricService.getInstance().addMetricSet(MigrationMetrics.getInstance());
     // threads and tasks
+    long limitRate = iotdbConfig.getObjectStorageUploadThroughputBytesPerSec();
+    objectStorageUploadRateLimiter =
+        RateLimiter.create(limitRate <= 0 ? Double.MAX_VALUE : (double) limitRate / 1024);
     scheduler =
         IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
             ThreadName.MIGRATION_SCHEDULER.getName());
@@ -214,6 +220,25 @@ public class MigrationTaskManager implements IService {
 
   void decreaseMigrationTasksNum() {
     migrationTasksNum.decrementAndGet();
+  }
+
+  void acquireUploadLimiter(long size) {
+    long sizeInKb = size / 1024;
+    while (sizeInKb > 0) {
+      if (sizeInKb > Integer.MAX_VALUE) {
+        objectStorageUploadRateLimiter.acquire(Integer.MAX_VALUE);
+        sizeInKb -= Integer.MAX_VALUE;
+      } else {
+        objectStorageUploadRateLimiter.acquire((int) sizeInKb);
+        return;
+      }
+    }
+  }
+
+  public void reloadObjectStorageUploadThroughput() {
+    long limitRate = iotdbConfig.getObjectStorageUploadThroughputBytesPerSec();
+    objectStorageUploadRateLimiter.setRate(
+        limitRate <= 0 ? Double.MAX_VALUE : (double) limitRate / 1024);
   }
 
   @Override

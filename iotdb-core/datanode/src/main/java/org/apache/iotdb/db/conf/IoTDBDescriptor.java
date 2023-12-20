@@ -41,6 +41,7 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.CrossCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerSequenceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerUnsequenceCompactionSelector;
+import org.apache.iotdb.db.storageengine.dataregion.migration.MigrationTaskManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
@@ -1144,6 +1145,11 @@ public class IoTDBDescriptor {
   }
 
   private void loadObjectStorageProps(Properties properties) {
+    conf.setObjectStorageUploadThroughputBytesPerSec(
+        Long.parseLong(
+            properties.getProperty(
+                "object_storage_upload_throughput_bytes_per_sec",
+                Long.toString(conf.getObjectStorageUploadThroughputBytesPerSec()))));
     conf.setObjectStorageType(
         properties.getProperty("object_storage_type", conf.getObjectStorageType()));
     conf.setObjectStorageBucket(
@@ -1746,6 +1752,13 @@ public class IoTDBDescriptor {
               properties.getProperty(
                   "merge_write_throughput_mb_per_sec",
                   Integer.toString(conf.getCompactionWriteThroughputMbPerSec()))));
+      // update object_storage_upload_throughput_bytes_per_sec
+      conf.setObjectStorageUploadThroughputBytesPerSec(
+          Long.parseLong(
+              properties.getProperty(
+                  "object_storage_upload_throughput_bytes_per_sec",
+                  Long.toString(conf.getObjectStorageUploadThroughputBytesPerSec()))));
+      MigrationTaskManager.getInstance().reloadObjectStorageUploadThroughput();
 
       // update select into operation max buffer size
       conf.setIntoOperationBufferSizeInByte(

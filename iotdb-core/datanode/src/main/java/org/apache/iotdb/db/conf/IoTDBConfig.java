@@ -1126,6 +1126,9 @@ public class IoTDBConfig {
   /** Enable object storage or not */
   private boolean enableObjectStorage = false;
 
+  /** The limit of object storage upload can reach per second */
+  private long objectStorageUploadThroughputBytesPerSec = 10 * 1024 * 1024;
+
   /** Config for object storage */
   private ObjectStorageConfig osConfig = ObjectStorageDescriptor.getInstance().getConfig();
 
@@ -3828,6 +3831,15 @@ public class IoTDBConfig {
 
   public boolean isEnableObjectStorage() {
     return enableObjectStorage;
+  }
+
+  public long getObjectStorageUploadThroughputBytesPerSec() {
+    return objectStorageUploadThroughputBytesPerSec;
+  }
+
+  public void setObjectStorageUploadThroughputBytesPerSec(
+      long objectStorageUploadThroughputBytesPerSec) {
+    this.objectStorageUploadThroughputBytesPerSec = objectStorageUploadThroughputBytesPerSec;
   }
 
   public String getObjectStorageType() {
