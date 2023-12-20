@@ -236,6 +236,9 @@ public class MigrationTaskManager implements IService {
   }
 
   public void reloadObjectStorageUploadThroughput() {
+    if (objectStorageUploadRateLimiter == null) {
+      return;
+    }
     long limitRate = iotdbConfig.getObjectStorageUploadThroughputBytesPerSec();
     objectStorageUploadRateLimiter.setRate(
         limitRate <= 0 ? Double.MAX_VALUE : (double) limitRate / 1024);
