@@ -496,7 +496,7 @@ showAINodes
 getRegionId
     : SHOW (DATA|SCHEMA) REGIONID WHERE (DATABASE operator_eq database=prefixPath
         |DEVICE operator_eq device=prefixPath)
-        (operator_and (TIMESTAMP|TIME) operator_eq time = timeValue)?
+        (operator_and timeRangeExpression = expression )?
     ;
 
 // ---- Get Time Slot List
