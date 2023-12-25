@@ -21,6 +21,7 @@ package org.apache.iotdb.session.pool;
 
 import org.apache.iotdb.common.rpc.thrift.TAggregationType;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
+import org.apache.iotdb.isession.INodeSupplier;
 import org.apache.iotdb.isession.ISession;
 import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.isession.SessionDataSet;
@@ -32,7 +33,10 @@ import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.service.rpc.thrift.TSBackupConfigurationResp;
 import org.apache.iotdb.service.rpc.thrift.TSConnectionInfoResp;
+import org.apache.iotdb.session.DummyNodesSupplier;
+import org.apache.iotdb.session.NodesSupplier;
 import org.apache.iotdb.session.Session;
+import org.apache.iotdb.session.util.SessionUtils;
 import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSEncoding;
@@ -44,11 +48,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * SessionPool is a wrapper of a Session Set. Using SessionPool, the user do not need to consider
@@ -130,6 +137,13 @@ public class SessionPool implements ISessionPool {
 
   // formatted nodeUrls for logging e.g. "host:port" or "[host:port, host:port, host:port]"
   private final String formattedNodeUrls;
+
+  // used to update datanodeList periodically
+  private volatile ScheduledExecutorService executorService;
+
+  private INodeSupplier availableNodes;
+
+  private boolean enableAutoFetch = true;
 
   private static final String INSERT_RECORD_FAIL = "insertRecord failed";
 
@@ -353,6 +367,8 @@ public class SessionPool implements ISessionPool {
     this.thriftDefaultBufferSize = thriftDefaultBufferSize;
     this.thriftMaxFrameSize = thriftMaxFrameSize;
     this.formattedNodeUrls = String.format("%s:%s", host, port);
+    initThreadPool();
+    initAvailableNodes(Collections.singletonList(new TEndPoint(host, port)));
   }
 
   public SessionPool(
@@ -395,6 +411,8 @@ public class SessionPool implements ISessionPool {
     this.useSSL = useSSL;
     this.trustStore = trustStore;
     this.trustStorePwd = trustStorePwd;
+    initThreadPool();
+    initAvailableNodes(Collections.singletonList(new TEndPoint(host, port)));
   }
 
   @SuppressWarnings("squid:S107") // ignore Methods should not have too many parameters
@@ -434,6 +452,8 @@ public class SessionPool implements ISessionPool {
     this.thriftDefaultBufferSize = thriftDefaultBufferSize;
     this.thriftMaxFrameSize = thriftMaxFrameSize;
     this.formattedNodeUrls = nodeUrls.toString();
+    initThreadPool();
+    initAvailableNodes(SessionUtils.parseSeedNodeUrls(nodeUrls));
   }
 
   public SessionPool(Builder builder) {
@@ -452,6 +472,13 @@ public class SessionPool implements ISessionPool {
     this.version = builder.version;
     this.thriftDefaultBufferSize = builder.thriftDefaultBufferSize;
     this.thriftMaxFrameSize = builder.thriftMaxFrameSize;
+    this.enableAutoFetch = builder.enableAutoFetch;
+    this.useSSL = builder.useSSL;
+    this.trustStore = builder.trustStore;
+    this.trustStorePwd = builder.trustStorePwd;
+    if (enableAutoFetch) {
+      initThreadPool();
+    }
     if (builder.nodeUrls != null) {
       if (builder.nodeUrls.isEmpty()) {
         throw new IllegalArgumentException("nodeUrls shouldn't be empty.");
@@ -460,15 +487,24 @@ public class SessionPool implements ISessionPool {
       this.host = null;
       this.port = -1;
       this.formattedNodeUrls = builder.nodeUrls.toString();
+      if (enableAutoFetch) {
+        initAvailableNodes(SessionUtils.parseSeedNodeUrls(nodeUrls));
+      } else {
+        this.availableNodes = new DummyNodesSupplier(SessionUtils.parseSeedNodeUrls(nodeUrls));
+      }
+
     } else {
       this.host = builder.host;
       this.port = builder.port;
       this.nodeUrls = null;
       this.formattedNodeUrls = String.format("%s:%s", host, port);
+      if (enableAutoFetch) {
+        initAvailableNodes(Collections.singletonList(new TEndPoint(host, port)));
+      } else {
+        this.availableNodes =
+            new DummyNodesSupplier(Collections.singletonList(new TEndPoint(host, port)));
+      }
     }
-    this.useSSL = builder.useSSL;
-    this.trustStore = builder.trustStore;
-    this.trustStorePwd = builder.trustStorePwd;
   }
 
   protected ISession constructNewSession() {
@@ -511,6 +547,41 @@ public class SessionPool implements ISessionPool {
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
     return session;
+  }
+
+  private void initThreadPool() {
+    this.executorService =
+        Executors.newSingleThreadScheduledExecutor(
+            r -> {
+              Thread t =
+                  new Thread(
+                      Thread.currentThread().getThreadGroup(), r, "PeriodicalUpdateDNList", 0);
+              if (!t.isDaemon()) {
+                t.setDaemon(true);
+              }
+              if (t.getPriority() != Thread.NORM_PRIORITY) {
+                t.setPriority(Thread.NORM_PRIORITY);
+              }
+              return t;
+            });
+  }
+
+  private void initAvailableNodes(List<TEndPoint> endPointList) {
+    this.availableNodes =
+        NodesSupplier.createNodeSupplier(
+            endPointList,
+            executorService,
+            user,
+            password,
+            zoneId,
+            thriftDefaultBufferSize,
+            thriftMaxFrameSize,
+            connectionTimeoutInMs,
+            useSSL,
+            trustStore,
+            trustStorePwd,
+            enableCompression,
+            version.toString());
   }
 
   // if this method throws an exception, either the server is broken, or the ip/port/user/password
@@ -583,7 +654,7 @@ public class SessionPool implements ISessionPool {
       session = constructNewSession();
 
       try {
-        session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint);
+        session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint, availableNodes);
         // avoid someone has called close() the session pool
         synchronized (this) {
           if (closed) {
@@ -654,6 +725,14 @@ public class SessionPool implements ISessionPool {
         LOGGER.warn(CLOSE_THE_SESSION_FAILED, e);
       }
     }
+    if (this.executorService != null) {
+      this.executorService.shutdown();
+      this.executorService = null;
+    }
+    if (availableNodes != null) {
+      this.availableNodes.close();
+      this.availableNodes = null;
+    }
     LOGGER.info("closing the session pool, cleaning queues...");
     this.closed = true;
     queue.clear();
@@ -680,7 +759,7 @@ public class SessionPool implements ISessionPool {
   private void tryConstructNewSession() {
     ISession session = constructNewSession();
     try {
-      session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint);
+      session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint, availableNodes);
       // avoid someone has called close() the session pool
       synchronized (this) {
         if (closed) {
@@ -3531,6 +3610,8 @@ public class SessionPool implements ISessionPool {
     private String trustStore;
     private String trustStorePwd;
 
+    private boolean enableAutoFetch;
+
     public Builder useSSL(boolean useSSL) {
       this.useSSL = useSSL;
       return this;
@@ -3618,6 +3699,11 @@ public class SessionPool implements ISessionPool {
 
     public Builder version(Version version) {
       this.version = version;
+      return this;
+    }
+
+    public Builder enableAutoFetch(boolean enableAutoFetch) {
+      this.enableAutoFetch = enableAutoFetch;
       return this;
     }
 
