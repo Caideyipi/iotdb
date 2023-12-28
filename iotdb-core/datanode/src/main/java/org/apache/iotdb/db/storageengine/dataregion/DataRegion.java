@@ -62,6 +62,7 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.write.InsertTablet
 import org.apache.iotdb.db.service.SettleService;
 import org.apache.iotdb.db.service.metrics.CompactionMetrics;
 import org.apache.iotdb.db.service.metrics.FileMetrics;
+import org.apache.iotdb.db.service.metrics.WritingMetrics;
 import org.apache.iotdb.db.storageengine.StorageEngine;
 import org.apache.iotdb.db.storageengine.buffer.BloomFilterCache;
 import org.apache.iotdb.db.storageengine.buffer.ChunkCache;
@@ -826,6 +827,10 @@ public class DataRegion implements IDataRegionForQuery {
                 isSeq ? this::sequenceFlushCallback : this::unsequenceFlushCallback,
                 isSeq,
                 writer);
+        if (workSequenceTsFileProcessors.get(tsFileProcessor.getTimeRangeId()) == null
+            && workUnsequenceTsFileProcessors.get(tsFileProcessor.getTimeRangeId()) == null) {
+          WritingMetrics.getInstance().recordActiveTimePartitionCount(1);
+        }
         if (isSeq) {
           workSequenceTsFileProcessors.put(timePartitionId, tsFileProcessor);
         } else {
@@ -1325,7 +1330,6 @@ public class DataRegion implements IDataRegionForQuery {
       throws IOException, DiskSpaceInsufficientException {
 
     TsFileProcessor res = tsFileProcessorTreeMap.get(timeRangeId);
-
     if (null == res) {
       // build new processor, memory control module will control the number of memtables
       TimePartitionManager.getInstance()
@@ -1334,6 +1338,10 @@ public class DataRegion implements IDataRegionForQuery {
       res = newTsFileProcessor(sequence, timeRangeId);
       tsFileProcessorTreeMap.put(timeRangeId, res);
       tsFileManager.add(res.getTsFileResource(), sequence);
+      if (!workSequenceTsFileProcessors.containsKey(timeRangeId)
+          && !workSequenceTsFileProcessors.containsKey(timeRangeId)) {
+        WritingMetrics.getInstance().recordActiveTimePartitionCount(1);
+      }
     }
 
     return res;
@@ -1481,6 +1489,10 @@ public class DataRegion implements IDataRegionForQuery {
         timePartitionIdVersionControllerMap.remove(tsFileProcessor.getTimeRangeId());
       }
     }
+    if (workSequenceTsFileProcessors.get(tsFileProcessor.getTimeRangeId()) == null
+        && workUnsequenceTsFileProcessors.get(tsFileProcessor.getTimeRangeId()) == null) {
+      WritingMetrics.getInstance().recordActiveTimePartitionCount(-1);
+    }
     return future;
   }
 
@@ -1546,7 +1558,6 @@ public class DataRegion implements IDataRegionForQuery {
             }
           });
       deleteAllSGFolders(TierManager.getInstance().getAllFilesFolders());
-
       this.workSequenceTsFileProcessors.clear();
       this.workUnsequenceTsFileProcessors.clear();
       this.tsFileManager.clear();
@@ -1627,13 +1638,13 @@ public class DataRegion implements IDataRegionForQuery {
   }
 
   public void timedFlushSeqMemTable() {
+    int count = 0;
     writeLock("timedFlushSeqMemTable");
     try {
       // only check sequence tsfiles' memtables
       List<TsFileProcessor> tsFileProcessors =
           new ArrayList<>(workSequenceTsFileProcessors.values());
       long timeLowerBound = System.currentTimeMillis() - config.getSeqMemtableFlushInterval();
-
       for (TsFileProcessor tsFileProcessor : tsFileProcessors) {
         if (tsFileProcessor.getWorkMemTableCreatedTime() < timeLowerBound) {
           logger.info(
@@ -1642,14 +1653,17 @@ public class DataRegion implements IDataRegionForQuery {
               databaseName,
               dataRegionId);
           fileFlushPolicy.apply(this, tsFileProcessor, tsFileProcessor.isSequence());
+          count++;
         }
       }
     } finally {
       writeUnlock();
     }
+    WritingMetrics.getInstance().recordTimedFlushMemTableCount(dataRegionId, count);
   }
 
   public void timedFlushUnseqMemTable() {
+    int count = 0;
     writeLock("timedFlushUnseqMemTable");
     try {
       // only check unsequence tsfiles' memtables
@@ -1665,11 +1679,13 @@ public class DataRegion implements IDataRegionForQuery {
               databaseName,
               dataRegionId);
           fileFlushPolicy.apply(this, tsFileProcessor, tsFileProcessor.isSequence());
+          count++;
         }
       }
     } finally {
       writeUnlock();
     }
+    WritingMetrics.getInstance().recordTimedFlushMemTableCount(dataRegionId, count);
   }
 
   /** This method will be blocked until all tsfile processors are closed. */
