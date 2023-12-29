@@ -177,8 +177,6 @@ public class IoTDBConfig {
   /** The proportion of write memory for loading TsFile */
   private double loadTsFileProportion = 0.125;
 
-  private int maxLoadingTimeseriesNumber = 2000;
-
   /**
    * If memory cost of data region increased more than proportion of {@linkplain
    * IoTDBConfig#getAllocateMemoryForStorageEngine()}*{@linkplain
@@ -238,6 +236,7 @@ public class IoTDBConfig {
 
   /** The period when outdated wal files are periodically deleted. Unit: millisecond */
   private volatile long deleteWalFilesPeriodInMs = 20 * 1000L;
+
   // endregion
 
   /**
@@ -549,6 +548,7 @@ public class IoTDBConfig {
    * tasks containing mods files are selected first.
    */
   private long innerCompactionTaskSelectionModsFileThreshold = 10 * 1024 * 1024L;
+
   /**
    * When disk availability is lower than the sum of (disk_space_warning_threshold +
    * inner_compaction_task_selection_disk_redundancy), inner compaction tasks containing mods files
@@ -977,6 +977,7 @@ public class IoTDBConfig {
 
   /** Number of queues per forwarding trigger */
   private int triggerForwardMaxQueueNumber = 8;
+
   /** The length of one of the queues per forwarding trigger */
   private int triggerForwardMaxSizePerQueue = 2000;
 
@@ -1103,6 +1104,15 @@ public class IoTDBConfig {
   private int maxSizePerBatch = 16 * 1024 * 1024;
   private int maxPendingBatchesNum = 5;
   private double maxMemoryRatioForQueue = 0.6;
+
+  /** Load related */
+  private int loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber = 4096;
+
+  private long loadTsFileAnalyzeSchemaMemorySizeInBytes =
+      0; // 0 means that the decision will be adaptive based on the number of sequences
+
+  private long loadMemoryAllocateRetryIntervalMs = 1000;
+  private int loadMemoryAllocateMaxRetries = 5;
 
   /** Pipe related */
   /** initialized as empty, updated based on the latest `systemDir` during querying */
@@ -3301,14 +3311,6 @@ public class IoTDBConfig {
     return loadTsFileProportion;
   }
 
-  public int getMaxLoadingTimeseriesNumber() {
-    return maxLoadingTimeseriesNumber;
-  }
-
-  public void setMaxLoadingTimeseriesNumber(int maxLoadingTimeseriesNumber) {
-    this.maxLoadingTimeseriesNumber = maxLoadingTimeseriesNumber;
-  }
-
   public static String getEnvironmentVariables() {
     return "\n\t"
         + IoTDBConstant.IOTDB_HOME
@@ -3769,6 +3771,41 @@ public class IoTDBConfig {
 
   public int getModeMapSizeThreshold() {
     return modeMapSizeThreshold;
+  }
+
+  public int getLoadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber() {
+    return loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber;
+  }
+
+  public void setLoadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber(
+      int loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber) {
+    this.loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber =
+        loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber;
+  }
+
+  public long getLoadTsFileAnalyzeSchemaMemorySizeInBytes() {
+    return loadTsFileAnalyzeSchemaMemorySizeInBytes;
+  }
+
+  public void setLoadTsFileAnalyzeSchemaMemorySizeInBytes(
+      long loadTsFileAnalyzeSchemaMemorySizeInBytes) {
+    this.loadTsFileAnalyzeSchemaMemorySizeInBytes = loadTsFileAnalyzeSchemaMemorySizeInBytes;
+  }
+
+  public long getLoadMemoryAllocateRetryIntervalMs() {
+    return loadMemoryAllocateRetryIntervalMs;
+  }
+
+  public void setLoadMemoryAllocateRetryIntervalMs(long loadMemoryAllocateRetryIntervalMs) {
+    this.loadMemoryAllocateRetryIntervalMs = loadMemoryAllocateRetryIntervalMs;
+  }
+
+  public int getLoadMemoryAllocateMaxRetries() {
+    return loadMemoryAllocateMaxRetries;
+  }
+
+  public void setLoadMemoryAllocateMaxRetries(int loadMemoryAllocateMaxRetries) {
+    this.loadMemoryAllocateMaxRetries = loadMemoryAllocateMaxRetries;
   }
 
   public void setPipeReceiverFileDirs(String[] pipeReceiverFileDirs) {
