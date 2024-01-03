@@ -307,7 +307,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         analyzeDeviceViewOutput(analysis, queryStatement);
         analyzeDeviceViewInput(analysis, queryStatement);
 
-        analyzeInto(analysis, queryStatement, deviceList, outputExpressions);
+        analyzeInto(analysis, queryStatement, deviceList, outputExpressions, context);
       } else {
         // analyze output expressions
         if (queryStatement.isGroupByLevel()) {
@@ -357,7 +357,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         analyzeSource(analysis, queryStatement);
 
         // analyze into paths
-        analyzeInto(analysis, queryStatement, outputExpressions);
+        analyzeInto(analysis, queryStatement, outputExpressions, context);
       }
 
       analyzeGroupByTime(analysis, queryStatement);
@@ -481,7 +481,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       }
 
       // make sure paths in logical view is fetched
-      updateSchemaTreeByViews(analysis, schemaTree);
+      updateSchemaTreeByViews(analysis, schemaTree, context);
     } finally {
       logger.debug("[EndFetchSchema]");
       QueryPlanCostMetricSet.getInstance()
@@ -589,7 +589,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         lastQueryNonWritableViewSourceExpressionMap);
   }
 
-  private void updateSchemaTreeByViews(Analysis analysis, ISchemaTree originSchemaTree) {
+  private void updateSchemaTreeByViews(
+      Analysis analysis, ISchemaTree originSchemaTree, MPPQueryContext context) {
     if (!originSchemaTree.hasLogicalViewMeasurement()) {
       return;
     }
@@ -623,7 +624,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     }
 
     if (needToReFetch) {
-      ISchemaTree viewSchemaTree = this.schemaFetcher.fetchSchema(patternTree, true, null);
+      ISchemaTree viewSchemaTree = this.schemaFetcher.fetchSchema(patternTree, true, context);
       originSchemaTree.mergeSchemaTree(viewSchemaTree);
       Set<String> allDatabases = viewSchemaTree.getDatabases();
       allDatabases.addAll(originSchemaTree.getDatabases());
@@ -2166,7 +2167,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       Analysis analysis,
       QueryStatement queryStatement,
       List<PartialPath> deviceSet,
-      List<Pair<Expression, String>> outputExpressions) {
+      List<Pair<Expression, String>> outputExpressions,
+      MPPQueryContext context) {
     if (!queryStatement.isSelectInto()) {
       return;
     }
@@ -2217,7 +2219,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
     // fetch schema of target paths
     long startTime = System.nanoTime();
-    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree, true, null);
+    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree, true, context);
     QueryPlanCostMetricSet.getInstance()
         .recordPlanCost(SCHEMA_FETCHER, System.nanoTime() - startTime);
     deviceViewIntoPathDescriptor.bindType(targetSchemaTree);
@@ -2228,7 +2230,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   private void analyzeInto(
       Analysis analysis,
       QueryStatement queryStatement,
-      List<Pair<Expression, String>> outputExpressions) {
+      List<Pair<Expression, String>> outputExpressions,
+      MPPQueryContext context) {
     if (!queryStatement.isSelectInto()) {
       return;
     }
@@ -2285,8 +2288,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
     // fetch schema of target paths
     long startTime = System.nanoTime();
-    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree, true, null);
-    updateSchemaTreeByViews(analysis, targetSchemaTree);
+    ISchemaTree targetSchemaTree = schemaFetcher.fetchSchema(targetPathTree, true, context);
+    updateSchemaTreeByViews(analysis, targetSchemaTree, context);
     QueryPlanCostMetricSet.getInstance()
         .recordPlanCost(SCHEMA_FETCHER, System.nanoTime() - startTime);
     intoPathDescriptor.bindType(targetSchemaTree);
@@ -2897,7 +2900,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       // request schema fetch API
       logger.debug("[StartFetchSchema]");
       ISchemaTree schemaTree = schemaFetcher.fetchSchema(patternTree, true, context);
-      updateSchemaTreeByViews(analysis, schemaTree);
+      updateSchemaTreeByViews(analysis, schemaTree, context);
       logger.debug("[EndFetchSchema]]");
 
       analyzeLastSource(
@@ -3133,7 +3136,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     Set<String> deduplicatedDevicePaths = new HashSet<>();
 
     if (schemaTree.hasLogicalViewMeasurement()) {
-      updateSchemaTreeByViews(analysis, schemaTree);
+      updateSchemaTreeByViews(analysis, schemaTree, context);
 
       Set<PartialPath> deletePatternSet = new HashSet<>(deleteDataStatement.getPathList());
       IMeasurementSchema measurementSchema;
