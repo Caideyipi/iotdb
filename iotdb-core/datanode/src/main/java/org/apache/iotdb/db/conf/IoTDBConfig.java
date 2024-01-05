@@ -174,9 +174,6 @@ public class IoTDBConfig {
   /** The proportion of write memory for compaction */
   private double compactionProportion = 0.2;
 
-  /** The proportion of write memory for loading TsFile */
-  private double loadTsFileProportion = 0.125;
-
   /**
    * If memory cost of data region increased more than proportion of {@linkplain
    * IoTDBConfig#getAllocateMemoryForStorageEngine()}*{@linkplain
@@ -1106,6 +1103,8 @@ public class IoTDBConfig {
   private double maxMemoryRatioForQueue = 0.6;
 
   /** Load related */
+  private double maxAllocateMemoryRatioForLoad = 0.8;
+
   private int loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber = 4096;
 
   private long loadTsFileAnalyzeSchemaMemorySizeInBytes =
@@ -3307,10 +3306,6 @@ public class IoTDBConfig {
     return compactionProportion;
   }
 
-  public double getLoadTsFileProportion() {
-    return loadTsFileProportion;
-  }
-
   public static String getEnvironmentVariables() {
     return "\n\t"
         + IoTDBConstant.IOTDB_HOME
@@ -3771,6 +3766,14 @@ public class IoTDBConfig {
 
   public int getModeMapSizeThreshold() {
     return modeMapSizeThreshold;
+  }
+
+  public double getMaxAllocateMemoryRatioForLoad() {
+    return maxAllocateMemoryRatioForLoad;
+  }
+
+  public void setMaxAllocateMemoryRatioForLoad(double maxAllocateMemoryRatioForLoad) {
+    this.maxAllocateMemoryRatioForLoad = maxAllocateMemoryRatioForLoad;
   }
 
   public int getLoadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber() {
