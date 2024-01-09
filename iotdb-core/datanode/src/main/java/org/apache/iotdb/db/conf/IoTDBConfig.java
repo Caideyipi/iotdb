@@ -432,7 +432,7 @@ public class IoTDBConfig {
   private boolean enableAINodeService = false;
 
   /** Insert the non overlapped unsequence files into sequence space */
-  private boolean enableInsertionCrossSpaceCompaction = false;
+  private boolean enableInsertionCrossSpaceCompaction = true;
 
   /** The buffer for sort operation */
   private long sortBufferSize = 1024 * 1024L;
