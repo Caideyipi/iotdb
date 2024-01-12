@@ -109,24 +109,31 @@ public class ActivationManager {
 
   LicenseFileMonitor licenseFileMonitor;
 
-  private ISystemInfoGetter systemInfoGetter;
+  private static final ISystemInfoGetter systemInfoGetter = generateSystemInfoGetter();
 
   private final ConfigNodeDescriptor configNodeDescriptor = ConfigNodeDescriptor.getInstance();
 
-  private final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
+  static final ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter =
       ImmutableMap.of(
-          License.CPU_ID_NAME,
-          () -> this.systemInfoGetter.getCPUId(),
-          License.MAIN_BOARD_ID_NAME,
-          () -> this.systemInfoGetter.getMainBoardId(),
-          License.SYSTEM_UUID_NAME,
-          () -> this.systemInfoGetter.getSystemUUID(),
+          License.CPU_ID_NAME, systemInfoGetter::getCPUId,
+          License.MAIN_BOARD_ID_NAME, systemInfoGetter::getMainBoardId,
+          License.SYSTEM_UUID_NAME, systemInfoGetter::getSystemUUID);
+
+  private final ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
+      ImmutableMap.of(
           License.IP_ADDRESS_NAME,
           () -> this.configNodeDescriptor.getConf().getInternalAddress(),
           License.INTERNAL_PORT_NAME,
           () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
           License.IS_SEED_CONFIGNODE_NODE_NAME,
           () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()));
+
+  private final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
+      ImmutableMap.<String, Supplier<String>>builder()
+          .putAll(hardwareSystemInfoNameToItsGetter)
+          .putAll(configurableSystemInfoNameToItsGetter)
+          .build();
+
   /** In some situation (like not root user) we cannot get cpu id or main board id. */
   private final ImmutableSet<String> systemInfoAllowEmpty =
       ImmutableSet.of(License.CPU_ID_NAME, License.MAIN_BOARD_ID_NAME, License.SYSTEM_UUID_NAME);
@@ -136,7 +143,11 @@ public class ActivationManager {
   public ActivationManager(ConfigManager configManager) throws LicenseException {
     initLicense(configManager);
 
-    systemInfoGetter = generateSystemInfoGetter();
+    try {
+      generateNodeUUIDIfNotExist();
+    } catch (IOException e) {
+      throw new LicenseException(e);
+    }
 
     createActivationDir();
 
@@ -418,8 +429,9 @@ public class ActivationManager {
       if (!verifyAllSystemInfo(properties)) {
         throw new LicenseException("This license is not allowed to activate this ConfigNode.");
       }
-      license.loadFromProperties(properties, true);
-      logger.info("Load license success.");
+      if (license.loadFromProperties(properties, true)) {
+        logger.info("Load license success.");
+      }
       checkSystemTimeAndIssueTime();
     } catch (LicenseException | IOException e) {
       logger.error("Load license fail.", e);
@@ -512,7 +524,7 @@ public class ActivationManager {
    *
    * @return node UUID
    */
-  public static String getOrGenerateNodeUUID() throws IOException {
+  public static void generateNodeUUIDIfNotExist() throws IOException {
     File envFile = new File(ENV_FILE_PATH);
     if (envFile.createNewFile()) {
       // Do nothing, don't print log here
@@ -522,7 +534,7 @@ public class ActivationManager {
       envProperties.load(reader);
     }
     if (envProperties.containsKey(NODE_UUID_IN_ENV_FILE)) {
-      return String.valueOf(envProperties.get(NODE_UUID_IN_ENV_FILE));
+      return;
     }
     final String uuid = String.valueOf(UUID.randomUUID());
     envProperties.put(NODE_UUID_IN_ENV_FILE, uuid);
@@ -530,7 +542,6 @@ public class ActivationManager {
       envProperties.store(fos, null);
       fos.getFD().sync();
     }
-    return uuid;
   }
 
   public static String getNodeUUID() throws IOException, LicenseException {
@@ -556,12 +567,12 @@ public class ActivationManager {
   public void generateSystemInfoFile() {
     Properties systemInfoProperties = new Properties();
     try (FileOutputStream fos = new FileOutputStream(SYSTEM_INFO_FILE_PATH)) {
+      // generate properties
       for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
         systemInfoProperties.setProperty(entry.getKey(), entry.getValue().get());
       }
-      if (systemInfoProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()) {
-        systemInfoProperties.setProperty(License.NODE_UUID_NAME, getOrGenerateNodeUUID());
-      }
+      systemInfoProperties.setProperty(License.NODE_UUID_NAME, getNodeUUID());
+      // store properties to file
       StringWriter stringWriter = new StringWriter();
       systemInfoProperties.store(stringWriter, null);
       String beforeEncrypt = stringWriter.toString();
@@ -578,21 +589,34 @@ public class ActivationManager {
     }
   }
 
-  public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
+  public static boolean verifyAllSystemInfoStatic(
+      Properties licenseProperties,
+      ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter,
+      ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter) {
+    final boolean skipHardwareSystemInfoCheck =
+        Boolean.parseBoolean(
+            licenseProperties.getProperty(License.SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME, "false"));
     try {
-      for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
-        if (!verifySystemInfo(
-            licenseProperties,
-            entry.getKey(),
-            entry.getValue().get(),
-            systemInfoAllowEmpty.contains(entry.getKey()))) {
+      if (skipHardwareSystemInfoCheck) {
+        logger.info(RSA.publicEncrypt("skip hardware system info check"));
+      } else {
+        for (Entry<String, Supplier<String>> entry : hardwareSystemInfoNameToItsGetter.entrySet()) {
+          if (!verifySystemInfo(licenseProperties, entry.getKey(), entry.getValue().get(), true)) {
+            return false;
+          }
+        }
+      }
+      for (Entry<String, Supplier<String>> entry :
+          configurableSystemInfoNameToItsGetter.entrySet()) {
+        if (!verifySystemInfo(licenseProperties, entry.getKey(), entry.getValue().get(), false)) {
           return false;
         }
       }
       if (licenseProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()
-          && !verifySystemInfo(
-              licenseProperties, License.NODE_UUID_NAME, getOrGenerateNodeUUID(), false)) {
-        return false;
+          || skipHardwareSystemInfoCheck) {
+        if (!verifySystemInfo(licenseProperties, License.NODE_UUID_NAME, getNodeUUID(), false)) {
+          return false;
+        }
       }
     } catch (Exception ignored) {
       logger.error("Verify system info fail.");
@@ -601,19 +625,26 @@ public class ActivationManager {
     return true;
   }
 
-  private boolean verifySystemInfo(
+  public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
+    return verifyAllSystemInfoStatic(
+        licenseProperties,
+        hardwareSystemInfoNameToItsGetter,
+        configurableSystemInfoNameToItsGetter);
+  }
+
+  private static boolean verifySystemInfo(
       Properties licenseProperties, String key, String systemActualValue, boolean allowEmpty)
       throws LicenseException {
     if (!licenseProperties.containsKey(key)) {
       String errorMessage = String.format("License does not contain the \"%s\" field.", key);
-      logErrorEncrypted(errorMessage);
+      logger.error(RSA.publicEncrypt(errorMessage));
       return false;
     }
     if (licenseProperties.get(key).equals("") && allowEmpty) {
       String warnMessage =
           String.format(
               "License's \"%s\" field is empty, and this field is allowed to be empty.", key);
-      logWarnEncrypted(warnMessage);
+      logger.warn(RSA.publicEncrypt(warnMessage));
       return true;
     }
     if (!licenseProperties.get(key).equals(systemActualValue)) {
@@ -622,7 +653,7 @@ public class ActivationManager {
           String.format(
               "License's \"%s\" field has value \"%s\", but system's actual value is \"%s\". To make this license work, these two parameters must be the same.",
               key, licenseValue, systemActualValue);
-      logErrorEncrypted(errorMessage);
+      logger.error(RSA.publicEncrypt(errorMessage));
       return false;
     }
     return true;
@@ -699,21 +730,6 @@ public class ActivationManager {
 
   protected String decrypt(String src) throws LicenseException {
     return RSA.publicDecrypt(src);
-  }
-
-  protected void logInfoEncrypted(String raw) throws LicenseException {
-    String encrypted = encrypt(raw);
-    logger.info(encrypted);
-  }
-
-  protected void logWarnEncrypted(String raw) throws LicenseException {
-    String encrypted = encrypt(raw);
-    logger.warn(encrypted);
-  }
-
-  protected void logErrorEncrypted(String raw) throws LicenseException {
-    String encrypted = encrypt(raw);
-    logger.error(encrypted);
   }
 
   private void checkSystemTimeAndIssueTime() {

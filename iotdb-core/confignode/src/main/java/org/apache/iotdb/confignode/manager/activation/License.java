@@ -36,6 +36,7 @@ public class License {
   public static final String LICENSE_ISSUE_TIMESTAMP_NAME = "L1";
   public static final String LICENSE_EXPIRE_TIMESTAMP_NAME = "L2";
   public static final String DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME = "L3";
+  public static final String SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME = "L4";
 
   // system info fields
   public static final String CPU_ID_NAME = "S1";
@@ -59,11 +60,12 @@ public class License {
   // activate info
   protected long licenseIssueTimestamp = 0;
   protected long licenseExpireTimestamp = 0;
+  protected long disconnectionFromActiveNodeTimeLimit = 0;
+  protected boolean skipHardwareSystemInfoCheck = false;
   protected short dataNodeNumLimit = 0;
   protected int dataNodeCpuCoreNumLimit = 0;
   protected long deviceNumLimit = 0;
   protected long sensorNumLimit = 0;
-  protected long disconnectionFromActiveNodeTimeLimit = 0;
   protected short aiNodeNumLimit = 0;
 
   // other info
@@ -129,11 +131,12 @@ public class License {
     // activate info
     licenseIssueTimestamp = 0;
     licenseExpireTimestamp = 0;
+    disconnectionFromActiveNodeTimeLimit = 0;
+    skipHardwareSystemInfoCheck = false;
     dataNodeNumLimit = 0;
     dataNodeCpuCoreNumLimit = 0;
     deviceNumLimit = 0;
     sensorNumLimit = 0;
-    disconnectionFromActiveNodeTimeLimit = 0;
     aiNodeNumLimit = 0;
     // other
     licenseSource = LicenseSource.NO_LICENSE;
@@ -144,13 +147,16 @@ public class License {
 
   // region load method
 
-  public void loadFromProperties(Properties properties, boolean needLog) throws LicenseException {
+  public boolean loadFromProperties(Properties properties, boolean needLog)
+      throws LicenseException {
     // try load properties
     License newLicense = new License(null);
     // activate info
     try {
       newLicense.licenseIssueTimestamp = getLong(LICENSE_ISSUE_TIMESTAMP_NAME, properties);
       newLicense.licenseExpireTimestamp = getLong(LICENSE_EXPIRE_TIMESTAMP_NAME, properties);
+      newLicense.skipHardwareSystemInfoCheck =
+          Boolean.parseBoolean(properties.getProperty(SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME));
       newLicense.dataNodeNumLimit = (short) getLong(DATANODE_NUM_LIMIT_NAME, properties);
       newLicense.dataNodeCpuCoreNumLimit =
           (int) getLong(DATANODE_CPU_CORE_NUM_LIMIT_NAME, properties);
@@ -161,7 +167,7 @@ public class License {
       newLicense.aiNodeNumLimit = (short) getLong(AINODE_NUM_LIMIT_NAME, properties);
     } catch (LicenseException | NumberFormatException e) {
       logger.error("License parse error", e);
-      return;
+      return false;
     }
 
     // compare and copy
@@ -177,18 +183,20 @@ public class License {
     }
 
     this.onLicenseChange.run();
+
+    return true;
   }
 
   public void loadFromTLicense(TLicense license) throws LicenseException {
     License newLicense = new License(null);
     newLicense.licenseIssueTimestamp = license.licenseIssueTimestamp;
     newLicense.licenseExpireTimestamp = license.getExpireTimestamp();
+    newLicense.disconnectionFromActiveNodeTimeLimit =
+        license.getDisconnectionFromActiveNodeTimeLimit();
     newLicense.dataNodeCpuCoreNumLimit = license.cpuCoreNumLimit;
     newLicense.dataNodeNumLimit = license.dataNodeNumLimit;
     newLicense.deviceNumLimit = license.deviceNumLimit;
     newLicense.sensorNumLimit = license.sensorNumLimit;
-    newLicense.disconnectionFromActiveNodeTimeLimit =
-        license.getDisconnectionFromActiveNodeTimeLimit();
     newLicense.aiNodeNumLimit = license.getAiNodeNumLimit();
 
     // compare and copy
@@ -206,15 +214,15 @@ public class License {
 
   // region helper method
 
-  private long getLong(String str, Properties properties) throws LicenseException {
-    if (!properties.containsKey(str)) {
+  private long getLong(String key, Properties properties) throws LicenseException {
+    if (!properties.containsKey(key)) {
       throw new LicenseException(
-          String.format("%s is necessary, but cannot be found in license file", str));
+          String.format("%s is necessary, but cannot be found in license file", key));
     }
     try {
-      return Long.parseLong(properties.getProperty(str).trim());
+      return Long.parseLong(properties.getProperty(key).trim());
     } catch (NumberFormatException e) {
-      throw new LicenseException(str + " field cannot be parsed to Long", e);
+      throw new LicenseException(key + " field cannot be parsed to Long", e);
     }
   }
 
@@ -252,6 +260,14 @@ public class License {
         "licenseExpireTimestamp",
         this.licenseExpireTimestamp,
         anotherLicense.licenseExpireTimestamp);
+    logFieldDifference(
+        "disconnectionFromActiveNodeTimeLimit",
+        this.disconnectionFromActiveNodeTimeLimit,
+        anotherLicense.disconnectionFromActiveNodeTimeLimit);
+    logFieldDifference(
+        "skipHardwareSystemInfoCheck",
+        this.skipHardwareSystemInfoCheck,
+        anotherLicense.skipHardwareSystemInfoCheck);
     logFieldDifference("dataNodeNumLimit", this.dataNodeNumLimit, anotherLicense.dataNodeNumLimit);
     logFieldDifference(
         "dataNodeCpuCoreNumLimit",
@@ -259,10 +275,6 @@ public class License {
         anotherLicense.dataNodeCpuCoreNumLimit);
     logFieldDifference("deviceNumLimit", this.deviceNumLimit, anotherLicense.deviceNumLimit);
     logFieldDifference("sensorNumLimit", this.sensorNumLimit, anotherLicense.sensorNumLimit);
-    logFieldDifference(
-        "disconnectionFromActiveNodeTimeLimit",
-        this.disconnectionFromActiveNodeTimeLimit,
-        anotherLicense.disconnectionFromActiveNodeTimeLimit);
     logFieldDifference("aiNodeNumLimit", this.aiNodeNumLimit, anotherLicense.aiNodeNumLimit);
   }
 
@@ -270,11 +282,12 @@ public class License {
   private void copyFrom(License anotherLicense) {
     this.licenseIssueTimestamp = anotherLicense.licenseIssueTimestamp;
     this.licenseExpireTimestamp = anotherLicense.licenseExpireTimestamp;
+    this.disconnectionFromActiveNodeTimeLimit = anotherLicense.disconnectionFromActiveNodeTimeLimit;
+    this.skipHardwareSystemInfoCheck = anotherLicense.skipHardwareSystemInfoCheck;
     this.dataNodeNumLimit = anotherLicense.dataNodeNumLimit;
     this.dataNodeCpuCoreNumLimit = anotherLicense.dataNodeCpuCoreNumLimit;
     this.deviceNumLimit = anotherLicense.deviceNumLimit;
     this.sensorNumLimit = anotherLicense.sensorNumLimit;
-    this.disconnectionFromActiveNodeTimeLimit = anotherLicense.disconnectionFromActiveNodeTimeLimit;
     this.aiNodeNumLimit = anotherLicense.aiNodeNumLimit;
   }
 

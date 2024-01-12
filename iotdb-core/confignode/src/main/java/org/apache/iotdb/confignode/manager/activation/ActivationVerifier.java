@@ -31,8 +31,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -123,14 +121,9 @@ public class ActivationVerifier {
   private static void checkSystemInfo(Properties systemProperties, Properties licenseProperties) {
     SystemInfoGetter systemInfoGetter = ActivationManager.generateSystemInfoGetter();
     systemInfoGetter.setLogEnabled(false);
-    ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
+
+    ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
         ImmutableMap.of(
-            License.CPU_ID_NAME,
-            systemInfoGetter::getCPUId,
-            License.MAIN_BOARD_ID_NAME,
-            systemInfoGetter::getMainBoardId,
-            License.SYSTEM_UUID_NAME,
-            systemInfoGetter::getSystemUUID,
             License.IP_ADDRESS_NAME,
             () -> String.valueOf(systemProperties.get(IoTDBConstant.CN_INTERNAL_ADDRESS)),
             License.INTERNAL_PORT_NAME,
@@ -138,22 +131,10 @@ public class ActivationVerifier {
             License.IS_SEED_CONFIGNODE_NODE_NAME,
             () -> String.valueOf(systemProperties.get("is_seed_config_node")));
 
-    for (Map.Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
-      String systemInfoName = entry.getKey();
-      String systemInfoValue = entry.getValue().get();
-      String licenseValue = licenseProperties.getProperty(systemInfoName);
-      if (!systemInfoValue.equals(licenseValue)) {
-        errorThenExit(FAIL_MESSAGE);
-      }
-    }
-
-    try {
-      if (licenseProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()
-          && !Objects.equals(
-              licenseProperties.get(License.NODE_UUID_NAME), ActivationManager.getNodeUUID())) {
-        errorThenExit(FAIL_MESSAGE);
-      }
-    } catch (Exception e) {
+    if (!ActivationManager.verifyAllSystemInfoStatic(
+        licenseProperties,
+        ActivationManager.hardwareSystemInfoNameToItsGetter,
+        configurableSystemInfoNameToItsGetter)) {
       errorThenExit(FAIL_MESSAGE);
     }
   }
