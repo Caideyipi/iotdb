@@ -75,6 +75,9 @@ class AINodeConfig(object):
     def get_cluster_name(self) -> str:
         return self.__cluster_name
 
+    def set_cluster_name(self, cluster_name: str) -> None:
+        self.__cluster_name = cluster_name
+
     def get_version_info(self) -> str:
         return self.__version_info
 
@@ -249,6 +252,10 @@ class AINodeDescriptor(object):
 
             if file_configs['ain_seed_config_node'] is not None:
                 self.__config.set_ain_target_config_node_list(file_configs['ain_seed_config_node'])
+
+            if file_configs['cluster_name'] is not None:
+                self.__config.set_cluster_name(file_configs['cluster_name'])
+
             # AINODE_THRIFT_COMPRESSION_ENABLED
             if file_configs['ain_thrift_compression_enabled'] is not None:
                 self.__config.set_ain_thrift_compression_enabled(int(file_configs['ain_thrift_compression_enabled']))
