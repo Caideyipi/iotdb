@@ -431,9 +431,6 @@ public class IoTDBConfig {
   /** Enable the service for AINode */
   private boolean enableAINodeService = false;
 
-  /** Insert the non overlapped unsequence files into sequence space */
-  private boolean enableInsertionCrossSpaceCompaction = true;
-
   /** The buffer for sort operation */
   private long sortBufferSize = 1024 * 1024L;
 
@@ -2718,14 +2715,6 @@ public class IoTDBConfig {
 
   public void setEnableAINodeService(boolean enableAINodeService) {
     this.enableAINodeService = enableAINodeService;
-  }
-
-  public boolean isEnableInsertionCrossSpaceCompaction() {
-    return enableInsertionCrossSpaceCompaction;
-  }
-
-  public void setEnableInsertionCrossSpaceCompaction(boolean enableInsertionCrossSpaceCompaction) {
-    this.enableInsertionCrossSpaceCompaction = enableInsertionCrossSpaceCompaction;
   }
 
   public InnerSequenceCompactionSelector getInnerSequenceCompactionSelector() {
