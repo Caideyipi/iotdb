@@ -306,13 +306,18 @@ public class ConfigPlanExecutor {
 
   public TSStatus executeNonQueryPlan(ConfigPhysicalPlan physicalPlan)
       throws UnknownPhysicalPlanTypeException {
+    TSStatus status;
     switch (physicalPlan.getType()) {
       case RegisterDataNode:
         return nodeInfo.registerDataNode((RegisterDataNodePlan) physicalPlan);
       case RemoveDataNode:
         return nodeInfo.removeDataNode((RemoveDataNodePlan) physicalPlan);
       case UpdateDataNodeConfiguration:
-        return nodeInfo.updateDataNode((UpdateDataNodePlan) physicalPlan);
+        status = nodeInfo.updateDataNode((UpdateDataNodePlan) physicalPlan);
+        if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+          return status;
+        }
+        return partitionInfo.updateDataNode((UpdateDataNodePlan) physicalPlan);
       case RegisterAINode:
         return nodeInfo.registerAINode((RegisterAINodePlan) physicalPlan);
       case UpdateAINodeConfiguration:
@@ -320,7 +325,7 @@ public class ConfigPlanExecutor {
       case RemoveAINode:
         return nodeInfo.removeAINode((RemoveAINodePlan) physicalPlan);
       case CreateDatabase:
-        TSStatus status = clusterSchemaInfo.createDatabase((DatabaseSchemaPlan) physicalPlan);
+        status = clusterSchemaInfo.createDatabase((DatabaseSchemaPlan) physicalPlan);
         if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
           return status;
         }
