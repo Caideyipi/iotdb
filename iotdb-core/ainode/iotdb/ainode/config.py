@@ -203,15 +203,15 @@ class AINodeDescriptor(object):
         system_properties_file = os.path.join(self.__config.get_ain_system_dir(), AINODE_SYSTEM_FILE_NAME)
         if os.path.exists(system_properties_file):
             system_configs = self.load_properties(system_properties_file)
-            if system_configs['ainode_id'] is not None:
+            if 'ainode_id' in system_configs:
                 self.__config.set_ainode_id(int(system_configs['ainode_id']))
 
         git_file = os.path.join(AINODE_ROOT_DIR, AINODE_ROOT_CONF_DIRECTORY_NAME, AINODE_CONF_GIT_FILE_NAME)
         if os.path.exists(git_file):
             git_configs = self.load_properties(git_file)
-            if git_configs['git.commit.id.abbrev'] is not None:
+            if 'git.commit.id.abbrev' in git_configs:
                 build_info = git_configs['git.commit.id.abbrev']
-                if git_configs['git.dirty'] is not None:
+                if 'git.dirty' in git_configs:
                     if git_configs['git.dirty'] == "true":
                         build_info += "-dev"
                 self.__config.set_build_info(build_info)
@@ -219,7 +219,7 @@ class AINodeDescriptor(object):
         pom_file = os.path.join(AINODE_ROOT_DIR, AINODE_ROOT_CONF_DIRECTORY_NAME, AINODE_CONF_POM_FILE_NAME)
         if os.path.exists(pom_file):
             pom_configs = self.load_properties(pom_file)
-            if pom_configs['version'] is not None:
+            if 'version' in pom_configs:
                 self.__config.set_version_info(pom_configs['version'])
 
         conf_file = os.path.join(AINODE_CONF_DIRECTORY_NAME, AINODE_CONF_FILE_NAME)
@@ -233,33 +233,34 @@ class AINodeDescriptor(object):
         try:
             file_configs = self.load_properties(conf_file)
 
-            if file_configs['ain_inference_rpc_address'] is not None:
+            config_keys = file_configs.keys()
+
+            if 'ain_inference_rpc_address' in config_keys:
                 self.__config.set_ain_inference_rpc_address(file_configs['ain_inference_rpc_address'])
 
-            if file_configs['ain_inference_rpc_port'] is not None:
+            if 'ain_inference_rpc_port' in config_keys:
                 self.__config.set_ain_inference_rpc_port(int(file_configs['ain_inference_rpc_port']))
 
-            if file_configs['ain_logs_dir'] is not None:
+            if 'ain_logs_dir' in config_keys:
                 self.__config.set_ain_logs_dir(file_configs['ain_logs_dir'])
 
             set_logger(self.__config.get_ain_logs_dir())
 
-            if file_configs['ain_models_dir'] is not None:
+            if 'ain_models_dir' in config_keys:
                 self.__config.set_ain_models_dir(file_configs['ain_models_dir'])
 
-            if file_configs['ain_system_dir'] is not None:
+            if 'ain_system_dir' in config_keys:
                 self.__config.set_ain_system_dir(file_configs['ain_system_dir'])
 
-            if file_configs['ain_seed_config_node'] is not None:
+            if 'ain_seed_config_node' in config_keys:
                 self.__config.set_ain_target_config_node_list(file_configs['ain_seed_config_node'])
 
-            if file_configs['cluster_name'] is not None:
+            if 'cluster_name' in config_keys:
                 self.__config.set_cluster_name(file_configs['cluster_name'])
 
             # AINODE_THRIFT_COMPRESSION_ENABLED
-            if file_configs['ain_thrift_compression_enabled'] is not None:
+            if 'ain_thrift_compression_enabled' in config_keys:
                 self.__config.set_ain_thrift_compression_enabled(int(file_configs['ain_thrift_compression_enabled']))
-
 
         except BadNodeUrlError:
             logger.warning("Cannot load AINode conf file, use default configuration.")
