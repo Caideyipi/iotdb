@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.iotdb.db.it.utils.TestUtils.resultSetEqualTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -183,6 +184,57 @@ public class IoTDBAlignByDeviceWithViewIT {
   }
 
   @Test
+  public void testOrderBy() {
+    String[] expectedHeader = new String[] {"Time,Device,vs1,vs2"};
+    String[] retArray =
+        new String[] {
+          "2,root.view.d1,2.0,2,",
+          "2,root.view.d2,2.0,2,",
+          "3,root.view.d1,30000.0,null,",
+          "3,root.view.d2,3.0,null,",
+          "4,root.view.d1,4.0,4,"
+        };
+    resultSetEqualTest(
+        "SELECT vs1, vs2 FROM root.view.** ORDER BY TIME OFFSET 2 LIMIT 5 ALIGN BY DEVICE;",
+        expectedHeader,
+        retArray);
+
+    expectedHeader = new String[] {"Time,Device,vs1,vs2"};
+    retArray =
+        new String[] {
+          "39,root.view.d1,null,39,",
+          "39,root.view.d2,null,39,",
+          "38,root.view.d1,null,38,",
+          "38,root.view.d2,null,38,",
+          "37,root.view.d1,null,37,"
+        };
+    resultSetEqualTest(
+        "SELECT vs1, vs2 FROM root.view.** ORDER BY TIME DESC OFFSET 2 LIMIT 5 ALIGN BY DEVICE;",
+        expectedHeader,
+        retArray);
+
+    expectedHeader = new String[] {"Device,count(vs1),first_value(vs2)"};
+    retArray =
+        new String[] {
+          "root.view.d2,19,1,",
+        };
+    resultSetEqualTest(
+        "SELECT count(vs1), first_value(vs2) FROM root.view.** ORDER BY TIME DESC OFFSET 1 LIMIT 1 ALIGN BY DEVICE;",
+        expectedHeader,
+        retArray);
+
+    expectedHeader = new String[] {"Time,Device,count(vs1),first_value(vs2)"};
+    retArray =
+        new String[] {
+          "16,root.view.d1,5,12,", "16,root.view.d2,5,12,", "11,root.view.d1,4,7,",
+        };
+    resultSetEqualTest(
+        "SELECT count(vs1), first_value(vs2) FROM root.view.** group by ((1,20], 5ms) ORDER BY TIME DESC OFFSET 2 LIMIT 3 ALIGN BY DEVICE;",
+        expectedHeader,
+        retArray);
+  }
+
+  @Test
   public void testErrorSqlList() {
     for (Pair<String, String> errorPair : ERROR_SQL_LIST) {
       String sql = errorPair.getLeft();
@@ -244,6 +296,10 @@ public class IoTDBAlignByDeviceWithViewIT {
 
   private static final String[] VIEW_SQL_LIST =
       new String[] {
+        "CREATE VIEW root.view.d1.vs1 as root.sg1.d1.s1;",
+        "CREATE VIEW root.view.d1.vs2 as root.sg1.d1.s2;",
+        "CREATE VIEW root.view.d2.vs1 as root.sg1.d2.s1;",
+        "CREATE VIEW root.view.d2.vs2 as root.sg1.d2.s2;",
         "CREATE VIEW root.sg1.d3.s1 as root.sg1.d1.s1;",
         "CREATE VIEW root.sg1.d3.vs1 as root.sg1.d2.s1;",
         "CREATE VIEW root.sg1.d3.vs2 as root.sg1.d2.s1;",
