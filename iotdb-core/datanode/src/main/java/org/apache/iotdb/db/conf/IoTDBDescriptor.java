@@ -895,6 +895,11 @@ public class IoTDBDescriptor {
             properties.getProperty(
                 "load_tsfile_analyze_schema_memory_size_in_bytes",
                 String.valueOf(conf.getLoadTsFileAnalyzeSchemaMemorySizeInBytes()))));
+    conf.setLoadCleanupTaskExecutionDelayTimeSeconds(
+        Long.parseLong(
+            properties.getProperty(
+                "load_clean_up_task_execution_delay_time_seconds",
+                String.valueOf(conf.getLoadCleanupTaskExecutionDelayTimeSeconds()))));
 
     conf.setExtPipeDir(properties.getProperty("ext_pipe_dir", conf.getExtPipeDir()).trim());
 
@@ -1781,6 +1786,13 @@ public class IoTDBDescriptor {
                   "enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
       // update compaction config
       loadCompactionHotModifiedProps(properties);
+
+      // update load config
+      conf.setLoadCleanupTaskExecutionDelayTimeSeconds(
+          Long.parseLong(
+              properties.getProperty(
+                  "load_clean_up_task_execution_delay_time_seconds",
+                  String.valueOf(conf.getLoadCleanupTaskExecutionDelayTimeSeconds()))));
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }
