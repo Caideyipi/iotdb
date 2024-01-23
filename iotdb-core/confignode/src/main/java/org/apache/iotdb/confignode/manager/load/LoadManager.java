@@ -291,13 +291,13 @@ public class LoadManager {
   /** Check if there is any active node keep living. */
   public boolean activeNodeLive() {
     return loadCache.getActivationStatusCacheMap().values().stream()
-        .anyMatch(cache -> !cache.tooOld() && cache.isActive());
+        .anyMatch(cache -> !cache.isFake() && !cache.tooOld() && cache.isActive());
   }
 
   /** Check if there is any active node disconnects. */
   public boolean activeNodeDisconnect() {
     return loadCache.getActivationStatusCacheMap().values().stream()
-        .anyMatch(cache -> cache.tooOld() && cache.isActive());
+        .anyMatch(cache -> !cache.isFake() && cache.tooOld() && cache.isActive());
   }
 
   public boolean someConfigNodeNotSentHeartbeatYet() {

@@ -42,7 +42,7 @@ public class AINodeHeartbeatHandler implements AsyncMethodCallback<TAIHeartbeatR
   @Override
   public void onComplete(TAIHeartbeatResp aiHeartbeatResp) {
     loadCache.cacheAINodeHeartbeatSample(
-        nodeId, new NodeHeartbeatSample(aiHeartbeatResp, System.currentTimeMillis()));
+        nodeId, new NodeHeartbeatSample(aiHeartbeatResp, System.nanoTime()));
   }
 
   @Override

@@ -133,7 +133,7 @@ public class HeartbeatService {
   private TDataNodeHeartbeatReq genHeartbeatReq() {
     /* Generate heartbeat request */
     TDataNodeHeartbeatReq heartbeatReq = new TDataNodeHeartbeatReq();
-    heartbeatReq.setHeartbeatTimestamp(System.currentTimeMillis());
+    heartbeatReq.setHeartbeatTimestamp(System.nanoTime());
     // Always sample RegionGroups' leadership as the Region heartbeat
     heartbeatReq.setNeedJudgeLeader(true);
     // We sample DataNode's load in every 10 heartbeat loop
@@ -166,7 +166,7 @@ public class HeartbeatService {
 
   private TConfigNodeHeartbeatReq genConfigNodeHeartbeatReq() {
     TConfigNodeHeartbeatReq req = new TConfigNodeHeartbeatReq();
-    req.setTimestamp(System.currentTimeMillis());
+    req.setTimestamp(System.nanoTime());
     ActivationManager activationManager = configManager.getActivationManager();
     License license = activationManager.getLicense();
     LoadManager loadManager = configManager.getLoadManager();
@@ -192,7 +192,7 @@ public class HeartbeatService {
   private TAIHeartbeatReq genMLHeartbeatReq() {
     /* Generate heartbeat request */
     TAIHeartbeatReq heartbeatReq = new TAIHeartbeatReq();
-    heartbeatReq.setHeartbeatTimestamp(System.currentTimeMillis());
+    heartbeatReq.setHeartbeatTimestamp(System.nanoTime());
 
     // We sample AINode's load in every 10 heartbeat loop
     heartbeatReq.setNeedSamplingLoad(heartbeatCounter.get() % 10 == 0);

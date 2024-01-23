@@ -65,6 +65,7 @@ public class NodeHeartbeatSample {
     }
   }
 
+  /** Constructor for ConfigNode sample. */
   public NodeHeartbeatSample(TConfigNodeHeartbeatResp heartbeatResp, long receiveTimestamp) {
     this.sendTimestamp = heartbeatResp.getTimestamp();
     this.receiveTimestamp = receiveTimestamp;
@@ -127,7 +128,7 @@ public class NodeHeartbeatSample {
    * @return A NodeHeartbeatSample that only contain timestamp and NodeStatus
    */
   public static NodeHeartbeatSample generateDefaultSample(NodeStatus status) {
-    long currentTime = System.currentTimeMillis();
+    long currentTime = System.nanoTime();
     return new NodeHeartbeatSample(
         new TDataNodeHeartbeatResp(currentTime, status.getStatus())
             .setStatusReason(null)

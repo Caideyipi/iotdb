@@ -152,7 +152,7 @@ public class LoadCache {
    * @param resp the heartbeat response
    */
   public void cacheConfigNodeHeartbeatSample(int nodeId, TConfigNodeHeartbeatResp resp) {
-    final long receiveTime = System.currentTimeMillis();
+    final long receiveTime = System.nanoTime();
     if (resp.isSetActivateStatus()) {
       activationStatusCacheMap.put(
           nodeId,
@@ -174,7 +174,7 @@ public class LoadCache {
    * @param resp the latest heartbeat response
    */
   public void cacheDataNodeHeartbeatSample(int nodeId, TDataNodeHeartbeatResp resp) {
-    long receiveTime = System.currentTimeMillis();
+    long receiveTime = System.nanoTime();
     if (resp.isSetActivateStatus()) {
       activationStatusCacheMap.put(
           nodeId,
@@ -319,17 +319,15 @@ public class LoadCache {
    * @return Map<NodeId, Node activation info
    */
   public Map<Integer, TNodeActivateInfo> getNodeSimplifiedActivateStatus() {
-    return activationStatusCacheMap.entrySet().stream()
-        .collect(
-            Collectors.toMap(
-                Map.Entry::getKey,
-                e -> {
-                  ActivateStatus status = e.getValue().getActivateStatus();
-                  if (e.getValue().tooOld()) {
-                    status = ActivateStatus.UNKNOWN;
-                  }
-                  return new TNodeActivateInfo(status.toSimpleString());
-                }));
+    Map<Integer, TNodeActivateInfo> result = new HashMap<>();
+    for (Map.Entry<Integer, ActivationStatusCache> entry : activationStatusCacheMap.entrySet()) {
+      ActivateStatus status = entry.getValue().getActivateStatus();
+      if (entry.getValue().isFake() || entry.getValue().tooOld()) {
+        status = ActivateStatus.UNKNOWN;
+      }
+      result.put(entry.getKey(), new TNodeActivateInfo(status.toSimpleString()));
+    }
+    return result;
   }
 
   public Map<Integer, String> getNodeActivateStatus() {
@@ -339,7 +337,7 @@ public class LoadCache {
                 Map.Entry::getKey,
                 e -> {
                   ActivateStatus status = e.getValue().getActivateStatus();
-                  if (e.getValue().tooOld()) {
+                  if (e.getValue().isFake() || e.getValue().tooOld()) {
                     status = ActivateStatus.UNKNOWN;
                   }
                   return status.toString();

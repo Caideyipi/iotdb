@@ -24,7 +24,6 @@ import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.activation.License;
-import org.apache.iotdb.confignode.manager.load.cache.node.ActivationStatusCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
@@ -110,6 +109,8 @@ public class IoTDBActivationIT {
   private static final long mediumDisconnectionTimeLimit = TimeUnit.SECONDS.toMillis(40);
 
   private static final long sleepLogThreshold = TimeUnit.SECONDS.toMillis(10);
+  private static final long HEARTBEAT_TIMEOUT_TIME_IN_MS =
+      BaseNodeCache.HEARTBEAT_TIMEOUT_TIME_IN_NS / 1000_000;
 
   private static final int baseTest = 0;
   private static final int normalTest = 0;
@@ -597,7 +598,7 @@ public class IoTDBActivationIT {
 
       // stop this follower
       followerWrapper.stop();
-      saferSleep(ActivationStatusCache.EXPIRE_TIMEOUT + shortDisconnectionTimeLimit);
+      saferSleep(HEARTBEAT_TIMEOUT_TIME_IN_MS + shortDisconnectionTimeLimit);
       testStatusWithRetry(
           leaderClient, Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNKNOWN));
     } catch (Exception e) {
@@ -683,8 +684,7 @@ public class IoTDBActivationIT {
 
   @Test
   public void activeFollowerDisconnection2Test() throws IOException {
-    final long sleepInterval1 =
-        ActivationStatusCache.EXPIRE_TIMEOUT + mediumDisconnectionTimeLimit / 4;
+    final long sleepInterval1 = HEARTBEAT_TIMEOUT_TIME_IN_MS + mediumDisconnectionTimeLimit / 4;
     Assert.assertTrue(sleepInterval1 < mediumDisconnectionTimeLimit);
     final long sleepInterval2 = mediumDisconnectionTimeLimit - sleepInterval1;
     EnvFactory.getEnv().initClusterEnvironment(2, 0);
@@ -715,8 +715,7 @@ public class IoTDBActivationIT {
 
   @Test
   public void activeLeaderDisconnection2Test() throws IOException {
-    final long sleepInterval1 =
-        ActivationStatusCache.EXPIRE_TIMEOUT + mediumDisconnectionTimeLimit / 4;
+    final long sleepInterval1 = HEARTBEAT_TIMEOUT_TIME_IN_MS + mediumDisconnectionTimeLimit / 4;
     Assert.assertTrue(sleepInterval1 < mediumDisconnectionTimeLimit);
     final long sleepInterval2 = mediumDisconnectionTimeLimit - sleepInterval1;
     EnvFactory.getEnv().initClusterEnvironment(3, 0);
@@ -925,7 +924,7 @@ public class IoTDBActivationIT {
       testStatusWithRetry(
           leaderClient,
           Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED),
-          BaseNodeCache.HEARTBEAT_TIMEOUT_TIME + TimeUnit.SECONDS.toMillis(2));
+          HEARTBEAT_TIMEOUT_TIME_IN_MS + TimeUnit.SECONDS.toMillis(2));
       EnvFactory.getEnv().getDataNodeWrapper(0).start();
       testPassiveUnactivated(leaderClient, 2, 1);
 

@@ -23,11 +23,13 @@ import org.apache.iotdb.commons.license.ActivateStatus;
 
 public class ActivationStatusCache {
   // After expireTime, active node will be treated as disconnected.
-  public static final long EXPIRE_TIMEOUT = BaseNodeCache.HEARTBEAT_TIMEOUT_TIME;
+  public static final long EXPIRE_TIMEOUT = BaseNodeCache.HEARTBEAT_TIMEOUT_TIME_IN_NS;
+  private boolean fake = false;
   private final long timestamp;
   private final ActivateStatus activateStatus;
 
   public ActivationStatusCache() {
+    this.fake = true;
     this.timestamp = 0;
     this.activateStatus = ActivateStatus.UNKNOWN;
   }
@@ -42,11 +44,11 @@ public class ActivationStatusCache {
   }
 
   /**
-   * When the timestamp is 0, it indicates that this cache does not come from a real heartbeat but
-   * is just used as a placeholder.
+   * When an ActivationStatusCache is fake, it indicates that this cache does not come from a real
+   * heartbeat but is just used as a placeholder.
    */
   public boolean isFake() {
-    return timestamp == 0;
+    return fake;
   }
 
   public boolean isActive() {
@@ -54,6 +56,6 @@ public class ActivationStatusCache {
   }
 
   public boolean tooOld() {
-    return System.currentTimeMillis() - timestamp > EXPIRE_TIMEOUT;
+    return System.nanoTime() - timestamp > EXPIRE_TIMEOUT;
   }
 }
