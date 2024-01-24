@@ -1312,6 +1312,9 @@ service IConfigNodeRPCService {
   /** Clear the cache of chunk, chunk metadata and timeseries metadata to release the memory footprint on all DataNodes */
   common.TSStatus clearCache()
 
+  /** Check and repair unsorted tsfile by compaction */
+  common.TSStatus repairData()
+
   /** Load configuration on all DataNodes */
   common.TSStatus loadConfiguration()
 
