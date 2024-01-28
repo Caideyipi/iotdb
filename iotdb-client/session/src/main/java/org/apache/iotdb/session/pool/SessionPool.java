@@ -145,6 +145,10 @@ public class SessionPool implements ISessionPool {
 
   private boolean enableAutoFetch = true;
 
+  protected int maxRetryCount = SessionConfig.MAX_RETRY_COUNT;
+
+  protected long retryIntervalInMs = SessionConfig.RETRY_INTERVAL_IN_MS;
+
   private static final String INSERT_RECORD_FAIL = "insertRecord failed";
 
   private static final String INSERT_RECORD_ERROR_MSG = "unexpected error in insertRecord";
@@ -476,6 +480,9 @@ public class SessionPool implements ISessionPool {
     this.useSSL = builder.useSSL;
     this.trustStore = builder.trustStore;
     this.trustStorePwd = builder.trustStorePwd;
+    this.maxRetryCount = builder.maxRetryCount;
+    this.retryIntervalInMs = builder.retryIntervalInMs;
+
     if (enableAutoFetch) {
       initThreadPool();
     }
@@ -526,6 +533,8 @@ public class SessionPool implements ISessionPool {
               .useSSL(useSSL)
               .trustStore(trustStore)
               .trustStorePwd(trustStorePwd)
+              .maxRetryCount(maxRetryCount)
+              .retryIntervalInMs(retryIntervalInMs)
               .build();
     } else {
       // Construct redirect-able Session
@@ -543,6 +552,8 @@ public class SessionPool implements ISessionPool {
               .useSSL(useSSL)
               .trustStore(trustStore)
               .trustStorePwd(trustStorePwd)
+              .maxRetryCount(maxRetryCount)
+              .retryIntervalInMs(retryIntervalInMs)
               .build();
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
@@ -845,24 +856,21 @@ public class SessionPool implements ISessionPool {
      *     3,   3,  3,  3
      */
 
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertTablet(tablet, sorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertTablet failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertTablet", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertTablet(tablet, sorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertTablet failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertTablet", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -891,24 +899,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void insertAlignedTablet(Tablet tablet, boolean sorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedTablet(tablet, sorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedTablet failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedTablet", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedTablet(tablet, sorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedTablet failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedTablet", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -943,24 +948,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void insertTablets(Map<String, Tablet> tablets, boolean sorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertTablets(tablets, sorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertTablets failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertTablets", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertTablets(tablets, sorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertTablets failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertTablets", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -973,24 +975,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void insertAlignedTablets(Map<String, Tablet> tablets, boolean sorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedTablets(tablets, sorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedTablets failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedTablets", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedTablets(tablets, sorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedTablets failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedTablets", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1010,24 +1009,21 @@ public class SessionPool implements ISessionPool {
       List<List<TSDataType>> typesList,
       List<List<Object>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecords(deviceIds, times, measurementsList, typesList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertRecords failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORDS_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecords(deviceIds, times, measurementsList, typesList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertRecords failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORDS_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1047,25 +1043,22 @@ public class SessionPool implements ISessionPool {
       List<List<TSDataType>> typesList,
       List<List<Object>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedRecords(
-            multiSeriesIds, times, multiMeasurementComponentsList, typesList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedRecords failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedRecords", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedRecords(
+          multiSeriesIds, times, multiMeasurementComponentsList, typesList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedRecords failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedRecords", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1084,25 +1077,22 @@ public class SessionPool implements ISessionPool {
       List<List<TSDataType>> typesList,
       List<List<Object>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecordsOfOneDevice(
-            deviceId, times, measurementsList, typesList, valuesList, false);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecordsOfOneDevice(
+          deviceId, times, measurementsList, typesList, valuesList, false);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1123,25 +1113,22 @@ public class SessionPool implements ISessionPool {
       List<List<TSDataType>> typesList,
       List<List<Object>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecordsOfOneDevice(
-            deviceId, times, measurementsList, typesList, valuesList, false);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecordsOfOneDevice(
+          deviceId, times, measurementsList, typesList, valuesList, false);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1160,25 +1147,21 @@ public class SessionPool implements ISessionPool {
       List<List<String>> measurementsList,
       List<List<String>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertStringRecordsOfOneDevice(
-            deviceId, times, measurementsList, valuesList, false);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertStringRecordsOfOneDevice failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertStringRecordsOfOneDevice", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertStringRecordsOfOneDevice(deviceId, times, measurementsList, valuesList, false);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertStringRecordsOfOneDevice failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertStringRecordsOfOneDevice", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1199,25 +1182,22 @@ public class SessionPool implements ISessionPool {
       List<List<Object>> valuesList,
       boolean haveSorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecordsOfOneDevice(
-            deviceId, times, measurementsList, typesList, valuesList, haveSorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecordsOfOneDevice(
+          deviceId, times, measurementsList, typesList, valuesList, haveSorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1240,25 +1220,22 @@ public class SessionPool implements ISessionPool {
       List<List<Object>> valuesList,
       boolean haveSorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecordsOfOneDevice(
-            deviceId, times, measurementsList, typesList, valuesList, haveSorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecordsOfOneDevice(
+          deviceId, times, measurementsList, typesList, valuesList, haveSorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(INSERT_RECORDS_OF_ONE_DEVICE_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORDS_OF_ONE_DEVICE_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1279,25 +1256,22 @@ public class SessionPool implements ISessionPool {
       List<List<String>> valuesList,
       boolean haveSorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertStringRecordsOfOneDevice(
-            deviceId, times, measurementsList, valuesList, haveSorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertStringRecordsOfOneDevice failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertStringRecordsOfOneDevice", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertStringRecordsOfOneDevice(
+          deviceId, times, measurementsList, valuesList, haveSorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertStringRecordsOfOneDevice failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertStringRecordsOfOneDevice", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1317,25 +1291,22 @@ public class SessionPool implements ISessionPool {
       List<List<TSDataType>> typesList,
       List<List<Object>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedRecordsOfOneDevice(
-            deviceId, times, measurementsList, typesList, valuesList, false);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedRecordsOfOneDevice failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedRecordsOfOneDevice", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedRecordsOfOneDevice(
+          deviceId, times, measurementsList, typesList, valuesList, false);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedRecordsOfOneDevice failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedRecordsOfOneDevice", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1354,25 +1325,21 @@ public class SessionPool implements ISessionPool {
       List<List<String>> measurementsList,
       List<List<String>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedStringRecordsOfOneDevice(
-            deviceId, times, measurementsList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedStringRecordsOfOneDevice failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedStringRecordsOfOneDevice", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedStringRecordsOfOneDevice(deviceId, times, measurementsList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedStringRecordsOfOneDevice failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedStringRecordsOfOneDevice", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1394,25 +1361,23 @@ public class SessionPool implements ISessionPool {
       List<List<Object>> valuesList,
       boolean haveSorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedRecordsOfOneDevice(
-            deviceId, times, measurementsList, typesList, valuesList, haveSorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedRecordsOfOneDevice failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedRecordsOfOneDevice", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedRecordsOfOneDevice(
+          deviceId, times, measurementsList, typesList, valuesList, haveSorted);
+      putBack(session);
+      return;
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedRecordsOfOneDevice failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedRecordsOfOneDevice", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1433,25 +1398,22 @@ public class SessionPool implements ISessionPool {
       List<List<String>> valuesList,
       boolean haveSorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedStringRecordsOfOneDevice(
-            deviceId, times, measurementsList, valuesList, haveSorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedStringRecordsOfOneDevice failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedStringRecordsOfOneDevice", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedStringRecordsOfOneDevice(
+          deviceId, times, measurementsList, valuesList, haveSorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedStringRecordsOfOneDevice failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedStringRecordsOfOneDevice", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1469,24 +1431,21 @@ public class SessionPool implements ISessionPool {
       List<List<String>> measurementsList,
       List<List<String>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecords(deviceIds, times, measurementsList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertRecords failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORDS_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecords(deviceIds, times, measurementsList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertRecords failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORDS_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1504,25 +1463,22 @@ public class SessionPool implements ISessionPool {
       List<List<String>> multiMeasurementComponentsList,
       List<List<String>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedRecords(
-            multiSeriesIds, times, multiMeasurementComponentsList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedRecords failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedRecords", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedRecords(
+          multiSeriesIds, times, multiMeasurementComponentsList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedRecords failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedRecords", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1541,24 +1497,21 @@ public class SessionPool implements ISessionPool {
       List<TSDataType> types,
       Object... values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecord(deviceId, time, measurements, types, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.error(INSERT_RECORD_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORD_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecord(deviceId, time, measurements, types, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.error(INSERT_RECORD_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORD_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1577,24 +1530,21 @@ public class SessionPool implements ISessionPool {
       List<TSDataType> types,
       List<Object> values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecord(deviceId, time, measurements, types, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(INSERT_RECORD_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORD_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecord(deviceId, time, measurements, types, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(INSERT_RECORD_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORD_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1639,24 +1589,21 @@ public class SessionPool implements ISessionPool {
       List<TSDataType> types,
       List<Object> values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedRecord(multiSeriesId, time, multiMeasurementComponents, types, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedRecord failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedRecord", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedRecord(multiSeriesId, time, multiMeasurementComponents, types, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedRecord failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedRecord", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1671,24 +1618,21 @@ public class SessionPool implements ISessionPool {
   public void insertRecord(
       String deviceId, long time, List<String> measurements, List<String> values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertRecord(deviceId, time, measurements, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(INSERT_RECORD_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(INSERT_RECORD_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertRecord(deviceId, time, measurements, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(INSERT_RECORD_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(INSERT_RECORD_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1703,24 +1647,21 @@ public class SessionPool implements ISessionPool {
   public void insertAlignedRecord(
       String multiSeriesId, long time, List<String> multiMeasurementComponents, List<String> values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.insertAlignedRecord(multiSeriesId, time, multiMeasurementComponents, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("insertAlignedRecord failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in insertAlignedRecord", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.insertAlignedRecord(multiSeriesId, time, multiMeasurementComponents, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("insertAlignedRecord failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in insertAlignedRecord", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1731,24 +1672,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void testInsertTablet(Tablet tablet)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertTablet(tablet);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertTablet failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertTablet", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertTablet(tablet);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertTablet failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertTablet", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1759,24 +1697,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void testInsertTablet(Tablet tablet, boolean sorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertTablet(tablet, sorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertTablet failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertTablet", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertTablet(tablet, sorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertTablet failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertTablet", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1787,24 +1722,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void testInsertTablets(Map<String, Tablet> tablets)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertTablets(tablets);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertTablets failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertTablets", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertTablets(tablets);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertTablets failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertTablets", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1815,24 +1747,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void testInsertTablets(Map<String, Tablet> tablets, boolean sorted)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertTablets(tablets, sorted);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertTablets failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertTablets", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertTablets(tablets, sorted);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertTablets failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertTablets", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1847,24 +1776,21 @@ public class SessionPool implements ISessionPool {
       List<List<String>> measurementsList,
       List<List<String>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertRecords(deviceIds, times, measurementsList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertRecords failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertRecords", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertRecords(deviceIds, times, measurementsList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertRecords failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertRecords", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1880,24 +1806,21 @@ public class SessionPool implements ISessionPool {
       List<List<TSDataType>> typesList,
       List<List<Object>> valuesList)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertRecords(deviceIds, times, measurementsList, typesList, valuesList);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertRecords failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertRecords", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertRecords(deviceIds, times, measurementsList, typesList, valuesList);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertRecords failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertRecords", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1909,24 +1832,21 @@ public class SessionPool implements ISessionPool {
   public void testInsertRecord(
       String deviceId, long time, List<String> measurements, List<String> values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertRecord(deviceId, time, measurements, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertRecord failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertRecord", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertRecord(deviceId, time, measurements, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertRecord failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertRecord", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1942,24 +1862,21 @@ public class SessionPool implements ISessionPool {
       List<TSDataType> types,
       List<Object> values)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.testInsertRecord(deviceId, time, measurements, types, values);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("testInsertRecord failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in testInsertRecord", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.testInsertRecord(deviceId, time, measurements, types, values);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("testInsertRecord failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in testInsertRecord", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -1971,24 +1888,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void deleteTimeseries(String path)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.deleteTimeseries(path);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("deleteTimeseries failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in deleteTimeseries", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.deleteTimeseries(path);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("deleteTimeseries failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in deleteTimeseries", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -2000,24 +1914,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void deleteTimeseries(List<String> paths)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.deleteTimeseries(paths);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("deleteTimeseries failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in deleteTimeseries", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.deleteTimeseries(paths);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("deleteTimeseries failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in deleteTimeseries", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -2030,24 +1941,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void deleteData(String path, long time)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.deleteData(path, time);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(DELETE_DATA_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(DELETE_DATA_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.deleteData(path, time);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(DELETE_DATA_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(DELETE_DATA_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -2060,24 +1968,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void deleteData(List<String> paths, long time)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.deleteData(paths, time);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(DELETE_DATA_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(DELETE_DATA_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.deleteData(paths, time);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(DELETE_DATA_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(DELETE_DATA_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -2091,24 +1996,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void deleteData(List<String> paths, long startTime, long endTime)
       throws IoTDBConnectionException, StatementExecutionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.deleteData(paths, startTime, endTime);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn(DELETE_DATA_FAIL, e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error(DELETE_DATA_ERROR_MSG, e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.deleteData(paths, startTime, endTime);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn(DELETE_DATA_FAIL, e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error(DELETE_DATA_ERROR_MSG, e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -3108,24 +3010,21 @@ public class SessionPool implements ISessionPool {
   @Override
   public void executeNonQueryStatement(String sql)
       throws StatementExecutionException, IoTDBConnectionException {
-    for (int i = 0; i < RETRY; i++) {
-      ISession session = getSession();
-      try {
-        session.executeNonQueryStatement(sql);
-        putBack(session);
-        return;
-      } catch (IoTDBConnectionException e) {
-        // TException means the connection is broken, remove it and get a new one.
-        LOGGER.warn("executeNonQueryStatement failed", e);
-        cleanSessionAndMayThrowConnectionException(session, i, e);
-      } catch (StatementExecutionException | RuntimeException e) {
-        putBack(session);
-        throw e;
-      } catch (Throwable e) {
-        LOGGER.error("unexpected error in executeNonQueryStatement", e);
-        putBack(session);
-        throw new RuntimeException(e);
-      }
+    ISession session = getSession();
+    try {
+      session.executeNonQueryStatement(sql);
+      putBack(session);
+    } catch (IoTDBConnectionException e) {
+      // TException means the connection is broken, remove it and get a new one.
+      LOGGER.warn("executeNonQueryStatement failed", e);
+      cleanSessionAndMayThrowConnectionException(session, FINAL_RETRY, e);
+    } catch (StatementExecutionException | RuntimeException e) {
+      putBack(session);
+      throw e;
+    } catch (Throwable e) {
+      LOGGER.error("unexpected error in executeNonQueryStatement", e);
+      putBack(session);
+      throw new RuntimeException(e);
     }
   }
 
@@ -3612,6 +3511,10 @@ public class SessionPool implements ISessionPool {
 
     private boolean enableAutoFetch;
 
+    private int maxRetryCount = SessionConfig.MAX_RETRY_COUNT;
+
+    private long retryIntervalInMs = SessionConfig.RETRY_INTERVAL_IN_MS;
+
     public Builder useSSL(boolean useSSL) {
       this.useSSL = useSSL;
       return this;
@@ -3704,6 +3607,16 @@ public class SessionPool implements ISessionPool {
 
     public Builder enableAutoFetch(boolean enableAutoFetch) {
       this.enableAutoFetch = enableAutoFetch;
+      return this;
+    }
+
+    public Builder maxRetryCount(int maxRetryCount) {
+      this.maxRetryCount = maxRetryCount;
+      return this;
+    }
+
+    public Builder retryIntervalInMs(long retryIntervalInMs) {
+      this.retryIntervalInMs = retryIntervalInMs;
       return this;
     }
 
