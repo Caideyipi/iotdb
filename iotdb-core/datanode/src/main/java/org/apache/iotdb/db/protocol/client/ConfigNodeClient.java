@@ -41,6 +41,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAddConsensusGroupReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAlterPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerReq;
@@ -896,6 +897,12 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TSStatus createPipe(TCreatePipeReq req) throws TException {
     return executeRemoteCallWithRetry(
         () -> client.createPipe(req), status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TSStatus alterPipe(TAlterPipeReq req) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.alterPipe(req), status -> !updateConfigNodeLeader(status));
   }
 
   @Override

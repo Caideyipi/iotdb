@@ -462,6 +462,10 @@ MODELS
     : M O D E L S
     ;
 
+MODIFY
+    : M O D I F Y
+    ;
+
 NAN
     : N A N
     ;

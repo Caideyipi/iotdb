@@ -139,6 +139,7 @@ keyWords
     | AINODES
     | MODEL
     | MODELS
+    | MODIFY
     | NAN
     | NODEID
     | NODES
