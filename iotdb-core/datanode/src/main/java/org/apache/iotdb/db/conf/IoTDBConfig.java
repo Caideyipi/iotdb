@@ -362,9 +362,6 @@ public class IoTDBConfig {
    */
   private int maxPendingWindowEvaluationTasks = 64;
 
-  /** Is the write mem control for writing enable. */
-  private boolean enableMemControl = true;
-
   /** Is the write ahead log enable. */
   private boolean enableIndex = false;
 
@@ -385,9 +382,6 @@ public class IoTDBConfig {
 
   /** When a sequence TsFile's file size (in byte) exceed this, the TsFile is forced closed. */
   private long seqTsFileSize = 0L;
-
-  /** When a memTable's size (in byte) exceeds this, the memtable is flushed to disk. Unit: byte */
-  private long memtableSizeThreshold = 1024 * 1024 * 1024L;
 
   /** Whether to timed flush sequence tsfiles' memtables. */
   private boolean enableTimedFlushSeqMemtable = true;
@@ -465,13 +459,6 @@ public class IoTDBConfig {
    * types
    */
   private CompactionPriority compactionPriority = CompactionPriority.BALANCE;
-
-  /**
-   * Enable compaction memory control or not. If true and estimated memory size of one compaction
-   * task exceeds the threshold, system will block the compaction. It only works for cross space
-   * compaction currently.
-   */
-  private boolean enableCompactionMemControl = true;
 
   private double chunkMetadataSizeProportion = 0.1;
 
@@ -763,9 +750,6 @@ public class IoTDBConfig {
 
   /** kerberos principal */
   private String kerberosPrincipal = "your principal";
-
-  /** the num of memtable in each database */
-  private int concurrentWritingTimePartition = 1;
 
   /** the default fill interval in LinearFill and PreviousFill, -1 means infinite past time */
   private int defaultFillInterval = -1;
@@ -1230,14 +1214,6 @@ public class IoTDBConfig {
   public void setUdfInitialByteArrayLengthForMemoryControl(
       int udfInitialByteArrayLengthForMemoryControl) {
     this.udfInitialByteArrayLengthForMemoryControl = udfInitialByteArrayLengthForMemoryControl;
-  }
-
-  public int getConcurrentWritingTimePartition() {
-    return concurrentWritingTimePartition;
-  }
-
-  public void setConcurrentWritingTimePartition(int concurrentWritingTimePartition) {
-    this.concurrentWritingTimePartition = concurrentWritingTimePartition;
   }
 
   public int getDefaultFillInterval() {
@@ -2044,22 +2020,6 @@ public class IoTDBConfig {
     this.compactionWriteThroughputMbPerSec = compactionWriteThroughputMbPerSec;
   }
 
-  public boolean isEnableMemControl() {
-    return enableMemControl;
-  }
-
-  public void setEnableMemControl(boolean enableMemControl) {
-    this.enableMemControl = enableMemControl;
-  }
-
-  public long getMemtableSizeThreshold() {
-    return memtableSizeThreshold;
-  }
-
-  public void setMemtableSizeThreshold(long memtableSizeThreshold) {
-    this.memtableSizeThreshold = memtableSizeThreshold;
-  }
-
   public boolean isEnableTimedFlushSeqMemtable() {
     return enableTimedFlushSeqMemtable;
   }
@@ -2770,14 +2730,6 @@ public class IoTDBConfig {
 
   public void setCompactionPriority(CompactionPriority compactionPriority) {
     this.compactionPriority = compactionPriority;
-  }
-
-  public boolean isEnableCompactionMemControl() {
-    return enableCompactionMemControl;
-  }
-
-  public void setEnableCompactionMemControl(boolean enableCompactionMemControl) {
-    this.enableCompactionMemControl = enableCompactionMemControl;
   }
 
   public long getTargetCompactionFileSize() {
