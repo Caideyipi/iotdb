@@ -90,7 +90,8 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
           .setIsActive(!CommonDescriptor.getInstance().getConfig().isUnactivated())
           .setExpireDate(
               DateTimeUtils.convertMillsecondToZonedDateTime(license.expireTimestamp).toString())
-          .setIsEnterprise(true);
+          .setIsEnterprise(true)
+          .setLicense(license);
     } catch (ClientManagerException e) {
       throw new TException(e);
     }

@@ -72,7 +72,7 @@ import static org.apache.iotdb.jdbc.Config.VERSION;
 public abstract class AbstractEnv implements BaseEnv {
   private static final Logger logger = IoTDBTestLogger.logger;
 
-  private final Random rand = new Random();
+  final Random rand = new Random();
   protected List<ConfigNodeWrapper> configNodeWrapperList = Collections.emptyList();
   protected List<DataNodeWrapper> dataNodeWrapperList = Collections.emptyList();
   protected List<AINodeWrapper> aiNodeWrapperList = Collections.emptyList();

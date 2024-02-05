@@ -414,7 +414,6 @@ public class ActivationManager {
   }
 
   protected void tryLoadLicenseFromFile() {
-    Properties properties = new Properties();
     try (FileReader fileReader = new FileReader(LICENSE_FILE_PATH);
         AutoCloseableLock ignore = AutoCloseableLock.acquire(loadLock)) {
       StringBuilder builder = new StringBuilder();
@@ -425,6 +424,7 @@ public class ActivationManager {
       final String encryptedLicenseContent = builder.toString();
       logger.info("Loading license: \n{}", encryptedLicenseContent);
       String licenseContent = decrypt(encryptedLicenseContent);
+      Properties properties = new Properties();
       properties.load(new StringReader(licenseContent));
       if (!verifyAllSystemInfo(properties)) {
         throw new LicenseException("This license is not allowed to activate this ConfigNode.");
@@ -437,6 +437,14 @@ public class ActivationManager {
       logger.error("Load license fail.", e);
       license.licenseFileNotExistOrInvalid();
     }
+  }
+
+  @TestOnly
+  public static void tryLoadLicenseFromString(License license, String licenseContent)
+      throws IOException, LicenseException {
+    Properties properties = new Properties();
+    properties.load(new StringReader(licenseContent));
+    license.loadFromProperties(properties, true);
   }
 
   public void tryLoadRemoteLicense(TLicense remoteLicense) {

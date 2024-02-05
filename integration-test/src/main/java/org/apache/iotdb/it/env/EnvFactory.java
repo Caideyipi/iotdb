@@ -22,6 +22,7 @@ package org.apache.iotdb.it.env;
 import org.apache.iotdb.it.env.cluster.env.AIEnv;
 import org.apache.iotdb.it.env.cluster.env.Cluster1Env;
 import org.apache.iotdb.it.env.cluster.env.SimpleEnv;
+import org.apache.iotdb.it.env.cluster.env.TimechoEnv;
 import org.apache.iotdb.it.env.remote.env.RemoteServerEnv;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
 import org.apache.iotdb.itbase.env.BaseEnv;
@@ -60,6 +61,9 @@ public class EnvFactory {
             logger.warn(
                 "EnvFactory only supports EnvType Simple, Cluster1 and Remote, please use MultiEnvFactory instead.");
             System.exit(-1);
+            break;
+          case Timecho:
+            env = new TimechoEnv();
             break;
           default:
             logger.warn("Unknown env type: {}", envType);

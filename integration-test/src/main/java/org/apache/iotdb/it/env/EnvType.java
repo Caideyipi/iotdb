@@ -22,6 +22,7 @@ package org.apache.iotdb.it.env;
 public enum EnvType {
   Remote,
   Simple,
+  Timecho,
   Cluster1,
   MultiCluster,
   AI;

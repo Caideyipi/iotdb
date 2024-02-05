@@ -20,7 +20,9 @@
 package org.apache.iotdb.confignode.it.cluster;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
+import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.activation.License;
@@ -36,8 +38,12 @@ import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
+import org.apache.iotdb.rpc.IoTDBConnectionException;
+import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.rpc.TSStatusCode;
+import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 
+import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
 import org.junit.After;
 import org.junit.Assert;
@@ -118,6 +124,7 @@ public class IoTDBActivationIT {
 
   @BeforeClass
   public static void setUpClass() throws IOException {
+    System.setProperty("TestEnv", "Timecho");
     baseLicenseProperties = ActivationManager.buildUnlimitedLicenseProperties();
     StringWriter writer = new StringWriter();
     baseLicenseProperties.store(writer, null);
@@ -207,7 +214,7 @@ public class IoTDBActivationIT {
           (SyncConfigNodeIServiceClient)
               EnvFactory.getEnv().getConfigNodeConnection(getAnyFollowerIndex());
       followerClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
-      waitToMakeSureLicenseHasBeenReloaded();
+      waitLicenseReload();
       testStatusWithRetry(
           leaderClient,
           Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED, PASSIVE_ACTIVATED, ACTIVATED));
@@ -236,7 +243,7 @@ public class IoTDBActivationIT {
         client.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
         client.close();
       }
-      waitToMakeSureLicenseHasBeenReloaded();
+      waitLicenseReload();
       EnvFactory.getEnv().registerNewDataNode(true);
       testStatusWithRetry(
           leaderClient,
@@ -389,7 +396,7 @@ public class IoTDBActivationIT {
       testStatusFalse(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVE_ACTIVATED));
 
       client1.setLicenseFile(LICENSE_FILE_NAME, license2); // expect cn0 -> PASSIVE, cn1 -> ACTIVE
-      waitToMakeSureLicenseHasBeenReloaded();
+      waitLicenseReload();
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, PASSIVE_ACTIVATED));
 
       client0.setLicenseFile(LICENSE_FILE_NAME, license2); // expect cn0 -> ACTIVE
@@ -443,7 +450,7 @@ public class IoTDBActivationIT {
         if (choice1 == 0) {
           logger.info("Activate all");
           runConsumerInParallel(setAll, licenseContent);
-          waitToMakeSureLicenseHasBeenReloaded();
+          waitLicenseReload();
           testStatusAllActiveActivate(leaderClient, configNodeNum, 0);
         } else if (choice1 == 1) {
           int dontBeZero = 0;
@@ -473,7 +480,7 @@ public class IoTDBActivationIT {
             }
           }
           runInParallel(updateRandomly);
-          waitToMakeSureLicenseHasBeenReloaded();
+          waitLicenseReload();
           List<ActivateStatus> expectation = new ArrayList<>();
           for (int j = 0; j < updateNum; j++) {
             expectation.add(ACTIVE_ACTIVATED);
@@ -512,7 +519,7 @@ public class IoTDBActivationIT {
           }
           logger.info("Set {} of {} to activated", activeActivatedNum, configNodeNum);
           runInParallel(setRandomly);
-          waitToMakeSureLicenseHasBeenReloaded();
+          waitLicenseReload();
           if (activeActivatedNum == 0) {
             testPassiveUnactivated(leaderClient, configNodeNum, 0);
           } else {
@@ -858,7 +865,7 @@ public class IoTDBActivationIT {
 
       // 4. modify license, set nodeNumLimit to 2, then second datanode start success
       leaderClient.setLicenseFile(LICENSE_FILE_NAME, cpuCoreLimit2);
-      waitToMakeSureLicenseHasBeenReloaded();
+      waitLicenseReload();
       dataNodeWrappers.get(1).start();
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
     } catch (Exception e) {
@@ -964,10 +971,29 @@ public class IoTDBActivationIT {
     }
   }
 
+  @Test
+  public void getLicenseInfoTest()
+      throws IoTDBConnectionException, StatementExecutionException, ClientManagerException,
+          IOException, InterruptedException, TException, LicenseException {
+    EnvFactory.getEnv().initClusterEnvironment(1, 0);
+    try (SyncConfigNodeIServiceClient leaderClient =
+        (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
+      leaderClient.setLicenseFile(LICENSE_FILE_NAME, baseLicenseContent);
+      waitLicenseReload();
+      EnvFactory.getEnv().registerNewDataNode(true);
+      Session session = (Session) EnvFactory.getEnv().getSessionConnection();
+      LicenseInfoResp resp = session.getLicenseInfo();
+      License license = new License(() -> {});
+      ActivationManager.tryLoadLicenseFromString(license, baseLicenseContent);
+      Assert.assertEquals(license.toTLicense().toString(), resp.license.toString());
+      allCheckPass();
+    }
+  }
+
   // endregion
 
   // region Helpers
-  private static void waitToMakeSureLicenseHasBeenReloaded() {
+  private static void waitLicenseReload() {
     saferSleep(ActivationManager.FILE_MONITOR_INTERVAL * 2);
   }
 
