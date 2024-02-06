@@ -127,10 +127,6 @@ public interface BaseEnv {
   IConfigNodeRPCService.Iface getLeaderConfigNodeConnection()
       throws ClientManagerException, IOException, InterruptedException;
 
-  default IConfigNodeRPCService.Iface getConfigNodeConnection(int index) throws Exception {
-    throw new UnsupportedOperationException();
-  }
-
   ISessionPool getSessionPool(int maxSize);
 
   ISession getSessionConnection() throws IoTDBConnectionException;
@@ -146,11 +142,21 @@ public interface BaseEnv {
    */
   int getLeaderConfigNodeIndex() throws IOException, InterruptedException;
 
+  default IConfigNodeRPCService.Iface getConfigNodeConnection(int index) throws Exception {
+    throw new UnsupportedOperationException();
+  }
+
   /** Start an existed ConfigNode. */
   void startConfigNode(int index);
 
+  /** Start all existed ConfigNodes. */
+  void startAllConfigNodes();
+
   /** Shutdown an existed ConfigNode. */
   void shutdownConfigNode(int index);
+
+  /** Shutdown all existed ConfigNodes. */
+  void shutdownAllConfigNodes();
 
   /**
    * Ensure all the nodes being in the corresponding status.
@@ -207,8 +213,14 @@ public interface BaseEnv {
   /** Start an existed DataNode. */
   void startDataNode(int index);
 
+  /** Start all existed DataNodes. */
+  void startAllDataNodes();
+
   /** Shutdown an existed DataNode. */
   void shutdownDataNode(int index);
+
+  /** Shutdown all existed DataNodes. */
+  void shutdownAllDataNodes();
 
   int getMqttPort();
 
