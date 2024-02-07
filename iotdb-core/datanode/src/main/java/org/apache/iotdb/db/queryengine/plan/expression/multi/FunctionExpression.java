@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.udf.builtin.BuiltinAggregationFunction;
 import org.apache.iotdb.commons.udf.builtin.BuiltinScalarFunction;
 import org.apache.iotdb.commons.udf.builtin.ModelInferenceFunction;
+import org.apache.iotdb.commons.udf.service.UDFManagementService;
 import org.apache.iotdb.db.queryengine.common.NodeRef;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.expression.ExpressionType;
@@ -117,13 +118,15 @@ public class FunctionExpression extends Expression {
   private void initializeFunctionType() {
     final String lowerCaseFunctionName = this.functionName.toLowerCase();
     if (BuiltinAggregationFunction.getNativeFunctionNames().contains(lowerCaseFunctionName)) {
-      functionType = FunctionType.AGGREGATION_FUNCTION;
+      functionType = FunctionType.BUILT_IN_AGGREGATION_FUNCTION;
     } else if (BuiltinScalarFunction.getNativeFunctionNames().contains(lowerCaseFunctionName)) {
       functionType = FunctionType.BUILT_IN_SCALAR_FUNCTION;
     } else if (ModelInferenceFunction.getNativeFunctionNames().contains(functionName)) {
       functionType = FunctionType.MODEL_INFERENCE_FUNCTION;
+    } else if (UDFManagementService.getInstance().isUDAF(functionName)) {
+      functionType = FunctionType.UDAF;
     } else {
-      functionType = FunctionType.UDF;
+      functionType = FunctionType.UDTF;
     }
   }
 
@@ -132,10 +135,10 @@ public class FunctionExpression extends Expression {
     if (functionType == null) {
       initializeFunctionType();
     }
-    return functionType == FunctionType.AGGREGATION_FUNCTION;
+    return functionType == FunctionType.BUILT_IN_AGGREGATION_FUNCTION;
   }
 
-  public boolean isBuiltInScalarFunction() {
+  public boolean isBuiltInScalarFunctionExpression() {
     if (functionType == null) {
       initializeFunctionType();
     }
@@ -147,6 +150,14 @@ public class FunctionExpression extends Expression {
       initializeFunctionType();
     }
     return functionType == FunctionType.MODEL_INFERENCE_FUNCTION;
+  }
+
+  @Override
+  public boolean isExternalAggregationFunctionExpression() {
+    if (functionType == null) {
+      initializeFunctionType();
+    }
+    return functionType == FunctionType.UDAF;
   }
 
   @Override
@@ -164,7 +175,7 @@ public class FunctionExpression extends Expression {
   }
 
   public boolean isCountStar() {
-    if (!isBuiltInAggregationFunctionExpression()) {
+    if (!isAggregationFunctionExpression()) {
       return false;
     }
     return getPaths().size() == 1
@@ -257,7 +268,7 @@ public class FunctionExpression extends Expression {
 
   @Override
   public boolean isMappable(Map<NodeRef<Expression>, TSDataType> expressionTypes) {
-    if (!isBuiltInAggregationFunctionExpression() && !isBuiltInScalarFunction()) {
+    if (!isAggregationFunctionExpression() && !isBuiltInScalarFunctionExpression()) {
       // this is a UDF function
       boolean isCurrentMappable =
           new UDTFInformationInferrer(functionName)

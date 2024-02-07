@@ -220,7 +220,8 @@ enum TAggregationType {
   VARIANCE,
   VAR_POP,
   VAR_SAMP,
-  MAX_BY
+  MAX_BY,
+  UDAF
 }
 
 // for AINode

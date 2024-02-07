@@ -21,8 +21,9 @@ package org.apache.iotdb.db.queryengine.plan.expression.multi;
 
 /** */
 public enum FunctionType {
-  AGGREGATION_FUNCTION,
+  BUILT_IN_AGGREGATION_FUNCTION,
   BUILT_IN_SCALAR_FUNCTION,
-  UDF,
+  UDAF,
+  UDTF,
   MODEL_INFERENCE_FUNCTION
 }
