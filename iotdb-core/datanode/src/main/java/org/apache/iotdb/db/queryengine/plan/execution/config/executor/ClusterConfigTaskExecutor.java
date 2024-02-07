@@ -80,6 +80,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
+import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
@@ -126,6 +127,7 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.DatabaseSc
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetRegionIdTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetSeriesSlotListTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetTimeSlotListTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterDetailsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterIdTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterTask;
@@ -2442,6 +2444,26 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
     } else {
       future.setException(new IoTDBException(tsStatus.message, tsStatus.code));
+    }
+    //    ShowActivationTask.build
+    return future;
+  }
+
+  @Override
+  public SettableFuture<ConfigTaskResult> showActivation() {
+    SettableFuture<ConfigTaskResult> future = SettableFuture.create();
+    TLicenseContentResp resp;
+    try (ConfigNodeClient client =
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      resp = client.getLicenseContent();
+      if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        future.setException(new IoTDBException(resp.getStatus().message, resp.getStatus().code));
+        return future;
+      }
+      ShowActivationTask.buildTsBlock(resp.getLicense(), resp.getUsage(), future);
+    } catch (Throwable e) {
+      e.printStackTrace();
+      future.setException(e);
     }
     return future;
   }

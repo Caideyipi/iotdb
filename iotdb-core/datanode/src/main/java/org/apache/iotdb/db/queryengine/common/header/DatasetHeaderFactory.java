@@ -204,4 +204,8 @@ public class DatasetHeaderFactory {
   public static DatasetHeader getShowLogicalViewHeader() {
     return new DatasetHeader(ColumnHeaderConstant.showLogicalViewColumnHeaders, true);
   }
+
+  public static DatasetHeader getShowActivationHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showActivationColumnHeaders, true);
+  }
 }

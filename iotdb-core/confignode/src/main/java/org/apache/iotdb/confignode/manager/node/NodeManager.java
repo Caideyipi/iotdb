@@ -841,6 +841,10 @@ public class NodeManager {
     return dataNodeInfoList;
   }
 
+  public int getDataNodeCpuCoreCount() {
+    return nodeInfo.getDataNodeTotalCpuCoreCount();
+  }
+
   public List<TConfigNodeLocation> getRegisteredConfigNodes() {
     return nodeInfo.getRegisteredConfigNodes();
   }

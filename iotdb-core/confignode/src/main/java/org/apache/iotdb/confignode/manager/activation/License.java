@@ -191,13 +191,12 @@ public class License {
     License newLicense = new License(null);
     newLicense.licenseIssueTimestamp = license.licenseIssueTimestamp;
     newLicense.licenseExpireTimestamp = license.getExpireTimestamp();
-    newLicense.disconnectionFromActiveNodeTimeLimit =
-        license.getDisconnectionFromActiveNodeTimeLimit();
-    newLicense.dataNodeCpuCoreNumLimit = license.cpuCoreNumLimit;
-    newLicense.dataNodeNumLimit = license.dataNodeNumLimit;
-    newLicense.deviceNumLimit = license.deviceNumLimit;
-    newLicense.sensorNumLimit = license.sensorNumLimit;
-    newLicense.aiNodeNumLimit = license.getAiNodeNumLimit();
+    newLicense.disconnectionFromActiveNodeTimeLimit = license.getDisconnectionFromActiveNodeTime();
+    newLicense.dataNodeCpuCoreNumLimit = license.cpuCoreNum;
+    newLicense.dataNodeNumLimit = license.dataNodeNum;
+    newLicense.deviceNumLimit = license.deviceNum;
+    newLicense.sensorNumLimit = license.sensorNum;
+    newLicense.aiNodeNumLimit = license.getAiNodeNum();
 
     // compare and copy
     this.logLicenseDifferences(newLicense);

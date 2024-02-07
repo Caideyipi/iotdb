@@ -63,6 +63,8 @@ ddlStatement
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
     // AI Model
     | createModel | dropModel | showModels | showTrials | callInference
+    // Activation
+    | showActivation
     // Quota
     | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
     // View
@@ -632,6 +634,10 @@ windowFunction
 
 callInference
     : CALL INFERENCE LR_BRACKET modelId=identifier COMMA inputSql=STRING_LITERAL (COMMA hparamPair)* RR_BRACKET
+    ;
+
+showActivation
+    : SHOW ACTIVATION
     ;
 
 hparamPair

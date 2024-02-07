@@ -53,13 +53,15 @@ public class ClusterSchemaQuotaStatistics {
    * @return the remain quota, >=0
    */
   public long getSeriesQuotaRemain(Set<Integer> consensusGroupIdSet) {
-    long res =
-        seriesThreshold
-            - seriesCountMap.entrySet().stream()
-                .filter(i -> consensusGroupIdSet.contains(i.getKey()))
-                .mapToLong(Map.Entry::getValue)
-                .sum();
+    long res = seriesThreshold - getTimeSeriesUsage(consensusGroupIdSet);
     return res > 0 ? res : 0;
+  }
+
+  public long getTimeSeriesUsage(Set<Integer> consensusGroupIdSet) {
+    return seriesCountMap.entrySet().stream()
+        .filter(i -> consensusGroupIdSet.contains(i.getKey()))
+        .mapToLong(Map.Entry::getValue)
+        .sum();
   }
 
   /**
@@ -69,13 +71,15 @@ public class ClusterSchemaQuotaStatistics {
    * @return the remain quota, >=0
    */
   public long getDeviceQuotaRemain(Set<Integer> consensusGroupIdSet) {
-    long res =
-        deviceThreshold
-            - deviceCountMap.entrySet().stream()
-                .filter(i -> consensusGroupIdSet.contains(i.getKey()))
-                .mapToLong(Map.Entry::getValue)
-                .sum();
+    long res = deviceThreshold - getDeviceUsage(consensusGroupIdSet);
     return res > 0 ? res : 0;
+  }
+
+  public long getDeviceUsage(Set<Integer> consensusGroupIdSet) {
+    return deviceCountMap.entrySet().stream()
+        .filter(i -> consensusGroupIdSet.contains(i.getKey()))
+        .mapToLong(Map.Entry::getValue)
+        .sum();
   }
 
   public long getSeriesThreshold() {

@@ -22,6 +22,7 @@ import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
+import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
 import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
@@ -85,13 +86,16 @@ public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
   public LicenseInfoResp getLicenseInfo() throws TException {
     try (ConfigNodeClient configNodeClient =
         ConfigNodeClientManager.getInstance().borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      TLicense license = configNodeClient.getLicenseContent().getLicenseContent();
+      TLicenseContentResp resp = configNodeClient.getLicenseContent();
+      TLicense license = resp.getLicense();
+      TLicense usage = resp.getUsage();
       return new LicenseInfoResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()))
           .setIsActive(!CommonDescriptor.getInstance().getConfig().isUnactivated())
           .setExpireDate(
               DateTimeUtils.convertMillsecondToZonedDateTime(license.expireTimestamp).toString())
           .setIsEnterprise(true)
-          .setLicense(license);
+          .setLicense(license)
+          .setUsage(usage);
     } catch (ClientManagerException e) {
       throw new TException(e);
     }

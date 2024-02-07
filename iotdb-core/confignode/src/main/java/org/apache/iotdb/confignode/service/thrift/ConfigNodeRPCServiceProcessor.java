@@ -1105,7 +1105,8 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   public TLicenseContentResp getLicenseContent() throws TException {
     TLicenseContentResp resp =
         new TLicenseContentResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    resp.setLicenseContent(configManager.getActivationManager().getLicense().toTLicense());
+    resp.setLicense(configManager.getActivationManager().getLicense().toTLicense());
+    resp.setUsage(configManager.getActivationManager().getLicenseUsage());
     return resp;
   }
 

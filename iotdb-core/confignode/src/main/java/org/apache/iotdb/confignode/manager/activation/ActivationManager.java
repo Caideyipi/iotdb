@@ -72,6 +72,8 @@ import static org.apache.iotdb.commons.conf.IoTDBConstant.NODE_UUID_IN_ENV_FILE;
 public class ActivationManager {
   static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
 
+  private final ConfigManager configManager;
+
   private static final String CONFIGNODE_HOME_PATH =
       System.getProperty("CONFIGNODE_HOME") == null ? "." : System.getProperty("CONFIGNODE_HOME");
   public static final String ACTIVATION_DIR_PATH =
@@ -141,7 +143,9 @@ public class ActivationManager {
   ReentrantLock loadLock = new ReentrantLock();
 
   public ActivationManager(ConfigManager configManager) throws LicenseException {
-    initLicense(configManager);
+    this.configManager = configManager;
+
+    initLicense();
 
     try {
       generateNodeUUIDIfNotExist();
@@ -162,7 +166,7 @@ public class ActivationManager {
     logger.info("Expiration warning service launched successfully");
   }
 
-  private void initLicense(ConfigManager configManager) {
+  private void initLicense() {
     this.license =
         new License(
             () ->
@@ -495,6 +499,17 @@ public class ActivationManager {
 
   public License getLicense() {
     return this.license;
+  }
+
+  public TLicense getLicenseUsage() {
+    TLicense usage = this.license.toTLicense();
+    usage
+        .setDataNodeNum((short) configManager.getNodeManager().getRegisteredDataNodeCount())
+        .setCpuCoreNum(configManager.getNodeManager().getDataNodeCpuCoreCount())
+        .setDeviceNum(configManager.getClusterSchemaManager().getDeviceUsage())
+        .setSensorNum(configManager.getClusterSchemaManager().getTimeSeriesUsage())
+        .setAiNodeNum((short) configManager.getNodeManager().getRegisteredAINodeInfoList().size());
+    return usage;
   }
 
   public ActivateStatus getActivateStatus() {

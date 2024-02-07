@@ -56,6 +56,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetSeriesSlotList
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.MigrateRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildNodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildPathsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterIdStatement;
@@ -284,6 +285,11 @@ public abstract class StatementVisitor<R, C> {
 
   public R visitShowModels(ShowModelsStatement showModelsModelStatement, C context) {
     return visitStatement(showModelsModelStatement, context);
+  }
+
+  // Activation
+  public R visitShowActivation(ShowActivationStatement showActivationStatement, C context) {
+    return visitStatement(showActivationStatement, context);
   }
 
   /** Data Manipulation Language (DML) */

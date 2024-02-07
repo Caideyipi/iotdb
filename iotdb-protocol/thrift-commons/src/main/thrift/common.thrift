@@ -179,12 +179,12 @@ struct TSetThrottleQuotaReq {
 struct TLicense {
     1: required i64 licenseIssueTimestamp
     2: required i64 expireTimestamp
-    4: required i16 dataNodeNumLimit
-    5: required i32 cpuCoreNumLimit
-    6: required i64 deviceNumLimit
-    7: required i64 sensorNumLimit
-    8: required i64 disconnectionFromActiveNodeTimeLimit
-    9: required i16 aiNodeNumLimit
+    4: required i16 dataNodeNum
+    5: required i32 cpuCoreNum
+    6: required i64 deviceNum
+    7: required i64 sensorNum
+    8: required i64 disconnectionFromActiveNodeTime
+    9: required i16 aiNodeNum
 }
 
 struct TLoadSample {

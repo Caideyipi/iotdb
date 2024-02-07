@@ -1099,8 +1099,16 @@ public class ClusterSchemaManager {
     schemaQuotaStatistics.updateTimeSeriesUsage(seriesUsage);
   }
 
+  public long getTimeSeriesUsage() {
+    return schemaQuotaStatistics.getTimeSeriesUsage(getPartitionManager().getAllSchemaPartition());
+  }
+
   public void updateDeviceUsage(Map<Integer, Long> deviceUsage) {
     schemaQuotaStatistics.updateDeviceUsage(deviceUsage);
+  }
+
+  public long getDeviceUsage() {
+    return schemaQuotaStatistics.getDeviceUsage(getPartitionManager().getAllSchemaPartition());
   }
 
   public void updateSchemaQuotaConfiguration(long deviceThreshold, long seriesThreshold) {

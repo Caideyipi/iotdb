@@ -37,6 +37,10 @@ WS
 
 // Common Keywords
 
+ACTIVATION
+    : A C T I V A T I O N
+    ;
+
 ADD
     : A D D
     ;

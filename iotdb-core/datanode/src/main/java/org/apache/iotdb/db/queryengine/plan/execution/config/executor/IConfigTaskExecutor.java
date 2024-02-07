@@ -233,4 +233,6 @@ public interface IConfigTaskExecutor {
   SettableFuture<ConfigTaskResult> showModels(String modelName);
 
   SettableFuture<ConfigTaskResult> showAINodes(ShowAINodesStatement showAINodesStatement);
+
+  SettableFuture<ConfigTaskResult> showActivation();
 }

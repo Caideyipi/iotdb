@@ -654,6 +654,7 @@ struct LicenseInfoResp{
   3: optional string expireDate
   4: optional bool isEnterprise
   5: optional common.TLicense license
+  6: optional common.TLicense usage
 }
 
 struct WhiteListInfoResp{

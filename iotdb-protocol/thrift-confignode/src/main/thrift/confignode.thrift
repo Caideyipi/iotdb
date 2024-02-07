@@ -868,9 +868,11 @@ struct TShowThrottleReq{
 // ====================================================
 // Activation
 // ====================================================
+
 struct TLicenseContentResp {
     1: required common.TSStatus status
-    2: optional common.TLicense licenseContent
+    2: optional common.TLicense license
+    3: optional common.TLicense usage
 }
 
 enum TActivationControl {

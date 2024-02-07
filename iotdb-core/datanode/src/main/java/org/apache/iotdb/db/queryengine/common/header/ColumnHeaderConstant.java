@@ -195,6 +195,11 @@ public class ColumnHeaderConstant {
   public static final String HYPERPARAMETER = "Hyperparameter";
   public static final String MODEL_PATH = "ModelPath";
 
+  // column names for show activation
+  public static final String LICENSE_INFO = "LicenseInfo";
+  public static final String USAGE = "Usage";
+  public static final String QUOTA = "Quota";
+
   // column names for views (e.g. logical view)
   public static final String VIEW_TYPE = "ViewType";
   public static final String SOURCE = "Source";
@@ -481,6 +486,12 @@ public class ColumnHeaderConstant {
           new ColumnHeader(STATE, TSDataType.TEXT),
           new ColumnHeader(CONFIGS, TSDataType.TEXT),
           new ColumnHeader(NOTES, TSDataType.TEXT));
+
+  public static final List<ColumnHeader> showActivationColumnHeaders =
+      ImmutableList.of(
+          new ColumnHeader(LICENSE_INFO, TSDataType.TEXT),
+          new ColumnHeader(USAGE, TSDataType.TEXT),
+          new ColumnHeader(LIMIT, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showTrialsColumnHeaders =
       ImmutableList.of(

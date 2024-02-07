@@ -146,6 +146,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetSeriesSlotList
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.MigrateRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildNodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildPathsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterIdStatement;
@@ -4194,5 +4195,10 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
               Integer.parseInt(windowContext.step.getText()));
     }
     statement.setInferenceWindow(inferenceWindow);
+  }
+
+  @Override
+  public Statement visitShowActivation(IoTDBSqlParser.ShowActivationContext ctx) {
+    return new ShowActivationStatement();
   }
 }
