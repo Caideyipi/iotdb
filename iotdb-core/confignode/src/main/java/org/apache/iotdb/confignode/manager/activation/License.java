@@ -78,7 +78,7 @@ public class License {
 
   protected LicenseSource licenseSource = LicenseSource.UNKNOWN;
 
-  private final Runnable onLicenseChange;
+  protected final Runnable onLicenseChange;
 
   private ActivateStatus oldActivateStatus = ActivateStatus.UNKNOWN;
 
@@ -141,6 +141,7 @@ public class License {
     // other
     licenseSource = LicenseSource.NO_LICENSE;
     // done
+    this.onLicenseChange.run();
     logActivateStatus(true);
     return true;
   }

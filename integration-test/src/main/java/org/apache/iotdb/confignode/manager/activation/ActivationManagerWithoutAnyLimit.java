@@ -36,7 +36,8 @@ public class ActivationManagerWithoutAnyLimit extends ActivationManager {
                 configManager
                     .getClusterSchemaManager()
                     .updateSchemaQuotaConfiguration(
-                        license.getDeviceNumLimit(), license.getSensorNumLimit()));
+                        LicenseWithoutLimit.DEVICE_NUM_UNLIMITED,
+                        LicenseWithoutLimit.SENSOR_NUM_UNLIMITED));
   }
 
   @Override
