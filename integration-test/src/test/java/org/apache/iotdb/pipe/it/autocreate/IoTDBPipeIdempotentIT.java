@@ -61,11 +61,11 @@ public class IoTDBPipeIdempotentIT extends AbstractPipeDualAutoIT {
           .getConfig()
           .getCommonConfig()
           .setAutoCreateSchemaEnabled(true)
+          // Limit the schemaRegionGroup number to 1 to guarantee the after sql executed on the same
+          // region of the tested idempotent sql.
           .setDefaultSchemaRegionGroupNumPerDatabase(1);
       receiverEnv.getConfig().getCommonConfig().setAutoCreateSchemaEnabled(true);
 
-      // Limit the schemaRegion number to 1 to guarantee the after sql executed on the same region
-      // of the tested idempotent sql.
       senderEnv.initClusterEnvironment();
       receiverEnv.initClusterEnvironment();
     } catch (Throwable e) {
