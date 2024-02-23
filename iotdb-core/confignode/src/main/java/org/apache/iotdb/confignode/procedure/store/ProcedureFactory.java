@@ -20,6 +20,7 @@
 package org.apache.iotdb.confignode.procedure.store;
 
 import org.apache.iotdb.confignode.procedure.Procedure;
+import org.apache.iotdb.confignode.procedure.impl.CreateManyDatabasesProcedure;
 import org.apache.iotdb.confignode.procedure.impl.cq.CreateCQProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.CreateModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.DropModelProcedure;
@@ -177,6 +178,9 @@ public class ProcedureFactory implements IProcedureFactory {
       case REMOVE_AI_NODE_PROCEDURE:
         procedure = new RemoveAINodeProcedure();
         break;
+      case CREATE_MANY_DATABASES_PROCEDURE:
+        procedure = new CreateManyDatabasesProcedure();
+        break;
       default:
         LOGGER.error("unknown Procedure type: " + typeCode);
         throw new IOException("unknown Procedure type: " + typeCode);
@@ -252,8 +256,11 @@ public class ProcedureFactory implements IProcedureFactory {
       return ProcedureType.ALTER_LOGICAL_VIEW_PROCEDURE;
     } else if (procedure instanceof AuthOperationProcedure) {
       return ProcedureType.AUTH_OPERATE_PROCEDURE;
+    } else if (procedure instanceof CreateManyDatabasesProcedure) {
+      return ProcedureType.CREATE_MANY_DATABASES_PROCEDURE;
     }
-    return null;
+    throw new UnsupportedOperationException(
+        "Procedure type " + procedure.getClass() + " is not supported");
   }
 
   private static class ProcedureFactoryHolder {

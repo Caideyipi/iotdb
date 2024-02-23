@@ -1056,6 +1056,9 @@ service IConfigNodeRPCService {
   /** Get the matched Databases' TDatabaseSchema */
   TDatabaseSchemaResp getMatchedDatabaseSchemas(TGetDatabaseReq req)
 
+  /** Test only */
+  common.TSStatus createManyDatabases()
+
   // ======================================================
   // SchemaPartition
   // ======================================================

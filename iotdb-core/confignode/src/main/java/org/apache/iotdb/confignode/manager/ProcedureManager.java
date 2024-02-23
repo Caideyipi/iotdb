@@ -37,6 +37,7 @@ import org.apache.iotdb.commons.schema.view.viewExpression.ViewExpression;
 import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.commons.trigger.TriggerInformation;
 import org.apache.iotdb.commons.utils.StatusUtils;
+import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.consensus.request.auth.AuthorPlan;
@@ -51,6 +52,7 @@ import org.apache.iotdb.confignode.procedure.Procedure;
 import org.apache.iotdb.confignode.procedure.ProcedureExecutor;
 import org.apache.iotdb.confignode.procedure.ProcedureMetrics;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
+import org.apache.iotdb.confignode.procedure.impl.CreateManyDatabasesProcedure;
 import org.apache.iotdb.confignode.procedure.impl.cq.CreateCQProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.CreateModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.DropModelProcedure;
@@ -85,7 +87,6 @@ import org.apache.iotdb.confignode.procedure.scheduler.SimpleProcedureScheduler;
 import org.apache.iotdb.confignode.procedure.store.ConfigProcedureStore;
 import org.apache.iotdb.confignode.procedure.store.IProcedureStore;
 import org.apache.iotdb.confignode.procedure.store.ProcedureFactory;
-import org.apache.iotdb.confignode.procedure.store.ProcedureStore;
 import org.apache.iotdb.confignode.procedure.store.ProcedureType;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterPipeReq;
@@ -174,6 +175,12 @@ public class ProcedureManager {
         }
       }
     }
+  }
+
+  @TestOnly
+  public TSStatus createManyDatabases() {
+    this.executor.submitProcedure(new CreateManyDatabasesProcedure());
+    return StatusUtils.OK;
   }
 
   public TSStatus deleteDatabases(ArrayList<TDatabaseSchema> deleteSgSchemaList) {
@@ -1051,10 +1058,6 @@ public class ProcedureManager {
 
   public IProcedureStore getStore() {
     return store;
-  }
-
-  public void setStore(ProcedureStore store) {
-    this.store = store;
   }
 
   public ConfigNodeProcedureEnv getEnv() {
