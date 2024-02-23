@@ -449,6 +449,7 @@ public class ExpressionTypeAnalyzer {
       case SqlConstant.VAR_POP:
       case SqlConstant.VAR_SAMP:
       case SqlConstant.MAX_BY:
+      case SqlConstant.MIN_BY:
         return expressionTypes.get(NodeRef.of(inputExpressions.get(0)));
       default:
         throw new IllegalArgumentException(

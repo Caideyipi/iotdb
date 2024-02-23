@@ -2967,6 +2967,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
         return;
       case SqlConstant.COUNT_IF:
       case SqlConstant.MAX_BY:
+      case SqlConstant.MIN_BY:
         checkFunctionExpressionInputSize(
             functionExpression.getExpressionString(),
             functionExpression.getExpressions().size(),
