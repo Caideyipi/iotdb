@@ -89,6 +89,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TSetDataNodeStatusReq;
 import org.apache.iotdb.consensus.common.DataSet;
 import org.apache.iotdb.consensus.common.Peer;
 import org.apache.iotdb.consensus.exception.ConsensusException;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -268,10 +269,23 @@ public class NodeManager {
    * @return DataNodeConfigurationDataSet. The {@link TSStatus} will be set to {@link
    *     TSStatusCode#SUCCESS_STATUS} when register success.
    */
-  public synchronized DataSet registerDataNode(TDataNodeRegisterReq req) {
-    DataNodeRegisterResp activationCheckResp = registerDataNodeActivationCheck(req);
-    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != activationCheckResp.getStatus().getCode()) {
-      return activationCheckResp;
+  public DataSet registerDataNode(TDataNodeRegisterReq req) {
+    DataNodeRegisterResp resp = new DataNodeRegisterResp();
+    final String clusterId =
+        configManager
+            .getClusterManager()
+            .getClusterIdWithRetry(
+                IoTDBDescriptor.getInstance().getConfig().getConnectionTimeoutInMS() / 2);
+    if (clusterId == null) {
+      resp.setStatus(
+          new TSStatus(TSStatusCode.GET_CLUSTER_ID_ERROR.getStatusCode())
+              .setMessage("clusterId has not generated"));
+      return resp;
+    }
+
+    resp = registerDataNodeActivationCheck(req);
+    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != resp.getStatus().getCode()) {
+      return resp;
     }
 
     int dataNodeId = nodeInfo.generateNextNodeId();
@@ -309,18 +323,17 @@ public class NodeManager {
     // Adjust the maximum RegionGroup number of each StorageGroup
     getClusterSchemaManager().adjustMaxRegionGroupNum();
 
-    DataNodeRegisterResp resp = new DataNodeRegisterResp();
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_REGISTRATION);
     resp.setConfigNodeList(getRegisteredConfigNodes());
     resp.setDataNodeId(
         registerDataNodePlan.getDataNodeConfiguration().getLocation().getDataNodeId());
-    resp.setRuntimeConfiguration(getRuntimeConfiguration());
+    resp.setRuntimeConfiguration(getRuntimeConfiguration().setClusterId(clusterId));
 
     License license = configManager.getActivationManager().getLicense();
     LOGGER.info(
-        "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
-        license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
-        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
+            "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
+            license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
+            license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
 
     return resp;
   }
@@ -332,7 +345,7 @@ public class NodeManager {
     // check if unactivated
     if (!license.isActivated()) {
       final String message =
-          "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
+              "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
@@ -340,21 +353,21 @@ public class NodeManager {
     // check DataNode num limit
     if (nodeInfo.getRegisteredDataNodeCount() + 1 > license.getDataNodeNumLimit()) {
       final String message =
-          String.format(
-              "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
-              nodeInfo.getRegisteredDataNodeCount(),
-              nodeInfo.getRegisteredDataNodeCount() + 1,
-              license.getDataNodeNumLimit());
+              String.format(
+                      "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
+                      nodeInfo.getRegisteredDataNodeCount(),
+                      nodeInfo.getRegisteredDataNodeCount() + 1,
+                      license.getDataNodeNumLimit());
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
     } else {
       String message =
-          String.format(
-              "DataNode register node num check pass. "
-                  + "After the successful register of this datanode, "
-                  + "the remaining quota for node num will be set to %d.",
-              license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
+              String.format(
+                      "DataNode register node num check pass. "
+                              + "After the successful register of this datanode, "
+                              + "the remaining quota for node num will be set to %d.",
+                      license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
       LOGGER.info(message);
     }
     // check DataNode's cpu core num limit
@@ -363,22 +376,22 @@ public class NodeManager {
     int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
     if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
       String message =
-          String.format(
-              "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
-              clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
+              String.format(
+                      "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
+                      clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
     } else {
       String message =
-          String.format(
-              "DataNode register cpu core num check pass. "
-                  + "After the successful register of this datanode, "
-                  + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
-              cpuCoreLimit,
-              clusterCpuCores,
-              newNodeCpuCores,
-              cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
+              String.format(
+                      "DataNode register cpu core num check pass. "
+                              + "After the successful register of this datanode, "
+                              + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
+                      cpuCoreLimit,
+                      clusterCpuCores,
+                      newNodeCpuCores,
+                      cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
       LOGGER.info(message);
     }
     resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
@@ -386,6 +399,20 @@ public class NodeManager {
   }
 
   public TDataNodeRestartResp updateDataNodeIfNecessary(TDataNodeRestartReq req) {
+    final String clusterId =
+        configManager
+            .getClusterManager()
+            .getClusterIdWithRetry(
+                IoTDBDescriptor.getInstance().getConfig().getConnectionTimeoutInMS() / 2);
+    TDataNodeRestartResp resp = new TDataNodeRestartResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    if (clusterId == null) {
+      resp.setStatus(
+          new TSStatus(TSStatusCode.GET_CLUSTER_ID_ERROR.getStatusCode())
+              .setMessage("clusterId has not generated"));
+      return resp;
+    }
+
     int nodeId = req.getDataNodeConfiguration().getLocation().getDataNodeId();
     TDataNodeRestartResp checkResp = updateDataNodeActivationCheck(req);
     if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != checkResp.status.getCode()) {
@@ -414,10 +441,8 @@ public class NodeManager {
       }
     }
 
-    TDataNodeRestartResp resp = new TDataNodeRestartResp();
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_RESTART);
-    resp.setConfigNodeList(getRegisteredConfigNodes());
-    resp.setRuntimeConfiguration(getRuntimeConfiguration());
+    resp.setRuntimeConfiguration(getRuntimeConfiguration().setClusterId(clusterId));
     return resp;
   }
 

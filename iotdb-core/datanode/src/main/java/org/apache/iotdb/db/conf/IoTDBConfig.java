@@ -609,6 +609,12 @@ public class IoTDBConfig {
   private String clusterName = "defaultCluster";
 
   /**
+   * The cluster ID that this DataNode joined in the cluster mode. DataNode will fetch cluster ID
+   * from ConfigNode and cache it here when first time use it.
+   */
+  private String clusterId = "";
+
+  /**
    * The DataNodeId of this DataNode for cluster mode. The default value -1 will be changed after
    * join cluster
    */
@@ -3041,6 +3047,14 @@ public class IoTDBConfig {
 
   public void setClusterName(String clusterName) {
     this.clusterName = clusterName;
+  }
+
+  public String getClusterId() {
+    return clusterId;
+  }
+
+  public void setClusterId(String clusterId) {
+    this.clusterId = clusterId;
   }
 
   public int getDataNodeId() {
