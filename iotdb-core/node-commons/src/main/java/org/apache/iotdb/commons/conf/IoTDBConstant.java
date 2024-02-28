@@ -224,7 +224,8 @@ public class IoTDBConstant {
               MAX_STRING_LENGTH));
 
   // default base dir, stores all IoTDB runtime files
-  public static final String DEFAULT_BASE_DIR = "data" + File.separator + DN_ROLE;
+  public static final String CN_DEFAULT_DATA_DIR = "data" + File.separator + CN_ROLE;
+  public static final String DN_DEFAULT_DATA_DIR = "data" + File.separator + DN_ROLE;
 
   // .env file name
   public static final String ENV_FILE_NAME = ".env";

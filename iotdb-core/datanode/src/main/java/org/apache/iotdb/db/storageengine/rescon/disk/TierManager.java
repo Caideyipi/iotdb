@@ -105,7 +105,7 @@ public class TierManager {
             if (i != tierDirs.length - 1 || tierDirs.length == 1) {
               File defaultDataDir =
                   new File(
-                      IoTDBConstant.DEFAULT_BASE_DIR
+                      IoTDBConstant.DN_DEFAULT_DATA_DIR
                           + File.separator
                           + IoTDBConstant.DATA_FOLDER_NAME);
               logger.error(
