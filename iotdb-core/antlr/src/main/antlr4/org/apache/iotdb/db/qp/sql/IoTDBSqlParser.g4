@@ -82,7 +82,7 @@ dclStatement
     ;
 
 utilityStatement
-    : | flush | clearCache | settle | repairData | explain
+    : flush | clearCache | settle | startRepairData | stopRepairData | explain
     | setSystemStatus | showVersion | showFlushInfo | showLockInfo | showQueryResource
     | showQueries | killQuery | grantWatermarkEmbedding | revokeWatermarkEmbedding
     | loadConfiguration | loadTimeseries | loadFile | removeFile | unloadFile
@@ -1011,9 +1011,14 @@ settle
     : SETTLE (prefixPath|tsFilePath=STRING_LITERAL)
     ;
 
-// Repair Data
-repairData
-    : REPAIR DATA (ON (LOCAL | CLUSTER))?
+// Start Repair Data
+startRepairData
+    : START REPAIR DATA (ON (LOCAL | CLUSTER))?
+    ;
+
+// Stop Repair Data
+stopRepairData
+    : STOP REPAIR DATA (ON (LOCAL | CLUSTER))?
     ;
 
 // Explain

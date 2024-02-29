@@ -498,8 +498,8 @@ public class IoTDBConfig {
   /** The max candidate file num in one cross space compaction task */
   private int fileLimitPerCrossTask = 500;
 
-  /** The max candidate file num in cross space compaction */
-  private int totalFileLimitForCrossTask = 5000;
+  /** The max candidate file num in compaction */
+  private int totalFileLimitForCompactionTask = 5000;
 
   /** The max total size of candidate files in one cross space compaction task */
   private long maxCrossCompactionCandidateFileSize = 1024 * 1024 * 1024 * 5L;
@@ -521,6 +521,9 @@ public class IoTDBConfig {
    * for nonAligned data in cross space compaction and unseq inner space compaction.
    */
   private int subCompactionTaskNum = 4;
+
+  /** The number of threads to be set up to select compaction task. */
+  private int compactionScheduleThreadNum = 4;
 
   private boolean enableTsFileValidation = false;
 
@@ -2807,8 +2810,8 @@ public class IoTDBConfig {
     return fileLimitPerCrossTask;
   }
 
-  public int getTotalFileLimitForCrossTask() {
-    return totalFileLimitForCrossTask;
+  public int getTotalFileLimitForCompactionTask() {
+    return totalFileLimitForCompactionTask;
   }
 
   public void setFileLimitPerCrossTask(int fileLimitPerCrossTask) {
@@ -2845,6 +2848,14 @@ public class IoTDBConfig {
 
   public void setSubCompactionTaskNum(int subCompactionTaskNum) {
     this.subCompactionTaskNum = subCompactionTaskNum;
+  }
+
+  public int getCompactionScheduleThreadNum() {
+    return compactionScheduleThreadNum;
+  }
+
+  public void setCompactionScheduleThreadNum(int compactionScheduleThreadNum) {
+    this.compactionScheduleThreadNum = compactionScheduleThreadNum;
   }
 
   public int getCachedMNodeSizeInPBTreeMode() {
