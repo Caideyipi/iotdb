@@ -133,11 +133,11 @@ public class StatementGenerator {
     return invokeParser(sql, zoneId);
   }
 
-  public static Statement createStatement(TSRawDataQueryReq rawDataQueryReq, ZoneId zoneId)
+  public static Statement createStatement(TSRawDataQueryReq rawDataQueryReq)
       throws IllegalPathException {
     final long startTime = System.nanoTime();
     // construct query statement
-    SelectComponent selectComponent = new SelectComponent(zoneId);
+    SelectComponent selectComponent = new SelectComponent();
     FromComponent fromComponent = new FromComponent();
     WhereCondition whereCondition = new WhereCondition();
 
@@ -175,11 +175,11 @@ public class StatementGenerator {
     return queryStatement;
   }
 
-  public static Statement createStatement(TSLastDataQueryReq lastDataQueryReq, ZoneId zoneId)
+  public static Statement createStatement(TSLastDataQueryReq lastDataQueryReq)
       throws IllegalPathException {
     final long startTime = System.nanoTime();
     // construct query statement
-    SelectComponent selectComponent = new SelectComponent(zoneId);
+    SelectComponent selectComponent = new SelectComponent();
     FromComponent fromComponent = new FromComponent();
 
     selectComponent.setHasLast(true);
@@ -218,8 +218,7 @@ public class StatementGenerator {
     return lastQueryStatement;
   }
 
-  public static Statement createStatement(TSAggregationQueryReq req, ZoneId zoneId)
-      throws IllegalPathException {
+  public static Statement createStatement(TSAggregationQueryReq req) throws IllegalPathException {
     final long startTime = System.nanoTime();
     QueryStatement queryStatement = new QueryStatement();
 
@@ -227,7 +226,7 @@ public class StatementGenerator {
     fromComponent.addPrefixPath(new PartialPath("", false));
     queryStatement.setFromComponent(fromComponent);
 
-    SelectComponent selectComponent = new SelectComponent(zoneId);
+    SelectComponent selectComponent = new SelectComponent();
     List<PartialPath> selectPaths = new ArrayList<>();
     for (String pathStr : req.getPaths()) {
       if (req.isLegalPathNodes()) {

@@ -224,6 +224,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1039,7 +1040,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
     SESSION_MANAGER.registerSession(session);
 
-    SESSION_MANAGER.supplySession(session, req.getUsername(), req.getZoneId(), ClientVersion.V_1_0);
+    SESSION_MANAGER.supplySession(
+        session, req.getUsername(), ZoneId.of(req.getZoneId()), ClientVersion.V_1_0);
 
     String executedSQL = req.queryBody;
 
