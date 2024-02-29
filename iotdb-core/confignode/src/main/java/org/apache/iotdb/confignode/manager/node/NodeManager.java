@@ -269,7 +269,7 @@ public class NodeManager {
    * @return DataNodeConfigurationDataSet. The {@link TSStatus} will be set to {@link
    *     TSStatusCode#SUCCESS_STATUS} when register success.
    */
-  public DataSet registerDataNode(TDataNodeRegisterReq req) {
+  public synchronized DataSet registerDataNode(TDataNodeRegisterReq req) {
     DataNodeRegisterResp resp = new DataNodeRegisterResp();
     final String clusterId =
         configManager
