@@ -331,9 +331,9 @@ public class NodeManager {
 
     License license = configManager.getActivationManager().getLicense();
     LOGGER.info(
-            "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
-            license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
-            license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
+        "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
+        license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
+        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
 
     return resp;
   }
@@ -345,7 +345,7 @@ public class NodeManager {
     // check if unactivated
     if (!license.isActivated()) {
       final String message =
-              "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
+          "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
@@ -353,21 +353,21 @@ public class NodeManager {
     // check DataNode num limit
     if (nodeInfo.getRegisteredDataNodeCount() + 1 > license.getDataNodeNumLimit()) {
       final String message =
-              String.format(
-                      "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
-                      nodeInfo.getRegisteredDataNodeCount(),
-                      nodeInfo.getRegisteredDataNodeCount() + 1,
-                      license.getDataNodeNumLimit());
+          String.format(
+              "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
+              nodeInfo.getRegisteredDataNodeCount(),
+              nodeInfo.getRegisteredDataNodeCount() + 1,
+              license.getDataNodeNumLimit());
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
     } else {
       String message =
-              String.format(
-                      "DataNode register node num check pass. "
-                              + "After the successful register of this datanode, "
-                              + "the remaining quota for node num will be set to %d.",
-                      license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
+          String.format(
+              "DataNode register node num check pass. "
+                  + "After the successful register of this datanode, "
+                  + "the remaining quota for node num will be set to %d.",
+              license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
       LOGGER.info(message);
     }
     // check DataNode's cpu core num limit
@@ -376,22 +376,22 @@ public class NodeManager {
     int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
     if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
       String message =
-              String.format(
-                      "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
-                      clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
+          String.format(
+              "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
+              clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
       LOGGER.warn(message);
       resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
       return resp;
     } else {
       String message =
-              String.format(
-                      "DataNode register cpu core num check pass. "
-                              + "After the successful register of this datanode, "
-                              + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
-                      cpuCoreLimit,
-                      clusterCpuCores,
-                      newNodeCpuCores,
-                      cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
+          String.format(
+              "DataNode register cpu core num check pass. "
+                  + "After the successful register of this datanode, "
+                  + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
+              cpuCoreLimit,
+              clusterCpuCores,
+              newNodeCpuCores,
+              cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
       LOGGER.info(message);
     }
     resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
