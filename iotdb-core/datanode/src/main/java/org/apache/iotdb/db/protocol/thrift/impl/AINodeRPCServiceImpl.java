@@ -53,8 +53,8 @@ import org.apache.iotdb.tsfile.utils.Pair;
 import org.apache.thrift.TException;
 
 import java.nio.ByteBuffer;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.TimeZone;
 
 public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
 
@@ -76,8 +76,7 @@ public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
     schemaFetcher = ClusterSchemaFetcher.getInstance();
     session = new InternalClientSession("AINodeService");
     SESSION_MANAGER.registerSession(session);
-    SESSION_MANAGER.supplySession(
-        session, "AINode", TimeZone.getDefault().getID(), ClientVersion.V_1_0);
+    SESSION_MANAGER.supplySession(session, "AINode", ZoneId.systemDefault(), ClientVersion.V_1_0);
   }
 
   @Override

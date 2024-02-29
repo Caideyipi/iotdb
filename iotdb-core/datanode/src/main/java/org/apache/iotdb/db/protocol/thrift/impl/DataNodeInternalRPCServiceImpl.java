@@ -232,7 +232,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -1122,8 +1121,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   public TSStatus deleteModelMetrics(TDeleteModelMetricsReq req) {
     IClientSession session = new InternalClientSession(req.getModelId());
     SESSION_MANAGER.registerSession(session);
-    SESSION_MANAGER.supplySession(
-        session, "AINode", TimeZone.getDefault().getID(), ClientVersion.V_1_0);
+    SESSION_MANAGER.supplySession(session, "AINode", ZoneId.systemDefault(), ClientVersion.V_1_0);
 
     try {
       DeleteTimeSeriesStatement deleteTimeSeriesStatement = StatementGenerator.createStatement(req);
