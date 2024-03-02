@@ -208,4 +208,8 @@ public class DatasetHeaderFactory {
   public static DatasetHeader getShowActivationHeader() {
     return new DatasetHeader(ColumnHeaderConstant.showActivationColumnHeaders, true);
   }
+
+  public static DatasetHeader getShowCurrentTimestampHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showCurrentTimestampColumnHeaders, true);
+  }
 }

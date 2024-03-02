@@ -84,8 +84,9 @@ dclStatement
 utilityStatement
     : flush | clearCache | settle | startRepairData | stopRepairData | explain
     | setSystemStatus | showVersion | showFlushInfo | showLockInfo | showQueryResource
-    | showQueries | killQuery | grantWatermarkEmbedding | revokeWatermarkEmbedding
-    | loadConfiguration | loadTimeseries | loadFile | removeFile | unloadFile
+    | showQueries | showCurrentTimestamp | killQuery | grantWatermarkEmbedding
+    | revokeWatermarkEmbedding | loadConfiguration | loadTimeseries | loadFile
+    | removeFile | unloadFile
     ;
 
 /**
@@ -1058,6 +1059,11 @@ showQueries
     whereClause?
     orderByClause?
     rowPaginationClause?
+    ;
+
+// Show Current Timestamp
+showCurrentTimestamp
+    : SHOW CURRENT_TIMESTAMP
     ;
 
 // Kill Query
