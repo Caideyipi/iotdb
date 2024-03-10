@@ -47,6 +47,7 @@ import org.apache.iotdb.tsfile.read.filter.basic.Filter;
 import org.apache.iotdb.tsfile.utils.FSUtils;
 import org.apache.iotdb.tsfile.utils.FilePathUtils;
 import org.apache.iotdb.tsfile.utils.Pair;
+import org.apache.iotdb.tsfile.utils.RamUsageEstimator;
 import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
 import org.apache.iotdb.tsfile.write.writer.TsFileIOWriter;
 
@@ -72,6 +73,11 @@ import static org.apache.iotdb.tsfile.common.constant.TsFileConstant.TSFILE_SUFF
 
 @SuppressWarnings("java:S1135") // ignore todos
 public class TsFileResource {
+
+  private static final long INSTANCE_SIZE =
+      RamUsageEstimator.shallowSizeOfInstance(TsFileResource.class)
+          + RamUsageEstimator.shallowSizeOfInstance(TsFileRepairStatus.class)
+          + RamUsageEstimator.shallowSizeOfInstance(TsFileID.class);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TsFileResource.class);
 
@@ -888,8 +894,12 @@ public class TsFileResource {
 
   /** @return resource map size */
   public long calculateRamSize() {
-    ramSize = timeIndex.calculateRamSize();
-    return ramSize;
+    if (ramSize == 0) {
+      ramSize = INSTANCE_SIZE + timeIndex.calculateRamSize();
+      return ramSize;
+    } else {
+      return ramSize;
+    }
   }
 
   public long getMaxPlanIndex() {
@@ -1103,7 +1113,12 @@ public class TsFileResource {
     long endTime = timeIndex.getMaxEndTime();
     // replace the DeviceTimeIndex with FileTimeIndex
     timeIndex = new FileTimeIndex(startTime, endTime);
-    return ramSize - timeIndex.calculateRamSize();
+
+    long beforeRamSize = ramSize;
+
+    ramSize = INSTANCE_SIZE + timeIndex.calculateRamSize();
+
+    return beforeRamSize - ramSize;
   }
 
   private void generatePathToTimeSeriesMetadataMap() throws IOException {

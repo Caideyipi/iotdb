@@ -42,7 +42,6 @@ import org.apache.iotdb.db.storageengine.dataregion.IDataRegionForQuery;
 import org.apache.iotdb.db.utils.SetThreadName;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchFragmentInstanceStatisticsResp;
 
-import io.airlift.stats.CounterStat;
 import io.airlift.units.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,9 +76,6 @@ public class FragmentInstanceManager {
   public final ExecutorService instanceNotificationExecutor;
 
   private final Duration infoCacheTime;
-
-  // record failed instances count
-  private final CounterStat failedInstances = new CounterStat();
 
   private final ExecutorService intoOperationExecutor;
   private final ExecutorService modelInferenceExecutor;
@@ -184,7 +180,6 @@ public class FragmentInstanceManager {
                       drivers,
                       sink,
                       stateMachine,
-                      failedInstances,
                       instance.getTimeOut(),
                       instance.isExplainAnalyze(),
                       exchangeManager);
@@ -257,7 +252,6 @@ public class FragmentInstanceManager {
                     drivers,
                     sink,
                     stateMachine,
-                    failedInstances,
                     instance.getTimeOut(),
                     false,
                     exchangeManager);
@@ -349,10 +343,6 @@ public class FragmentInstanceManager {
       return null;
     }
     return statistics;
-  }
-
-  public CounterStat getFailedInstances() {
-    return failedInstances;
   }
 
   private FragmentInstanceInfo createFailedInstanceInfo(FragmentInstanceId instanceId) {
