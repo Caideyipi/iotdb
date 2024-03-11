@@ -454,7 +454,7 @@ public class ConfigNode implements ConfigNodeMBean {
 
   private static class ConfigNodeHolder {
 
-    private static final ConfigNode INSTANCE = new ConfigNode();
+    private static ConfigNode instance = new ConfigNode();
 
     private ConfigNodeHolder() {
       // Empty constructor
@@ -462,6 +462,10 @@ public class ConfigNode implements ConfigNodeMBean {
   }
 
   public static ConfigNode getInstance() {
-    return ConfigNodeHolder.INSTANCE;
+    return ConfigNodeHolder.instance;
+  }
+
+  public static void setInstance(ConfigNode configNode) {
+    ConfigNodeHolder.instance = configNode;
   }
 }

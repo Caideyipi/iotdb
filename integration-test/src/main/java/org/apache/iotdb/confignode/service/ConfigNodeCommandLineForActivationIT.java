@@ -23,5 +23,6 @@ public class ConfigNodeCommandLineForActivationIT extends ConfigNodeCommandLine 
   @Override
   protected void activeConfigNodeInstance() {
     ConfigNodeForActivationIT.getInstance().active();
+    ConfigNode.setInstance(ConfigNodeForActivationIT.getInstance());
   }
 }
