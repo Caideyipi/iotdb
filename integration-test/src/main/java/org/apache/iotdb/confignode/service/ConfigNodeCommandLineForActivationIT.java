@@ -22,7 +22,7 @@ package org.apache.iotdb.confignode.service;
 public class ConfigNodeCommandLineForActivationIT extends ConfigNodeCommandLine {
   @Override
   protected void activeConfigNodeInstance() {
-    ConfigNodeForActivationIT.getInstance().active();
     ConfigNode.setInstance(ConfigNodeForActivationIT.getInstance());
+    ConfigNodeForActivationIT.getInstance().active();
   }
 }
