@@ -20,7 +20,6 @@
 package org.apache.iotdb.confignode.procedure.store;
 
 import org.apache.iotdb.confignode.procedure.Procedure;
-import org.apache.iotdb.confignode.procedure.impl.CreateManyDatabasesProcedure;
 import org.apache.iotdb.confignode.procedure.impl.cq.CreateCQProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.CreateModelProcedure;
 import org.apache.iotdb.confignode.procedure.impl.model.DropModelProcedure;
@@ -52,6 +51,9 @@ import org.apache.iotdb.confignode.procedure.impl.sync.CreatePipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.DropPipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.StartPipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.StopPipeProcedure;
+import org.apache.iotdb.confignode.procedure.impl.testonly.AddNeverFinishSubProcedureProcedure;
+import org.apache.iotdb.confignode.procedure.impl.testonly.CreateManyDatabasesProcedure;
+import org.apache.iotdb.confignode.procedure.impl.testonly.NeverFinishProcedure;
 import org.apache.iotdb.confignode.procedure.impl.trigger.CreateTriggerProcedure;
 import org.apache.iotdb.confignode.procedure.impl.trigger.DropTriggerProcedure;
 import org.apache.iotdb.confignode.service.ConfigNode;
@@ -211,6 +213,12 @@ public class ProcedureFactory implements IProcedureFactory {
       case CREATE_MANY_DATABASES_PROCEDURE:
         procedure = new CreateManyDatabasesProcedure();
         break;
+      case NEVER_FINISH_PROCEDURE:
+        procedure = new NeverFinishProcedure();
+        break;
+      case ADD_NEVER_FINISH_SUB_PROCEDURE_PROCEDURE:
+        procedure = new AddNeverFinishSubProcedureProcedure();
+        break;
       default:
         LOGGER.error("Unknown Procedure type: {}", typeCode);
         throw new IOException("Unknown Procedure type: " + typeCode);
@@ -288,6 +296,10 @@ public class ProcedureFactory implements IProcedureFactory {
       return ProcedureType.AUTH_OPERATE_PROCEDURE;
     } else if (procedure instanceof CreateManyDatabasesProcedure) {
       return ProcedureType.CREATE_MANY_DATABASES_PROCEDURE;
+    } else if (procedure instanceof NeverFinishProcedure) {
+      return ProcedureType.NEVER_FINISH_PROCEDURE;
+    } else if (procedure instanceof AddNeverFinishSubProcedureProcedure) {
+      return ProcedureType.ADD_NEVER_FINISH_SUB_PROCEDURE_PROCEDURE;
     }
     throw new UnsupportedOperationException(
         "Procedure type " + procedure.getClass() + " is not supported");
