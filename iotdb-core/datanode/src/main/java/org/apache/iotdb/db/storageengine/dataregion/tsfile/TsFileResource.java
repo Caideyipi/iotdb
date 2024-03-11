@@ -1144,7 +1144,7 @@ public class TsFileResource {
     maxProgressIndex =
         (maxProgressIndex == null
             ? progressIndex
-            : maxProgressIndex.updateToMinimumIsAfterProgressIndex(progressIndex));
+            : maxProgressIndex.updateToMinimumEqualOrIsAfterProgressIndex(progressIndex));
   }
 
   public void setProgressIndex(ProgressIndex progressIndex) {

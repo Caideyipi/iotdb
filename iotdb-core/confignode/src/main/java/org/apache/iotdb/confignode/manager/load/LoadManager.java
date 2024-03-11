@@ -61,8 +61,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * The LoadManager at ConfigNodeGroup-Leader is active. It proactively implements the cluster
- * dynamic load balancing policy and passively accepts the PartitionTable expansion request.
+ * The {@link LoadManager} at ConfigNodeGroup-Leader is active. It proactively implements the
+ * cluster dynamic load balancing policy and passively accepts the PartitionTable expansion request.
  */
 public class LoadManager {
 
