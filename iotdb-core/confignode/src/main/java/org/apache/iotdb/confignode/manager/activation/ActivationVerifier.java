@@ -83,7 +83,7 @@ public class ActivationVerifier {
 
   private static Properties loadSystemProperties() {
     String homePath = System.getProperty(ConfigNodeConstant.CONFIGNODE_HOME);
-    String confDir = homePath + File.separator + ConfigNodeConstant.CONF_DIR;
+    String confDir = homePath + File.separator + IoTDBConstant.CN_DEFAULT_DATA_DIR;
     String confVar = System.getProperty(ConfigNodeConstant.CONFIGNODE_CONF);
     if (confVar != null && !confVar.isEmpty()) {
       confDir = confVar;
@@ -102,7 +102,7 @@ public class ActivationVerifier {
             .orElse(
                 homePath
                     + File.separator
-                    + ConfigNodeConstant.DATA_DIR
+                    + IoTDBConstant.CN_DEFAULT_DATA_DIR
                     + File.separator
                     + IoTDBConstant.SYSTEM_FOLDER_NAME);
     String systemPropertiesPath = systemDir + File.separator + ConfigNodeConstant.SYSTEM_FILE_NAME;
