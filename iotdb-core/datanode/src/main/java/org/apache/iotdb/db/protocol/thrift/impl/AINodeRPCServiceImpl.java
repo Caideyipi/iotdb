@@ -98,7 +98,7 @@ public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
       long queryId =
           SESSION_MANAGER.requestQueryId(session, SESSION_MANAGER.requestStatementId(session));
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               s,
               queryId,
               SESSION_MANAGER.getSessionInfo(session),
@@ -191,7 +191,7 @@ public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
 
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               insertRowStatement,
               queryId,
               SESSION_MANAGER.getSessionInfo(session),

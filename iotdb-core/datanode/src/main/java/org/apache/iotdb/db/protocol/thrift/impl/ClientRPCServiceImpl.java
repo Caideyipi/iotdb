@@ -305,7 +305,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
       // create and cache dataset
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               s,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -349,7 +349,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // record each operation time cost
       if (statementType != null) {
         addStatementExecutionLatency(
-            OperationType.EXECUTE_QUERY_STATEMENT, statementType, currentOperationCost);
+            OperationType.EXECUTE_QUERY_STATEMENT, statementType.name(), currentOperationCost);
       }
 
       if (finished) {
@@ -395,7 +395,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
       // create and cache dataset
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               s,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -437,7 +437,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       // record each operation time cost
       addStatementExecutionLatency(
-          OperationType.EXECUTE_RAW_DATA_QUERY, StatementType.QUERY, currentOperationCost);
+          OperationType.EXECUTE_RAW_DATA_QUERY, StatementType.QUERY.name(), currentOperationCost);
 
       if (finished) {
         // record total time cost for one query
@@ -483,7 +483,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
       // create and cache dataset
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               s,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -527,7 +527,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       // record each operation time cost
       addStatementExecutionLatency(
-          OperationType.EXECUTE_LAST_DATA_QUERY, StatementType.QUERY, currentOperationCost);
+          OperationType.EXECUTE_LAST_DATA_QUERY, StatementType.QUERY.name(), currentOperationCost);
 
       if (finished) {
         // record total time cost for one query
@@ -570,7 +570,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       queryId = SESSION_MANAGER.requestQueryId(clientSession, req.statementId);
       // create and cache dataset
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               s,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -614,7 +614,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       // record each operation time cost
       addStatementExecutionLatency(
-          OperationType.EXECUTE_AGG_QUERY, StatementType.QUERY, currentOperationCost);
+          OperationType.EXECUTE_AGG_QUERY, StatementType.QUERY.name(), currentOperationCost);
 
       if (finished) {
         // record total time cost for one query
@@ -897,7 +897,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
       // create and cache dataset
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               s,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -948,7 +948,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       // record each operation time cost
       addStatementExecutionLatency(
-          OperationType.EXECUTE_LAST_DATA_QUERY, StatementType.QUERY, currentOperationCost);
+          OperationType.EXECUTE_LAST_DATA_QUERY, StatementType.QUERY.name(), currentOperationCost);
 
       if (finished) {
         // record total time cost for one query
@@ -1053,7 +1053,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
   public TSFetchResultsResp fetchResultsV2(TSFetchResultsReq req) {
     long startTime = System.nanoTime();
     boolean finished = false;
-    StatementType statementType = null;
+    String statementType = null;
     Throwable t = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
@@ -1069,7 +1069,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         resp.setMoreData(false);
         return resp;
       }
-      statementType = queryExecution.getStatement().getType();
+      statementType = queryExecution.getStatementType();
 
       try (SetThreadName queryName = new SetThreadName(queryExecution.getQueryId())) {
         Pair<List<ByteBuffer>, Boolean> pair =
@@ -1230,7 +1230,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1271,7 +1271,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1321,7 +1321,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1370,7 +1370,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1410,7 +1410,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1453,7 +1453,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1497,7 +1497,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       for (int i = 0; i < req.getStatements().size(); i++) {
         String statement = req.getStatements().get(i);
         long t2 = System.nanoTime();
-        StatementType type = null;
+        String type = null;
         OperationQuota quota = null;
         try {
           Statement s = StatementGenerator.createStatement(statement, clientSession.getZoneId());
@@ -1520,10 +1520,10 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           }
 
           long queryId = SESSION_MANAGER.requestQueryId();
-          type = s.getType();
+          type = s.getType() == null ? null : s.getType().name();
           // create and cache dataset
           ExecutionResult result =
-              COORDINATOR.execute(
+              COORDINATOR.executeForTreeModel(
                   s,
                   queryId,
                   SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1551,7 +1551,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       }
     } finally {
       addStatementExecutionLatency(
-          OperationType.EXECUTE_BATCH_STATEMENT, StatementType.NULL, System.nanoTime() - t1);
+          OperationType.EXECUTE_BATCH_STATEMENT, StatementType.NULL.name(), System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
     }
     return isAllSuccessful
@@ -1573,7 +1573,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
   public TSFetchResultsResp fetchResults(TSFetchResultsReq req) {
     boolean finished = false;
     long startTime = System.nanoTime();
-    StatementType statementType = null;
+    String statementType = null;
     Throwable t = null;
     try {
       IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
@@ -1589,7 +1589,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         resp.setMoreData(true);
         return resp;
       }
-      statementType = queryExecution.getStatement().getType();
+      statementType = queryExecution.getStatementType();
 
       try (SetThreadName queryName = new SetThreadName(queryExecution.getQueryId())) {
         Pair<TSQueryDataSet, Boolean> pair =
@@ -1674,7 +1674,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1690,7 +1690,9 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           e, OperationType.INSERT_RECORDS, TSStatusCode.EXECUTE_STATEMENT_ERROR);
     } finally {
       addStatementExecutionLatency(
-          OperationType.INSERT_RECORDS, StatementType.BATCH_INSERT_ROWS, System.nanoTime() - t1);
+          OperationType.INSERT_RECORDS,
+          StatementType.BATCH_INSERT_ROWS.name(),
+          System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
         quota.close();
@@ -1741,7 +1743,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1758,7 +1760,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     } finally {
       addStatementExecutionLatency(
           OperationType.INSERT_RECORDS_OF_ONE_DEVICE,
-          StatementType.BATCH_INSERT_ONE_DEVICE,
+          StatementType.BATCH_INSERT_ONE_DEVICE.name(),
           System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
@@ -1809,7 +1811,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1829,7 +1831,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     } finally {
       addStatementExecutionLatency(
           OperationType.INSERT_STRING_RECORDS_OF_ONE_DEVICE,
-          StatementType.BATCH_INSERT_ONE_DEVICE,
+          StatementType.BATCH_INSERT_ONE_DEVICE.name(),
           System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
@@ -1878,7 +1880,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1894,7 +1896,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           e, OperationType.INSERT_RECORD, TSStatusCode.EXECUTE_STATEMENT_ERROR);
     } finally {
       addStatementExecutionLatency(
-          OperationType.INSERT_RECORD, StatementType.INSERT, System.nanoTime() - t1);
+          OperationType.INSERT_RECORD, StatementType.INSERT.name(), System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
         quota.close();
@@ -1935,7 +1937,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -1951,7 +1953,9 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           e, OperationType.INSERT_TABLETS, TSStatusCode.EXECUTE_STATEMENT_ERROR);
     } finally {
       addStatementExecutionLatency(
-          OperationType.INSERT_TABLETS, StatementType.MULTI_BATCH_INSERT, System.nanoTime() - t1);
+          OperationType.INSERT_TABLETS,
+          StatementType.MULTI_BATCH_INSERT.name(),
+          System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
         quota.close();
@@ -1991,7 +1995,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2007,7 +2011,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           e, OperationType.INSERT_TABLET, TSStatusCode.EXECUTE_STATEMENT_ERROR);
     } finally {
       addStatementExecutionLatency(
-          OperationType.INSERT_TABLET, StatementType.BATCH_INSERT, System.nanoTime() - t1);
+          OperationType.INSERT_TABLET, StatementType.BATCH_INSERT.name(), System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
         quota.close();
@@ -2056,7 +2060,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2073,7 +2077,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     } finally {
       addStatementExecutionLatency(
           OperationType.INSERT_STRING_RECORDS,
-          StatementType.BATCH_INSERT_ROWS,
+          StatementType.BATCH_INSERT_ROWS.name(),
           System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
@@ -2142,7 +2146,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2206,7 +2210,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2310,7 +2314,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       long queryId = SESSION_MANAGER.requestQueryId();
       // create and cache dataset
       ExecutionResult executionResult =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2354,7 +2358,9 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       return null;
     } finally {
       addStatementExecutionLatency(
-          OperationType.EXECUTE_STATEMENT, statement.getType(), System.nanoTime() - startTime);
+          OperationType.EXECUTE_STATEMENT,
+          statement.getType().name(),
+          System.nanoTime() - startTime);
       SESSION_MANAGER.updateIdleTime();
     }
   }
@@ -2387,7 +2393,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2435,7 +2441,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2480,7 +2486,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2524,7 +2530,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2621,7 +2627,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
       // Step 2: call the coordinator
       long queryId = SESSION_MANAGER.requestQueryId();
       ExecutionResult result =
-          COORDINATOR.execute(
+          COORDINATOR.executeForTreeModel(
               statement,
               queryId,
               SESSION_MANAGER.getSessionInfo(clientSession),
@@ -2637,7 +2643,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           e, OperationType.INSERT_STRING_RECORD, TSStatusCode.EXECUTE_STATEMENT_ERROR);
     } finally {
       addStatementExecutionLatency(
-          OperationType.INSERT_STRING_RECORD, StatementType.INSERT, System.nanoTime() - t1);
+          OperationType.INSERT_STRING_RECORD, StatementType.INSERT.name(), System.nanoTime() - t1);
       SESSION_MANAGER.updateIdleTime();
       if (quota != null) {
         quota.close();
@@ -2684,7 +2690,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
   /** Add stat of operation into metrics */
   private void addStatementExecutionLatency(
-      OperationType operation, StatementType statementType, long costTime) {
+      OperationType operation, String statementType, long costTime) {
     if (statementType == null) {
       return;
     }
@@ -2698,7 +2704,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
             Tag.INTERFACE.toString(),
             operation.toString(),
             Tag.TYPE.toString(),
-            statementType.name());
+            statementType);
   }
 
   private String checkIdentifierAndRemoveBackQuotesIfNecessary(String identifier) {
