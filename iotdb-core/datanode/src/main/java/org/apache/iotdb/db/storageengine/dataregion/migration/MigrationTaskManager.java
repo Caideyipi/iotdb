@@ -59,10 +59,11 @@ public class MigrationTaskManager implements IService {
   private static final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
   private static final TierManager tierManager = TierManager.getInstance();
   private static final long CHECK_INTERVAL_IN_SECONDS = 10;
-  private static final double MOVE_THRESHOLD_SAFE_LIMIT = 0.1;
   private static final int MIGRATION_TASK_LIMIT = 20;
   /** max concurrent migration tasks */
   private final AtomicInteger migrationTasksNum = new AtomicInteger(0);
+  /** enable or not */
+  private boolean enable = false;
   /** single thread to schedule */
   private ScheduledExecutorService scheduler;
   /** workers to migrate files */
@@ -72,10 +73,13 @@ public class MigrationTaskManager implements IService {
 
   @Override
   public void start() throws StartupException {
-    if (iotdbConfig.getTierDataDirs().length == 1) {
+    if (iotdbConfig.getTierDataDirs().length == 1
+        && iotdbConfig.getTierFullPolicy() == TierFullPolicy.NULL) {
       logger.info("tiered storage status: disable");
+      stop();
       return;
     }
+    enable = true;
     // metrics
     MetricService.getInstance().addMetricSet(MigrationMetrics.getInstance());
     // threads and tasks
@@ -103,15 +107,31 @@ public class MigrationTaskManager implements IService {
     private final Set<Integer> needMigrationTiers = new HashSet<>();
     /** Tiers are disk-full, cannot migrate data to these tiers */
     private final Set<Integer> spaceWarningTiers = new HashSet<>();
+    /** TsFiles of all data region */
+    private final List<TsFileResource> tsfiles = new ArrayList<>();
 
     public MigrationScheduleTask() {
       for (int i = 0; i < tierManager.getTiersNum(); i++) {
         double usable = tierDiskUsableSpace[i] * 1.0 / tierDiskTotalSpace[i];
-        if (usable <= iotdbConfig.getSpaceMoveThresholds()[i]) {
+        if (usable <= 1 - iotdbConfig.getSpaceUsageThresholds()[i]) {
           needMigrationTiers.add(i);
         }
         if (usable <= commonConfig.getDiskSpaceWarningThreshold()) {
           spaceWarningTiers.add(i);
+        }
+      }
+    }
+
+    private boolean isLastTier(int tierLevel) {
+      return tierLevel + 1 >= tierDiskTotalSpace.length;
+    }
+
+    private void releaseDiskUsage(int tierLevel, long usage) {
+      tierDiskUsableSpace[tierLevel] -= usage;
+      if (needMigrationTiers.contains(tierLevel)) {
+        double usable = tierDiskUsableSpace[tierLevel] * 1.0 / tierDiskTotalSpace[tierLevel];
+        if (usable > 1 - iotdbConfig.getSpaceUsageThresholds()[tierLevel]) {
+          needMigrationTiers.remove(tierLevel);
         }
       }
     }
@@ -122,26 +142,67 @@ public class MigrationTaskManager implements IService {
     }
 
     private void schedule() {
-      if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT) {
-        return;
-      }
-      // sort all tsfiles by priority
-      List<TsFileResource> tsfiles = new ArrayList<>();
       for (DataRegion dataRegion : StorageEngine.getInstance().getAllDataRegions()) {
         tsfiles.addAll(dataRegion.getSequenceFileList());
         tsfiles.addAll(dataRegion.getUnSequenceFileList());
       }
+      if (iotdbConfig.getTierFullPolicy() == TierFullPolicy.DELETE) {
+        scheduleDeletion();
+      }
+      if (migrationTasksNum.get() < MIGRATION_TASK_LIMIT) {
+        scheduleMigration();
+      }
+    }
+
+    private void scheduleDeletion() {
+      if (!needMigrationTiers.contains(tierDiskTotalSpace.length - 1)) {
+        return;
+      }
+      // only delete files in the last tier
+      List<TsFileResource> deleteCandidates =
+          tsfiles.stream()
+              .filter(
+                  f -> f.getStatus() == TsFileResourceStatus.NORMAL && isLastTier(f.getTierLevel()))
+              .sorted(this::compareDeletePriority)
+              .collect(Collectors.toList());
+      // submit delete tasks
+      for (TsFileResource tsfile : deleteCandidates) {
+        if (!needMigrationTiers.contains(tierDiskTotalSpace.length - 1)) {
+          break;
+        }
+        trySubmitDeleteTask(tierDiskTotalSpace.length - 1, tsfile);
+      }
+    }
+
+    private void trySubmitDeleteTask(int tierLevel, TsFileResource sourceTsFile) {
+      if (!sourceTsFile.setStatus(TsFileResourceStatus.MIGRATING)) {
+        return;
+      }
+      workers.submit(new DeleteTask(sourceTsFile));
+      releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
+    }
+
+    private int compareDeletePriority(TsFileResource f1, TsFileResource f2) {
+      // old time partitions first
+      int res = Long.compare(f1.getTimePartition(), f2.getTimePartition());
+      // old file first
+      if (res == 0) {
+        res = Long.compare(f1.getVersion(), f2.getVersion());
+      }
+      return res;
+    }
+
+    private void scheduleMigration() {
       // only migrate closed TsFiles not in the last tier
-      tsfiles =
+      List<TsFileResource> migrateCandidates =
           tsfiles.stream()
               .filter(
                   f ->
-                      f.getStatus() == TsFileResourceStatus.NORMAL
-                          && f.getTierLevel() + 1 < iotdbConfig.getTierDataDirs().length)
+                      f.getStatus() == TsFileResourceStatus.NORMAL && !isLastTier(f.getTierLevel()))
               .sorted(this::compareMigrationPriority)
               .collect(Collectors.toList());
       // submit migration tasks
-      for (TsFileResource tsfile : tsfiles) {
+      for (TsFileResource tsfile : migrateCandidates) {
         if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT) {
           break;
         }
@@ -184,15 +245,8 @@ public class MigrationTaskManager implements IService {
         return;
       }
       migrationTasksNum.incrementAndGet();
-      MigrationTask task = MigrationTask.newTask(cause, sourceTsFile, targetDir);
-      workers.submit(task);
-      tierDiskUsableSpace[tierLevel] -= sourceTsFile.getTsFileSize();
-      if (needMigrationTiers.contains(tierLevel)) {
-        double usable = tierDiskUsableSpace[tierLevel] * 1.0 / tierDiskTotalSpace[tierLevel];
-        if (usable > iotdbConfig.getSpaceMoveThresholds()[tierLevel] + MOVE_THRESHOLD_SAFE_LIMIT) {
-          needMigrationTiers.remove(tierLevel);
-        }
-      }
+      workers.submit(MigrationTask.newTask(cause, sourceTsFile, targetDir));
+      releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
     }
 
     private int compareMigrationPriority(TsFileResource f1, TsFileResource f2) {
@@ -252,6 +306,11 @@ public class MigrationTaskManager implements IService {
     if (workers != null) {
       workers.shutdownNow();
     }
+    enable = false;
+  }
+
+  public boolean isEnable() {
+    return enable;
   }
 
   @Override

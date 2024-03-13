@@ -43,6 +43,7 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerSequenceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerUnsequenceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.migration.MigrationTaskManager;
+import org.apache.iotdb.db.storageengine.dataregion.migration.TierFullPolicy;
 import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
@@ -1093,27 +1094,37 @@ public class IoTDBDescriptor {
     }
     conf.setMigrateThreadCount(migrationThreadCount);
 
-    String[] moveThresholdsStr = new String[conf.getSpaceMoveThresholds().length];
-    for (int i = 0; i < moveThresholdsStr.length; ++i) {
-      moveThresholdsStr[i] = String.valueOf(conf.getSpaceMoveThresholds()[i]);
+    loadMigrationHotProps(properties);
+  }
+
+  private void loadMigrationHotProps(Properties properties) {
+    String[] usageThresholdsStr = new String[conf.getSpaceUsageThresholds().length];
+    for (int i = 0; i < usageThresholdsStr.length; ++i) {
+      usageThresholdsStr[i] = String.valueOf(conf.getSpaceUsageThresholds()[i]);
     }
-    moveThresholdsStr =
+    usageThresholdsStr =
         properties
             .getProperty(
-                "dn_default_space_move_thresholds",
-                String.join(IoTDBConstant.TIER_SEPARATOR, moveThresholdsStr))
+                "dn_default_space_usage_thresholds",
+                String.join(IoTDBConstant.TIER_SEPARATOR, usageThresholdsStr))
             .split(IoTDBConstant.TIER_SEPARATOR);
-    double[] moveThresholds = new double[moveThresholdsStr.length];
-    for (int i = 0; i < moveThresholds.length; ++i) {
-      moveThresholds[i] = Double.parseDouble(moveThresholdsStr[i]);
-      if (moveThresholds[i] <= 0 || moveThresholds[i] >= 1) {
-        moveThresholds[i] = 0.15;
+    double[] usageThresholds = new double[usageThresholdsStr.length];
+    for (int i = 0; i < usageThresholds.length; ++i) {
+      usageThresholds[i] = Double.parseDouble(usageThresholdsStr[i]);
+      if (usageThresholds[i] <= 0 || usageThresholds[i] >= 1) {
+        usageThresholds[i] = 0.85;
         LOGGER.warn(
-            "It's meaningless to set dn_default_space_move_thresholds out of range (0.0, 1.0), iotdb will use default value {}.",
-            moveThresholds[i]);
+            "It's meaningless to set dn_default_space_usage_thresholds out of range (0.0, 1.0), iotdb will use default value {}.",
+            usageThresholds[i]);
       }
     }
-    conf.setSpaceMoveThresholds(moveThresholds);
+    conf.setSpaceUsageThresholds(usageThresholds);
+
+    TierFullPolicy tierFullPolicy =
+        TierFullPolicy.valueOf(
+            properties.getProperty(
+                "dn_tier_full_policy", String.valueOf(conf.getTierFullPolicy())));
+    conf.setTierFullPolicy(tierFullPolicy);
   }
 
   private void loadObjectStorageProps(Properties properties) {
@@ -1174,10 +1185,10 @@ public class IoTDBDescriptor {
 
   private void checkTierConfig() {
     int tierNum = conf.getTierDataDirs().length;
-    if (conf.getSpaceMoveThresholds().length != tierNum) {
+    if (conf.getSpaceUsageThresholds().length != tierNum) {
       double[] moveThresholds = new double[tierNum];
       Arrays.fill(moveThresholds, 0.15);
-      conf.setSpaceMoveThresholds(moveThresholds);
+      conf.setSpaceUsageThresholds(moveThresholds);
       LOGGER.warn(
           "dn_default_space_move_thresholds should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
           Arrays.toString(moveThresholds));
@@ -1766,6 +1777,12 @@ public class IoTDBDescriptor {
               properties.getProperty(
                   "load_clean_up_task_execution_delay_time_seconds",
                   String.valueOf(conf.getLoadCleanupTaskExecutionDelayTimeSeconds()))));
+
+      // update migration config
+      loadMigrationHotProps(properties);
+      if (!MigrationTaskManager.getInstance().isEnable()) {
+        MigrationTaskManager.getInstance().start();
+      }
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }

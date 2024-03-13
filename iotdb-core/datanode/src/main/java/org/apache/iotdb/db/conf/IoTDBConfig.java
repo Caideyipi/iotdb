@@ -37,6 +37,7 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.CrossCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerSequenceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerUnsequenceCompactionSelector;
+import org.apache.iotdb.db.storageengine.dataregion.migration.TierFullPolicy;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.timeindex.TimeIndexLevel;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.utils.datastructure.TVListSortAlgorithm;
@@ -1117,7 +1118,11 @@ public class IoTDBConfig {
   /** Threads for migration tasks */
   private int migrateThreadCount = 1;
 
-  private double[] spaceMoveThresholds = {0.15};
+  /** Disk move threshold at which current tier data will be moved to the next tier */
+  private double[] spaceUsageThresholds = {0.85};
+
+  /** Delete the oldest data when last tier‘s space is full */
+  private TierFullPolicy tierFullPolicy = TierFullPolicy.NULL;
 
   /** Enable object storage or not */
   private boolean enableObjectStorage = false;
@@ -3825,12 +3830,20 @@ public class IoTDBConfig {
     this.migrateThreadCount = migrateThreadCount;
   }
 
-  public double[] getSpaceMoveThresholds() {
-    return spaceMoveThresholds;
+  public double[] getSpaceUsageThresholds() {
+    return spaceUsageThresholds;
   }
 
-  public void setSpaceMoveThresholds(double[] spaceMoveThresholds) {
-    this.spaceMoveThresholds = spaceMoveThresholds;
+  public void setSpaceUsageThresholds(double[] spaceUsageThresholds) {
+    this.spaceUsageThresholds = spaceUsageThresholds;
+  }
+
+  public TierFullPolicy getTierFullPolicy() {
+    return tierFullPolicy;
+  }
+
+  public void setTierFullPolicy(TierFullPolicy tierFullPolicy) {
+    this.tierFullPolicy = tierFullPolicy;
   }
 
   public boolean isEnableObjectStorage() {
