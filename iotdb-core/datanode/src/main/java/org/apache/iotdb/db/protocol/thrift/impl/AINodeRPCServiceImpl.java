@@ -141,7 +141,7 @@ public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
       throw error;
     } finally {
       if (finished) {
-        COORDINATOR.cleanupQueryExecution(resp.queryId, t);
+        COORDINATOR.cleanupQueryExecution(resp.queryId, req, t);
       }
     }
   }
@@ -179,7 +179,7 @@ public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
       throw error;
     } finally {
       if (finished) {
-        COORDINATOR.cleanupQueryExecution(req.queryId, t);
+        COORDINATOR.cleanupQueryExecution(req.queryId, req, t);
       }
     }
   }

@@ -22,6 +22,8 @@ import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.queryengine.plan.execution.IQueryExecution;
 import org.apache.iotdb.db.utils.constant.SqlConstant;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchMoreDataReq;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchTimeseriesReq;
 import org.apache.iotdb.service.rpc.thrift.TSAggregationQueryReq;
 import org.apache.iotdb.service.rpc.thrift.TSFastLastDataQueryForOneDeviceReq;
 import org.apache.iotdb.service.rpc.thrift.TSFetchResultsReq;
@@ -305,6 +307,16 @@ public class CommonUtils {
               + "queryId: %s, output value column count: %s, fetchSize: %s, "
               + "some response headers: %s",
           req.getQueryId(), queryExecution.getOutputValueColumnCount(), req.getFetchSize(), sb);
+    } else if (request instanceof TFetchTimeseriesReq) {
+      TFetchTimeseriesReq req = (TFetchTimeseriesReq) request;
+      return String.format(
+          "Request name: TFetchTimeseriesReq, fetchSize: %s, queryBody: %s",
+          req.getFetchSize(), req.getQueryBody());
+    } else if (request instanceof TFetchMoreDataReq) {
+      TFetchMoreDataReq req = (TFetchMoreDataReq) request;
+      return String.format(
+          "Request name: TFetchMoreDataReq, fetchSize: %s, queryId: %s",
+          req.getFetchSize(), req.getQueryId());
     } else {
       return UNKNOWN_RESULT;
     }
