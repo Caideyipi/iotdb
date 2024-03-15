@@ -29,6 +29,7 @@ import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.protocol.thrift.handler.AINodeRPCServiceThriftHandler;
 import org.apache.iotdb.db.protocol.thrift.impl.AINodeRPCServiceImpl;
 import org.apache.iotdb.mpp.rpc.thrift.IAINodeInternalRPCService;
+import org.apache.iotdb.rpc.DeepCopyRpcTransportFactory;
 
 public class AINodeRPCService extends ThriftService implements AINodeRPCServiceMBean {
 
@@ -63,7 +64,8 @@ public class AINodeRPCService extends ThriftService implements AINodeRPCServiceM
               config.getRpcMaxConcurrentClientNum(),
               config.getThriftServerAwaitTimeForStopService(),
               new AINodeRPCServiceThriftHandler(impl),
-              config.isRpcThriftCompressionEnable());
+              config.isRpcThriftCompressionEnable(),
+              DeepCopyRpcTransportFactory.INSTANCE);
     } catch (RPCServiceException e) {
       throw new IllegalAccessException(e.getMessage());
     }
