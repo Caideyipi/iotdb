@@ -235,6 +235,11 @@ public class AINodeWrapper implements BaseNodeWrapper {
   }
 
   @Override
+  public void stopForcibly() {
+    stop();
+  }
+
+  @Override
   public String getIp() {
     return this.nodeAddress;
   }
