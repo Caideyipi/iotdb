@@ -549,6 +549,12 @@ public class IoTDBDescriptor {
       conf.setDegreeOfParallelism(Runtime.getRuntime().availableProcessors() / 2);
     }
 
+    conf.setMergeThresholdOfExplainAnalyze(
+        Integer.parseInt(
+            properties.getProperty(
+                "merge_threshold_of_explain_analyze",
+                Integer.toString(conf.getMergeThresholdOfExplainAnalyze()))));
+
     conf.setModeMapSizeThreshold(
         Integer.parseInt(
             properties.getProperty(
@@ -1783,6 +1789,14 @@ public class IoTDBDescriptor {
       if (!MigrationTaskManager.getInstance().isEnable()) {
         MigrationTaskManager.getInstance().start();
       }
+
+      // update merge_threshold_of_explain_analyze
+      conf.setMergeThresholdOfExplainAnalyze(
+          Integer.parseInt(
+              properties.getProperty(
+                  "merge_threshold_of_explain_analyze",
+                  String.valueOf(conf.getMergeThresholdOfExplainAnalyze()))));
+
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }
