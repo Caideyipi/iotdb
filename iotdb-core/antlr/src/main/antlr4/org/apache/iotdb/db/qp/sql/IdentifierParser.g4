@@ -218,6 +218,7 @@ keyWords
     | STATELESS
     | STATEMENT
     | STOP
+    | SUBSCRIPTIONS
     | SUBSTRING
     | SYSTEM
     | TAGS
@@ -235,6 +236,8 @@ keyWords
     | TO
     | TOLERANCE
     | TOP
+    | TOPIC
+    | TOPICS
     | TRACING
     | TRIALS
     | TRIGGER
