@@ -107,6 +107,8 @@ import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.tsfile.file.metadata.ChunkMetadata;
+import org.apache.iotdb.tsfile.file.metadata.IDeviceID;
+import org.apache.iotdb.tsfile.file.metadata.PlainDeviceID;
 import org.apache.iotdb.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.iotdb.tsfile.fileSystem.FSType;
 import org.apache.iotdb.tsfile.fileSystem.fsFactory.FSFactory;
@@ -150,6 +152,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.FILE_NAME_SEPARATOR;
 import static org.apache.iotdb.db.queryengine.metric.QueryResourceMetricSet.SEQUENCE_TSFILE;
@@ -586,8 +589,8 @@ public class DataRegion implements IDataRegionForQuery {
 
   private void updateLastFlushTime(TsFileResource resource, boolean isSeq) {
     long timePartitionId = resource.getTimePartition();
-    Map<String, Long> endTimeMap = new HashMap<>();
-    for (String deviceId : resource.getDevices()) {
+    Map<IDeviceID, Long> endTimeMap = new HashMap<>();
+    for (IDeviceID deviceId : resource.getDevices()) {
       long endTime = resource.getEndTime(deviceId);
       endTimeMap.put(deviceId, endTime);
     }
@@ -944,8 +947,7 @@ public class DataRegion implements IDataRegionForQuery {
       boolean isSequence =
           config.isEnableSeparateData()
               && insertRowNode.getTime()
-                  > lastFlushTimeMap.getFlushedTime(
-                      timePartitionId, insertRowNode.getDevicePath().getFullPath());
+                  > lastFlushTimeMap.getFlushedTime(timePartitionId, insertRowNode.getDeviceID());
 
       Map<TsFileProcessor, Boolean> tsFileProcessorMapForFlushing = new HashMap<>();
 
@@ -1033,8 +1035,7 @@ public class DataRegion implements IDataRegionForQuery {
 
       long lastFlushTime =
           config.isEnableSeparateData()
-              ? lastFlushTimeMap.getFlushedTime(
-                  beforeTimePartition, insertTabletNode.getDevicePath().getFullPath())
+              ? lastFlushTimeMap.getFlushedTime(beforeTimePartition, insertTabletNode.getDeviceID())
               : Long.MAX_VALUE;
 
       // if is sequence
@@ -1143,8 +1144,7 @@ public class DataRegion implements IDataRegionForQuery {
       // disable updating last cache on follower
       return;
     }
-    long latestFlushedTime =
-        lastFlushTimeMap.getGlobalFlushedTime(node.getDevicePath().getFullPath());
+    long latestFlushedTime = lastFlushTimeMap.getGlobalFlushedTime(node.getDeviceID());
     String[] measurements = node.getMeasurements();
     MeasurementSchema[] measurementSchemas = node.getMeasurementSchemas();
     String[] rawMeasurements = new String[measurements.length];
@@ -1204,8 +1204,7 @@ public class DataRegion implements IDataRegionForQuery {
   }
 
   private void tryToUpdateInsertRowLastCache(InsertRowNode node) {
-    long latestFlushedTime =
-        lastFlushTimeMap.getGlobalFlushedTime(node.getDevicePath().getFullPath());
+    long latestFlushedTime = lastFlushTimeMap.getGlobalFlushedTime(node.getDeviceID());
     String[] measurements = node.getMeasurements();
     MeasurementSchema[] measurementSchemas = node.getMeasurementSchemas();
     String[] rawMeasurements = new String[measurements.length];
@@ -1282,8 +1281,7 @@ public class DataRegion implements IDataRegionForQuery {
     DataNodeSchemaCache.getInstance().takeReadLock();
     try {
       for (InsertRowNode node : nodeList) {
-        long latestFlushedTime =
-            lastFlushTimeMap.getGlobalFlushedTime(node.getDevicePath().getFullPath());
+        long latestFlushedTime = lastFlushTimeMap.getGlobalFlushedTime(node.getDeviceID());
         String[] measurements = node.getMeasurements();
         MeasurementSchema[] measurementSchemas = node.getMeasurementSchemas();
         String[] rawMeasurements = new String[measurements.length];
@@ -1938,7 +1936,11 @@ public class DataRegion implements IDataRegionForQuery {
 
     for (TsFileResource tsFileResource : tsFileResources) {
       if (!tsFileResource.isSatisfied(
-          singleDeviceId, globalTimeFilter, isSeq, dataTTL, context.isDebug())) {
+          singleDeviceId == null ? null : new PlainDeviceID(singleDeviceId),
+          globalTimeFilter,
+          isSeq,
+          dataTTL,
+          context.isDebug())) {
         continue;
       }
       closeQueryLock.readLock().lock();
@@ -2148,14 +2150,17 @@ public class DataRegion implements IDataRegionForQuery {
           return false;
         }
         Pair<Long, Long> startAndEndTime =
-            tsFileResource.getPossibleStartTimeAndEndTime(device, deviceMatchInfo);
+            tsFileResource.getPossibleStartTimeAndEndTime(
+                device,
+                deviceMatchInfo.stream().map(PlainDeviceID::new).collect(Collectors.toSet()));
         if (startAndEndTime == null) {
           continue;
         }
         deviceStartTime = startAndEndTime.getLeft();
         deviceEndTime = startAndEndTime.getRight();
       } else {
-        String deviceId = device.getFullPath();
+        // TODO: DELETE
+        IDeviceID deviceId = new PlainDeviceID(device.getFullPath());
         if (tsFileResource.definitelyNotContains(deviceId)) {
           // resource does not contain this device
           continue;
@@ -2380,7 +2385,7 @@ public class DataRegion implements IDataRegionForQuery {
   }
 
   private void flushCallback(
-      TsFileProcessor processor, Map<String, Long> updateMap, long systemFlushTime) {
+      TsFileProcessor processor, Map<IDeviceID, Long> updateMap, long systemFlushTime) {
     if (config.isEnableSeparateData()
         && CommonDescriptor.getInstance().getConfig().isLastCacheEnable()) {
       // update both partitionLastFlushTime and globalLastFlushTime
@@ -2394,7 +2399,7 @@ public class DataRegion implements IDataRegionForQuery {
     if (config.isEnableSeparateData()) {
       TimePartitionManager.getInstance()
           .updateAfterFlushing(
-              new DataRegionId(Integer.valueOf(dataRegionId)),
+              new DataRegionId(Integer.parseInt(dataRegionId)),
               processor.getTimeRangeId(),
               systemFlushTime,
               lastFlushTimeMap.getMemSize(processor.getTimeRangeId()),
@@ -2818,7 +2823,7 @@ public class DataRegion implements IDataRegionForQuery {
    * partitionLatestFlushedTimeForEachDevice. @UsedBy sync module, load external tsfile module.
    */
   protected void updateLastFlushTime(TsFileResource newTsFileResource) {
-    for (String device : newTsFileResource.getDevices()) {
+    for (IDeviceID device : newTsFileResource.getDevices()) {
       long endTime = newTsFileResource.getEndTime(device);
       long timePartitionId = TimePartitionUtils.getTimePartitionId(endTime);
       if (config.isEnableSeparateData()) {
@@ -3211,8 +3216,7 @@ public class DataRegion implements IDataRegionForQuery {
         boolean isSequence =
             config.isEnableSeparateData()
                 && insertRowNode.getTime()
-                    > lastFlushTimeMap.getFlushedTime(
-                        timePartitionId, insertRowNode.getDevicePath().getFullPath());
+                    > lastFlushTimeMap.getFlushedTime(timePartitionId, insertRowNode.getDeviceID());
 
         // insert to sequence or unSequence file
         try {
@@ -3284,7 +3288,7 @@ public class DataRegion implements IDataRegionForQuery {
             config.isEnableSeparateData()
                 && insertRowNode.getTime()
                     > lastFlushTimeMap.getFlushedTime(
-                        timePartitionIds[i], insertRowNode.getDevicePath().getFullPath());
+                        timePartitionIds[i], insertRowNode.getDeviceID());
       }
       insertToTsFileProcessors(insertRowsNode, areSequence, timePartitionIds);
       if (!insertRowsNode.getResults().isEmpty()) {
@@ -3434,7 +3438,7 @@ public class DataRegion implements IDataRegionForQuery {
   @FunctionalInterface
   public interface UpdateEndTimeCallBack {
 
-    void call(TsFileProcessor caller, Map<String, Long> updateMap, long systemFlushTime);
+    void call(TsFileProcessor caller, Map<IDeviceID, Long> updateMap, long systemFlushTime);
   }
 
   @FunctionalInterface
