@@ -91,6 +91,7 @@ import org.apache.iotdb.db.storageengine.dataregion.migration.MigrationTaskManag
 import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
+import org.apache.iotdb.db.subscription.agent.SubscriptionAgent;
 import org.apache.iotdb.db.trigger.executor.TriggerExecutor;
 import org.apache.iotdb.db.trigger.service.TriggerInformationUpdater;
 import org.apache.iotdb.db.trigger.service.TriggerManagementService;
@@ -623,6 +624,8 @@ public class DataNode implements DataNodeMBean {
 
     registerManager.register(MigrationTaskManager.getInstance());
 
+    // Register subscription agent before pipe agent
+    registerManager.register(SubscriptionAgent.runtime());
     registerManager.register(PipeAgent.runtime());
   }
 

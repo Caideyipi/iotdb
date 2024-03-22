@@ -42,6 +42,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.iotdb</groupId>
+            <artifactId>pipe-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>tsfile</artifactId>
             <version>1.3.2-SNAPSHOT</version>
