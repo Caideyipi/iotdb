@@ -679,7 +679,10 @@ public class DataRegion implements IDataRegionForQuery {
                         tsFilePartitionPath2File.get(tsFilePartitionPath).getCanonicalPath())) {
                   Files.delete(f.toPath());
                 }
-              } else {
+              } else if (config.isEnableObjectStorage()) {
+                // if a resource doesn't have a corresponding tsfile, it normally happened when
+                // ObjectStorage is enabled.
+                // if ObjectStorage is disabled, we shouldn't load it to memory
                 tsFilePartitionPath2File.put(
                     tsFilePartitionPath, fsFactory.getFile(fileFolder, tsFilePartitionPath));
               }
