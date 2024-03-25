@@ -513,7 +513,7 @@ public class ProcedureManager {
    * AddConfigNodeProcedure}s.
    */
   public void addConfigNode(TConfigNodeRegisterReq req) {
-    AddConfigNodeProcedure addConfigNodeProcedure =
+    final AddConfigNodeProcedure addConfigNodeProcedure =
         new AddConfigNodeProcedure(req.getConfigNodeLocation(), req.getVersionInfo());
     this.executor.submitProcedure(addConfigNodeProcedure);
   }
@@ -523,7 +523,7 @@ public class ProcedureManager {
    * RemoveConfigNodeProcedure}s.
    */
   public void removeConfigNode(RemoveConfigNodePlan removeConfigNodePlan) {
-    RemoveConfigNodeProcedure removeConfigNodeProcedure =
+    final RemoveConfigNodeProcedure removeConfigNodeProcedure =
         new RemoveConfigNodeProcedure(removeConfigNodePlan.getConfigNodeLocation());
     this.executor.submitProcedure(removeConfigNodeProcedure);
     LOGGER.info("Submit RemoveConfigNodeProcedure successfully: {}", removeConfigNodePlan);
@@ -552,7 +552,8 @@ public class ProcedureManager {
   }
 
   public TSStatus migrateRegion(TMigrateRegionReq migrateRegionReq) {
-    TConsensusGroupId regionGroupId;
+    final TConsensusGroupId regionGroupId;
+    final TSStatus status;
     if (configManager
         .getPartitionManager()
         .isRegionGroupExists(
@@ -571,7 +572,7 @@ public class ProcedureManager {
       LOGGER.warn(
           "Submit RegionMigrateProcedure failed, because RegionGroup: {} doesn't exist",
           migrateRegionReq.getRegionId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           String.format(
               "Submit RegionMigrateProcedure failed, because RegionGroup: %s doesn't exist",
@@ -579,12 +580,12 @@ public class ProcedureManager {
       return status;
     }
 
-    TDataNodeLocation originalDataNode =
+    final TDataNodeLocation originalDataNode =
         configManager
             .getNodeManager()
             .getRegisteredDataNode(migrateRegionReq.getFromId())
             .getLocation();
-    TDataNodeLocation destDataNode =
+    final TDataNodeLocation destDataNode =
         configManager
             .getNodeManager()
             .getRegisteredDataNode(migrateRegionReq.getToId())
@@ -594,7 +595,7 @@ public class ProcedureManager {
       LOGGER.warn(
           "Submit RegionMigrateProcedure failed, because no original DataNode {}",
           migrateRegionReq.getFromId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           "Submit RegionMigrateProcedure failed, because no original DataNode "
               + migrateRegionReq.getFromId());
@@ -603,7 +604,7 @@ public class ProcedureManager {
       LOGGER.warn(
           "Submit RegionMigrateProcedure failed, because no target DataNode {}",
           migrateRegionReq.getToId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           "Submit RegionMigrateProcedure failed, because no target DataNode "
               + migrateRegionReq.getToId());
@@ -615,7 +616,7 @@ public class ProcedureManager {
           "Submit RegionMigrateProcedure failed, because the original DataNode {} doesn't contain Region {}",
           migrateRegionReq.getFromId(),
           migrateRegionReq.getRegionId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           "Submit RegionMigrateProcedure failed, because the original DataNode "
               + migrateRegionReq.getFromId()
@@ -629,7 +630,7 @@ public class ProcedureManager {
           "Submit RegionMigrateProcedure failed, because the target DataNode {} already contains Region {}",
           migrateRegionReq.getToId(),
           migrateRegionReq.getRegionId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           "Submit RegionMigrateProcedure failed, because the target DataNode "
               + migrateRegionReq.getToId()
@@ -639,7 +640,7 @@ public class ProcedureManager {
     }
     // Here we only check Running DataNode to implement migration, because removing nodes may not
     // exist when add peer is performing
-    Set<Integer> aliveDataNodes =
+    final Set<Integer> aliveDataNodes =
         configManager.getNodeManager().filterDataNodeThroughStatus(NodeStatus.Running).stream()
             .map(TDataNodeConfiguration::getLocation)
             .map(TDataNodeLocation::getDataNodeId)
@@ -649,7 +650,7 @@ public class ProcedureManager {
       LOGGER.warn(
           "Submit RegionMigrateProcedure failed, because the sourceDataNode {} is Unknown.",
           migrateRegionReq.getFromId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           "Submit RegionMigrateProcedure failed, because the sourceDataNode "
               + migrateRegionReq.getFromId()
@@ -661,7 +662,7 @@ public class ProcedureManager {
       LOGGER.warn(
           "Submit RegionMigrateProcedure failed, because the destDataNode {} is ReadOnly or Unknown.",
           migrateRegionReq.getToId());
-      TSStatus status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
+      status = new TSStatus(TSStatusCode.MIGRATE_REGION_ERROR.getStatusCode());
       status.setMessage(
           "Submit RegionMigrateProcedure failed, because the destDataNode "
               + migrateRegionReq.getToId()
@@ -686,11 +687,11 @@ public class ProcedureManager {
    */
   public TSStatus createRegionGroups(
       TConsensusGroupType consensusGroupType, CreateRegionGroupsPlan createRegionGroupsPlan) {
-    long procedureId =
+    final long procedureId =
         executor.submitProcedure(
             new CreateRegionGroupsProcedure(consensusGroupType, createRegionGroupsPlan));
-    List<TSStatus> statusList = new ArrayList<>();
-    boolean isSucceed =
+    final List<TSStatus> statusList = new ArrayList<>();
+    final boolean isSucceed =
         waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     if (isSucceed) {
       return RpcUtils.SUCCESS_STATUS;
@@ -724,9 +725,9 @@ public class ProcedureManager {
           .setMessage(e.getMessage());
     }
 
-    long procedureId = executor.submitProcedure(createTriggerProcedure);
-    List<TSStatus> statusList = new ArrayList<>();
-    boolean isSucceed =
+    final long procedureId = executor.submitProcedure(createTriggerProcedure);
+    final List<TSStatus> statusList = new ArrayList<>();
+    final boolean isSucceed =
         waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     if (isSucceed) {
       return RpcUtils.SUCCESS_STATUS;
@@ -745,8 +746,8 @@ public class ProcedureManager {
   public TSStatus dropTrigger(String triggerName, boolean isGeneratedByPipe) {
     long procedureId =
         executor.submitProcedure(new DropTriggerProcedure(triggerName, isGeneratedByPipe));
-    List<TSStatus> statusList = new ArrayList<>();
-    boolean isSucceed =
+    final List<TSStatus> statusList = new ArrayList<>();
+    final boolean isSucceed =
         waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     if (isSucceed) {
       return RpcUtils.SUCCESS_STATUS;
@@ -757,8 +758,9 @@ public class ProcedureManager {
   }
 
   public TSStatus createCQ(TCreateCQReq req, ScheduledExecutorService scheduledExecutor) {
-    long procedureId = executor.submitProcedure(new CreateCQProcedure(req, scheduledExecutor));
-    List<TSStatus> statusList = new ArrayList<>();
+    final long procedureId =
+        executor.submitProcedure(new CreateCQProcedure(req, scheduledExecutor));
+    final List<TSStatus> statusList = new ArrayList<>();
     waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     return statusList.get(0);
   }
@@ -800,9 +802,9 @@ public class ProcedureManager {
           .setMessage(e.getMessage());
     }
 
-    long procedureId = executor.submitProcedure(createPipePluginProcedure);
-    List<TSStatus> statusList = new ArrayList<>();
-    boolean isSucceed =
+    final long procedureId = executor.submitProcedure(createPipePluginProcedure);
+    final List<TSStatus> statusList = new ArrayList<>();
+    final boolean isSucceed =
         waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     if (isSucceed) {
       return RpcUtils.SUCCESS_STATUS;
@@ -813,9 +815,9 @@ public class ProcedureManager {
   }
 
   public TSStatus dropPipePlugin(String pluginName) {
-    long procedureId = executor.submitProcedure(new DropPipePluginProcedure(pluginName));
-    List<TSStatus> statusList = new ArrayList<>();
-    boolean isSucceed =
+    final long procedureId = executor.submitProcedure(new DropPipePluginProcedure(pluginName));
+    final List<TSStatus> statusList = new ArrayList<>();
+    final boolean isSucceed =
         waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
     if (isSucceed) {
       return RpcUtils.SUCCESS_STATUS;
@@ -827,9 +829,9 @@ public class ProcedureManager {
 
   public TSStatus createPipe(TCreatePipeReq req) {
     try {
-      long procedureId = executor.submitProcedure(new CreatePipeProcedureV2(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new CreatePipeProcedureV2(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -844,9 +846,9 @@ public class ProcedureManager {
 
   public TSStatus alterPipe(TAlterPipeReq req) {
     try {
-      long procedureId = executor.submitProcedure(new AlterPipeProcedureV2(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new AlterPipeProcedureV2(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -861,9 +863,9 @@ public class ProcedureManager {
 
   public TSStatus startPipe(String pipeName) {
     try {
-      long procedureId = executor.submitProcedure(new StartPipeProcedureV2(pipeName));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new StartPipeProcedureV2(pipeName));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -878,9 +880,9 @@ public class ProcedureManager {
 
   public TSStatus stopPipe(String pipeName) {
     try {
-      long procedureId = executor.submitProcedure(new StopPipeProcedureV2(pipeName));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new StopPipeProcedureV2(pipeName));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -895,9 +897,9 @@ public class ProcedureManager {
 
   public TSStatus dropPipe(String pipeName) {
     try {
-      long procedureId = executor.submitProcedure(new DropPipeProcedureV2(pipeName));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new DropPipeProcedureV2(pipeName));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -975,9 +977,9 @@ public class ProcedureManager {
 
   public TSStatus createTopic(TCreateTopicReq req) {
     try {
-      long procedureId = executor.submitProcedure(new CreateTopicProcedure(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new CreateTopicProcedure(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -993,9 +995,9 @@ public class ProcedureManager {
 
   public TSStatus dropTopic(String topicName) {
     try {
-      long procedureId = executor.submitProcedure(new DropTopicProcedure(topicName));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new DropTopicProcedure(topicName));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -1010,9 +1012,9 @@ public class ProcedureManager {
 
   public TSStatus createConsumer(TCreateConsumerReq req) {
     try {
-      long procedureId = executor.submitProcedure(new CreateConsumerProcedure(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new CreateConsumerProcedure(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -1028,9 +1030,9 @@ public class ProcedureManager {
 
   public TSStatus dropConsumer(TCloseConsumerReq req) {
     try {
-      long procedureId = executor.submitProcedure(new DropConsumerProcedure(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new DropConsumerProcedure(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -1046,9 +1048,9 @@ public class ProcedureManager {
 
   public TSStatus createSubscription(TSubscribeReq req) {
     try {
-      long procedureId = executor.submitProcedure(new CreateSubscriptionProcedure(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new CreateSubscriptionProcedure(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -1064,9 +1066,9 @@ public class ProcedureManager {
 
   public TSStatus dropSubscription(TUnsubscribeReq req) {
     try {
-      long procedureId = executor.submitProcedure(new DropSubscriptionProcedure(req));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final long procedureId = executor.submitProcedure(new DropSubscriptionProcedure(req));
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return statusList.get(0);
@@ -1085,8 +1087,8 @@ public class ProcedureManager {
     try {
       final long procedureId =
           executor.submitProcedure(new AuthOperationProcedure(authorPlan, dns, isGeneratedByPipe));
-      List<TSStatus> statusList = new ArrayList<>();
-      boolean isSucceed =
+      final List<TSStatus> statusList = new ArrayList<>();
+      final boolean isSucceed =
           waitingProcedureFinished(Collections.singletonList(procedureId), statusList);
       if (isSucceed) {
         return RpcUtils.SUCCESS_STATUS;
@@ -1109,13 +1111,13 @@ public class ProcedureManager {
   private boolean waitingProcedureFinished(List<Long> procedureIds, List<TSStatus> statusList) {
     boolean isSucceed = true;
     for (long procedureId : procedureIds) {
-      long startTimeForCurrentProcedure = System.currentTimeMillis();
+      final long startTimeForCurrentProcedure = System.currentTimeMillis();
       while (executor.isRunning()
           && !executor.isFinished(procedureId)
           && System.currentTimeMillis() - startTimeForCurrentProcedure < PROCEDURE_WAIT_TIME_OUT) {
         sleepWithoutInterrupt(PROCEDURE_WAIT_RETRY_TIMEOUT);
       }
-      Procedure<ConfigNodeProcedureEnv> finishedProcedure =
+      final Procedure<ConfigNodeProcedureEnv> finishedProcedure =
           executor.getResultOrProcedure(procedureId);
       if (!finishedProcedure.isFinished()) {
         // the procedure is still executing
@@ -1135,7 +1137,7 @@ public class ProcedureManager {
         }
       } else {
         if (finishedProcedure.getException().getCause() instanceof IoTDBException) {
-          IoTDBException e = (IoTDBException) finishedProcedure.getException().getCause();
+          final IoTDBException e = (IoTDBException) finishedProcedure.getException().getCause();
           if (e instanceof BatchProcessException) {
             statusList.add(
                 RpcUtils.getStatus(
@@ -1157,7 +1159,7 @@ public class ProcedureManager {
 
   public static void sleepWithoutInterrupt(final long timeToSleep) {
     long currentTime = System.currentTimeMillis();
-    long endTime = timeToSleep + currentTime;
+    final long endTime = timeToSleep + currentTime;
     boolean interrupted = false;
     while (currentTime < endTime) {
       try {
