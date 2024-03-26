@@ -21,6 +21,7 @@ package org.apache.iotdb.commons.pipe.plugin.builtin;
 
 import org.apache.iotdb.commons.pipe.plugin.builtin.connector.donothing.DoNothingConnector;
 import org.apache.iotdb.commons.pipe.plugin.builtin.connector.iotdb.airgap.IoTDBAirGapConnector;
+import org.apache.iotdb.commons.pipe.plugin.builtin.connector.iotdb.thrift.InfluxDBDoubleWriteConnector;
 import org.apache.iotdb.commons.pipe.plugin.builtin.connector.iotdb.thrift.IoTDBLegacyPipeConnector;
 import org.apache.iotdb.commons.pipe.plugin.builtin.connector.iotdb.thrift.IoTDBThriftAsyncConnector;
 import org.apache.iotdb.commons.pipe.plugin.builtin.connector.iotdb.thrift.IoTDBThriftConnector;
@@ -76,6 +77,8 @@ public enum BuiltinPipePlugin {
   WEBSOCKET_CONNECTOR("websocket-connector", WebSocketConnector.class),
   OPC_UA_CONNECTOR("opc-ua-connector", OpcUaConnector.class),
   WRITE_BACK_CONNECTOR("write-back-connector", WriteBackConnector.class),
+  INFLUXDB_DOUBLE_WRITE_CONNECTOR(
+      "influxdb-double-write-connector", InfluxDBDoubleWriteConnector.class),
 
   DO_NOTHING_SINK("do-nothing-sink", DoNothingConnector.class),
   IOTDB_THRIFT_SINK("iotdb-thrift-sink", IoTDBThriftConnector.class),
@@ -88,6 +91,7 @@ public enum BuiltinPipePlugin {
   OPC_UA_SINK("opc-ua-sink", OpcUaConnector.class),
   WRITE_BACK_SINK("write-back-sink", WriteBackConnector.class),
   SUBSCRIPTION_SINK("subscription-sink", DoNothingConnector.class),
+  INFLUXDB_DOUBLE_WRITE_SINK("influxdb-double-write-sink", InfluxDBDoubleWriteConnector.class),
   ;
 
   private final String pipePluginName;
