@@ -43,7 +43,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_INFLUXDB_NODE_URLS_KEY;
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_IOTDB_PASSWORD_DEFAULT_VALUE;
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_IOTDB_PASSWORD_KEY;
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_IOTDB_USER_DEFAULT_VALUE;
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_IOTDB_USER_KEY;
 import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.SINK_INFLUXDB_NODE_URLS_KEY;
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.SINK_IOTDB_PASSWORD_KEY;
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.SINK_IOTDB_USER_KEY;
 
 /** This connector is mainly used to detect receiver problems using influxDB as comparison. */
 public class InfluxDBDoubleWriteConnector extends IoTDBDataRegionAsyncConnector {
@@ -60,8 +66,12 @@ public class InfluxDBDoubleWriteConnector extends IoTDBDataRegionAsyncConnector 
             parameters.getStringOrDefault(
                 Arrays.asList(SINK_INFLUXDB_NODE_URLS_KEY, CONNECTOR_INFLUXDB_NODE_URLS_KEY),
                 CONNECTOR_INFLUXDB_NODE_URLS_KEY),
-            "root",
-            "root",
+            parameters.getStringOrDefault(
+                Arrays.asList(SINK_IOTDB_USER_KEY, CONNECTOR_IOTDB_USER_KEY),
+                CONNECTOR_IOTDB_USER_DEFAULT_VALUE),
+            parameters.getStringOrDefault(
+                Arrays.asList(SINK_IOTDB_PASSWORD_KEY, CONNECTOR_IOTDB_PASSWORD_KEY),
+                CONNECTOR_IOTDB_PASSWORD_DEFAULT_VALUE),
             new okhttp3.OkHttpClient.Builder());
     influxDB.createDatabase("root");
     influxDB.setDatabase("root");
