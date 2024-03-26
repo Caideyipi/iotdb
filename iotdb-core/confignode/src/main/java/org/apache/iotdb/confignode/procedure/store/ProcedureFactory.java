@@ -37,8 +37,10 @@ import org.apache.iotdb.confignode.procedure.impl.pipe.task.CreatePipeProcedureV
 import org.apache.iotdb.confignode.procedure.impl.pipe.task.DropPipeProcedureV2;
 import org.apache.iotdb.confignode.procedure.impl.pipe.task.StartPipeProcedureV2;
 import org.apache.iotdb.confignode.procedure.impl.pipe.task.StopPipeProcedureV2;
+import org.apache.iotdb.confignode.procedure.impl.region.AddRegionPeerProcedure;
 import org.apache.iotdb.confignode.procedure.impl.region.CreateRegionGroupsProcedure;
 import org.apache.iotdb.confignode.procedure.impl.region.RegionMigrateProcedure;
+import org.apache.iotdb.confignode.procedure.impl.region.RemoveRegionPeerProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.AlterLogicalViewProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.DeactivateTemplateProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteDatabaseProcedure;
@@ -101,6 +103,12 @@ public class ProcedureFactory implements IProcedureFactory {
         break;
       case REGION_MIGRATE_PROCEDURE:
         procedure = new RegionMigrateProcedure();
+        break;
+      case ADD_REGION_PEER_PROCEDURE:
+        procedure = new AddRegionPeerProcedure();
+        break;
+      case REMOVE_REGION_PEER_PROCEDURE:
+        procedure = new RemoveRegionPeerProcedure();
         break;
       case CREATE_REGION_GROUPS:
         procedure = new CreateRegionGroupsProcedure();
@@ -271,6 +279,10 @@ public class ProcedureFactory implements IProcedureFactory {
       return ProcedureType.REMOVE_AI_NODE_PROCEDURE;
     } else if (procedure instanceof RegionMigrateProcedure) {
       return ProcedureType.REGION_MIGRATE_PROCEDURE;
+    } else if (procedure instanceof AddRegionPeerProcedure) {
+      return ProcedureType.ADD_REGION_PEER_PROCEDURE;
+    } else if (procedure instanceof RemoveRegionPeerProcedure) {
+      return ProcedureType.REMOVE_REGION_PEER_PROCEDURE;
     } else if (procedure instanceof CreateRegionGroupsProcedure) {
       return ProcedureType.CREATE_REGION_GROUPS;
     } else if (procedure instanceof DeleteTimeSeriesProcedure) {
