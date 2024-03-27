@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_INFLUXDB_NODE_URLS_DEFAULT_VALUE;
 import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_INFLUXDB_NODE_URLS_KEY;
 import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_IOTDB_PASSWORD_DEFAULT_VALUE;
 import static org.apache.iotdb.commons.pipe.config.constant.PipeConnectorConstant.CONNECTOR_IOTDB_PASSWORD_KEY;
@@ -65,7 +66,7 @@ public class InfluxDBDoubleWriteConnector extends IoTDBDataRegionAsyncConnector 
         new InfluxDBImpl(
             parameters.getStringOrDefault(
                 Arrays.asList(SINK_INFLUXDB_NODE_URLS_KEY, CONNECTOR_INFLUXDB_NODE_URLS_KEY),
-                CONNECTOR_INFLUXDB_NODE_URLS_KEY),
+                CONNECTOR_INFLUXDB_NODE_URLS_DEFAULT_VALUE),
             parameters.getStringOrDefault(
                 Arrays.asList(SINK_IOTDB_USER_KEY, CONNECTOR_IOTDB_USER_KEY),
                 CONNECTOR_IOTDB_USER_DEFAULT_VALUE),

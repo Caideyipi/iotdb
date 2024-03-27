@@ -42,7 +42,7 @@ public class PipeConnectorConstant {
 
   public static final String CONNECTOR_INFLUXDB_NODE_URLS_KEY = "connector.influxdb.node-urls";
   public static final String SINK_INFLUXDB_NODE_URLS_KEY = "sink.influxdb.node-urls";
-  private static final String CONNECTOR_INFLUXDB_NODE_URLS_DEFAULT_VALUE = "127.0.0.1:8086";
+  public static final String CONNECTOR_INFLUXDB_NODE_URLS_DEFAULT_VALUE = "127.0.0.1:8086";
 
   public static final String SINK_IOTDB_SSL_ENABLE_KEY = "sink.ssl.enable";
   public static final String SINK_IOTDB_SSL_TRUST_STORE_PATH_KEY = "sink.ssl.trust-store-path";
