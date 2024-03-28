@@ -2695,13 +2695,6 @@ public class DataRegion implements IDataRegionForQuery {
                 false);
       }
 
-      // update partition version
-      updatePartitionFileVersion(
-          newTsFileResource.getTimePartition(), newTsFileResource.getVersion());
-
-      // help tsfile resource degrade
-      TsFileResourceManager.getInstance().registerSealedTsFileResource(newTsFileResource);
-
       logger.info("TsFile {} is successfully loaded in unsequence list.", newFileName);
     } catch (DiskSpaceInsufficientException e) {
       logger.error(
@@ -2867,7 +2860,7 @@ public class DataRegion implements IDataRegionForQuery {
       logger.error("The file {} has already been loaded in unsequence list", tsFileResource);
       return false;
     }
-    tsFileManager.add(tsFileResource, false);
+
     logger.info(
         "Load tsfile in unsequence list, move file from {} to {}",
         tsFileToLoad.getAbsolutePath(),
@@ -2952,7 +2945,11 @@ public class DataRegion implements IDataRegionForQuery {
       }
     }
 
-    updatePartitionFileVersion(filePartitionId, tsFileResource.getVersion());
+    // help tsfile resource degrade
+    TsFileResourceManager.getInstance().registerSealedTsFileResource(tsFileResource);
+
+    tsFileManager.add(tsFileResource, false);
+
     return true;
   }
 
