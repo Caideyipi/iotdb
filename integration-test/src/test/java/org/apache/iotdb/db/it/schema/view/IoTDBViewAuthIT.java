@@ -106,7 +106,7 @@ public class IoTDBViewAuthIT {
             .toArray(String[]::new),
         new String[] {
           "root.sg.view_d1.s1,root.sg,DOUBLE,null,null,VIEW,(root.sg.d1.s1 + root.sg.d1.s2) / 2,",
-          "root.sg.view_d1.s2,root.sg,FLOAT,null,null,VIEW,root.sg.d1.s2,"
+          "root.sg.view_d1.s2,root.sg,DOUBLE,null,null,VIEW,root.sg.d1.s2,"
         },
         "test",
         "test123");
