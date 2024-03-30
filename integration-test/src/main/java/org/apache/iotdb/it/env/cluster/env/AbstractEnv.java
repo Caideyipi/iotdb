@@ -87,6 +87,8 @@ public abstract class AbstractEnv implements BaseEnv {
   protected long startTime;
   protected int retryCount = 30;
   private IClientManager<TEndPoint, SyncConfigNodeIServiceClient> clientManager;
+  private List<String> configNodeKillPoints = new ArrayList<>();
+  private List<String> dataNodeKillPoints = new ArrayList<>();
 
   /**
    * This config object stores the properties set by developers during the test. It will be cleared
@@ -175,6 +177,7 @@ public abstract class AbstractEnv implements BaseEnv {
         (MppCommonConfig) clusterConfig.getConfigNodeCommonConfig(),
         (MppJVMConfig) clusterConfig.getConfigNodeJVMConfig());
     seedConfigNodeWrapper.createLogDir();
+    seedConfigNodeWrapper.setKillPoints(configNodeKillPoints);
     seedConfigNodeWrapper.start();
     String seedConfigNode = seedConfigNodeWrapper.getIpAndPortString();
     this.configNodeWrapperList.add(seedConfigNodeWrapper);
@@ -209,6 +212,7 @@ public abstract class AbstractEnv implements BaseEnv {
           (MppCommonConfig) clusterConfig.getConfigNodeCommonConfig(),
           (MppJVMConfig) clusterConfig.getConfigNodeJVMConfig());
       configNodeWrapper.createLogDir();
+      configNodeWrapper.setKillPoints(configNodeKillPoints);
       configNodesDelegate.addRequest(
           () -> {
             configNodeWrapper.start();
@@ -243,6 +247,7 @@ public abstract class AbstractEnv implements BaseEnv {
           (MppCommonConfig) clusterConfig.getDataNodeCommonConfig(),
           (MppJVMConfig) clusterConfig.getDataNodeJVMConfig());
       dataNodeWrapper.createLogDir();
+      dataNodeWrapper.setKillPoints(dataNodeKillPoints);
       dataNodesDelegate.addRequest(
           () -> {
             dataNodeWrapper.start();
@@ -1083,5 +1088,15 @@ public abstract class AbstractEnv implements BaseEnv {
     } catch (Exception e) {
       return Optional.empty();
     }
+  }
+
+  @Override
+  public void registerConfigNodeKillPoints(List<String> killPoints) {
+    this.configNodeKillPoints = killPoints;
+  }
+
+  @Override
+  public void registerDataNodeKillPoints(List<String> killPoints) {
+    this.dataNodeKillPoints = killPoints;
   }
 }
