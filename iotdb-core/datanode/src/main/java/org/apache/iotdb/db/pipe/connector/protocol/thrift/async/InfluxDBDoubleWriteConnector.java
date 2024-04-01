@@ -26,7 +26,6 @@ import org.apache.iotdb.pipe.api.customizer.configuration.PipeConnectorRuntimeCo
 import org.apache.iotdb.pipe.api.customizer.parameter.PipeParameters;
 import org.apache.iotdb.pipe.api.event.dml.insertion.TabletInsertionEvent;
 import org.apache.iotdb.pipe.api.event.dml.insertion.TsFileInsertionEvent;
-import org.apache.iotdb.tsfile.common.constant.TsFileConstant;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
 import org.apache.iotdb.tsfile.utils.Binary;
 import org.apache.iotdb.tsfile.write.record.Tablet;
@@ -123,35 +122,31 @@ public class InfluxDBDoubleWriteConnector extends IoTDBDataRegionAsyncConnector 
           continue;
         }
 
-        Point.Builder builder =
-            Point.measurement(
-                tablet.deviceId
-                    + TsFileConstant.PATH_SEPARATOR
-                    + tablet.getSchemas().get(columnIndex).getMeasurementId());
+        Point.Builder builder = Point.measurement("root");
 
         Map<String, String> tags = new HashMap<>();
         Map<String, Object> fields = new HashMap<>();
-
-        builder.tag(tags);
+        tags.put("device", tablet.deviceId);
+        tags.put("measurement", tablet.getSchemas().get(columnIndex).getMeasurementId());
 
         switch (dataType) {
           case BOOLEAN:
-            fields.put("value", ((boolean[]) tablet.values[columnIndex])[rowIndex]);
+            fields.put("boolValue", ((boolean[]) tablet.values[columnIndex])[rowIndex]);
             break;
           case INT32:
-            fields.put("value", ((int[]) tablet.values[columnIndex])[rowIndex]);
+            fields.put("intValue", ((int[]) tablet.values[columnIndex])[rowIndex]);
             break;
           case INT64:
-            fields.put("value", ((long[]) tablet.values[columnIndex])[rowIndex]);
+            fields.put("longValue", ((long[]) tablet.values[columnIndex])[rowIndex]);
             break;
           case FLOAT:
-            fields.put("value", ((float[]) tablet.values[columnIndex])[rowIndex]);
+            fields.put("floatValue", ((float[]) tablet.values[columnIndex])[rowIndex]);
             break;
           case DOUBLE:
-            fields.put("value", ((double[]) tablet.values[columnIndex])[rowIndex]);
+            fields.put("doubleValue", ((double[]) tablet.values[columnIndex])[rowIndex]);
             break;
           case TEXT:
-            fields.put("value", ((Binary[]) tablet.values[columnIndex])[rowIndex]);
+            fields.put("textValue", ((Binary[]) tablet.values[columnIndex])[rowIndex]);
             break;
           case VECTOR:
           case UNKNOWN:
@@ -159,6 +154,7 @@ public class InfluxDBDoubleWriteConnector extends IoTDBDataRegionAsyncConnector 
             throw new PipeRuntimeNonCriticalException(
                 "Unsupported data type: " + tablet.getSchemas().get(columnIndex).getType());
         }
+        builder.tag(tags);
         builder.fields(fields);
         builder.time(tablet.timestamps[rowIndex], TimeUnit.MILLISECONDS);
         Point point = builder.build();
