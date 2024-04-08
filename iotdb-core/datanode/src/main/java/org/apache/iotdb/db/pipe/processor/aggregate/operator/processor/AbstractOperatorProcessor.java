@@ -31,8 +31,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * {@link AbstractOperatorProcessor} is the formal processor defining the operators adoptable for
- * {@link AggregateProcessor}.
+ * {@link AbstractOperatorProcessor} is an {@link AbstractFormalProcessor} defining the operators
+ * adoptable for {@link AggregateProcessor}.
  */
 public abstract class AbstractOperatorProcessor extends AbstractFormalProcessor {
   @Override

@@ -22,6 +22,7 @@ package org.apache.iotdb.db.pipe.processor.aggregate.operator.processor;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.AggregatedResultOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.standardstatistics.AverageOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.standardstatistics.ClearanceFactorOperator;
+import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.standardstatistics.CountPointOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.standardstatistics.CrestFactorOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.standardstatistics.FormFactorOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.aggregatedresult.standardstatistics.KurtosisOperator;
@@ -34,7 +35,7 @@ import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.sametype.numeric.AbsoluteMaxOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.sametype.numeric.IntegralPoweredSumOperator;
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.specifictype.doubletype.FractionPoweredSumOperator;
-import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.specifictype.integertype.CountOperator;
+import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.specifictype.longtype.CountOperator;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +51,7 @@ public class StandardStatisticsOperatorProcessor extends AbstractOperatorProcess
             Arrays.asList(
                 new AverageOperator(),
                 new ClearanceFactorOperator(),
+                new CountPointOperator(),
                 new CrestFactorOperator(),
                 new FormFactorOperator(),
                 new KurtosisOperator(),

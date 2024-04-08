@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.specifictype.integertype;
+package org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.specifictype.longtype;
 
 import org.apache.iotdb.db.pipe.processor.aggregate.operator.intermediateresult.IntermediateResultOperator;
 import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 public class CountOperator implements IntermediateResultOperator {
-  private int count;
+  private long count;
 
   @Override
   public String getName() {
@@ -120,6 +120,6 @@ public class CountOperator implements IntermediateResultOperator {
 
   @Override
   public void deserialize(ByteBuffer byteBuffer) throws IOException {
-    count = ReadWriteIOUtils.readInt(byteBuffer);
+    count = ReadWriteIOUtils.readLong(byteBuffer);
   }
 }
