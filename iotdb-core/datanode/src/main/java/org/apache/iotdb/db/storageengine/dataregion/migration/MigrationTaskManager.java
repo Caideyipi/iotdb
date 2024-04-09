@@ -127,7 +127,7 @@ public class MigrationTaskManager implements IService {
     }
 
     private void releaseDiskUsage(int tierLevel, long usage) {
-      tierDiskUsableSpace[tierLevel] -= usage;
+      tierDiskUsableSpace[tierLevel] += usage;
       if (needMigrationTiers.contains(tierLevel)) {
         double usable = tierDiskUsableSpace[tierLevel] * 1.0 / tierDiskTotalSpace[tierLevel];
         if (usable > 1 - iotdbConfig.getSpaceUsageThresholds()[tierLevel]) {
@@ -178,8 +178,8 @@ public class MigrationTaskManager implements IService {
       if (!sourceTsFile.setStatus(TsFileResourceStatus.MIGRATING)) {
         return;
       }
-      workers.submit(new DeleteTask(sourceTsFile));
       releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
+      workers.submit(new DeleteTask(sourceTsFile));
     }
 
     private int compareDeletePriority(TsFileResource f1, TsFileResource f2) {
@@ -245,8 +245,8 @@ public class MigrationTaskManager implements IService {
         return;
       }
       migrationTasksNum.incrementAndGet();
-      workers.submit(MigrationTask.newTask(cause, sourceTsFile, targetDir));
       releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
+      workers.submit(MigrationTask.newTask(cause, sourceTsFile, targetDir));
     }
 
     private int compareMigrationPriority(TsFileResource f1, TsFileResource f2) {
