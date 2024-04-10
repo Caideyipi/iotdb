@@ -249,5 +249,7 @@ public interface IConfigTaskExecutor {
 
   SettableFuture<ConfigTaskResult> showActivation();
 
-  TPipeTransferResp handleTransferConfigPlan(TPipeTransferReq req);
+  TPipeTransferResp handleTransferConfigPlan(String clientId, TPipeTransferReq req);
+
+  void handlePipeConfigClientExit(String clientId);
 }
