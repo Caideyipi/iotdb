@@ -240,6 +240,11 @@ public class AINodeWrapper implements BaseNodeWrapper {
   }
 
   @Override
+  public boolean isAlive() {
+    return this.instance != null && this.instance.isAlive();
+  }
+
+  @Override
   public String getIp() {
     return this.nodeAddress;
   }
