@@ -271,7 +271,7 @@ public class LoadManager {
       NodeType nodeType, int nodeId, NodeHeartbeatSample heartbeatSample) {
     switch (nodeType) {
       case ConfigNode:
-        loadCache.cacheConfigNodeHeartbeatSample(nodeId, heartbeatSample);
+        loadCache.cacheConfigNodeHeartbeatSample(nodeId, heartbeatSample, false);
         break;
       case DataNode:
         loadCache.cacheDataNodeHeartbeatSample(nodeId, heartbeatSample);

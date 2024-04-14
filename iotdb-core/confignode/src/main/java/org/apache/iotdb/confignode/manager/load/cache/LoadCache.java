@@ -177,10 +177,13 @@ public class LoadCache {
    * @param nodeId the id of the ConfigNode
    * @param sample the latest heartbeat sample
    */
-  public void cacheConfigNodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
+  public void cacheConfigNodeHeartbeatSample(
+      int nodeId, NodeHeartbeatSample sample, boolean needUpdateActivationMap) {
     final long receiveTime = System.nanoTime();
-    activationStatusCacheMap.put(
-        nodeId, new ActivationStatusCache(receiveTime, sample.getActivateStatus()));
+    if (needUpdateActivationMap) {
+      activationStatusCacheMap.put(
+          nodeId, new ActivationStatusCache(receiveTime, sample.getActivateStatus()));
+    }
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new ConfigNodeHeartbeatCache(nodeId))
         .cacheHeartbeatSample(sample);
