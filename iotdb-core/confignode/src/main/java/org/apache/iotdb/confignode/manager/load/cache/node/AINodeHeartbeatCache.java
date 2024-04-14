@@ -34,14 +34,14 @@ public class AINodeHeartbeatCache extends BaseNodeCache {
   }
 
   @Override
-  protected void updateCurrentStatistics() {
+  public void updateCurrentStatistics() {
     NodeHeartbeatSample lastSample = null;
     synchronized (slidingWindow) {
       if (!slidingWindow.isEmpty()) {
-        lastSample = slidingWindow.getLast();
+        lastSample = (NodeHeartbeatSample) getLastSample();
       }
     }
-    long lastSendTime = lastSample == null ? 0 : lastSample.getSendTimestamp();
+    long lastSendTime = lastSample == null ? 0 : lastSample.getSampleLogicalTimestamp();
 
     /* Update load sample */
     if (lastSample != null && lastSample.isSetLoadSample()) {
@@ -51,9 +51,10 @@ public class AINodeHeartbeatCache extends BaseNodeCache {
     /* Update Node status */
     NodeStatus status = null;
     String statusReason = null;
+    long currentNanoTime = System.nanoTime();
     if (lastSample != null && NodeStatus.Removing.equals(lastSample.getStatus())) {
       status = NodeStatus.Removing;
-    } else if (System.nanoTime() - lastSendTime > HEARTBEAT_TIMEOUT_TIME_IN_NS) {
+    } else if (currentNanoTime - lastSendTime > HEARTBEAT_TIMEOUT_TIME_IN_NS) {
       status = NodeStatus.Unknown;
     } else if (lastSample != null) {
       status = lastSample.getStatus();
@@ -62,7 +63,8 @@ public class AINodeHeartbeatCache extends BaseNodeCache {
 
     long loadScore = NodeStatus.isNormalStatus(status) ? 0 : Long.MAX_VALUE;
 
-    NodeStatistics newStatistics = new NodeStatistics(loadScore, status, statusReason);
+    NodeStatistics newStatistics =
+        new NodeStatistics(currentNanoTime, status, statusReason, loadScore);
     if (!currentStatistics.get().equals(newStatistics)) {
       // Update the current NodeStatistics if necessary
       currentStatistics.set(newStatistics);

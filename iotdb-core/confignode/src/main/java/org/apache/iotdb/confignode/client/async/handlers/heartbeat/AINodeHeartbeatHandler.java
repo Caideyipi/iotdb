@@ -23,7 +23,7 @@ import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatResp;
 import org.apache.iotdb.commons.client.ThriftClient;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
-import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
+import org.apache.iotdb.confignode.manager.load.LoadManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 
 import org.apache.thrift.async.AsyncMethodCallback;
@@ -32,24 +32,26 @@ public class AINodeHeartbeatHandler implements AsyncMethodCallback<TAIHeartbeatR
 
   private final int nodeId;
 
-  private final LoadCache loadCache;
+  private final LoadManager loadManager;
 
-  public AINodeHeartbeatHandler(int nodeId, LoadCache loadCache) {
+  public AINodeHeartbeatHandler(int nodeId, LoadManager loadManager) {
     this.nodeId = nodeId;
-    this.loadCache = loadCache;
+    this.loadManager = loadManager;
   }
 
   @Override
   public void onComplete(TAIHeartbeatResp aiHeartbeatResp) {
-    loadCache.cacheAINodeHeartbeatSample(
-        nodeId, new NodeHeartbeatSample(aiHeartbeatResp, System.nanoTime()));
+    loadManager
+        .getLoadCache()
+        .cacheAINodeHeartbeatSample(nodeId, new NodeHeartbeatSample(aiHeartbeatResp));
   }
 
   @Override
   public void onError(Exception e) {
     if (ThriftClient.isConnectionBroken(e)) {
-      loadCache.forceUpdateNodeCache(
-          NodeType.DataNode, nodeId, NodeHeartbeatSample.generateDefaultSample(NodeStatus.Unknown));
+      loadManager.forceUpdateNodeCache(
+          NodeType.DataNode, nodeId, new NodeHeartbeatSample(NodeStatus.Unknown));
     }
+    loadManager.getLoadCache().resetHeartbeatProcessing(nodeId);
   }
 }

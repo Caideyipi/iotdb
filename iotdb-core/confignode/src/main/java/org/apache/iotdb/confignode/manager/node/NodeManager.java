@@ -28,7 +28,6 @@ import org.apache.iotdb.common.rpc.thrift.TFlushReq;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.cluster.NodeStatus;
-import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.cluster.RegionRoleType;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
@@ -63,7 +62,6 @@ import org.apache.iotdb.confignode.manager.activation.License;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
-import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 import org.apache.iotdb.confignode.manager.partition.PartitionManager;
 import org.apache.iotdb.confignode.manager.partition.PartitionMetrics;
 import org.apache.iotdb.confignode.manager.pipe.coordinator.PipeManager;
@@ -302,13 +300,6 @@ public class NodeManager {
       LOGGER.warn(CONSENSUS_WRITE_ERROR, e);
     }
 
-    // Init HeartbeatCache
-    getLoadManager()
-        .forceUpdateNodeCache(
-            NodeType.DataNode,
-            dataNodeId,
-            NodeHeartbeatSample.generateDefaultSample(NodeStatus.Unknown));
-
     // update datanode's versionInfo
     UpdateVersionInfoPlan updateVersionInfoPlan =
         new UpdateVersionInfoPlan(req.getVersionInfo(), dataNodeId);
@@ -322,8 +313,10 @@ public class NodeManager {
     PartitionMetrics.bindDataNodePartitionMetricsWhenUpdate(
         MetricService.getInstance(), configManager, dataNodeId);
 
-    // Adjust the maximum RegionGroup number of each StorageGroup
+    // Adjust the maximum RegionGroup number of each Database
     getClusterSchemaManager().adjustMaxRegionGroupNum();
+
+    // TODO: Add a force heartbeat to update LoadCache immediately
 
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_REGISTRATION);
     resp.setDataNodeId(
@@ -627,13 +620,6 @@ public class NodeManager {
     } catch (ConsensusException e) {
       LOGGER.warn(CONSENSUS_WRITE_ERROR, e);
     }
-
-    // Init HeartbeatCache
-    getLoadManager()
-        .forceUpdateNodeCache(
-            NodeType.AINode,
-            aiNodeId,
-            NodeHeartbeatSample.generateDefaultSample(NodeStatus.Unknown));
 
     // update datanode's versionInfo
     UpdateVersionInfoPlan updateVersionInfoPlan =

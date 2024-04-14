@@ -20,10 +20,11 @@
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
 import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.confignode.manager.load.cache.AbstractLoadCache;
 
 public class ActivationStatusCache {
   // After expireTime, active node will be treated as disconnected.
-  public static final long EXPIRE_TIMEOUT = BaseNodeCache.HEARTBEAT_TIMEOUT_TIME_IN_NS;
+  public static final long EXPIRE_TIMEOUT = AbstractLoadCache.HEARTBEAT_TIMEOUT_TIME_IN_NS;
   private boolean fake = false;
   private final long timestamp;
   private final ActivateStatus activateStatus;

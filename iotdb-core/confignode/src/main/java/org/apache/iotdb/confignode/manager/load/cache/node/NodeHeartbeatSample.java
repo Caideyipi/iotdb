@@ -23,80 +23,75 @@ import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatResp;
 import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.confignode.manager.load.cache.AbstractHeartbeatSample;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatResp;
 
-public class NodeHeartbeatSample {
-
-  // Unit: ms
-  private final long sendTimestamp;
-  private final long receiveTimestamp;
+/** NodeHeartbeatSample records the heartbeat sample of a Node. */
+public class NodeHeartbeatSample extends AbstractHeartbeatSample {
 
   private final ActivateStatus activateStatus;
 
   private final NodeStatus status;
   private final String statusReason;
+  // The Node hardware's load sample
+  private final TLoadSample loadSample;
 
-  private TLoadSample loadSample = null;
-
-  /** Constructor for ConfigNode sample. */
-  public NodeHeartbeatSample(long sendTimestamp, long receiveTimestamp) {
-    this.sendTimestamp = sendTimestamp;
-    this.receiveTimestamp = receiveTimestamp;
+  /** Constructor for generating default sample with specified status */
+  public NodeHeartbeatSample(NodeStatus status) {
+    super(System.nanoTime());
     this.activateStatus = ActivateStatus.UNKNOWN;
-    this.status = NodeStatus.Running;
+    this.status = status;
     this.statusReason = null;
+    this.loadSample = null;
+  }
+
+  /** Constructor for generating default sample with specified status and timestamp */
+  public NodeHeartbeatSample(long sampleNanoTimestamp, NodeStatus status) {
+    super(sampleNanoTimestamp);
+    this.activateStatus = ActivateStatus.UNKNOWN;
+    this.status = status;
+    this.statusReason = null;
+    this.loadSample = null;
   }
 
   /** Constructor for DataNode sample. */
-  public NodeHeartbeatSample(TDataNodeHeartbeatResp heartbeatResp, long receiveTimestamp) {
-    this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
-    this.receiveTimestamp = receiveTimestamp;
+  public NodeHeartbeatSample(TDataNodeHeartbeatResp heartbeatResp) {
+    super(heartbeatResp.getHeartbeatTimestamp());
+    this.status = NodeStatus.parse(heartbeatResp.getStatus());
+    this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
+    this.loadSample = heartbeatResp.isSetLoadSample() ? heartbeatResp.getLoadSample() : null;
     if (heartbeatResp.getActivateStatus() == null) {
       this.activateStatus = ActivateStatus.UNKNOWN;
     } else {
       this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
     }
+  }
+
+  /** Constructor for AINode sample. */
+  public NodeHeartbeatSample(TAIHeartbeatResp heartbeatResp) {
+    super(heartbeatResp.getHeartbeatTimestamp());
+    this.activateStatus = ActivateStatus.UNKNOWN;
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
-
     if (heartbeatResp.isSetLoadSample()) {
       this.loadSample = heartbeatResp.getLoadSample();
+    } else {
+      this.loadSample = null;
     }
   }
 
   /** Constructor for ConfigNode sample. */
-  public NodeHeartbeatSample(TConfigNodeHeartbeatResp heartbeatResp, long receiveTimestamp) {
-    this.sendTimestamp = heartbeatResp.getTimestamp();
-    this.receiveTimestamp = receiveTimestamp;
+  public NodeHeartbeatSample(TConfigNodeHeartbeatResp heartbeatResp) {
+    super(heartbeatResp.getTimestamp());
+    this.status = NodeStatus.Running;
+    this.statusReason = null;
     if (heartbeatResp.getActivateStatus() == null) {
       this.activateStatus = ActivateStatus.UNKNOWN;
     } else {
       this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
     }
-    this.status = NodeStatus.Running;
-    this.statusReason = null;
-  }
-
-  /** Constructor for AINode sample. */
-  public NodeHeartbeatSample(TAIHeartbeatResp heartbeatResp, long receiveTimestamp) {
-    this.sendTimestamp = heartbeatResp.getHeartbeatTimestamp();
-    this.receiveTimestamp = receiveTimestamp;
-    this.activateStatus = ActivateStatus.UNKNOWN;
-    this.status = NodeStatus.parse(heartbeatResp.getStatus());
-    this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
-
-    if (heartbeatResp.isSetLoadSample()) {
-      this.loadSample = heartbeatResp.getLoadSample();
-    }
-  }
-
-  public long getSendTimestamp() {
-    return sendTimestamp;
-  }
-
-  public long getReceiveTimestamp() {
-    return receiveTimestamp;
+    this.loadSample = null;
   }
 
   public NodeStatus getStatus() {
@@ -117,22 +112,5 @@ public class NodeHeartbeatSample {
 
   public TLoadSample getLoadSample() {
     return loadSample;
-  }
-
-  /**
-   * Generate a default NodeHeartbeatSample.
-   *
-   * <p>i.e. Only contain timestamp and NodeStatus
-   *
-   * @param status The NodeStatus in default NodeSample
-   * @return A NodeHeartbeatSample that only contain timestamp and NodeStatus
-   */
-  public static NodeHeartbeatSample generateDefaultSample(NodeStatus status) {
-    long currentTime = System.nanoTime();
-    return new NodeHeartbeatSample(
-        new TDataNodeHeartbeatResp(currentTime, status.getStatus())
-            .setStatusReason(null)
-            .setActivateStatus(ActivateStatus.UNKNOWN.toString()),
-        currentTime);
   }
 }

@@ -61,7 +61,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-/** Maintain the Cluster-Heartbeat-Service. */
+/**
+ * HeartbeatService periodically sending heartbeat requests from ConfigNode-leader to all other
+ * cluster Nodes.
+ */
 public class HeartbeatService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatService.class);
@@ -233,14 +236,15 @@ public class HeartbeatService {
       TConfigNodeHeartbeatReq heartbeatReq, List<TConfigNodeLocation> registeredConfigNodes) {
     // Send heartbeat requests
     for (TConfigNodeLocation configNodeLocation : registeredConfigNodes) {
-      if (configNodeLocation.getConfigNodeId() == ConfigNodeHeartbeatCache.CURRENT_NODE_ID) {
-        // Skip itself
+      int configNodeId = configNodeLocation.getConfigNodeId();
+      if (configNodeId == ConfigNodeHeartbeatCache.CURRENT_NODE_ID
+          || loadCache.checkAndSetHeartbeatProcessing(configNodeId)) {
+        // Skip itself and the ConfigNode that is processing heartbeat
         continue;
       }
-
       ConfigNodeHeartbeatHandler handler =
           new ConfigNodeHeartbeatHandler(
-              configManager, configNodeLocation.getConfigNodeId(), loadCache);
+              configNodeId, configManager, configManager.getLoadManager());
       AsyncConfigNodeHeartbeatClientPool.getInstance()
           .getConfigNodeHeartBeat(configNodeLocation.getInternalEndPoint(), heartbeatReq, handler);
     }
@@ -255,10 +259,15 @@ public class HeartbeatService {
       TDataNodeHeartbeatReq heartbeatReq, List<TDataNodeConfiguration> registeredDataNodes) {
     // Send heartbeat requests
     for (TDataNodeConfiguration dataNodeInfo : registeredDataNodes) {
+      int dataNodeId = dataNodeInfo.getLocation().getDataNodeId();
+      if (loadCache.checkAndSetHeartbeatProcessing(dataNodeId)) {
+        // Skip the DataNode that is processing heartbeat
+        continue;
+      }
       DataNodeHeartbeatHandler handler =
           new DataNodeHeartbeatHandler(
-              dataNodeInfo.getLocation().getDataNodeId(),
-              loadCache,
+              dataNodeId,
+              configManager.getLoadManager(),
               configManager.getClusterQuotaManager().getDeviceNum(),
               configManager.getClusterQuotaManager().getTimeSeriesNum(),
               configManager.getClusterQuotaManager().getRegionDisk(),
@@ -266,7 +275,7 @@ public class HeartbeatService {
               configManager.getClusterSchemaManager()::updateDeviceUsage,
               configManager.getPipeManager().getPipeRuntimeCoordinator());
       configManager.getClusterQuotaManager().updateSpaceQuotaUsage();
-      addConfigNodeLocationsToReq(dataNodeInfo.getLocation().getDataNodeId(), heartbeatReq);
+      addConfigNodeLocationsToReq(dataNodeId, heartbeatReq);
       AsyncDataNodeHeartbeatClientPool.getInstance()
           .getDataNodeHeartBeat(
               dataNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);
@@ -283,7 +292,8 @@ public class HeartbeatService {
     // Send heartbeat requests
     for (TAINodeConfiguration aiNodeInfo : registeredAINodes) {
       AINodeHeartbeatHandler handler =
-          new AINodeHeartbeatHandler(aiNodeInfo.getLocation().getAiNodeId(), loadCache);
+          new AINodeHeartbeatHandler(
+              aiNodeInfo.getLocation().getAiNodeId(), configManager.getLoadManager());
       AsyncAINodeHeartbeatClientPool.getInstance()
           .getAINodeHeartBeat(
               aiNodeInfo.getLocation().getInternalEndPoint(), heartbeatReq, handler);

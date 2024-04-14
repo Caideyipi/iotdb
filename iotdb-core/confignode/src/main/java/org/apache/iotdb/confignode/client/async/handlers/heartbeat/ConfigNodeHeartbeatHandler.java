@@ -23,7 +23,7 @@ import org.apache.iotdb.commons.client.ThriftClient;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.confignode.manager.IManager;
-import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
+import org.apache.iotdb.confignode.manager.load.LoadManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 
@@ -31,29 +31,30 @@ import org.apache.thrift.async.AsyncMethodCallback;
 
 public class ConfigNodeHeartbeatHandler implements AsyncMethodCallback<TConfigNodeHeartbeatResp> {
 
-  private final IManager configManager;
   private final int nodeId;
-  private final LoadCache loadCache;
+  private final IManager configManager;
+  private final LoadManager loadManager;
 
-  public ConfigNodeHeartbeatHandler(IManager configManager, int nodeId, LoadCache loadCache) {
-    this.configManager = configManager;
+  public ConfigNodeHeartbeatHandler(int nodeId, IManager configManager, LoadManager loadManager) {
     this.nodeId = nodeId;
-    this.loadCache = loadCache;
+    this.configManager = configManager;
+    this.loadManager = loadManager;
   }
 
   @Override
   public void onComplete(TConfigNodeHeartbeatResp resp) {
-    loadCache.cacheConfigNodeHeartbeatSample(nodeId, resp);
+    loadManager
+        .getLoadCache()
+        .cacheConfigNodeHeartbeatSample(nodeId, new NodeHeartbeatSample(resp));
     configManager.getActivationManager().tryLoadRemoteLicense(resp.getLicense());
   }
 
   @Override
   public void onError(Exception e) {
     if (ThriftClient.isConnectionBroken(e)) {
-      loadCache.forceUpdateNodeCache(
-          NodeType.ConfigNode,
-          nodeId,
-          NodeHeartbeatSample.generateDefaultSample(NodeStatus.Unknown));
+      loadManager.forceUpdateNodeCache(
+          NodeType.ConfigNode, nodeId, new NodeHeartbeatSample(NodeStatus.Unknown));
     }
+    loadManager.getLoadCache().resetHeartbeatProcessing(nodeId);
   }
 }
