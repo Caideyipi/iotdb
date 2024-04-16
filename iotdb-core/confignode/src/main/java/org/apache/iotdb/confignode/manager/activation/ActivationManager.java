@@ -26,6 +26,7 @@ import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.ConfigManager;
@@ -307,11 +308,11 @@ public class ActivationManager {
           // Active node related task
           long timeRemain = passiveActiveTimeRemain();
           final String disconnectionStr =
-              DateTimeUtils.convertMillisecondToDurationStr(msSinceLastTimeHeardActiveNode());
+              CommonDateTimeUtils.convertMillisecondToDurationStr(msSinceLastTimeHeardActiveNode());
           final String remainStr =
-              DateTimeUtils.convertMillisecondToDurationStr(passiveActiveTimeRemain());
+              CommonDateTimeUtils.convertMillisecondToDurationStr(passiveActiveTimeRemain());
           final String disconnectionLimitStr =
-              DateTimeUtils.convertMillisecondToDurationStr(disconnectionLimit);
+              CommonDateTimeUtils.convertMillisecondToDurationStr(disconnectionLimit);
           if (timeRemain < 0) {
             logger.warn(
                 "This ConfigNode has disconnected from all active ConfigNodes for {} ({} ms), exceeds the disconnection time limit {}. License will be given up now.",
@@ -405,7 +406,7 @@ public class ActivationManager {
     String expirationTimeStr =
         DateTimeUtils.convertLongToDate(license.getLicenseExpireTimestamp(), "ms");
     String timeRemainStr =
-        DateTimeUtils.convertMillisecondToDurationStr(license.licenseExpireTimestamp - now);
+        CommonDateTimeUtils.convertMillisecondToDurationStr(license.licenseExpireTimestamp - now);
     logger.warn(
         "License will expire at {}, there is {} left. Cluster will only allow reading when the time comes. Contact Timecho for more information.",
         expirationTimeStr,
