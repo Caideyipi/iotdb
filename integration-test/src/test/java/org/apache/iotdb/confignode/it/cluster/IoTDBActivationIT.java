@@ -927,11 +927,7 @@ public class IoTDBActivationIT {
 
       // old DataNode can restart
       testPassiveUnactivated(leaderClient, 2, 1);
-      EnvFactory.getEnv().getDataNodeWrapper(0).stop();
-      testStatusWithRetry(
-          leaderClient,
-          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED),
-          HEARTBEAT_TIMEOUT_TIME_IN_MS + TimeUnit.SECONDS.toMillis(2));
+      EnvFactory.getEnv().getDataNodeWrapper(0).stopForcibly();
       EnvFactory.getEnv().getDataNodeWrapper(0).start();
       testPassiveUnactivated(leaderClient, 2, 1);
 
