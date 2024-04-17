@@ -1089,6 +1089,13 @@ public class IoTDBDescriptor {
                     "data_region_iot_max_memory_ratio_for_queue",
                     String.valueOf(conf.getMaxMemoryRatioForQueue()))
                 .trim()));
+    conf.setRegionMigrationSpeedLimitBytesPerSecond(
+        Long.parseLong(
+            properties
+                .getProperty(
+                    "region_migration_speed_limit_bytes_per_second",
+                    String.valueOf(conf.getRegionMigrationSpeedLimitBytesPerSecond()))
+                .trim()));
   }
 
   private void loadAuthorCache(Properties properties) {
