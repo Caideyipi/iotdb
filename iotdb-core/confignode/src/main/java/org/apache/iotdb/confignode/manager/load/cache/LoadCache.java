@@ -43,6 +43,7 @@ import org.apache.iotdb.confignode.manager.load.cache.node.NodeStatistics;
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionGroupCache;
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionGroupStatistics;
 import org.apache.iotdb.confignode.manager.load.cache.region.RegionHeartbeatSample;
+import org.apache.iotdb.confignode.manager.load.cache.region.RegionStatistics;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 
@@ -296,6 +297,22 @@ public class LoadCache {
   }
 
   /**
+   * Get the NodeStatistics of all DataNodes.
+   *
+   * @return a map of all DataNodes' NodeStatistics
+   */
+  public Map<Integer, NodeStatistics> getCurrentDataNodeStatisticsMap() {
+    Map<Integer, NodeStatistics> dataNodeStatisticsMap = new TreeMap<>();
+    nodeCacheMap.forEach(
+        (nodeId, nodeCache) -> {
+          if (nodeCache instanceof DataNodeHeartbeatCache) {
+            dataNodeStatisticsMap.put(nodeId, (NodeStatistics) nodeCache.getCurrentStatistics());
+          }
+        });
+    return dataNodeStatisticsMap;
+  }
+
+  /**
    * Get the RegionGroupStatistics of all RegionGroups.
    *
    * @return a map of RegionGroupStatistics
@@ -308,6 +325,30 @@ public class LoadCache {
     return regionGroupStatisticsMap;
   }
 
+  /**
+   * Get the RegionStatistics of all Regions.
+   *
+   * @param type DataRegion or SchemaRegion
+   * @return a map of RegionStatistics
+   */
+  public Map<TConsensusGroupId, Map<Integer, RegionStatistics>> getCurrentRegionStatisticsMap(
+      TConsensusGroupType type) {
+    Map<TConsensusGroupId, Map<Integer, RegionStatistics>> regionStatisticsMap = new TreeMap<>();
+    regionGroupCacheMap.forEach(
+        (regionGroupId, regionGroupCache) -> {
+          if (type.equals(regionGroupId.getType())) {
+            regionStatisticsMap.put(
+                regionGroupId, regionGroupCache.getCurrentStatistics().getRegionStatisticsMap());
+          }
+        });
+    return regionStatisticsMap;
+  }
+
+  /**
+   * Get the ConsensusGroupStatistics of all RegionGroups.
+   *
+   * @return a map of ConsensusGroupStatistics
+   */
   public Map<TConsensusGroupId, ConsensusGroupStatistics> getCurrentConsensusGroupStatisticsMap() {
     Map<TConsensusGroupId, ConsensusGroupStatistics> consensusGroupStatisticsMap = new TreeMap<>();
     consensusGroupCacheMap.forEach(
@@ -326,6 +367,22 @@ public class LoadCache {
   public NodeStatus getNodeStatus(int nodeId) {
     BaseNodeCache nodeCache = nodeCacheMap.get(nodeId);
     return nodeCache == null ? NodeStatus.Unknown : nodeCache.getNodeStatus();
+  }
+
+  /**
+   * Get all DataNodes' NodeStatus
+   *
+   * @return Map<DataNodeId, NodeStatus>
+   */
+  public Map<Integer, NodeStatus> getDataNodeStatus() {
+    Map<Integer, NodeStatus> nodeStatusMap = new TreeMap<>();
+    nodeCacheMap.forEach(
+        (nodeId, nodeCache) -> {
+          if (nodeCache instanceof DataNodeHeartbeatCache) {
+            nodeStatusMap.put(nodeId, nodeCache.getNodeStatus());
+          }
+        });
+    return nodeStatusMap;
   }
 
   /**
@@ -513,7 +570,7 @@ public class LoadCache {
    */
   public Map<TConsensusGroupId, RegionGroupStatus> getRegionGroupStatus(
       List<TConsensusGroupId> consensusGroupIds) {
-    Map<TConsensusGroupId, RegionGroupStatus> regionGroupStatusMap = new ConcurrentHashMap<>();
+    Map<TConsensusGroupId, RegionGroupStatus> regionGroupStatusMap = new TreeMap<>();
     for (TConsensusGroupId consensusGroupId : consensusGroupIds) {
       regionGroupStatusMap.put(consensusGroupId, getRegionGroupStatus(consensusGroupId));
     }
