@@ -31,10 +31,10 @@ import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.imp
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.impl.CachedBasicInternalMNode;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.impl.CachedDatabaseMNode;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.pbtree.mnode.impl.CachedMeasurementMNode;
-import org.apache.iotdb.tsfile.write.schema.IMeasurementSchema;
 
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.schemaregion.mtree.pbtree.CachedViewMNode;
+import org.apache.tsfile.write.schema.IMeasurementSchema;
 
 @MNodeFactory(env = EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV)
 public class EnterpriseCachedMNodeFactory implements IMNodeFactory<ICachedMNode> {

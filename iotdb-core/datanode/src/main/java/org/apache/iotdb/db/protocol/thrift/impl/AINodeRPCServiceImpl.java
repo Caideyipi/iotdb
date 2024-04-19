@@ -48,9 +48,9 @@ import org.apache.iotdb.mpp.rpc.thrift.TFetchWindowBatchResp;
 import org.apache.iotdb.mpp.rpc.thrift.TRecordModelMetricsReq;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
-import org.apache.iotdb.tsfile.utils.Pair;
 
 import org.apache.thrift.TException;
+import org.apache.tsfile.utils.Pair;
 
 import java.nio.ByteBuffer;
 import java.time.ZoneId;

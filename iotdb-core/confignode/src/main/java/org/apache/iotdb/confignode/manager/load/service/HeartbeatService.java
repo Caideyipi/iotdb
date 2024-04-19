@@ -47,8 +47,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TActivationControl;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeActivation;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatReq;
-import org.apache.iotdb.tsfile.utils.Pair;
 
+import org.apache.tsfile.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

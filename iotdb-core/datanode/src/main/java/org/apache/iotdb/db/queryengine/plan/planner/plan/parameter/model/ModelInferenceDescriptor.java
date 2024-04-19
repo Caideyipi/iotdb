@@ -22,7 +22,8 @@ package org.apache.iotdb.db.queryengine.plan.planner.plan.parameter.model;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.commons.model.ModelInformation;
 import org.apache.iotdb.db.queryengine.execution.operator.window.ainode.InferenceWindowParameter;
-import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
+
+import org.apache.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

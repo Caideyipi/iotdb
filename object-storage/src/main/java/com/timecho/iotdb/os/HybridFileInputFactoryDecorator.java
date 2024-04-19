@@ -18,14 +18,13 @@
  */
 package com.timecho.iotdb.os;
 
-import org.apache.iotdb.tsfile.fileSystem.fileInputFactory.FileInputFactory;
-import org.apache.iotdb.tsfile.fileSystem.fileInputFactory.HybridFileInputFactory;
-import org.apache.iotdb.tsfile.read.reader.TsFileInput;
-import org.apache.iotdb.tsfile.utils.FSUtils;
-
 import com.timecho.iotdb.os.conf.ObjectStorageConfig;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
+import org.apache.tsfile.fileSystem.fileInputFactory.FileInputFactory;
+import org.apache.tsfile.fileSystem.fileInputFactory.HybridFileInputFactory;
+import org.apache.tsfile.read.reader.TsFileInput;
+import org.apache.tsfile.utils.FSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

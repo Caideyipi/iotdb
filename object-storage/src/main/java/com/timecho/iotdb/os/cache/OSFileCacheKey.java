@@ -18,9 +18,8 @@
  */
 package com.timecho.iotdb.os.cache;
 
-import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
-
 import com.timecho.iotdb.os.fileSystem.OSFile;
+import org.apache.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

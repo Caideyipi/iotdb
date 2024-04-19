@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package com.timecho.iotdb.os.fileSystem;
 
-import org.apache.iotdb.tsfile.write.writer.TsFileOutput;
-
+import org.apache.tsfile.write.writer.TsFileOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

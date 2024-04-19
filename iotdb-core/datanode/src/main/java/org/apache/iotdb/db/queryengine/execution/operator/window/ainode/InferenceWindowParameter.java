@@ -20,7 +20,8 @@
 package org.apache.iotdb.db.queryengine.execution.operator.window.ainode;
 
 import org.apache.iotdb.db.exception.sql.SemanticException;
-import org.apache.iotdb.tsfile.utils.ReadWriteIOUtils;
+
+import org.apache.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

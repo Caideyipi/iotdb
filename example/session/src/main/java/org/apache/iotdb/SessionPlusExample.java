@@ -25,16 +25,17 @@ import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.session.template.MeasurementNode;
-import org.apache.iotdb.tsfile.file.metadata.enums.CompressionType;
-import org.apache.iotdb.tsfile.file.metadata.enums.TSDataType;
-import org.apache.iotdb.tsfile.file.metadata.enums.TSEncoding;
-import org.apache.iotdb.tsfile.utils.Binary;
-import org.apache.iotdb.tsfile.utils.BitMap;
-import org.apache.iotdb.tsfile.write.record.Tablet;
-import org.apache.iotdb.tsfile.write.schema.MeasurementSchema;
 
 import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
+import org.apache.tsfile.common.conf.TSFileConfig;
+import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.file.metadata.enums.CompressionType;
+import org.apache.tsfile.file.metadata.enums.TSEncoding;
+import org.apache.tsfile.utils.Binary;
+import org.apache.tsfile.utils.BitMap;
+import org.apache.tsfile.write.record.Tablet;
+import org.apache.tsfile.write.schema.MeasurementSchema;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -622,7 +623,7 @@ public class SessionPlusExample {
   private static void insertText() throws IoTDBConnectionException, StatementExecutionException {
     String device = "root.sg1.text_type";
     // the first data is String type and the second data is Binary type
-    List<Object> datas = Arrays.asList("String", new Binary("Binary"));
+    List<Object> datas = Arrays.asList("String", new Binary("Binary", TSFileConfig.STRING_CHARSET));
     // insertRecord example
     for (int i = 0; i < datas.size(); i++) {
       // write data of String type or Binary type

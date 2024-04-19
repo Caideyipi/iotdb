@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package com.timecho.iotdb.os.fileSystem;
 
-import org.apache.iotdb.tsfile.read.reader.TsFileInput;
-
 import com.timecho.iotdb.os.cache.OSFileChannel;
+import org.apache.tsfile.read.reader.TsFileInput;
 
 import java.io.IOException;
 import java.io.InputStream;

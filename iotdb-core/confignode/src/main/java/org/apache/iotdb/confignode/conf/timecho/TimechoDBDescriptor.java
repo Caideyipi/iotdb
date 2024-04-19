@@ -19,9 +19,8 @@
 
 package org.apache.iotdb.confignode.conf.timecho;
 
-import org.apache.iotdb.tsfile.utils.PublicBAOS;
-
 import org.apache.commons.codec.binary.Base64;
+import org.apache.tsfile.utils.PublicBAOS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
