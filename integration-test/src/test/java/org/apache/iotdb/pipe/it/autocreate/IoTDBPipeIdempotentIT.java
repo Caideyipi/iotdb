@@ -175,6 +175,58 @@ public class IoTDBPipeIdempotentIT extends AbstractPipeDualAutoIT {
   }
 
   @Test
+  public void testCreateLogicalViewIdempotent() throws Exception {
+    testIdempotent(
+        Collections.singletonList(
+            "create timeseries root.db.device.s01 with datatype=FLOAT,encoding=PLAIN"),
+        "CREATE VIEW root.view.device.status AS SELECT s01 FROM root.db.device",
+        "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
+        "count timeseries",
+        "count(timeseries),",
+        Collections.singleton("3,"));
+  }
+
+  @Test
+  public void testAlterLogicalViewCalculationIdempotent() throws Exception {
+    testIdempotent(
+        Arrays.asList(
+            "create timeseries root.db.device.s01 with datatype=FLOAT,encoding=PLAIN",
+            "create timeseries root.db.device.s02 with datatype=FLOAT,encoding=PLAIN",
+            "CREATE VIEW root.view.device.status AS SELECT s01 FROM root.db.device"),
+        "ALTER VIEW root.view.device.status AS SELECT s02 FROM root.db.device",
+        "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
+        "count timeseries",
+        "count(timeseries),",
+        Collections.singleton("4,"));
+  }
+
+  @Test
+  public void testAlterLogicalViewTagIdempotent() throws Exception {
+    testIdempotent(
+        Arrays.asList(
+            "create timeseries root.db.device.s01 with datatype=FLOAT,encoding=PLAIN",
+            "CREATE VIEW root.view.device.status AS SELECT s01 FROM root.db.device"),
+        "ALTER VIEW root.view.device.status ADD TAGS tag3=v3, tag4=v4",
+        "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
+        "count timeseries",
+        "count(timeseries),",
+        Collections.singleton("3,"));
+  }
+
+  @Test
+  public void testDeleteLogicalViewIdempotent() throws Exception {
+    testIdempotent(
+        Arrays.asList(
+            "create timeseries root.db.device.s01 with datatype=FLOAT,encoding=PLAIN",
+            "CREATE VIEW root.view.device.status AS SELECT s01 FROM root.db.device"),
+        "delete view root.view.device.status",
+        "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
+        "count timeseries",
+        "count(timeseries),",
+        Collections.singleton("2,"));
+  }
+
+  @Test
   public void testCreateTemplateIdempotent() throws Exception {
     testIdempotent(
         Collections.emptyList(),

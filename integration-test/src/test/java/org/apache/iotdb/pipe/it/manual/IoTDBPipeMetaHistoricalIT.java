@@ -105,6 +105,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualManualIT {
               "set schema template t1 to root.ln.wf01",
               "create timeseries using schema template on root.ln.wf01.wt01",
               "create timeseries root.ln.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN",
+              "CREATE VIEW root.ln.device.status AS root.ln.wf02.wt01.status",
               // Insert large timestamp to avoid deletion by ttl
               "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"))) {
         return;
@@ -116,7 +117,8 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualManualIT {
 
       extractorAttributes.put("extractor.inclusion", "data, schema");
       extractorAttributes.put(
-          "extractor.inclusion.exclusion", "schema.timeseries.ordinary, schema.ttl");
+          "extractor.inclusion.exclusion",
+          "schema.timeseries.ordinary, schema.timeseries.view, schema.ttl");
 
       connectorAttributes.put("connector", "iotdb-thrift-connector");
       connectorAttributes.put("connector.ip", receiverIp);
@@ -187,6 +189,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualManualIT {
               "set schema template t1 to root.ln.wf01",
               "create timeseries using schema template on root.ln.wf01.wt01",
               "create timeseries root.ln.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN",
+              "CREATE VIEW root.ln.device.status AS root.ln.wf02.wt01.status",
               // Insert large timestamp to avoid deletion by ttl
               "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"))) {
         return;
@@ -238,6 +241,88 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualManualIT {
 
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv, "list role", "role,", new HashSet<>(Arrays.asList("admin,", "test,")));
+    }
+  }
+
+  @Test
+  public void testLogicalViewInclusion() throws Exception {
+    final DataNodeWrapper receiverDataNode = receiverEnv.getDataNodeWrapper(0);
+
+    final String receiverIp = receiverDataNode.getIp();
+    final int receiverPort = receiverDataNode.getPort();
+
+    try (final SyncConfigNodeIServiceClient client =
+        (SyncConfigNodeIServiceClient) senderEnv.getLeaderConfigNodeConnection()) {
+
+      // Do not fail if the failure has nothing to do with pipe
+      // Because the failures will randomly generate due to resource limitation
+      if (!TestUtils.tryExecuteNonQueriesWithRetry(
+          senderEnv,
+          Arrays.asList(
+              "create database root.ln",
+              "set ttl to root.ln 3600000",
+              "create user `thulab` 'passwd'",
+              "create role `admin`",
+              "grant role `admin` to `thulab`",
+              "grant read on root.** to role `admin`",
+              "create schema template t1 (temperature FLOAT encoding=RLE, status BOOLEAN encoding=PLAIN compression=SNAPPY)",
+              "set schema template t1 to root.ln.wf01",
+              "create timeseries using schema template on root.ln.wf01.wt01",
+              "create timeseries root.ln.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN",
+              "CREATE VIEW root.ln.device.status AS root.ln.wf02.wt01.status",
+              // Insert large timestamp to avoid deletion by ttl
+              "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"))) {
+        return;
+      }
+
+      final Map<String, String> extractorAttributes = new HashMap<>();
+      final Map<String, String> processorAttributes = new HashMap<>();
+      final Map<String, String> connectorAttributes = new HashMap<>();
+
+      extractorAttributes.put("extractor.inclusion", "schema");
+      extractorAttributes.put("extractor.inclusion.exclusion", "schema.timeseries.template");
+
+      connectorAttributes.put("connector", "iotdb-thrift-connector");
+      connectorAttributes.put("connector.ip", receiverIp);
+      connectorAttributes.put("connector.port", Integer.toString(receiverPort));
+      connectorAttributes.put("connector.exception.conflict.resolve-strategy", "retry");
+      connectorAttributes.put("connector.exception.conflict.retry-max-time-seconds", "-1");
+
+      final TSStatus status =
+          client.createPipe(
+              new TCreatePipeReq("testPipe", connectorAttributes)
+                  .setExtractorAttributes(extractorAttributes)
+                  .setProcessorAttributes(processorAttributes));
+
+      Assert.assertEquals(TSStatusCode.SUCCESS_STATUS.getStatusCode(), status.getCode());
+
+      Assert.assertEquals(
+          TSStatusCode.SUCCESS_STATUS.getStatusCode(), client.startPipe("testPipe").getCode());
+
+      TestUtils.assertDataAlwaysOnEnv(
+          receiverEnv, "list user", "user,", Collections.singleton("root,"));
+      TestUtils.assertDataAlwaysOnEnv(receiverEnv, "list role", "role,", Collections.emptySet());
+
+      TestUtils.assertDataEventuallyOnEnv(
+          receiverEnv,
+          "show databases",
+          "Database,TTL,SchemaReplicationFactor,DataReplicationFactor,TimePartitionInterval,",
+          // Receiver's SchemaReplicationFactor/DataReplicationFactor shall be 3/2 regardless of the
+          // sender
+          Collections.singleton("root.ln,3600000,3,2,604800000,"));
+      TestUtils.assertDataEventuallyOnEnv(
+          receiverEnv,
+          "select * from root.**",
+          "Time,root.ln.wf02.wt01.status,root.ln.device.status,",
+          Collections.emptySet());
+
+      if (!TestUtils.tryExecuteNonQueryWithRetry(
+          senderEnv, "create timeseries using schema template on root.ln.wf01.wt02")) {
+        return;
+      }
+
+      TestUtils.assertDataEventuallyOnEnv(
+          receiverEnv, "count timeseries", "count(timeseries),", Collections.singleton("2,"));
     }
   }
 }
