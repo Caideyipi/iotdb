@@ -41,6 +41,7 @@ import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.exception.LicenseException;
+import org.apache.iotdb.commons.exception.MetadataException;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
@@ -117,6 +118,7 @@ import org.apache.iotdb.confignode.persistence.pipe.PipeInfo;
 import org.apache.iotdb.confignode.persistence.quota.QuotaInfo;
 import org.apache.iotdb.confignode.persistence.schema.ClusterSchemaInfo;
 import org.apache.iotdb.confignode.persistence.subscription.SubscriptionInfo;
+import org.apache.iotdb.confignode.procedure.impl.schema.SchemaUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
@@ -1960,6 +1962,7 @@ public class ConfigManager implements IManager {
       boolean canOptimize = false;
       HashSet<TDatabaseSchema> deleteDatabaseSchemas = new HashSet<>();
       List<PartialPath> deleteTimeSeriesPatternPaths = new ArrayList<>();
+      List<PartialPath> deleteDatabasePatternPaths = new ArrayList<>();
       for (PartialPath path : rawPatternTree.getAllPathPatterns()) {
         if (PathPatternUtil.isMultiLevelMatchWildcard(path.getMeasurement())
             && !path.getDevicePath().hasWildcard()) {
@@ -1967,6 +1970,7 @@ public class ConfigManager implements IManager {
               getClusterSchemaManager().getMatchedDatabaseSchemasByPrefix(path.getDevicePath());
           if (!databaseSchemaMap.isEmpty()) {
             deleteDatabaseSchemas.addAll(databaseSchemaMap.values());
+            deleteDatabasePatternPaths.add(path);
             canOptimize = true;
             continue;
           }
@@ -1975,6 +1979,12 @@ public class ConfigManager implements IManager {
       }
       if (!canOptimize) {
         return procedureManager.deleteTimeSeries(queryId, rawPatternTree, isGeneratedByPipe);
+      }
+      // check if the database is using template
+      try {
+        SchemaUtils.checkSchemaRegionUsingTemplate(this, deleteDatabasePatternPaths);
+      } catch (MetadataException e) {
+        return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
       }
       if (!deleteTimeSeriesPatternPaths.isEmpty()) {
         // 1. delete time series that can not be optimized
