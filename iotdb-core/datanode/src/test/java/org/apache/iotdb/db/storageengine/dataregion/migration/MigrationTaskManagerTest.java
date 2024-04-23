@@ -77,6 +77,9 @@ public class MigrationTaskManagerTest {
   @Before
   public void setUp() throws Exception {
     prevTSFileStorageFs = tsfileConfig.getTSFileStorageFs();
+    tsfileConfig.setObjectStorageFile("com.timecho.iotdb.os.fileSystem.OSFile");
+    tsfileConfig.setObjectStorageTsFileInput("com.timecho.iotdb.os.fileSystem.OSTsFileInput");
+    tsfileConfig.setObjectStorageTsFileOutput("com.timecho.iotdb.os.fileSystem.OSTsFileOutput");
     tsfileConfig.setTSFileStorageFs(new FSType[] {FSType.LOCAL, FSType.OBJECT_STORAGE});
     FSUtils.reload();
     prevOSType = osConfig.getOsType();

@@ -27,6 +27,7 @@ import org.apache.iotdb.db.service.RPCService;
 
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
+import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,18 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
     MNodeFactoryLoader.getInstance()
         .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
+
+    // set up environment for object storage
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setObjectStorageFile("com.timecho.iotdb.os.fileSystem.OSFile");
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setObjectStorageTsFileInput("com.timecho.iotdb.os.fileSystem.OSTsFileInput");
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setObjectStorageTsFileOutput("com.timecho.iotdb.os.fileSystem.OSTsFileOutput");
+
     new DataNodeServerCommandLineNew().doMain(args);
   }
 
