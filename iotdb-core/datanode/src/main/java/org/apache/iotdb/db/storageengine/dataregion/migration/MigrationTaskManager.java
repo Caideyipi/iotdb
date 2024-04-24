@@ -59,7 +59,7 @@ public class MigrationTaskManager implements IService {
   private static final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
   private static final TierManager tierManager = TierManager.getInstance();
   private static final long CHECK_INTERVAL_IN_SECONDS = 10;
-  private static final int MIGRATION_TASK_LIMIT = 20;
+  private static final int MIGRATION_TASK_LIMIT = 50;
   /** max concurrent migration tasks */
   private final AtomicInteger migrationTasksNum = new AtomicInteger(0);
   /** enable or not */
