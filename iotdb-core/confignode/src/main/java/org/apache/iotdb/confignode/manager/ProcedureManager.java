@@ -145,6 +145,8 @@ public class ProcedureManager {
 
   public static final long PROCEDURE_WAIT_TIME_OUT = COMMON_CONFIG.getConnectionTimeoutInMS();
   private static final int PROCEDURE_WAIT_RETRY_TIMEOUT = 10;
+  private static final String PROCEDURE_TIMEOUT_MESSAGE =
+      "Timed out to wait for procedure return. The procedure is still running.";
 
   private final ConfigManager configManager;
   private ProcedureExecutor<ConfigNodeProcedureEnv> executor;
@@ -861,7 +863,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -878,7 +880,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -895,7 +897,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -912,7 +914,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -929,7 +931,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -975,7 +977,7 @@ public class ProcedureManager {
         return RpcUtils.SUCCESS_STATUS;
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -992,7 +994,7 @@ public class ProcedureManager {
         return RpcUtils.SUCCESS_STATUS;
       } else {
         return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.PIPE_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -1009,7 +1011,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.CREATE_TOPIC_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.CREATE_TOPIC_ERROR.getStatusCode())
@@ -1027,7 +1029,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.DROP_TOPIC_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.DROP_TOPIC_ERROR.getStatusCode()).setMessage(e.getMessage());
@@ -1044,7 +1046,7 @@ public class ProcedureManager {
         return RpcUtils.SUCCESS_STATUS;
       } else {
         return new TSStatus(TSStatusCode.TOPIC_PUSH_META_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.TOPIC_PUSH_META_ERROR.getStatusCode())
@@ -1062,7 +1064,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.CREATE_CONSUMER_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.CREATE_CONSUMER_ERROR.getStatusCode())
@@ -1080,7 +1082,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.DROP_CONSUMER_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.DROP_CONSUMER_ERROR.getStatusCode())
@@ -1098,7 +1100,7 @@ public class ProcedureManager {
         return RpcUtils.SUCCESS_STATUS;
       } else {
         return new TSStatus(TSStatusCode.CONSUMER_PUSH_META_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.CONSUMER_PUSH_META_ERROR.getStatusCode())
@@ -1116,7 +1118,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.SUBSCRIPTION_SUBSCRIBE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.SUBSCRIPTION_SUBSCRIBE_ERROR.getStatusCode())
@@ -1134,7 +1136,7 @@ public class ProcedureManager {
         return statusList.get(0);
       } else {
         return new TSStatus(TSStatusCode.SUBSCRIPTION_UNSUBSCRIBE_ERROR.getStatusCode())
-            .setMessage(statusList.get(0).getMessage());
+            .setMessage(wrapTimeoutMessageForPipeProcedure(statusList.get(0).getMessage()));
       }
     } catch (Exception e) {
       return new TSStatus(TSStatusCode.SUBSCRIPTION_UNSUBSCRIBE_ERROR.getStatusCode())
@@ -1182,8 +1184,7 @@ public class ProcedureManager {
       if (!finishedProcedure.isFinished()) {
         // the procedure is still executing
         statusList.add(
-            RpcUtils.getStatus(
-                TSStatusCode.OVERLAP_WITH_EXISTING_TASK, "Procedure execution timed out."));
+            RpcUtils.getStatus(TSStatusCode.OVERLAP_WITH_EXISTING_TASK, PROCEDURE_TIMEOUT_MESSAGE));
         isSucceed = false;
         continue;
       }
@@ -1215,6 +1216,14 @@ public class ProcedureManager {
       }
     }
     return isSucceed;
+  }
+
+  private static String wrapTimeoutMessageForPipeProcedure(String message) {
+    if (message.equals(PROCEDURE_TIMEOUT_MESSAGE)) {
+      return message
+          + " Please manually check later whether the procedure is executed successfully.";
+    }
+    return message;
   }
 
   public static void sleepWithoutInterrupt(final long timeToSleep) {
