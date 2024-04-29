@@ -734,7 +734,9 @@ public class TsFileResource {
     return timeIndex.checkDeviceIdExist(deviceId);
   }
 
-  /** @return true if the device is contained in the TsFile and it lives beyond TTL */
+  /**
+   * @return true if the device is contained in the TsFile and it lives beyond TTL
+   */
   public boolean isSatisfied(
       IDeviceID deviceId, Filter globalTimeFilter, boolean isSeq, long ttl, boolean debug) {
     if (deviceId == null) {
@@ -773,7 +775,9 @@ public class TsFileResource {
     return true;
   }
 
-  /** @return true if the TsFile lives beyond TTL */
+  /**
+   * @return true if the TsFile lives beyond TTL
+   */
   private boolean isSatisfied(Filter timeFilter, boolean isSeq, long ttl, boolean debug) {
     long startTime = getFileStartTime();
     long endTime = isClosed() || !isSeq ? getFileEndTime() : Long.MAX_VALUE;
@@ -805,7 +809,9 @@ public class TsFileResource {
     return true;
   }
 
-  /** @return true if the device is contained in the TsFile */
+  /**
+   * @return true if the device is contained in the TsFile
+   */
   public boolean isSatisfied(IDeviceID deviceId, Filter timeFilter, boolean isSeq, boolean debug) {
     if (definitelyNotContains(deviceId)) {
       if (debug) {
@@ -839,7 +845,9 @@ public class TsFileResource {
     return true;
   }
 
-  /** @return whether the given time falls in ttl */
+  /**
+   * @return whether the given time falls in ttl
+   */
   private boolean isAlive(long time, long dataTTL) {
     return dataTTL == Long.MAX_VALUE || (CommonDateTimeUtils.currentTime() - time) <= dataTTL;
   }
@@ -893,7 +901,9 @@ public class TsFileResource {
     }
   }
 
-  /** @return resource map size */
+  /**
+   * @return resource map size
+   */
   public long calculateRamSize() {
     if (ramSize == 0) {
       ramSize = INSTANCE_SIZE + timeIndex.calculateRamSize();
@@ -1147,7 +1157,9 @@ public class TsFileResource {
     }
   }
 
-  /** @return is this tsfile resource in a TsFileResourceList */
+  /**
+   * @return is this tsfile resource in a TsFileResourceList
+   */
   public boolean isFileInList() {
     return prev != null || next != null;
   }
