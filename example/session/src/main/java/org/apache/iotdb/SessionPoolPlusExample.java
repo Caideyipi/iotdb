@@ -65,7 +65,9 @@ public class SessionPoolPlusExample {
   }
 
   public static void main(String[] args)
-      throws StatementExecutionException, IoTDBConnectionException, InterruptedException,
+      throws StatementExecutionException,
+          IoTDBConnectionException,
+          InterruptedException,
           TException {
     // Choose the SessionPoolPlus you going to use
     constructRedirectSessionPool();

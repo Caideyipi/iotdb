@@ -341,6 +341,7 @@ public class IoTDBCreateAndShowViewIT extends AbstractSchemaIT {
       fail(e.getMessage());
     }
   }
+
   // endregion
 
   // region Test Show View
@@ -400,6 +401,7 @@ public class IoTDBCreateAndShowViewIT extends AbstractSchemaIT {
       fail(e.getMessage());
     }
   }
+
   // endregion
 
   // region unsupported SQLs

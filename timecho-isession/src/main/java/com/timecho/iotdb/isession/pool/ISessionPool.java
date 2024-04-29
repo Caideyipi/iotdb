@@ -46,6 +46,7 @@ public interface ISessionPool extends org.apache.iotdb.isession.pool.ISessionPoo
    */
   long getTotalPoints(Set<String> databaseSet, long startTime, long endTime)
       throws StatementExecutionException, IoTDBConnectionException;
+
   /** Similar to the above method, start timestamp parameters are added to filter the data * */
   long getTotalPoints(Set<String> databaseSet, long startTime)
       throws StatementExecutionException, IoTDBConnectionException;

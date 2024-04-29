@@ -754,6 +754,7 @@ public class IoTDBActivationIT {
       throw new RuntimeException(e);
     }
   }
+
   // endregion
 
   // region DataNode Test
@@ -969,8 +970,13 @@ public class IoTDBActivationIT {
 
   @Test
   public void getLicenseInfoTest()
-      throws IoTDBConnectionException, StatementExecutionException, ClientManagerException,
-          IOException, InterruptedException, TException, LicenseException {
+      throws IoTDBConnectionException,
+          StatementExecutionException,
+          ClientManagerException,
+          IOException,
+          InterruptedException,
+          TException,
+          LicenseException {
     EnvFactory.getEnv().initClusterEnvironment(1, 0);
     try (SyncConfigNodeIServiceClient leaderClient =
         (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {

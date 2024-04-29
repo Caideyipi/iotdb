@@ -30,6 +30,7 @@ import java.util.Objects;
 public class OSFileCacheKey implements Serializable {
   /** remote TsFile */
   private final OSFile file;
+
   /** start position in the remote TsFile */
   private final long startPosition;
 

@@ -374,6 +374,7 @@ public class NodeInfo implements SnapshotProcessor {
       aiNodeInfoReadWriteLock.readLock().unlock();
     }
   }
+
   /**
    * Update ConfigNodeList both in memory and confignode-system{@literal .}properties file.
    *

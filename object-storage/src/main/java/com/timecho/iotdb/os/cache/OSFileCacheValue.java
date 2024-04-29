@@ -26,16 +26,21 @@ public class OSFileCacheValue {
 
   /** local cache file */
   private File cacheFile;
+
   // 如果每个块用一个文件来存储，则该值一直为 0
   // 如果使用一个大文件存储所有块，则该值为大文件中的起点
   /** start position in the local cache file */
   private long startPositionInCacheFile;
+
   /** cache data size */
   private int dataSize;
+
   /** cache key size */
   private int metaSize;
+
   /** start position in the remote TsFile */
   private long startPositionInOSFile;
+
   /** start position in the remote TsFile */
   private long endPositionInOSFile;
 

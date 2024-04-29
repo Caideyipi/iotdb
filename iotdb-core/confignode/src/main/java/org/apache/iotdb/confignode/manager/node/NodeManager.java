@@ -578,7 +578,9 @@ public class NodeManager {
     return aiNodeInfoList;
   }
 
-  /** @return All registered AINodes */
+  /**
+   * @return All registered AINodes
+   */
   public List<TAINodeConfiguration> getRegisteredAINodes() {
     return nodeInfo.getRegisteredAINodes();
   }

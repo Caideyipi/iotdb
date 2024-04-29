@@ -60,14 +60,19 @@ public class MigrationTaskManager implements IService {
   private static final TierManager tierManager = TierManager.getInstance();
   private static final long CHECK_INTERVAL_IN_SECONDS = 10;
   private static final int MIGRATION_TASK_LIMIT = 50;
+
   /** max concurrent migration tasks */
   private final AtomicInteger migrationTasksNum = new AtomicInteger(0);
+
   /** enable or not */
   private boolean enable = false;
+
   /** single thread to schedule */
   private ScheduledExecutorService scheduler;
+
   /** workers to migrate files */
   private ExecutorService workers;
+
   /** object storage upload rate limiter, KB/s */
   private RateLimiter objectStorageUploadRateLimiter;
 
@@ -103,10 +108,13 @@ public class MigrationTaskManager implements IService {
   private class MigrationScheduleTask implements Runnable {
     private final long[] tierDiskTotalSpace = tierManager.getTierDiskTotalSpace();
     private final long[] tierDiskUsableSpace = tierManager.getTierDiskUsableSpace();
+
     /** Tiers need migrating data to the next tier */
     private final Set<Integer> needMigrationTiers = new HashSet<>();
+
     /** Tiers are disk-full, cannot migrate data to these tiers */
     private final Set<Integer> spaceWarningTiers = new HashSet<>();
+
     /** TsFiles of all data region */
     private final List<TsFileResource> tsfiles = new ArrayList<>();
 

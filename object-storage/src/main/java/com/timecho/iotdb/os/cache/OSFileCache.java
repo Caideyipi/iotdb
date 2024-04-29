@@ -40,6 +40,7 @@ public class OSFileCache {
 
   /** manage all io operations to the cache files */
   private final CacheFileManager cacheFileManager = CacheFileManager.getInstance();
+
   /**
    * persistent LRU cache for remote TsFile, value is loaded successfully when it has been stored on
    * the disk

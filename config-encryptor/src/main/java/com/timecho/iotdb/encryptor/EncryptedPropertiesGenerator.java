@@ -47,8 +47,12 @@ public class EncryptedPropertiesGenerator {
   static final String RSA = "RSA";
 
   public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeySpecException,
-          IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException,
+      throws IOException,
+          NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          IllegalBlockSizeException,
+          NoSuchPaddingException,
+          BadPaddingException,
           InvalidKeyException {
     String rawFilePath = args[0];
     String encryptedFilePath = args[1];

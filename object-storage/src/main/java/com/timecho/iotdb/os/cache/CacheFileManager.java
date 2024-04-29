@@ -38,8 +38,10 @@ public class CacheFileManager {
   private static final Logger logger = LoggerFactory.getLogger(CacheFileManager.class);
   private static final ObjectStorageConfig config =
       ObjectStorageDescriptor.getInstance().getConfig();
+
   /** incremental id of next cache file */
   private final AtomicLong cacheFileId = new AtomicLong(0);
+
   /** disk usage of all cache files */
   private final AtomicLong totalCacheFileSize = new AtomicLong(0);
 
