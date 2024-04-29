@@ -1620,13 +1620,12 @@ public class DataRegion implements IDataRegionForQuery {
   }
 
   /** delete tsfile */
-  public void syncDeleteDataFiles() {
+  public void syncDeleteDataFiles() throws TsFileProcessorException {
     logger.info(
         "{} will close all files for deleting data files", databaseName + "-" + dataRegionId);
     writeLock("syncDeleteDataFiles");
     try {
-
-      syncCloseAllWorkingTsFileProcessors();
+      forceCloseAllWorkingTsFileProcessors();
       // normally, mergingModification is just need to be closed by after a merge task is finished.
       // we close it here just for IT test.
       closeAllResources();
@@ -1646,6 +1645,8 @@ public class DataRegion implements IDataRegionForQuery {
       this.tsFileManager.clear();
       lastFlushTimeMap.clearFlushedTime();
       lastFlushTimeMap.clearGlobalFlushedTime();
+      TimePartitionManager.getInstance()
+          .removeTimePartitionInfo(new DataRegionId(Integer.parseInt(dataRegionId)));
     } finally {
       writeUnlock();
     }
@@ -1807,7 +1808,7 @@ public class DataRegion implements IDataRegionForQuery {
   }
 
   /** close all working tsfile processors */
-  public List<Future<?>> asyncCloseAllWorkingTsFileProcessors() {
+  List<Future<?>> asyncCloseAllWorkingTsFileProcessors() {
     writeLock("asyncCloseAllWorkingTsFileProcessors");
     List<Future<?>> futures = new ArrayList<>();
     try {
@@ -1843,6 +1844,7 @@ public class DataRegion implements IDataRegionForQuery {
           new ArrayList<>(workUnsequenceTsFileProcessors.values())) {
         tsFileProcessor.putMemTableBackAndClose();
       }
+      WritingMetrics.getInstance().recordActiveTimePartitionCount(-1);
     } finally {
       writeUnlock();
     }
