@@ -36,7 +36,6 @@
         <module>object-storage</module>
         <module>iotdb-api</module>
         <module>iotdb-client</module>
-        <module>iotdb-connector</module>
         <module>iotdb-core</module>
         <module>iotdb-protocol</module>
         <module>distribution</module>
@@ -1997,8 +1996,6 @@
                         <sourceDirectory>iotdb-protocol/openapi/target/generated-sources/java/src/gen/java</sourceDirectory>
                         <sourceDirectory>iotdb-protocol/openapi/target/generated-sources/java/src/main/java</sourceDirectory>
                         <sourceDirectory>iotdb-core/datanode/target/generated-sources/freemarker/</sourceDirectory>
-                        <sourceDirectory>iotdb-connector/spark-iotdb-connector/src/main/scala</sourceDirectory>
-                        <sourceDirectory>iotdb-connector/spark-tsfile/src/main/scala</sourceDirectory>
                     </sourceDirectories>
                 </configuration>
                 <!-- JDK11 removes the following libs. We have to add them-->
