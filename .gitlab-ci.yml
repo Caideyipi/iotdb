@@ -42,7 +42,7 @@ variables:
 # See https://maven.apache.org/docs/3.8.1/release-notes.html#how-to-fix-when-i-get-a-http-repository-blocked for more.
 #image: maven:3-openjdk-8
 image:
-  name: maven:3.8.1-openjdk-8-slim-lsof
+  name: maven:3.8.1-openjdk-17-slim-lsof
   pull_policy: if-not-present
 
 # Cache downloaded dependencies and plugins between builds.
