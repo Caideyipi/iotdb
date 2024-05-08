@@ -24,6 +24,7 @@ import org.apache.iotdb.ainode.rpc.thrift.TWindowParams;
 import org.apache.iotdb.commons.client.ainode.AINodeClient;
 import org.apache.iotdb.commons.client.ainode.AINodeClientManager;
 import org.apache.iotdb.db.exception.runtime.ModelInferenceProcessException;
+import org.apache.iotdb.db.queryengine.execution.MemoryEstimationHelper;
 import org.apache.iotdb.db.queryengine.execution.operator.Operator;
 import org.apache.iotdb.db.queryengine.execution.operator.OperatorContext;
 import org.apache.iotdb.db.queryengine.execution.operator.process.ProcessOperator;
@@ -41,6 +42,7 @@ import org.apache.tsfile.read.common.block.TsBlock;
 import org.apache.tsfile.read.common.block.TsBlockBuilder;
 import org.apache.tsfile.read.common.block.column.TimeColumnBuilder;
 import org.apache.tsfile.read.common.block.column.TsBlockSerde;
+import org.apache.tsfile.utils.RamUsageEstimator;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -54,6 +56,9 @@ import java.util.stream.Collectors;
 import static com.google.common.util.concurrent.Futures.successfulAsList;
 
 public class InferenceOperator implements ProcessOperator {
+
+  private static final long INSTANCE_SIZE =
+      RamUsageEstimator.shallowSizeOfInstance(InferenceOperator.class);
 
   private final OperatorContext operatorContext;
   private final Operator child;
@@ -314,5 +319,19 @@ public class InferenceOperator implements ProcessOperator {
   @Override
   public long calculateRetainedSizeAfterCallingNext() {
     return maxRetainedSize + child.calculateRetainedSizeAfterCallingNext();
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    return INSTANCE_SIZE
+        + MemoryEstimationHelper.getEstimatedSizeOfAccountableObject(child)
+        + MemoryEstimationHelper.getEstimatedSizeOfAccountableObject(operatorContext)
+        + inputTsBlockBuilder.getRetainedSizeInBytes()
+        + (inputColumnNames == null
+            ? 0
+            : inputColumnNames.stream().mapToLong(RamUsageEstimator::sizeOf).sum())
+        + (targetColumnNames == null
+            ? 0
+            : targetColumnNames.stream().mapToLong(RamUsageEstimator::sizeOf).sum());
   }
 }
