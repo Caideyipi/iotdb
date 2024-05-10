@@ -913,6 +913,11 @@ public class IoTDBDescriptor {
             properties.getProperty(
                 "load_clean_up_task_execution_delay_time_seconds",
                 String.valueOf(conf.getLoadCleanupTaskExecutionDelayTimeSeconds()))));
+    conf.setLoadWriteThroughputBytesPerSecond(
+        Double.parseDouble(
+            properties.getProperty(
+                "load_write_throughput_bytes_per_sec",
+                String.valueOf(conf.getLoadWriteThroughputBytesPerSecond()))));
 
     conf.setExtPipeDir(properties.getProperty("ext_pipe_dir", conf.getExtPipeDir()).trim());
 
@@ -1874,6 +1879,11 @@ public class IoTDBDescriptor {
               properties.getProperty(
                   "load_clean_up_task_execution_delay_time_seconds",
                   String.valueOf(conf.getLoadCleanupTaskExecutionDelayTimeSeconds()))));
+      conf.setLoadWriteThroughputBytesPerSecond(
+          Double.parseDouble(
+              properties.getProperty(
+                  "load_write_throughput_bytes_per_sec",
+                  String.valueOf(conf.getLoadWriteThroughputBytesPerSecond()))));
 
       // update migration config
       loadMigrationHotProps(properties);
