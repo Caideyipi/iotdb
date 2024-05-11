@@ -257,7 +257,7 @@ public class ConfigManager implements IManager {
   private final ClusterManager clusterManager;
 
   /** Manage cluster node. */
-  private final NodeManager nodeManager;
+  protected NodeManager nodeManager;
 
   /** Manage cluster schema engine. */
   private final ClusterSchemaManager clusterSchemaManager;
@@ -269,7 +269,7 @@ public class ConfigManager implements IManager {
   private final PermissionManager permissionManager;
 
   /** Manage load balancing. */
-  private final LoadManager loadManager;
+  protected LoadManager loadManager;
 
   /** Manage procedure. */
   private final ProcedureManager procedureManager;
@@ -339,7 +339,7 @@ public class ConfigManager implements IManager {
 
     // Build the manager module
     this.clusterManager = new ClusterManager(this, clusterInfo);
-    this.nodeManager = new NodeManager(this, nodeInfo);
+    setNodeManager(nodeInfo);
     this.clusterSchemaManager =
         new ClusterSchemaManager(
             this,
@@ -360,7 +360,7 @@ public class ConfigManager implements IManager {
     // LoadManager will register PipeManager as a listener.
     // 2. keep RetryFailedTasksThread initialization after LoadManager initialization,
     // because RetryFailedTasksThread will keep a reference of LoadManager.
-    this.loadManager = new LoadManager(this);
+    setLoadManager();
 
     this.retryFailedTasksThread = new RetryFailedTasksThread(this);
     this.clusterQuotaManager = new ClusterQuotaManager(this, quotaInfo);
@@ -369,6 +369,14 @@ public class ConfigManager implements IManager {
   public void initConsensusManager() throws IOException {
     this.consensusManager.set(new ConsensusManager(this, this.stateMachine));
     this.consensusManager.get().start();
+  }
+
+  protected void setNodeManager(NodeInfo nodeInfo) {
+    this.nodeManager = new NodeManager(this, nodeInfo);
+  }
+
+  protected void setLoadManager() {
+    this.loadManager = new LoadManager(this);
   }
 
   public void initActivationManager() throws LicenseException {
@@ -562,49 +570,47 @@ public class ConfigManager implements IManager {
           dataNodeLocation ->
               nodeStatus.putIfAbsent(
                   dataNodeLocation.getDataNodeId(), NodeStatus.Unknown.toString()));
-      aiNodeInfoLocations.forEach(
-          aiNodeLocation ->
-              nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
+      aiNodeInfoLocations.forEach(aiNodeLocation -> nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
 
-      // prepare nodeActivateInfo
-      Map<Integer, TNodeActivateInfo> nodeActivateInfo =
-          getLoadManager().getNodeSimplifiedActivateStatus();
-      nodeActivateInfo.put(
-          CONF.getConfigNodeId(),
-          new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
-      configNodeLocations.forEach(
-          configNodeLocation ->
-              nodeActivateInfo.putIfAbsent(
-                  configNodeLocation.getConfigNodeId(),
-                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
-      dataNodeLocations.forEach(
-          dataNodeInfoLocation ->
-              nodeActivateInfo.putIfAbsent(
-                  dataNodeInfoLocation.getDataNodeId(),
-                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
-      aiNodeInfoLocations.forEach(
-          aiNodeInfoLocation ->
-              nodeActivateInfo.put(
-                  aiNodeInfoLocation.getAiNodeId(),
-                  new TNodeActivateInfo(ActivateStatus.ACTIVATED.toSimpleString())));
+        // prepare nodeActivateInfo
+        Map<Integer, TNodeActivateInfo> nodeActivateInfo =
+                getLoadManager().getNodeSimplifiedActivateStatus();
+        nodeActivateInfo.put(
+                CONF.getConfigNodeId(),
+                new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
+        configNodeLocations.forEach(
+                configNodeLocation ->
+                        nodeActivateInfo.putIfAbsent(
+                                configNodeLocation.getConfigNodeId(),
+                                new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+        dataNodeLocations.forEach(
+                dataNodeInfoLocation ->
+                        nodeActivateInfo.putIfAbsent(
+                                dataNodeInfoLocation.getDataNodeId(),
+                                new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+        aiNodeInfoLocations.forEach(
+                aiNodeInfoLocation ->
+                        nodeActivateInfo.put(
+                                aiNodeInfoLocation.getAiNodeId(),
+                                new TNodeActivateInfo(ActivateStatus.ACTIVATED.toSimpleString())));
 
-      return new TShowClusterResp(
-          status,
-          configNodeLocations,
-          dataNodeLocations,
-          aiNodeInfoLocations,
-          nodeStatus,
-          nodeVersionInfo,
-          nodeActivateInfo);
+        return new TShowClusterResp()
+          .setStatus(status)
+          .setConfigNodeList(configNodeLocations)
+          .setDataNodeList(dataNodeLocations)
+                .setAiNodeList(aiNodeInfoLocations)
+          .setNodeStatus(nodeStatus)
+          .setNodeVersionInfo(nodeVersionInfo)
+                .setNodeActivateInfo(nodeActivateInfo);
     } else {
-      return new TShowClusterResp(
-          status,
-          new ArrayList<>(),
-          new ArrayList<>(),
-          new ArrayList<>(),
-          new HashMap<>(),
-          new HashMap<>(),
-          new HashMap<>());
+      return new TShowClusterResp()
+          .setStatus(status)
+          .setConfigNodeList(Collections.emptyList())
+          .setDataNodeList(Collections.emptyList())
+              .setAiNodeList(Collections.emptyList())
+          .setNodeStatus(Collections.emptyMap())
+          .setNodeVersionInfo(Collections.emptyMap())
+              .setNodeActivateInfo(Collections.emptyMap());
     }
   }
 
@@ -1107,7 +1113,7 @@ public class ConfigManager implements IManager {
         dataPartitionRespString);
   }
 
-  private TSStatus confirmLeader() {
+  protected TSStatus confirmLeader() {
     // Make sure the consensus layer has been initialized
     if (getConsensusManager() == null) {
       return new TSStatus(TSStatusCode.CONSENSUS_NOT_INITIALIZED.getStatusCode())

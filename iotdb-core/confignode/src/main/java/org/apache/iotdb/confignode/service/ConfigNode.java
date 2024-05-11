@@ -97,11 +97,11 @@ public class ConfigNode implements ConfigNodeMBean {
           IoTDBConstant.IOTDB_SERVICE_JMX_NAME,
           IoTDBConstant.JMX_TYPE,
           ServiceType.CONFIG_NODE.getJmxName());
-  private final RegisterManager registerManager = new RegisterManager();
+  protected final RegisterManager registerManager = new RegisterManager();
 
   protected ConfigManager configManager;
 
-  ConfigNode() {
+  protected ConfigNode() {
     // We do not init anything here, so that we can re-initialize the instance in IT.
   }
 
@@ -304,8 +304,8 @@ public class ConfigNode implements ConfigNodeMBean {
 
   void initConfigManager() {
     try {
-      configManager = new ConfigManager();
-    } catch (IOException e) {
+      setConfigManager();
+    } catch (Exception e) {
       LOGGER.error("Can't start ConfigNode consensus group!", e);
       stop();
     }
@@ -316,6 +316,10 @@ public class ConfigNode implements ConfigNodeMBean {
       stop();
     }
     LOGGER.info("Successfully initialize ConfigManager.");
+  }
+
+  protected void setConfigManager() throws Exception {
+    this.configManager = new ConfigManager();
   }
 
   /**
@@ -399,9 +403,13 @@ public class ConfigNode implements ConfigNodeMBean {
     // Setup RPCService
     ConfigNodeRPCService configNodeRPCService = new ConfigNodeRPCService();
     ConfigNodeRPCServiceProcessor configNodeRPCServiceProcessor =
-        new ConfigNodeRPCServiceProcessor(configManager);
+        getConfigNodeRPCServiceProcessor();
     configNodeRPCService.initSyncedServiceImpl(configNodeRPCServiceProcessor);
     registerManager.register(configNodeRPCService);
+  }
+
+  protected ConfigNodeRPCServiceProcessor getConfigNodeRPCServiceProcessor() {
+    return new ConfigNodeRPCServiceProcessor(configManager);
   }
 
   private void waitForLeaderElected() {
@@ -444,7 +452,7 @@ public class ConfigNode implements ConfigNodeMBean {
     return configManager;
   }
 
-  protected void addShutDownHook() {
+  private void addShutDownHook() {
     Runtime.getRuntime().addShutdownHook(new ConfigNodeShutdownHook());
   }
 

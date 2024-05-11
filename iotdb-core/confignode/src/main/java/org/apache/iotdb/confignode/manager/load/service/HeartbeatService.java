@@ -72,7 +72,7 @@ public class HeartbeatService {
   private static final long HEARTBEAT_INTERVAL =
       ConfigNodeDescriptor.getInstance().getConf().getHeartbeatIntervalInMs();
 
-  private final IManager configManager;
+  protected IManager configManager;
   private final LoadCache loadCache;
 
   /** Heartbeat executor service. */
@@ -87,8 +87,12 @@ public class HeartbeatService {
   private static final int configNodeListPeriodicallySyncInterval = 100;
 
   public HeartbeatService(IManager configManager, LoadCache loadCache) {
-    this.configManager = configManager;
+    setConfigManager(configManager);
     this.loadCache = loadCache;
+  }
+
+  protected void setConfigManager(IManager configManager) {
+    this.configManager = configManager;
   }
 
   /** Start the heartbeat service. */
@@ -242,12 +246,15 @@ public class HeartbeatService {
         // Skip itself and the ConfigNode that is processing heartbeat
         continue;
       }
-      ConfigNodeHeartbeatHandler handler =
-          new ConfigNodeHeartbeatHandler(
-              configNodeId, configManager, configManager.getLoadManager());
+      ConfigNodeHeartbeatHandler handler = getConfigNodeHeartbeatHandler(configNodeId);
+
       AsyncConfigNodeHeartbeatClientPool.getInstance()
           .getConfigNodeHeartBeat(configNodeLocation.getInternalEndPoint(), heartbeatReq, handler);
     }
+  }
+
+  protected ConfigNodeHeartbeatHandler getConfigNodeHeartbeatHandler(int configNodeId) {
+    return new ConfigNodeHeartbeatHandler(configNodeId, configManager, configManager.getLoadManager());
   }
 
   /**
