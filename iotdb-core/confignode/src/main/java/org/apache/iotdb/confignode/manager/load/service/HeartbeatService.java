@@ -254,7 +254,8 @@ public class HeartbeatService {
   }
 
   protected ConfigNodeHeartbeatHandler getConfigNodeHeartbeatHandler(int configNodeId) {
-    return new ConfigNodeHeartbeatHandler(configNodeId, configManager, configManager.getLoadManager());
+    return new ConfigNodeHeartbeatHandler(
+        configNodeId, configManager, configManager.getLoadManager());
   }
 
   /**

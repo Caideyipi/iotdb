@@ -452,7 +452,7 @@ public class ConfigNode implements ConfigNodeMBean {
     return configManager;
   }
 
-  private void addShutDownHook() {
+  protected void addShutDownHook() {
     Runtime.getRuntime().addShutdownHook(new ConfigNodeShutdownHook());
   }
 

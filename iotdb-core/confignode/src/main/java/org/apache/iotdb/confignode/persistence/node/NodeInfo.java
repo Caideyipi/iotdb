@@ -97,10 +97,10 @@ public class NodeInfo implements SnapshotProcessor {
   private final Map<Integer, TDataNodeConfiguration> registeredDataNodes;
   private final ReentrantReadWriteLock dataNodeInfoReadWriteLock;
 
-    private final Map<Integer, TAINodeConfiguration> registeredAINodes;
+  private final Map<Integer, TAINodeConfiguration> registeredAINodes;
   private final ReentrantReadWriteLock aiNodeInfoReadWriteLock;
 
-    private final Map<Integer, TNodeVersionInfo> nodeVersionInfo;
+  private final Map<Integer, TNodeVersionInfo> nodeVersionInfo;
   private final ReentrantReadWriteLock versionInfoReadWriteLock;
 
   private static final String SNAPSHOT_FILENAME = "node_info.bin";

@@ -570,47 +570,49 @@ public class ConfigManager implements IManager {
           dataNodeLocation ->
               nodeStatus.putIfAbsent(
                   dataNodeLocation.getDataNodeId(), NodeStatus.Unknown.toString()));
-      aiNodeInfoLocations.forEach(aiNodeLocation -> nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
+      aiNodeInfoLocations.forEach(
+          aiNodeLocation ->
+              nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
 
-        // prepare nodeActivateInfo
-        Map<Integer, TNodeActivateInfo> nodeActivateInfo =
-                getLoadManager().getNodeSimplifiedActivateStatus();
-        nodeActivateInfo.put(
-                CONF.getConfigNodeId(),
-                new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
-        configNodeLocations.forEach(
-                configNodeLocation ->
-                        nodeActivateInfo.putIfAbsent(
-                                configNodeLocation.getConfigNodeId(),
-                                new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
-        dataNodeLocations.forEach(
-                dataNodeInfoLocation ->
-                        nodeActivateInfo.putIfAbsent(
-                                dataNodeInfoLocation.getDataNodeId(),
-                                new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
-        aiNodeInfoLocations.forEach(
-                aiNodeInfoLocation ->
-                        nodeActivateInfo.put(
-                                aiNodeInfoLocation.getAiNodeId(),
-                                new TNodeActivateInfo(ActivateStatus.ACTIVATED.toSimpleString())));
+      // prepare nodeActivateInfo
+      Map<Integer, TNodeActivateInfo> nodeActivateInfo =
+          getLoadManager().getNodeSimplifiedActivateStatus();
+      nodeActivateInfo.put(
+          CONF.getConfigNodeId(),
+          new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
+      configNodeLocations.forEach(
+          configNodeLocation ->
+              nodeActivateInfo.putIfAbsent(
+                  configNodeLocation.getConfigNodeId(),
+                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+      dataNodeLocations.forEach(
+          dataNodeInfoLocation ->
+              nodeActivateInfo.putIfAbsent(
+                  dataNodeInfoLocation.getDataNodeId(),
+                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
+      aiNodeInfoLocations.forEach(
+          aiNodeInfoLocation ->
+              nodeActivateInfo.put(
+                  aiNodeInfoLocation.getAiNodeId(),
+                  new TNodeActivateInfo(ActivateStatus.ACTIVATED.toSimpleString())));
 
-        return new TShowClusterResp()
+      return new TShowClusterResp()
           .setStatus(status)
           .setConfigNodeList(configNodeLocations)
           .setDataNodeList(dataNodeLocations)
-                .setAiNodeList(aiNodeInfoLocations)
+          .setAiNodeList(aiNodeInfoLocations)
           .setNodeStatus(nodeStatus)
           .setNodeVersionInfo(nodeVersionInfo)
-                .setNodeActivateInfo(nodeActivateInfo);
+          .setNodeActivateInfo(nodeActivateInfo);
     } else {
       return new TShowClusterResp()
           .setStatus(status)
           .setConfigNodeList(Collections.emptyList())
           .setDataNodeList(Collections.emptyList())
-              .setAiNodeList(Collections.emptyList())
+          .setAiNodeList(Collections.emptyList())
           .setNodeStatus(Collections.emptyMap())
           .setNodeVersionInfo(Collections.emptyMap())
-              .setNodeActivateInfo(Collections.emptyMap());
+          .setNodeActivateInfo(Collections.emptyMap());
     }
   }
 
