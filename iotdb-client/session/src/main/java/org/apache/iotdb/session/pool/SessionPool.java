@@ -485,6 +485,7 @@ public class SessionPool implements ISessionPool {
     this.trustStorePwd = builder.trustStorePwd;
     this.maxRetryCount = builder.maxRetryCount;
     this.retryIntervalInMs = builder.retryIntervalInMs;
+    this.queryTimeoutInMs = builder.queryTimeoutInMs;
 
     if (enableAutoFetch) {
       initThreadPool();
@@ -539,6 +540,7 @@ public class SessionPool implements ISessionPool {
               .trustStorePwd(trustStorePwd)
               .maxRetryCount(maxRetryCount)
               .retryIntervalInMs(retryIntervalInMs)
+              .timeOut(queryTimeoutInMs)
               .build();
     } else {
       // Construct redirect-able Session
@@ -559,6 +561,7 @@ public class SessionPool implements ISessionPool {
               .trustStorePwd(trustStorePwd)
               .maxRetryCount(maxRetryCount)
               .retryIntervalInMs(retryIntervalInMs)
+              .timeOut(queryTimeoutInMs)
               .build();
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
@@ -3528,6 +3531,8 @@ public class SessionPool implements ISessionPool {
 
     private long retryIntervalInMs = SessionConfig.RETRY_INTERVAL_IN_MS;
 
+    private long queryTimeoutInMs = SessionConfig.DEFAULT_QUERY_TIME_OUT;
+
     public Builder useSSL(boolean useSSL) {
       this.useSSL = useSSL;
       return this;
@@ -3635,6 +3640,11 @@ public class SessionPool implements ISessionPool {
 
     public Builder retryIntervalInMs(long retryIntervalInMs) {
       this.retryIntervalInMs = retryIntervalInMs;
+      return this;
+    }
+
+    public Builder queryTimeoutInMs(long queryTimeoutInMs) {
+      this.queryTimeoutInMs = queryTimeoutInMs;
       return this;
     }
 
