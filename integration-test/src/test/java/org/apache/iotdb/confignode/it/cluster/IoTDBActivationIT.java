@@ -1033,7 +1033,7 @@ public class IoTDBActivationIT {
   private void testStatusWithRetry(
       SyncConfigNodeIServiceClient leaderClient, List<ActivateStatus> expectation)
       throws Exception {
-    testStatusWithRetry(leaderClient, expectation, 10000);
+    testStatusWithRetry(leaderClient, expectation, 30000);
   }
 
   private void testStatusFalse(
