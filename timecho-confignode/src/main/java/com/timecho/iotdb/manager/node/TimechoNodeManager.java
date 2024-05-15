@@ -1,0 +1,192 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.timecho.iotdb.manager.node;
+
+import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.confignode.consensus.response.ainode.AINodeRegisterResp;
+import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
+import org.apache.iotdb.confignode.manager.node.NodeManager;
+import org.apache.iotdb.confignode.persistence.node.NodeInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterReq;
+import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
+import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartResp;
+import org.apache.iotdb.rpc.TSStatusCode;
+
+import com.timecho.iotdb.manager.ITimechoManager;
+import com.timecho.iotdb.manager.activation.License;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class TimechoNodeManager extends NodeManager {
+  private static final Logger LOGGER = LoggerFactory.getLogger(TimechoNodeManager.class);
+  private final ITimechoManager configManager;
+
+  public TimechoNodeManager(ITimechoManager configManager, NodeInfo nodeInfo) {
+    super(configManager, nodeInfo);
+    this.configManager = configManager;
+  }
+
+  @Override
+  protected DataNodeRegisterResp registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
+    License license = configManager.getActivationManager().getLicense();
+    DataNodeRegisterResp resp = new DataNodeRegisterResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    // check if unactivated
+    if (!license.isActivated()) {
+      final String message =
+          "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    }
+    // check DataNode num limit
+    if (nodeInfo.getRegisteredDataNodeCount() + 1 > license.getDataNodeNumLimit()) {
+      final String message =
+          String.format(
+              "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
+              nodeInfo.getRegisteredDataNodeCount(),
+              nodeInfo.getRegisteredDataNodeCount() + 1,
+              license.getDataNodeNumLimit());
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    } else {
+      String message =
+          String.format(
+              "DataNode register node num check pass. "
+                  + "After the successful register of this datanode, "
+                  + "the remaining quota for node num will be set to %d.",
+              license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
+      LOGGER.info(message);
+    }
+    // check DataNode's cpu core num limit
+    int clusterCpuCores = nodeInfo.getDataNodeTotalCpuCoreCount();
+    int newNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
+    int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
+    if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
+      String message =
+          String.format(
+              "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
+              clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    } else {
+      String message =
+          String.format(
+              "DataNode register cpu core num check pass. "
+                  + "After the successful register of this datanode, "
+                  + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
+              cpuCoreLimit,
+              clusterCpuCores,
+              newNodeCpuCores,
+              cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
+      LOGGER.info(message);
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+    return resp;
+  }
+
+  @Override
+  protected void printDataNodeRegistrationResult() {
+    License license = configManager.getActivationManager().getLicense();
+    LOGGER.info(
+        "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
+        license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
+        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
+  }
+
+  @Override
+  protected TDataNodeRestartResp updateDataNodeActivationCheck(TDataNodeRestartReq req) {
+    License license = configManager.getActivationManager().getLicense();
+    TDataNodeRestartResp resp = new TDataNodeRestartResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    // check DataNode's cpu core num limit
+    final int previousNodeCpuCores =
+        nodeInfo.getDataNodeCpuCoreCount(
+            req.getDataNodeConfiguration().getLocation().getDataNodeId());
+    final int restartNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
+    if (restartNodeCpuCores <= previousNodeCpuCores) {
+      LOGGER.info(
+          "cpu core num is less or equal, {} <= {}, check pass.",
+          restartNodeCpuCores,
+          previousNodeCpuCores);
+      resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+      return resp;
+    }
+    final int clusterCpuCoresExceptThisNode =
+        nodeInfo.getDataNodeTotalCpuCoreCount() - previousNodeCpuCores;
+    final int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
+    if (clusterCpuCoresExceptThisNode + restartNodeCpuCores > cpuCoreLimit) {
+      String message =
+          String.format(
+              "Deny DataNode's restart: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + restartDataNodeCores = allCores, greater than limit)",
+              clusterCpuCoresExceptThisNode,
+              restartNodeCpuCores,
+              clusterCpuCoresExceptThisNode + restartNodeCpuCores,
+              cpuCoreLimit);
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    } else {
+      String message =
+          String.format(
+              "DataNode restart cpu core num check pass. "
+                  + "After the successful restart of this datanode, "
+                  + "the remaining quota for cpu cores will be set to (%d - %d - %d = %d)",
+              cpuCoreLimit,
+              clusterCpuCoresExceptThisNode,
+              restartNodeCpuCores,
+              cpuCoreLimit - clusterCpuCoresExceptThisNode - restartNodeCpuCores);
+      LOGGER.info(message);
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+    return resp;
+  }
+
+  @Override
+  protected AINodeRegisterResp registerAINodeActivationCheck(TAINodeRegisterReq req) {
+    License license = configManager.getActivationManager().getLicense();
+    AINodeRegisterResp resp = new AINodeRegisterResp();
+    resp.setConfigNodeList(getRegisteredConfigNodes());
+    // check if unactivated
+    if (!license.isActivated()) {
+      final String message =
+          "Deny AINode registration: Cluster is unactivated now, AINode is not allowed to join.";
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+    }
+    // check AINode num limit
+    if (nodeInfo.getRegisteredAINodeCount() + 1 > license.getAINodeNumLimit()) {
+      final String message =
+          String.format(
+              "Deny AINode registration: AINodes number limit exceeded, %d + 1 = %d. Only %d AINodes is allowed.",
+              nodeInfo.getRegisteredAINodeCount(),
+              nodeInfo.getRegisteredAINodeCount() + 1,
+              license.getAINodeNumLimit());
+      LOGGER.warn(message);
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
+      return resp;
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+    return resp;
+  }
+}

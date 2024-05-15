@@ -19,6 +19,8 @@
 
 package org.apache.iotdb.confignode.manager.activation;
 
+import com.timecho.iotdb.manager.activation.License;
+
 /**
  * This class provides a license which has no restraint. Only for integration tests (except
  * IoTDBActivationTest)

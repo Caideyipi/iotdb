@@ -17,12 +17,27 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.service;
+package org.apache.iotdb.confignode.manager;
 
-public class ConfigNodeCommandLineForActivationIT extends ConfigNodeCommandLine {
+import org.apache.iotdb.commons.exception.LicenseException;
+import org.apache.iotdb.confignode.manager.activation.ActivationManagerWithoutEncryptionAndMachineBinding;
+
+import com.timecho.iotdb.manager.TimechoConfigManager;
+
+import java.io.IOException;
+
+/**
+ * ConfigManager which holds a ActivationManagerWithoutEncryptionAndMachineBinding. Only for
+ * IoTDBActivationTest.
+ */
+public class TimechoConfigManagerForActivationIT extends TimechoConfigManager {
+
+  public TimechoConfigManagerForActivationIT() throws IOException, LicenseException {
+    super();
+  }
+
   @Override
-  protected void activeConfigNodeInstance() {
-    ConfigNode.setInstance(ConfigNodeForActivationIT.getInstance());
-    ConfigNodeForActivationIT.getInstance().active();
+  public void initActivationManager() throws LicenseException {
+    this.activationManager = new ActivationManagerWithoutEncryptionAndMachineBinding(this);
   }
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation.systeminfo;
+package com.timecho.iotdb.manager.activation.systeminfo;
 
 import org.slf4j.Logger;
 

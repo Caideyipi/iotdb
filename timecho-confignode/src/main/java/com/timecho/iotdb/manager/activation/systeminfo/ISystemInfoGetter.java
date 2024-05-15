@@ -17,11 +17,13 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.service;
+package com.timecho.iotdb.manager.activation.systeminfo;
 
-public class ConfigNodeShutdownHookForActivationIT extends ConfigNodeShutdownHook {
-  @Override
-  protected ConfigNode getConfigNodeInstance() {
-    return ConfigNodeForActivationIT.getInstance();
-  }
+public interface ISystemInfoGetter {
+
+  String getCPUId();
+
+  String getMainBoardId();
+
+  String getSystemUUID();
 }

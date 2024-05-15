@@ -17,21 +17,23 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.service;
+package com.timecho.iotdb.service;
 
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
-import org.apache.iotdb.confignode.manager.TimechoConfigManagerForActivationIT;
+import org.apache.iotdb.confignode.service.thrift.ConfigNodeRPCServiceProcessor;
 
-import com.timecho.iotdb.service.ConfigNode;
+import com.timecho.iotdb.manager.TimechoConfigManager;
+import com.timecho.iotdb.service.thrift.TimechoConfigNodeRPCServiceProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 
-public class ConfigNodeForActivationIT extends ConfigNode {
+public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNode.class);
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNodeForActivationIT.class);
+  protected TimechoConfigManager timechoConfigManager;
 
   public static void main(String[] args) {
     LOGGER.info(
@@ -42,12 +44,22 @@ public class ConfigNodeForActivationIT extends ConfigNode {
         "{} default charset is: {}",
         ConfigNodeConstant.GLOBAL_NAME,
         Charset.defaultCharset().displayName());
-    new TimechoConfigNodeCommandLineForActivationIT().doMain(args);
+    new TimechoConfigNodeCommandLine().doMain(args);
+  }
+
+  @Override
+  protected void generateSystemInfoFile() {
+    timechoConfigManager.getActivationManager().generateSystemInfoFile();
   }
 
   @Override
   protected void setConfigManager() throws Exception {
-    this.timechoConfigManager = new TimechoConfigManagerForActivationIT();
-    super.configManager = timechoConfigManager;
+    this.timechoConfigManager = new TimechoConfigManager();
+    super.configManager = this.timechoConfigManager;
+  }
+
+  @Override
+  protected ConfigNodeRPCServiceProcessor getConfigNodeRPCServiceProcessor() {
+    return new TimechoConfigNodeRPCServiceProcessor(timechoConfigManager);
   }
 }

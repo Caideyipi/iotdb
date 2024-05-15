@@ -125,7 +125,7 @@ CLASSPATH=""
 for f in "${CONFIGNODE_HOME}"/lib/*.jar; do
   CLASSPATH=${CLASSPATH}":"$f
 done
-classname=org.apache.iotdb.confignode.service.ConfigNode
+classname=com.timecho.iotdb.service.ConfigNode
 
 launch_service() {
     class="$1"

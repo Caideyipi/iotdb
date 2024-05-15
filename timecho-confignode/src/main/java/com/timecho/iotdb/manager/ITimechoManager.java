@@ -17,35 +17,35 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation;
+package com.timecho.iotdb.manager;
 
-import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.confignode.manager.ConfigManager;
+import org.apache.iotdb.confignode.manager.IManager;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
+import org.apache.iotdb.consensus.common.DataSet;
 
 import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.manager.load.TimechoLoadManager;
+import com.timecho.iotdb.manager.node.TimechoNodeManager;
 
-import java.util.Properties;
+public interface ITimechoManager extends IManager {
+  /**
+   * Get ActivationManager
+   *
+   * @return ActivationManager instance
+   */
+  ActivationManager getActivationManager();
 
-/** License Manager without system info check, only for IoTDBActivationTest */
-public class ActivationManagerWithoutEncryptionAndMachineBinding extends ActivationManager {
-
-  public ActivationManagerWithoutEncryptionAndMachineBinding(ConfigManager configManager)
-      throws LicenseException {
-    super(configManager);
-  }
-
-  @Override
-  public boolean verifyAllSystemInfo(Properties properties) {
-    return true;
-  }
-
-  @Override
-  protected String encrypt(String src) {
-    return src;
-  }
+  /**
+   * Register AINode
+   *
+   * @param req TAINodeRegisterReq
+   * @return AINodeConfigurationDataSet
+   */
+  DataSet registerAINode(TAINodeRegisterReq req);
 
   @Override
-  protected String decrypt(String src) {
-    return src;
-  }
+  TimechoLoadManager getLoadManager();
+
+  @Override
+  TimechoNodeManager getNodeManager();
 }

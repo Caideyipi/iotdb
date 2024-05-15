@@ -19,8 +19,6 @@
 
 package org.apache.iotdb.confignode.manager;
 
-import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
-import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupId;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
@@ -40,9 +38,7 @@ import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.IllegalPathException;
-import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.exception.MetadataException;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.path.PathPatternUtil;
@@ -75,7 +71,6 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CreateSchemaTemplatePlan;
-import org.apache.iotdb.confignode.consensus.response.ainode.AINodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
 import org.apache.iotdb.confignode.consensus.response.database.CountDatabaseResp;
 import org.apache.iotdb.confignode.consensus.response.database.DatabaseSchemaResp;
@@ -89,7 +84,6 @@ import org.apache.iotdb.confignode.consensus.response.partition.SchemaNodeManage
 import org.apache.iotdb.confignode.consensus.response.partition.SchemaPartitionResp;
 import org.apache.iotdb.confignode.consensus.response.template.TemplateSetInfoResp;
 import org.apache.iotdb.confignode.consensus.statemachine.ConfigRegionStateMachine;
-import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.cq.CQManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
@@ -119,7 +113,6 @@ import org.apache.iotdb.confignode.persistence.quota.QuotaInfo;
 import org.apache.iotdb.confignode.persistence.schema.ClusterSchemaInfo;
 import org.apache.iotdb.confignode.persistence.subscription.SubscriptionInfo;
 import org.apache.iotdb.confignode.procedure.impl.schema.SchemaUtils;
-import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
@@ -177,7 +170,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
-import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPipeConfigTransferReq;
@@ -289,8 +281,6 @@ public class ConfigManager implements IManager {
   /** Pipe */
   private final PipeManager pipeManager;
 
-  protected ActivationManager activationManager;
-
   /** Manage quotas */
   private final ClusterQuotaManager clusterQuotaManager;
 
@@ -379,10 +369,6 @@ public class ConfigManager implements IManager {
     this.loadManager = new LoadManager(this);
   }
 
-  public void initActivationManager() throws LicenseException {
-    this.activationManager = new ActivationManager(this);
-  }
-
   public void close() throws IOException {
     if (consensusManager.get() != null) {
       consensusManager.get().close();
@@ -465,26 +451,6 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  public DataSet registerAINode(TAINodeRegisterReq req) {
-    TSStatus status = confirmLeader();
-    if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      status =
-          ClusterNodeStartUtils.confirmNodeRegistration(
-              NodeType.AINode,
-              req.getClusterName(),
-              req.getAiNodeConfiguration().getLocation(),
-              this);
-      if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        return nodeManager.registerAINode(req);
-      }
-    }
-    AINodeRegisterResp resp = new AINodeRegisterResp();
-    resp.setStatus(status);
-    resp.setConfigNodeList(getNodeManager().getRegisteredConfigNodes());
-    return resp;
-  }
-
-  @Override
   public TAINodeRestartResp restartAINode(TAINodeRestartReq req) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
@@ -555,11 +521,6 @@ public class ConfigManager implements IManager {
               .map(TDataNodeConfiguration::getLocation)
               .sorted(Comparator.comparingInt(TDataNodeLocation::getDataNodeId))
               .collect(Collectors.toList());
-      List<TAINodeLocation> aiNodeInfoLocations =
-          getNodeManager().getRegisteredAINodes().stream()
-              .map(TAINodeConfiguration::getLocation)
-              .sorted(Comparator.comparingInt(TAINodeLocation::getAiNodeId))
-              .collect(Collectors.toList());
       Map<Integer, TNodeVersionInfo> nodeVersionInfo = getNodeManager().getNodeVersionInfo();
       Map<Integer, String> nodeStatus = getLoadManager().getNodeStatusWithReason();
       configNodeLocations.forEach(
@@ -570,49 +531,20 @@ public class ConfigManager implements IManager {
           dataNodeLocation ->
               nodeStatus.putIfAbsent(
                   dataNodeLocation.getDataNodeId(), NodeStatus.Unknown.toString()));
-      aiNodeInfoLocations.forEach(
-          aiNodeLocation ->
-              nodeStatus.putIfAbsent(aiNodeLocation.getAiNodeId(), NodeStatus.Unknown.toString()));
-
-      // prepare nodeActivateInfo
-      Map<Integer, TNodeActivateInfo> nodeActivateInfo =
-          getLoadManager().getNodeSimplifiedActivateStatus();
-      nodeActivateInfo.put(
-          CONF.getConfigNodeId(),
-          new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
-      configNodeLocations.forEach(
-          configNodeLocation ->
-              nodeActivateInfo.putIfAbsent(
-                  configNodeLocation.getConfigNodeId(),
-                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
-      dataNodeLocations.forEach(
-          dataNodeInfoLocation ->
-              nodeActivateInfo.putIfAbsent(
-                  dataNodeInfoLocation.getDataNodeId(),
-                  new TNodeActivateInfo(ActivateStatus.UNKNOWN.toString())));
-      aiNodeInfoLocations.forEach(
-          aiNodeInfoLocation ->
-              nodeActivateInfo.put(
-                  aiNodeInfoLocation.getAiNodeId(),
-                  new TNodeActivateInfo(ActivateStatus.ACTIVATED.toSimpleString())));
 
       return new TShowClusterResp()
           .setStatus(status)
           .setConfigNodeList(configNodeLocations)
           .setDataNodeList(dataNodeLocations)
-          .setAiNodeList(aiNodeInfoLocations)
           .setNodeStatus(nodeStatus)
-          .setNodeVersionInfo(nodeVersionInfo)
-          .setNodeActivateInfo(nodeActivateInfo);
+          .setNodeVersionInfo(nodeVersionInfo);
     } else {
       return new TShowClusterResp()
           .setStatus(status)
           .setConfigNodeList(Collections.emptyList())
           .setDataNodeList(Collections.emptyList())
-          .setAiNodeList(Collections.emptyList())
           .setNodeStatus(Collections.emptyMap())
-          .setNodeVersionInfo(Collections.emptyMap())
-          .setNodeActivateInfo(Collections.emptyMap());
+          .setNodeVersionInfo(Collections.emptyMap());
     }
   }
 
@@ -1760,11 +1692,6 @@ public class ConfigManager implements IManager {
   @Override
   public CQManager getCQManager() {
     return cqManager;
-  }
-
-  @Override
-  public ActivationManager getActivationManager() {
-    return activationManager;
   }
 
   @Override

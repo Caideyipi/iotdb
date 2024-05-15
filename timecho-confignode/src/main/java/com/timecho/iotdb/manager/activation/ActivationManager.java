@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation;
+package com.timecho.iotdb.manager.activation;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
@@ -30,11 +30,6 @@ import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.ConfigManager;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.ISystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.LinuxSystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.MacSystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.SystemInfoGetter;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.WindowsSystemInfoGetter;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -42,6 +37,11 @@ import cn.hutool.system.OsInfo;
 import cn.hutool.system.SystemUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.timecho.iotdb.manager.activation.systeminfo.ISystemInfoGetter;
+import com.timecho.iotdb.manager.activation.systeminfo.LinuxSystemInfoGetter;
+import com.timecho.iotdb.manager.activation.systeminfo.MacSystemInfoGetter;
+import com.timecho.iotdb.manager.activation.systeminfo.SystemInfoGetter;
+import com.timecho.iotdb.manager.activation.systeminfo.WindowsSystemInfoGetter;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;

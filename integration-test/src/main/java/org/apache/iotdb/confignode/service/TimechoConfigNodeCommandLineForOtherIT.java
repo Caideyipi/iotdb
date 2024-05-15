@@ -17,25 +17,17 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager;
+package org.apache.iotdb.confignode.service;
 
-import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.confignode.manager.activation.ActivationManagerWithoutAnyLimit;
-
-import java.io.IOException;
+import com.timecho.iotdb.service.TimechoConfigNodeCommandLine;
 
 /**
- * ConfigManager which holds a ActivationManagerWithoutAnyLimit. Only for integration tests (except
- * IoTDBActivationTest).
+ * In order to make integration tests not be affected by activation functionality. (except
+ * IoTDBActivationIT)
  */
-public class ConfigManagerForOtherIT extends ConfigManager {
-
-  public ConfigManagerForOtherIT() throws IOException {
-    super();
-  }
-
+public class TimechoConfigNodeCommandLineForOtherIT extends TimechoConfigNodeCommandLine {
   @Override
-  public void initActivationManager() throws LicenseException {
-    this.activationManager = new ActivationManagerWithoutAnyLimit(this);
+  protected void mockConfigNodeInstance() {
+    ConfigNode.setInstance(new ConfigNodeForOtherIT());
   }
 }

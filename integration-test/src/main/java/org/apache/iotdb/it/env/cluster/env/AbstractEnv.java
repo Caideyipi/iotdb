@@ -188,7 +188,7 @@ public abstract class AbstractEnv implements BaseEnv {
       // Do nothing
       logger.info("The Seed-ConfigNode started successfully!");
     } catch (Exception e) {
-      logger.error("Failed to get connection to the Seed-ConfigNode", e);
+      throw new AssertionError("Failed to get connection to the Seed-ConfigNode", e);
     }
 
     List<String> configNodeEndpoints = new ArrayList<>();
@@ -222,8 +222,7 @@ public abstract class AbstractEnv implements BaseEnv {
     try {
       configNodesDelegate.requestAll();
     } catch (SQLException e) {
-      logger.error("Start configNodes failed", e);
-      throw new AssertionError();
+      throw new AssertionError("Start configNodes failed", e);
     }
 
     List<String> dataNodeEndpoints = new ArrayList<>();
@@ -258,8 +257,7 @@ public abstract class AbstractEnv implements BaseEnv {
     try {
       dataNodesDelegate.requestAll();
     } catch (SQLException e) {
-      logger.error("Start dataNodes failed", e);
-      throw new AssertionError();
+      throw new AssertionError("Start dataNodes failed", e);
     }
 
     if (addAINode) {

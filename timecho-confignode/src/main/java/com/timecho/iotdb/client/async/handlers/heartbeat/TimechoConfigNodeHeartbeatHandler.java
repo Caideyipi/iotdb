@@ -17,34 +17,26 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation.systeminfo;
+package com.timecho.iotdb.client.async.handlers.heartbeat;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.iotdb.confignode.client.async.handlers.heartbeat.ConfigNodeHeartbeatHandler;
+import org.apache.iotdb.confignode.manager.load.LoadManager;
+import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 
-import static cn.hutool.system.oshi.OshiUtil.getSystem;
+import com.timecho.iotdb.manager.ITimechoManager;
 
-public class MacSystemInfoGetter extends SystemInfoGetter {
+public class TimechoConfigNodeHeartbeatHandler extends ConfigNodeHeartbeatHandler {
+  private ITimechoManager configManager;
 
-  private static final Logger logger = LoggerFactory.getLogger(MacSystemInfoGetter.class);
-
-  @Override
-  Logger getLogger() {
-    return logger;
+  public TimechoConfigNodeHeartbeatHandler(
+      int nodeId, ITimechoManager configManager, LoadManager loadManager) {
+    super(nodeId, loadManager);
+    this.configManager = configManager;
   }
 
   @Override
-  String getCPUIdImpl() {
-    return "";
-  }
-
-  @Override
-  String getMainBoardIdImpl() {
-    return getSystem().getBaseboard().getSerialNumber();
-  }
-
-  @Override
-  String getSystemUUIDImpl() {
-    return getSystem().getHardwareUUID();
+  public void onComplete(TConfigNodeHeartbeatResp resp) {
+    super.onComplete(resp);
+    configManager.getActivationManager().tryLoadRemoteLicense(resp.getLicense());
   }
 }

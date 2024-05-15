@@ -17,13 +17,13 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation;
+package com.timecho.iotdb.manager.activation;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
-import org.apache.iotdb.confignode.manager.activation.systeminfo.SystemInfoGetter;
 
 import com.google.common.collect.ImmutableMap;
+import com.timecho.iotdb.manager.activation.systeminfo.SystemInfoGetter;
 
 import java.io.BufferedReader;
 import java.io.File;

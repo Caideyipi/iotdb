@@ -22,7 +22,6 @@ package org.apache.iotdb.confignode.client.async.handlers.heartbeat;
 import org.apache.iotdb.commons.client.ThriftClient;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
-import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
 import org.apache.iotdb.confignode.manager.load.cache.node.NodeHeartbeatSample;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
@@ -32,12 +31,10 @@ import org.apache.thrift.async.AsyncMethodCallback;
 public class ConfigNodeHeartbeatHandler implements AsyncMethodCallback<TConfigNodeHeartbeatResp> {
 
   private final int nodeId;
-  private final IManager configManager;
   private final LoadManager loadManager;
 
-  public ConfigNodeHeartbeatHandler(int nodeId, IManager configManager, LoadManager loadManager) {
+  public ConfigNodeHeartbeatHandler(int nodeId, LoadManager loadManager) {
     this.nodeId = nodeId;
-    this.configManager = configManager;
     this.loadManager = loadManager;
   }
 
@@ -46,7 +43,6 @@ public class ConfigNodeHeartbeatHandler implements AsyncMethodCallback<TConfigNo
     loadManager
         .getLoadCache()
         .cacheConfigNodeHeartbeatSample(nodeId, new NodeHeartbeatSample(resp), true);
-    configManager.getActivationManager().tryLoadRemoteLicense(resp.getLicense());
   }
 
   @Override

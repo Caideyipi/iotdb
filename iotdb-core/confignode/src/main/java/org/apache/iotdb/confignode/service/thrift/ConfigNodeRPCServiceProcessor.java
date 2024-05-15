@@ -55,7 +55,6 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetSchemaRep
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
-import org.apache.iotdb.confignode.consensus.response.ainode.AINodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
 import org.apache.iotdb.confignode.consensus.response.database.CountDatabaseResp;
 import org.apache.iotdb.confignode.consensus.response.database.DatabaseSchemaResp;
@@ -72,7 +71,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRemoveReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
-import org.apache.iotdb.confignode.rpc.thrift.TActivationControl;
 import org.apache.iotdb.confignode.rpc.thrift.TAddConsensusGroupReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterPipeReq;
@@ -199,8 +197,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /** ConfigNodeRPCServer exposes the interface that interacts with the DataNode */
@@ -278,11 +274,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TAINodeRegisterResp registerAINode(TAINodeRegisterReq req) {
-    TAINodeRegisterResp resp =
-        ((AINodeRegisterResp) configManager.registerAINode(req)).convertToAINodeRegisterResp();
-    LOGGER.info("Execute RegisterAINodeRequest {} with result {}", req, resp);
-
-    return resp;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -920,23 +912,6 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   public TConfigNodeHeartbeatResp getConfigNodeHeartBeat(TConfigNodeHeartbeatReq heartbeatReq) {
     TConfigNodeHeartbeatResp resp = new TConfigNodeHeartbeatResp();
     resp.setTimestamp(heartbeatReq.getTimestamp());
-    if (heartbeatReq.isSetActivationControl()) {
-      if (Objects.equals(
-          heartbeatReq.getActivationControl(), TActivationControl.ALL_LICENSE_FILE_DELETED)) {
-        configManager
-            .getActivationManager()
-            .giveUpLicenseBecauseLeaderBelieveThereIsNoActiveNodeInCluster();
-      } else {
-        throw new UnsupportedOperationException(
-            String.format("%s is not supported", heartbeatReq.getActivationControl()));
-      }
-    }
-    configManager.getActivationManager().tryLoadRemoteLicense(heartbeatReq.getLicence());
-    resp.setActivateStatus(configManager.getActivationManager().getActivateStatus().toString());
-    if (configManager.getActivationManager().isActive()) {
-      // Report my license only if I'm active
-      resp.setLicense(configManager.getActivationManager().getLicense().toTLicense());
-    }
     return resp;
   }
 
@@ -1172,46 +1147,33 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TSStatus setLicenseFile(String fileName, String content) throws TException {
-    return configManager.getActivationManager().setLicenseFile(fileName, content);
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public TSStatus deleteLicenseFile(String fileName) throws TException {
-    return configManager.getActivationManager().deleteLicenseFile(fileName);
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public TSStatus getLicenseFile(String fileName) throws TException {
-    return configManager.getActivationManager().getLicenseFile(fileName);
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public TLicenseContentResp getLicenseContent() throws TException {
-    TLicenseContentResp resp =
-        new TLicenseContentResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    resp.setLicense(configManager.getActivationManager().getLicense().toTLicense());
-    resp.setUsage(configManager.getActivationManager().getLicenseUsage());
-    return resp;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public TSStatus getActivateStatus() throws TException {
-    TSStatus result = new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
-    result.setMessage(configManager.getActivationManager().getActivateStatus().toString());
-    return result;
+    throw new UnsupportedOperationException();
   }
 
   @TestOnly
   @Override
   public TGetAllActivationStatusResp getAllActivationStatus() throws TException {
-    TGetAllActivationStatusResp resp = new TGetAllActivationStatusResp();
-    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    Map<Integer, String> activationMap = configManager.getLoadManager().getNodeActivateStatus();
-    activationMap.put(
-        CONFIG_NODE_CONFIG.getConfigNodeId(),
-        configManager.getActivationManager().getActivateStatus().toString());
-    resp.setActivationStatusMap(activationMap);
-    return resp;
+    throw new UnsupportedOperationException();
   }
 
   @Override

@@ -136,7 +136,7 @@ if %occupied%==1 (
 )
 
 set CONF_PARAMS=-s
-if NOT DEFINED MAIN_CLASS set MAIN_CLASS=org.apache.iotdb.confignode.service.ConfigNode
+if NOT DEFINED MAIN_CLASS set MAIN_CLASS=com.timecho.iotdb.service.ConfigNode
 if NOT DEFINED JAVA_HOME goto :err
 
 @REM -----------------------------------------------------------------------------

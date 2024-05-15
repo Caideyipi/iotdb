@@ -23,6 +23,8 @@ import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 
+import com.timecho.iotdb.manager.activation.ActivationManager;
+
 import java.util.Properties;
 
 /** Only for integration test (except IoTDBActivationTest) */

@@ -34,6 +34,7 @@
                 <include>*:iotdb-cli:zip:*</include>
                 <include>*:iotdb-confignode:zip:*</include>
                 <include>*:timecho-server:zip:*</include>
+                <include>*:timecho-confignode:zip:*</include>
             </includes>
             <outputDirectory>${file.separator}</outputDirectory>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>

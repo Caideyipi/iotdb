@@ -41,6 +41,7 @@
         <module>distribution</module>
         <module>example</module>
         <module>library-udf</module>
+        <module>timecho-confignode</module>
         <module>timecho-server</module>
         <module>timecho-isession</module>
         <module>timecho-session</module>

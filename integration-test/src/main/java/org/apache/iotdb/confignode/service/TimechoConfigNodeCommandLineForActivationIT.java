@@ -19,14 +19,11 @@
 
 package org.apache.iotdb.confignode.service;
 
-/**
- * In order to make integration tests not be affected by activation functionality. (except
- * IoTDBActivationIT)
- */
-public class ConfigNodeCommandLineForOtherIT extends ConfigNodeCommandLine {
+import com.timecho.iotdb.service.TimechoConfigNodeCommandLine;
+
+public class TimechoConfigNodeCommandLineForActivationIT extends TimechoConfigNodeCommandLine {
   @Override
-  protected void activeConfigNodeInstance() {
-    ConfigNode.setInstance(ConfigNodeForOtherIT.getInstance());
-    ConfigNodeForOtherIT.getInstance().active();
+  protected void mockConfigNodeInstance() {
+    ConfigNode.setInstance(new ConfigNodeForActivationIT());
   }
 }

@@ -29,7 +29,6 @@ import org.apache.iotdb.commons.concurrent.ThreadPoolMetrics;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
-import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.commons.service.JMXService;
 import org.apache.iotdb.commons.service.RegisterManager;
@@ -161,7 +160,7 @@ public class ConfigNode implements ConfigNodeMBean {
             startUpSleep("restart ConfigNode failed! ");
           }
         }
-        configManager.getActivationManager().generateSystemInfoFile();
+        generateSystemInfoFile();
         return;
       }
 
@@ -192,7 +191,6 @@ public class ConfigNode implements ConfigNodeMBean {
         // Notice: We always set up Seed-ConfigNode's RPC service lastly to ensure
         // that the external service is not provided until Seed-ConfigNode is fully initialized
         setUpRPCService();
-        configManager.getActivationManager().generateSystemInfoFile();
 
         // The initial startup of Seed-ConfigNode finished
         LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
@@ -200,6 +198,7 @@ public class ConfigNode implements ConfigNodeMBean {
             "{} has successfully started and joined the cluster: {}.",
             ConfigNodeConstant.GLOBAL_NAME,
             CONF.getClusterName());
+        generateSystemInfoFile();
         return;
       }
 
@@ -235,12 +234,17 @@ public class ConfigNode implements ConfigNodeMBean {
         LOGGER.error(
             "The current ConfigNode can't joined the cluster because leader's scheduling failed. The possible cause is that the ip:port configuration is incorrect.");
         stop();
+        return;
       }
-      configManager.getActivationManager().generateSystemInfoFile();
+      generateSystemInfoFile();
     } catch (StartupException | IOException e) {
       LOGGER.error("Meet error while starting up.", e);
       stop();
     }
+  }
+
+  protected void generateSystemInfoFile() {
+    throw new UnsupportedOperationException();
   }
 
   void processPid() {
@@ -307,12 +311,6 @@ public class ConfigNode implements ConfigNodeMBean {
       setConfigManager();
     } catch (Exception e) {
       LOGGER.error("Can't start ConfigNode consensus group!", e);
-      stop();
-    }
-    try {
-      configManager.initActivationManager();
-    } catch (LicenseException e) {
-      LOGGER.error("init license manager fail!");
       stop();
     }
     LOGGER.info("Successfully initialize ConfigManager.");
@@ -452,7 +450,7 @@ public class ConfigNode implements ConfigNodeMBean {
     return configManager;
   }
 
-  protected void addShutDownHook() {
+  private void addShutDownHook() {
     Runtime.getRuntime().addShutdownHook(new ConfigNodeShutdownHook());
   }
 

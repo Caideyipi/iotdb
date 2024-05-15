@@ -42,7 +42,6 @@ import org.apache.iotdb.confignode.consensus.request.write.database.SetSchemaRep
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTTLPlan;
 import org.apache.iotdb.confignode.consensus.request.write.database.SetTimePartitionIntervalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
-import org.apache.iotdb.confignode.manager.activation.ActivationManager;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.manager.cq.CQManager;
 import org.apache.iotdb.confignode.manager.load.LoadManager;
@@ -51,7 +50,6 @@ import org.apache.iotdb.confignode.manager.partition.PartitionManager;
 import org.apache.iotdb.confignode.manager.pipe.coordinator.PipeManager;
 import org.apache.iotdb.confignode.manager.schema.ClusterSchemaManager;
 import org.apache.iotdb.confignode.manager.subscription.SubscriptionManager;
-import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
@@ -230,13 +228,6 @@ public interface IManager {
   PipeManager getPipeManager();
 
   /**
-   * Get ActivationManager
-   *
-   * @return ActivationManager instance
-   */
-  ActivationManager getActivationManager();
-
-  /**
    * Get {@link ClusterQuotaManager}.
    *
    * @return {@link ClusterQuotaManager} instance
@@ -287,14 +278,6 @@ public interface IManager {
    * @return DataNodeToStatusResp
    */
   DataSet removeDataNode(RemoveDataNodePlan removeDataNodePlan);
-
-  /**
-   * Register AINode
-   *
-   * @param req TAINodeRegisterReq
-   * @return AINodeConfigurationDataSet
-   */
-  DataSet registerAINode(TAINodeRegisterReq req);
 
   /**
    * Restart AINode.

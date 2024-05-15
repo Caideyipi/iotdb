@@ -24,8 +24,6 @@ import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
-import org.apache.iotdb.confignode.manager.activation.ActivationManager;
-import org.apache.iotdb.confignode.manager.activation.License;
 import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
@@ -43,6 +41,8 @@ import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 
+import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.manager.activation.License;
 import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
 import org.junit.After;
@@ -84,6 +84,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.timecho.iotdb.manager.activation.ActivationManager.LICENSE_FILE_NAME;
+import static com.timecho.iotdb.manager.activation.License.DATANODE_NUM_LIMIT_NAME;
+import static com.timecho.iotdb.manager.activation.License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
+import static com.timecho.iotdb.manager.activation.License.LICENSE_EXPIRE_TIMESTAMP_NAME;
+import static com.timecho.iotdb.manager.activation.License.LICENSE_ISSUE_TIMESTAMP_NAME;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_UNACTIVATED;
@@ -91,11 +96,6 @@ import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_UNACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.UNACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.UNKNOWN;
-import static org.apache.iotdb.confignode.manager.activation.ActivationManager.LICENSE_FILE_NAME;
-import static org.apache.iotdb.confignode.manager.activation.License.DATANODE_NUM_LIMIT_NAME;
-import static org.apache.iotdb.confignode.manager.activation.License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
-import static org.apache.iotdb.confignode.manager.activation.License.LICENSE_EXPIRE_TIMESTAMP_NAME;
-import static org.apache.iotdb.confignode.manager.activation.License.LICENSE_ISSUE_TIMESTAMP_NAME;
 
 @RunWith(IoTDBTestRunner.class)
 @Category({ClusterIT.class})

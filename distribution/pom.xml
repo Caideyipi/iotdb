@@ -55,6 +55,12 @@
             <type>zip</type>
         </dependency>
         <dependency>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>timecho-confignode</artifactId>
+            <version>1.3.2-SNAPSHOT</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
             <groupId>org.apache.iotdb</groupId>
             <artifactId>library-udf</artifactId>
             <version>1.3.2-SNAPSHOT</version>
