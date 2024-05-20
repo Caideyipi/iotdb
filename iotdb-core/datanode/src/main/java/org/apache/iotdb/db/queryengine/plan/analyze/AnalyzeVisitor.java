@@ -2388,7 +2388,6 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   @Override
   public Analysis visitInsert(InsertStatement insertStatement, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    insertStatement.semanticCheck();
     long[] timeArray = insertStatement.getTimes();
     PartialPath devicePath = insertStatement.getDevice();
     String[] measurementList = insertStatement.getMeasurementList();
@@ -2399,9 +2398,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       insertRowStatement.setTime(timeArray[0]);
       insertRowStatement.setMeasurements(measurementList);
       insertRowStatement.setDataTypes(new TSDataType[measurementList.length]);
-      Object[] values = new Object[measurementList.length];
-      System.arraycopy(insertStatement.getValuesList().get(0), 0, values, 0, values.length);
-      insertRowStatement.setValues(values);
+      insertRowStatement.setValues(insertStatement.getValuesList().get(0));
       insertRowStatement.setNeedInferType(true);
       insertRowStatement.setAligned(insertStatement.isAligned());
       return insertRowStatement.accept(this, context);
@@ -2433,9 +2430,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         statement.setTime(timeArray[i]);
         TSDataType[] dataTypes = new TSDataType[measurementList.length];
         statement.setDataTypes(dataTypes);
-        Object[] values = new Object[measurementList.length];
-        System.arraycopy(insertStatement.getValuesList().get(i), 0, values, 0, values.length);
-        statement.setValues(values);
+        statement.setValues(insertStatement.getValuesList().get(i));
         statement.setAligned(insertStatement.isAligned());
         statement.setNeedInferType(true);
         insertRowStatementList.add(statement);
@@ -2717,6 +2712,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   public Analysis visitInsertTablet(
       InsertTabletStatement insertTabletStatement, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
+    insertTabletStatement.semanticCheck();
     Analysis analysis = new Analysis();
     validateSchema(analysis, insertTabletStatement, context);
     InsertBaseStatement realStatement = removeLogicalView(analysis, insertTabletStatement);
@@ -2748,6 +2744,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   @Override
   public Analysis visitInsertRow(InsertRowStatement insertRowStatement, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
+    insertRowStatement.semanticCheck();
     Analysis analysis = new Analysis();
     validateSchema(analysis, insertRowStatement, context);
     InsertBaseStatement realInsertStatement = removeLogicalView(analysis, insertRowStatement);
@@ -2798,6 +2795,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   public Analysis visitInsertRows(
       InsertRowsStatement insertRowsStatement, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
+    insertRowsStatement.semanticCheck();
     Analysis analysis = new Analysis();
     validateSchema(analysis, insertRowsStatement, context);
     InsertRowsStatement realInsertRowsStatement =
@@ -2837,6 +2835,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   public Analysis visitInsertMultiTablets(
       InsertMultiTabletsStatement insertMultiTabletsStatement, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
+    insertMultiTabletsStatement.semanticCheck();
     Analysis analysis = new Analysis();
     validateSchema(analysis, insertMultiTabletsStatement, context);
     InsertMultiTabletsStatement realStatement =
@@ -2854,6 +2853,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   public Analysis visitInsertRowsOfOneDevice(
       InsertRowsOfOneDeviceStatement insertRowsOfOneDeviceStatement, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
+    insertRowsOfOneDeviceStatement.semanticCheck();
     Analysis analysis = new Analysis();
     validateSchema(analysis, insertRowsOfOneDeviceStatement, context);
     InsertBaseStatement realInsertStatement =
