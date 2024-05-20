@@ -1154,27 +1154,32 @@ public class IoTDBDescriptor {
   }
 
   private void loadMigrationHotProps(Properties properties) {
-    String[] usageThresholdsStr = new String[conf.getSpaceUsageThresholds().length];
-    for (int i = 0; i < usageThresholdsStr.length; ++i) {
-      usageThresholdsStr[i] = String.valueOf(conf.getSpaceUsageThresholds()[i]);
-    }
-    usageThresholdsStr =
-        properties
-            .getProperty(
-                "dn_default_space_usage_thresholds",
-                String.join(IoTDBConstant.TIER_SEPARATOR, usageThresholdsStr))
-            .split(IoTDBConstant.TIER_SEPARATOR);
-    double[] usageThresholds = new double[usageThresholdsStr.length];
-    for (int i = 0; i < usageThresholds.length; ++i) {
-      usageThresholds[i] = Double.parseDouble(usageThresholdsStr[i]);
-      if (usageThresholds[i] <= 0 || usageThresholds[i] >= 1) {
-        usageThresholds[i] = 0.85;
-        LOGGER.warn(
-            "It's meaningless to set dn_default_space_usage_thresholds out of range (0.0, 1.0), iotdb will use default value {}.",
-            usageThresholds[i]);
+    String usageThresholdsParam = properties.getProperty("dn_default_space_usage_thresholds");
+    if (usageThresholdsParam != null) {
+      String[] usageThresholdsStr = usageThresholdsParam.split(IoTDBConstant.TIER_SEPARATOR);
+      double[] usageThresholds = new double[usageThresholdsStr.length];
+      for (int i = 0; i < usageThresholds.length; ++i) {
+        usageThresholds[i] = Double.parseDouble(usageThresholdsStr[i]);
+        if (usageThresholds[i] <= 0 || usageThresholds[i] >= 1) {
+          usageThresholds[i] = IoTDBConfig.DEFAULT_SPACE_USAGE_THRESHOLD;
+          LOGGER.warn(
+              "It's meaningless to set dn_default_space_usage_thresholds out of range (0.0, 1.0), iotdb will use default value {}.",
+              usageThresholds[i]);
+        }
       }
+      conf.setSpaceUsageThresholds(usageThresholds);
     }
-    conf.setSpaceUsageThresholds(usageThresholds);
+
+    String migrateSpeedLimitParam =
+        properties.getProperty("tiered_storage_migrate_speed_limit_bytes_per_sec");
+    if (migrateSpeedLimitParam != null) {
+      String[] migrateSpeedLimitStr = migrateSpeedLimitParam.split(IoTDBConstant.TIER_SEPARATOR);
+      long[] migrateSpeedLimit = new long[migrateSpeedLimitStr.length];
+      for (int i = 0; i < migrateSpeedLimit.length; ++i) {
+        migrateSpeedLimit[i] = Long.parseLong(migrateSpeedLimitStr[i]);
+      }
+      conf.setTieredStorageMigrateSpeedLimitBytesPerSec(migrateSpeedLimit);
+    }
 
     TierFullPolicy tierFullPolicy =
         TierFullPolicy.valueOf(
@@ -1184,11 +1189,6 @@ public class IoTDBDescriptor {
   }
 
   private void loadObjectStorageProps(Properties properties) {
-    conf.setObjectStorageUploadThroughputBytesPerSec(
-        Long.parseLong(
-            properties.getProperty(
-                "object_storage_upload_throughput_bytes_per_sec",
-                Long.toString(conf.getObjectStorageUploadThroughputBytesPerSec()))));
     conf.setObjectStorageType(
         properties.getProperty("object_storage_type", conf.getObjectStorageType()));
     conf.setObjectStorageBucket(
@@ -1243,11 +1243,19 @@ public class IoTDBDescriptor {
     int tierNum = conf.getTierDataDirs().length;
     if (conf.getSpaceUsageThresholds().length != tierNum) {
       double[] moveThresholds = new double[tierNum];
-      Arrays.fill(moveThresholds, 0.15);
+      Arrays.fill(moveThresholds, IoTDBConfig.DEFAULT_SPACE_USAGE_THRESHOLD);
       conf.setSpaceUsageThresholds(moveThresholds);
       LOGGER.warn(
-          "dn_default_space_move_thresholds should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
+          "dn_default_space_usage_thresholds should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
           Arrays.toString(moveThresholds));
+    }
+    if (conf.getTieredStorageMigrateSpeedLimitBytesPerSec().length != tierNum - 1) {
+      long[] speedLimit = new long[tierNum];
+      Arrays.fill(speedLimit, IoTDBConfig.DEFAULT_TIERED_STORAGE_MIGRATE_SPEED_LIMIT_BYTES_PER_SEC);
+      conf.setTieredStorageMigrateSpeedLimitBytesPerSec(speedLimit);
+      LOGGER.warn(
+          "The tiers number of tiered_storage_migrate_speed_limit_bytes_per_sec should be tiers number of dn_data_dirs minus 1, iotdb will use default value {}.",
+          Arrays.toString(speedLimit));
     }
     if (commonDescriptor.getConfig().getTierTTLInMs().length != tierNum) {
       long[] tierTTLs = new long[tierNum];
@@ -1825,13 +1833,6 @@ public class IoTDBDescriptor {
           Long.parseLong(
               properties.getProperty(
                   "slow_query_threshold", Long.toString(conf.getSlowQueryThreshold()))));
-      // update object_storage_upload_throughput_bytes_per_sec
-      conf.setObjectStorageUploadThroughputBytesPerSec(
-          Long.parseLong(
-              properties.getProperty(
-                  "object_storage_upload_throughput_bytes_per_sec",
-                  Long.toString(conf.getObjectStorageUploadThroughputBytesPerSec()))));
-      MigrationTaskManager.getInstance().reloadObjectStorageUploadThroughput();
 
       // update select into operation max buffer size
       conf.setIntoOperationBufferSizeInByte(
@@ -1887,8 +1888,11 @@ public class IoTDBDescriptor {
 
       // update migration config
       loadMigrationHotProps(properties);
+      checkTierConfig();
       if (!MigrationTaskManager.getInstance().isEnable()) {
         MigrationTaskManager.getInstance().start();
+      } else {
+        MigrationTaskManager.getInstance().reloadMigrateSpeedLimit();
       }
 
       // update merge_threshold_of_explain_analyze

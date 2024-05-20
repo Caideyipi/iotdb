@@ -71,7 +71,7 @@ public class MigrationTaskManagerTest {
           + 0;
   private FSType[] prevTSFileStorageFs;
   private ObjectStorageType prevOSType;
-  private long prevObjectStorageUploadThroughputKbPerSe;
+  private long[] prevTieredStorageMigrateSpeedLimitBytesPerSec;
   private String[][] prevTierDataDirs;
 
   @Before
@@ -90,8 +90,9 @@ public class MigrationTaskManagerTest {
     prevTierDataDirs = config.getTierDataDirs();
     config.setTierDataDirs(
         new String[][] {new String[] {"/tmp/test1"}, new String[] {"/tmp/test1"}});
-    prevObjectStorageUploadThroughputKbPerSe = config.getObjectStorageUploadThroughputBytesPerSec();
-    config.setObjectStorageUploadThroughputBytesPerSec(1024 * 1024);
+    prevTieredStorageMigrateSpeedLimitBytesPerSec =
+        config.getTieredStorageMigrateSpeedLimitBytesPerSec();
+    config.setTieredStorageMigrateSpeedLimitBytesPerSec(new long[] {1024 * 1024, 1024 * 1024});
     MigrationTaskManager.getInstance().start();
   }
 
@@ -102,7 +103,8 @@ public class MigrationTaskManagerTest {
     osConfig.setOsType(prevOSType);
     EnvironmentUtils.cleanDir(MIGRATION_SOURCE_BASE_DIR);
     EnvironmentUtils.cleanDir(MIGRATION_DESTINATION_BASE_DIR);
-    config.setObjectStorageUploadThroughputBytesPerSec(prevObjectStorageUploadThroughputKbPerSe);
+    config.setTieredStorageMigrateSpeedLimitBytesPerSec(
+        prevTieredStorageMigrateSpeedLimitBytesPerSec);
     config.setTierDataDirs(prevTierDataDirs);
     MigrationTaskManager.getInstance().stop();
   }

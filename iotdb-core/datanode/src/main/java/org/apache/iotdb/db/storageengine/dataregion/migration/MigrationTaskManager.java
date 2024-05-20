@@ -50,7 +50,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class MigrationTaskManager implements IService {
@@ -59,10 +58,6 @@ public class MigrationTaskManager implements IService {
   private static final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
   private static final TierManager tierManager = TierManager.getInstance();
   private static final long CHECK_INTERVAL_IN_SECONDS = 10;
-  private static final int MIGRATION_TASK_LIMIT = 50;
-
-  /** max concurrent migration tasks */
-  private final AtomicInteger migrationTasksNum = new AtomicInteger(0);
 
   /** enable or not */
   private boolean enable = false;
@@ -73,8 +68,8 @@ public class MigrationTaskManager implements IService {
   /** workers to migrate files */
   private ExecutorService workers;
 
-  /** object storage upload rate limiter, KB/s */
-  private RateLimiter objectStorageUploadRateLimiter;
+  /** migrate rate limiter, KB/s */
+  private RateLimiter[] migrateRateLimiters;
 
   @Override
   public void start() throws StartupException {
@@ -88,9 +83,12 @@ public class MigrationTaskManager implements IService {
     // metrics
     MetricService.getInstance().addMetricSet(MigrationMetrics.getInstance());
     // threads and tasks
-    long limitRate = iotdbConfig.getObjectStorageUploadThroughputBytesPerSec();
-    objectStorageUploadRateLimiter =
-        RateLimiter.create(limitRate <= 0 ? Double.MAX_VALUE : (double) limitRate / 1024);
+    long[] limitRates = iotdbConfig.getTieredStorageMigrateSpeedLimitBytesPerSec();
+    migrateRateLimiters = new RateLimiter[limitRates.length];
+    for (int i = 0; i < migrateRateLimiters.length; ++i) {
+      migrateRateLimiters[i] =
+          RateLimiter.create(limitRates[i] <= 0 ? Double.MAX_VALUE : (double) limitRates[i] / 1024);
+    }
     scheduler =
         IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
             ThreadName.MIGRATION_SCHEDULER.getName());
@@ -157,9 +155,7 @@ public class MigrationTaskManager implements IService {
       if (iotdbConfig.getTierFullPolicy() == TierFullPolicy.DELETE) {
         scheduleDeletion();
       }
-      if (migrationTasksNum.get() < MIGRATION_TASK_LIMIT) {
-        scheduleMigration();
-      }
+      scheduleMigration();
     }
 
     private void scheduleDeletion() {
@@ -211,9 +207,6 @@ public class MigrationTaskManager implements IService {
               .collect(Collectors.toList());
       // submit migration tasks
       for (TsFileResource tsfile : migrateCandidates) {
-        if (migrationTasksNum.get() >= MIGRATION_TASK_LIMIT) {
-          break;
-        }
         try {
           int currentTier = tsfile.getTierLevel();
           int nextTier = currentTier + 1;
@@ -252,7 +245,6 @@ public class MigrationTaskManager implements IService {
       if (!sourceTsFile.setStatus(TsFileResourceStatus.MIGRATING)) {
         return;
       }
-      migrationTasksNum.incrementAndGet();
       releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
       workers.submit(MigrationTask.newTask(cause, sourceTsFile, targetDir));
     }
@@ -280,30 +272,28 @@ public class MigrationTaskManager implements IService {
     }
   }
 
-  void decreaseMigrationTasksNum() {
-    migrationTasksNum.decrementAndGet();
-  }
-
-  void acquireUploadLimiter(long size) {
+  void acquireMigrateSpeedLimiter(int tierLevel, long size) {
     long sizeInKb = size / 1024;
     while (sizeInKb > 0) {
       if (sizeInKb > Integer.MAX_VALUE) {
-        objectStorageUploadRateLimiter.acquire(Integer.MAX_VALUE);
+        migrateRateLimiters[tierLevel].acquire(Integer.MAX_VALUE);
         sizeInKb -= Integer.MAX_VALUE;
       } else {
-        objectStorageUploadRateLimiter.acquire((int) sizeInKb);
+        migrateRateLimiters[tierLevel].acquire((int) sizeInKb);
         return;
       }
     }
   }
 
-  public void reloadObjectStorageUploadThroughput() {
-    if (objectStorageUploadRateLimiter == null) {
+  public void reloadMigrateSpeedLimit() {
+    if (migrateRateLimiters == null) {
       return;
     }
-    long limitRate = iotdbConfig.getObjectStorageUploadThroughputBytesPerSec();
-    objectStorageUploadRateLimiter.setRate(
-        limitRate <= 0 ? Double.MAX_VALUE : (double) limitRate / 1024);
+    long[] limitRates = iotdbConfig.getTieredStorageMigrateSpeedLimitBytesPerSec();
+    for (int i = 0; i < migrateRateLimiters.length; ++i) {
+      migrateRateLimiters[i].setRate(
+          limitRates[i] <= 0 ? Double.MAX_VALUE : (double) limitRates[i] / 1024);
+    }
   }
 
   @Override

@@ -99,7 +99,6 @@ public abstract class MigrationTask implements Runnable {
       // try to set the final status to NORMAL to avoid migrate failure
       // TODO: this setting may occur side effects
       tsFileResource.setStatus(TsFileResourceStatus.NORMAL);
-      MigrationTaskManager.getInstance().decreaseMigrationTasksNum();
     }
 
     long taskTimeCost = System.nanoTime() - taskStartTime;

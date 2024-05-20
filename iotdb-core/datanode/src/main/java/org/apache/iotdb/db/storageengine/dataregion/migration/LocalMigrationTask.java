@@ -51,8 +51,12 @@ public class LocalMigrationTask extends MigrationTask {
     try {
       destTsFile.getParentFile().mkdirs();
       migratedFileSize += srcFile.length();
+      MigrationTaskManager.getInstance()
+          .acquireMigrateSpeedLimiter(destTierLevel - 1, srcFile.length());
       migrateFile(srcFile, destTsFile);
       migratedFileSize += srcResourceFile.length();
+      MigrationTaskManager.getInstance()
+          .acquireMigrateSpeedLimiter(destTierLevel - 1, srcResourceFile.length());
       migrateFile(srcResourceFile, destResourceFile);
     } catch (Exception e) {
       if (!tsFileResource.isDeleted()) {
@@ -74,6 +78,8 @@ public class LocalMigrationTask extends MigrationTask {
       // migrate MOD file only when it exists
       if (srcModsFile.exists()) {
         migratedFileSize += srcModsFile.length();
+        MigrationTaskManager.getInstance()
+            .acquireMigrateSpeedLimiter(destTierLevel - 1, srcModsFile.length());
         migrateFile(srcModsFile, destModsFile);
       }
       tsFileResource.setFile(destTsFile);

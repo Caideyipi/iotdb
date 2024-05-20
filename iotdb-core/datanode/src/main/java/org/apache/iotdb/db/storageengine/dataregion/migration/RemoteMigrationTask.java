@@ -50,10 +50,12 @@ public class RemoteMigrationTask extends MigrationTask {
     tsFileResource.readLock();
     try {
       migratedFileSize += srcFile.length();
-      MigrationTaskManager.getInstance().acquireUploadLimiter(srcFile.length());
+      MigrationTaskManager.getInstance()
+          .acquireMigrateSpeedLimiter(destTierLevel - 1, srcFile.length());
       migrateFile(srcFile, destTsFile);
       migratedFileSize += srcResourceFile.length();
-      MigrationTaskManager.getInstance().acquireUploadLimiter(srcResourceFile.length());
+      MigrationTaskManager.getInstance()
+          .acquireMigrateSpeedLimiter(destTierLevel - 1, srcResourceFile.length());
       migrateFile(srcResourceFile, destResourceFile);
     } catch (Exception e) {
       if (!tsFileResource.isDeleted()) {

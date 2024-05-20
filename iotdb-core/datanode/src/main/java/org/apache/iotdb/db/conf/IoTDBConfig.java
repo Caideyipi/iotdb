@@ -1138,17 +1138,24 @@ public class IoTDBConfig {
   /** Threads for migration tasks */
   private int migrateThreadCount = 1;
 
+  /** The limit of object storage upload can reach per second */
+  private long[] tieredStorageMigrateSpeedLimitBytesPerSec = {
+    DEFAULT_TIERED_STORAGE_MIGRATE_SPEED_LIMIT_BYTES_PER_SEC
+  };
+
+  public static final long DEFAULT_TIERED_STORAGE_MIGRATE_SPEED_LIMIT_BYTES_PER_SEC =
+      10 * 1024 * 1024;
+
   /** Disk move threshold at which current tier data will be moved to the next tier */
-  private double[] spaceUsageThresholds = {0.85};
+  private double[] spaceUsageThresholds = {DEFAULT_SPACE_USAGE_THRESHOLD};
+
+  public static final double DEFAULT_SPACE_USAGE_THRESHOLD = 0.85;
 
   /** Delete the oldest data when last tier‘s space is full */
   private TierFullPolicy tierFullPolicy = TierFullPolicy.NULL;
 
   /** Enable object storage or not */
   private boolean enableObjectStorage = false;
-
-  /** The limit of object storage upload can reach per second */
-  private long objectStorageUploadThroughputBytesPerSec = 10 * 1024 * 1024;
 
   /** Config for object storage */
   private ObjectStorageConfig osConfig = ObjectStorageDescriptor.getInstance().getConfig();
@@ -3917,6 +3924,15 @@ public class IoTDBConfig {
     this.migrateThreadCount = migrateThreadCount;
   }
 
+  public long[] getTieredStorageMigrateSpeedLimitBytesPerSec() {
+    return tieredStorageMigrateSpeedLimitBytesPerSec;
+  }
+
+  public void setTieredStorageMigrateSpeedLimitBytesPerSec(
+      long[] tieredStorageMigrateSpeedLimitBytesPerSec) {
+    this.tieredStorageMigrateSpeedLimitBytesPerSec = tieredStorageMigrateSpeedLimitBytesPerSec;
+  }
+
   public double[] getSpaceUsageThresholds() {
     return spaceUsageThresholds;
   }
@@ -3935,15 +3951,6 @@ public class IoTDBConfig {
 
   public boolean isEnableObjectStorage() {
     return enableObjectStorage;
-  }
-
-  public long getObjectStorageUploadThroughputBytesPerSec() {
-    return objectStorageUploadThroughputBytesPerSec;
-  }
-
-  public void setObjectStorageUploadThroughputBytesPerSec(
-      long objectStorageUploadThroughputBytesPerSec) {
-    this.objectStorageUploadThroughputBytesPerSec = objectStorageUploadThroughputBytesPerSec;
   }
 
   public String getObjectStorageType() {
