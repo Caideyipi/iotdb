@@ -245,7 +245,7 @@ public class ClientPoolFactory {
               new AsyncPipeDataTransferServiceClient.Factory(
                   manager,
                   new ThriftClientProperty.Builder()
-                      .setConnectionTimeoutMs((int) conf.getPipeConnectorTransferTimeoutMs())
+                      .setConnectionTimeoutMs(conf.getPipeConnectorTransferTimeoutMs())
                       .setRpcThriftCompressionEnabled(
                           conf.isPipeConnectorRPCThriftCompressionEnabled())
                       .setSelectorNumOfAsyncClientManager(
