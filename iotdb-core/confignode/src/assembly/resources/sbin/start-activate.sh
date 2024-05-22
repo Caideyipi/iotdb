@@ -53,7 +53,7 @@ sleep 1
 echo "License has been successfully stored to $LICENSE_PATH"
 echo "Import completed. Starting to verify the license..."
 echo - - - - - - - - - -
-main_class=org.apache.iotdb.confignode.manager.activation.ActivationVerifier
+main_class=com.timecho.iotdb.manager.activation.ActivationVerifier
 iotdb_params="-DCONFIGNODE_CONF=${CONFIGNODE_CONF}"
 iotdb_params="$iotdb_params -DCONFIGNODE_HOME=${CONFIGNODE_HOME}"
 

@@ -57,7 +57,7 @@ echo License has been successfully stored to %LICENSE_PATH%
 echo Import completed. Starting to verify the license...
 echo - - - - - - - - - -
 
-set "main_class=org.apache.iotdb.confignode.manager.activation.ActivationVerifier"
+set "main_class=com.timecho.iotdb.manager.activation.ActivationVerifier"
 set "iotdb_params=-DCONFIGNODE_CONF=%CONFIGNODE_CONF%"
 set "iotdb_params=%iotdb_params% -DCONFIGNODE_HOME=%CONFIGNODE_HOME%"
 
