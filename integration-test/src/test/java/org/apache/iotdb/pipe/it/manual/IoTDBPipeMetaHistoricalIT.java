@@ -121,8 +121,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualManualIT {
 
       extractorAttributes.put("extractor.inclusion", "data, schema");
       extractorAttributes.put(
-          "extractor.inclusion.exclusion",
-          "schema.timeseries.ordinary, schema.timeseries.view, schema.ttl");
+          "extractor.inclusion.exclusion", "schema.timeseries.ordinary, schema.timeseries.view");
       extractorAttributes.put("extractor.path", "root.ln.**");
 
       connectorAttributes.put("connector", "iotdb-thrift-connector");
@@ -156,7 +155,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualManualIT {
           "Database,TTL,SchemaReplicationFactor,DataReplicationFactor,TimePartitionInterval,",
           // Receiver's SchemaReplicationFactor/DataReplicationFactor shall be 3/2 regardless of the
           // sender
-          Collections.singleton("root.ln,null,3,2,604800000,"));
+          Collections.singleton("root.ln,3600000,3,2,604800000,"));
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv,
           "select * from root.**",
