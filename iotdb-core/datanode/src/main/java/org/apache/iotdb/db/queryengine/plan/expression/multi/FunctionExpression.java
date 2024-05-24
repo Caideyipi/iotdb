@@ -26,6 +26,7 @@ import org.apache.iotdb.commons.udf.builtin.BuiltinScalarFunction;
 import org.apache.iotdb.commons.udf.builtin.ModelInferenceFunction;
 import org.apache.iotdb.commons.udf.service.UDFManagementService;
 import org.apache.iotdb.db.queryengine.common.NodeRef;
+import org.apache.iotdb.db.queryengine.execution.MemoryEstimationHelper;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
 import org.apache.iotdb.db.queryengine.plan.expression.ExpressionType;
 import org.apache.iotdb.db.queryengine.plan.expression.leaf.TimeSeriesOperand;
@@ -38,6 +39,7 @@ import org.apache.iotdb.db.queryengine.transformation.dag.udf.UDTFInformationInf
 import org.apache.iotdb.udf.api.customizer.strategy.AccessStrategy;
 
 import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.utils.RamUsageEstimator;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 
 import java.io.DataOutputStream;
@@ -53,6 +55,9 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public class FunctionExpression extends Expression {
+
+  private static final long INSTANCE_SIZE =
+      RamUsageEstimator.shallowSizeOfInstance(FunctionExpression.class);
 
   private FunctionType functionType;
 
@@ -401,5 +406,26 @@ public class FunctionExpression extends Expression {
     for (Expression expression : expressions) {
       Expression.serialize(expression, stream);
     }
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    return INSTANCE_SIZE
+        + RamUsageEstimator.sizeOf(functionName)
+        + RamUsageEstimator.sizeOf(parametersString)
+        + RamUsageEstimator.sizeOfMap(functionAttributes)
+        + (expressions == null
+            ? 0
+            : expressions.stream()
+                .mapToLong(MemoryEstimationHelper::getEstimatedSizeOfAccountableObject)
+                .sum())
+        + (paths == null
+            ? 0
+            : paths.stream().mapToLong(MemoryEstimationHelper::getEstimatedSizeOfPartialPath).sum())
+        + (countTimeExpressions == null
+            ? 0
+            : countTimeExpressions.stream()
+                .mapToLong(MemoryEstimationHelper::getEstimatedSizeOfAccountableObject)
+                .sum());
   }
 }
