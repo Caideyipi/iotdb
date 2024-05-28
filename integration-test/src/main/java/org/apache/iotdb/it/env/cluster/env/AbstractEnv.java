@@ -529,7 +529,9 @@ public abstract class AbstractEnv implements BaseEnv {
     String endpoint = dataNode.getIp() + ":" + dataNode.getPort();
     Connection writeConnection =
         DriverManager.getConnection(
-            Config.IOTDB_URL_PREFIX + endpoint + getParam(version, NODE_NETWORK_TIMEOUT_MS),
+            Config.IOTDB_URL_PREFIX
+                + endpoint
+                + getParam(version, NODE_NETWORK_TIMEOUT_MS, ZERO_TIME_ZONE),
             System.getProperty("User", username),
             System.getProperty("Password", password));
     return new NodeConnection(
@@ -571,7 +573,9 @@ public abstract class AbstractEnv implements BaseEnv {
           () -> {
             Connection readConnection =
                 DriverManager.getConnection(
-                    Config.IOTDB_URL_PREFIX + endpoint + getParam(version, NODE_NETWORK_TIMEOUT_MS),
+                    Config.IOTDB_URL_PREFIX
+                        + endpoint
+                        + getParam(version, NODE_NETWORK_TIMEOUT_MS, ZERO_TIME_ZONE),
                     System.getProperty("User", username),
                     System.getProperty("Password", password));
             return new NodeConnection(
@@ -609,7 +613,7 @@ public abstract class AbstractEnv implements BaseEnv {
                       DriverManager.getConnection(
                           Config.IOTDB_URL_PREFIX
                               + dataNodeEndpoint
-                              + getParam(null, NODE_NETWORK_TIMEOUT_MS),
+                              + getParam(null, NODE_NETWORK_TIMEOUT_MS, ZERO_TIME_ZONE),
                           System.getProperty("User", "root"),
                           System.getProperty("Password", "root"))) {
                 logger.info("Successfully connecting to DataNode: {}.", dataNodeEndpoint);
@@ -634,11 +638,14 @@ public abstract class AbstractEnv implements BaseEnv {
     }
   }
 
-  private String getParam(Constant.Version version, int timeout) {
+  private String getParam(Constant.Version version, int timeout, String timeZone) {
     StringBuilder sb = new StringBuilder("?");
     sb.append(Config.NETWORK_TIMEOUT).append("=").append(timeout);
     if (version != null) {
       sb.append("&").append(VERSION).append("=").append(version);
+    }
+    if (timeZone != null) {
+      sb.append("&").append(Config.TIME_ZONE).append("=").append(timeZone);
     }
     return sb.toString();
   }
