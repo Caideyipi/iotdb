@@ -24,9 +24,9 @@ IF "%~1"=="--help" (
     echo When it is necessary to move an already connected AINode out of the cluster, the corresponding removal script can be executed.
     echo Usage:
     echo Remove the AINode with ainode_id
-    echo ./sbin/remove-ainode.sh -t [ainode_id]
+    echo ./sbin/remove-ainode.bat -t [ainode_id]
     echo Remove the AINode with address:port
-    echo ./sbin/remove-ainode.sh -t [ain_inference_rpc_address:ain_inference_rpc_port]
+    echo ./sbin/remove-ainode.bat -t [ain_inference_rpc_address:ain_inference_rpc_port]
     echo.
     echo Options:
     echo ^ ^ -t = ainode_id or [ain_inference_rpc_address:ain_inference_rpc_port]
