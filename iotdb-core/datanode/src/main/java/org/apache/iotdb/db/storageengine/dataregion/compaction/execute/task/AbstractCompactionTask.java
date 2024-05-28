@@ -122,13 +122,27 @@ public abstract class AbstractCompactionTask {
    */
   public boolean setSourceFilesToCompactionCandidate() {
     List<TsFileResource> files = getAllSourceTsFiles();
-    for (int i = 0; i < files.size(); i++) {
-      if (!files.get(i).transformStatus(TsFileResourceStatus.COMPACTION_CANDIDATE)) {
-        // rollback status to NORMAL
-        for (int j = 0; j < i; j++) {
-          files.get(j).setStatus(TsFileResourceStatus.NORMAL);
+    if (this instanceof SharedStorageCompactionTask) {
+      for (int i = 0; i < files.size(); i++) {
+        if (!files
+            .get(i)
+            .setStatusForShareStorageCompaction(TsFileResourceStatus.COMPACTION_CANDIDATE)) {
+          // rollback status to NORMAL_ON_REMOTE
+          for (int j = 0; j < i; j++) {
+            files.get(j).setStatus(TsFileResourceStatus.NORMAL_ON_REMOTE);
+          }
+          return false;
         }
-        return false;
+      }
+    } else {
+      for (int i = 0; i < files.size(); i++) {
+        if (!files.get(i).transformStatus(TsFileResourceStatus.COMPACTION_CANDIDATE)) {
+          // rollback status to NORMAL
+          for (int j = 0; j < i; j++) {
+            files.get(j).setStatus(TsFileResourceStatus.NORMAL);
+          }
+          return false;
+        }
       }
     }
     return true;

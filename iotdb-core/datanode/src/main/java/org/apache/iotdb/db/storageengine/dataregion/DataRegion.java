@@ -68,6 +68,7 @@ import org.apache.iotdb.db.storageengine.buffer.TimeSeriesMetadataCache;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionTaskType;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.recover.CompactionRecoverManager;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.AbstractCompactionTask;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleSummary;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleTaskManager;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduler;
@@ -95,6 +96,7 @@ import org.apache.iotdb.db.storageengine.dataregion.tsfile.generator.VersionCont
 import org.apache.iotdb.db.storageengine.dataregion.utils.validate.TsFileValidator;
 import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.node.IWALNode;
+import org.apache.iotdb.db.storageengine.dataregion.wal.node.WALNode;
 import org.apache.iotdb.db.storageengine.dataregion.wal.recover.WALRecoverManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.recover.file.SealedTsFileRecoverPerformer;
 import org.apache.iotdb.db.storageengine.dataregion.wal.recover.file.UnsealedTsFileRecoverPerformer;
@@ -372,6 +374,7 @@ public class DataRegion implements IDataRegionForQuery {
     this.dataRegionId = id;
     this.tsFileManager = new TsFileManager(databaseName, id, "");
     this.partitionMaxFileVersions = new HashMap<>();
+    this.lastFlushTimeMap = new HashLastFlushTimeMap();
     partitionMaxFileVersions.put(0L, 0L);
   }
 
@@ -2222,6 +2225,7 @@ public class DataRegion implements IDataRegionForQuery {
       hasReleasedLock = true;
 
       deleteDataInFiles(sealedTsFileResource, deletion, devicePaths, deviceMatchInfo);
+      SharedStorageCompactionTask.deleteDataInRemoteFiles(this, deletion);
     } catch (Exception e) {
       throw new IOException(e);
     } finally {
@@ -2261,6 +2265,8 @@ public class DataRegion implements IDataRegionForQuery {
       writeUnlock();
       releasedLock = true;
       deleteDataDirectlyInFile(sealedTsFileResource, pathToDelete, startTime, endTime);
+      SharedStorageCompactionTask.deleteDataInRemoteFiles(
+          this, new Deletion(pathToDelete, MERGE_MOD_START_VERSION_NUM, startTime, endTime));
     } catch (Exception e) {
       throw new IOException(e);
     } finally {
@@ -2294,7 +2300,8 @@ public class DataRegion implements IDataRegionForQuery {
     return walFlushListeners;
   }
 
-  private boolean canSkipDelete(
+  public static boolean canSkipDelete(
+      String databaseName,
       TsFileResource tsFileResource,
       Set<PartialPath> devicePaths,
       long deleteStart,
@@ -2367,6 +2374,7 @@ public class DataRegion implements IDataRegionForQuery {
       throws IOException {
     for (TsFileResource tsFileResource : tsFileResourceList) {
       if (canSkipDelete(
+          databaseName,
           tsFileResource,
           devicePaths,
           deletion.getStartTime(),
@@ -2543,7 +2551,7 @@ public class DataRegion implements IDataRegionForQuery {
       long fileStartTime = file.getTimeIndex().getMinStartTime();
       long fileEndTime = file.getTimeIndex().getMaxEndTime();
 
-      if (!canSkipDelete(file, pathToDelete, startTime, endTime, deviceMatchInfo)) {
+      if (!canSkipDelete(databaseName, file, pathToDelete, startTime, endTime, deviceMatchInfo)) {
         if (startTime <= fileStartTime
             && endTime >= fileEndTime
             && file.isClosed()
@@ -2862,6 +2870,10 @@ public class DataRegion implements IDataRegionForQuery {
     }
   }
 
+  public long getPartitionMaxFileVersion(long partition) {
+    return partitionMaxFileVersions.getOrDefault(partition, 0L);
+  }
+
   /**
    * Set the version in "partition" to "version" if "version" is larger than the current version.
    */
@@ -2997,9 +3009,14 @@ public class DataRegion implements IDataRegionForQuery {
       boolean deleteOriginFile)
       throws LoadFileException, DiskSpaceInsufficientException {
     File targetFile;
+    int targetTierLevel = 0;
+    if (tsFileResource.onRemote()) {
+      targetTierLevel = TierManager.getInstance().getTiersNum() - 2;
+      tsFileResource.setTierLevel(TierManager.getInstance().getTiersNum() - 1);
+    }
     targetFile =
         fsFactory.getFile(
-            TierManager.getInstance().getNextFolderForTsFile(0, false),
+            TierManager.getInstance().getNextFolderForTsFile(targetTierLevel, false),
             databaseName
                 + File.separatorChar
                 + dataRegionId
@@ -3025,7 +3042,9 @@ public class DataRegion implements IDataRegionForQuery {
       targetFile.getParentFile().mkdirs();
     }
     try {
-      if (deleteOriginFile) {
+      if (tsFileResource.onRemote()) {
+        logger.debug("Load remote file {}", tsFileToLoad);
+      } else if (deleteOriginFile) {
         FileUtils.moveFile(tsFileToLoad, targetFile);
       } else {
         Files.copy(tsFileToLoad.toPath(), targetFile.toPath());
@@ -3200,6 +3219,11 @@ public class DataRegion implements IDataRegionForQuery {
    */
   public Collection<TsFileProcessor> getWorkUnsequenceTsFileProcessors() {
     return workUnsequenceTsFileProcessors.values();
+  }
+
+  public boolean hasWorkTsFileProcessor(long timePartition) {
+    return workSequenceTsFileProcessors.get(timePartition) != null
+        || workUnsequenceTsFileProcessors.get(timePartition) != null;
   }
 
   public void setDataTTLWithTimePrecisionCheck(long dataTTL) {
@@ -3660,6 +3684,10 @@ public class DataRegion implements IDataRegionForQuery {
     // identifier should be same with getTsFileProcessor method
     return WALManager.getInstance()
         .applyForWALNode(databaseName + FILE_NAME_SEPARATOR + dataRegionId);
+  }
+
+  public boolean isAllSearchIndexSafelyDeleted() {
+    return ((WALNode) getWALNode()).isAllSearchIndexSafelyDeleted();
   }
 
   /** Wait for this data region successfully deleted */

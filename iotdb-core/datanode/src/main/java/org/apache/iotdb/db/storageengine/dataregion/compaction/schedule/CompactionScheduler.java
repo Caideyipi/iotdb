@@ -21,6 +21,7 @@ package org.apache.iotdb.db.storageengine.dataregion.compaction.schedule;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.utils.TestOnly;
+import org.apache.iotdb.consensus.ConsensusFactory;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.service.metrics.CompactionMetrics;
@@ -29,11 +30,14 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.Abst
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.CrossSpaceCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InnerSpaceCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InsertionCrossSpaceCompactionTask;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.ICompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.ICrossSpaceSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.RewriteCrossSpaceCompactionSelector;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.CrossCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.InsertionCrossCompactionTaskResource;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
 import org.apache.iotdb.db.storageengine.rescon.memory.SystemInfo;
 
@@ -105,6 +109,7 @@ public class CompactionScheduler {
         tryToSubmitInnerSpaceCompactionTask(tsFileManager, timePartition, true, summary);
     trySubmitCount +=
         tryToSubmitInnerSpaceCompactionTask(tsFileManager, timePartition, false, summary);
+    trySubmitCount += tryToSubmitSharedStorageCompactionTask(tsFileManager, timePartition, summary);
     return trySubmitCount;
   }
 
@@ -279,6 +284,35 @@ public class CompactionScheduler {
                       tsFileManager.getNextCompactionTaskId())));
     }
     summary.incrementSubmitTaskNum(CompactionTaskType.CROSS, trySubmitCount);
+    return trySubmitCount;
+  }
+
+  private static int tryToSubmitSharedStorageCompactionTask(
+      TsFileManager tsFileManager, long timePartition, CompactionScheduleSummary summary)
+      throws InterruptedException {
+    if (config.getDataRegionConsensusProtocolClass().equals(ConsensusFactory.SIMPLE_CONSENSUS)
+        || (!config.isEnableHDFS() && !config.isEnableObjectStorage())) {
+      return 0;
+    }
+
+    ICrossSpaceSelector sharedStorageCompactionSelector =
+        new SharedStorageCompactionSelector(tsFileManager.getDataRegionId(), timePartition);
+    List<CrossCompactionTaskResource> taskResources =
+        sharedStorageCompactionSelector.selectCrossSpaceTask(
+            tsFileManager.getOrCreateSequenceListByTimePartition(timePartition),
+            tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition));
+    if (taskResources.isEmpty()) {
+      return 0;
+    }
+
+    SharedStorageCompactionTask task =
+        new SharedStorageCompactionTask(
+            timePartition,
+            tsFileManager,
+            (SharedStorageCompactionTaskResource) taskResources.get(0),
+            tsFileManager.getNextCompactionTaskId());
+    int trySubmitCount = addTaskToWaitingQueue(Collections.singletonList(task));
+    summary.incrementSubmitTaskNum(CompactionTaskType.SHARED_STORAGE, trySubmitCount);
     return trySubmitCount;
   }
 }

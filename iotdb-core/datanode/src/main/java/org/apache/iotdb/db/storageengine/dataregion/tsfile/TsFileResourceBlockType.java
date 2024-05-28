@@ -46,6 +46,8 @@ public enum TsFileResourceBlockType {
         return EMPTY_BLOCK;
       case 1:
         return PROGRESS_INDEX;
+      case 2:
+        return REMOTE_STORAGE_BLOCK;
       default:
         throw new IllegalArgumentException("Invalid input: " + type);
     }

@@ -92,7 +92,7 @@ public class MigrationTaskManagerTest {
         new String[][] {new String[] {"/tmp/test1"}, new String[] {"/tmp/test1"}});
     prevTieredStorageMigrateSpeedLimitBytesPerSec =
         config.getTieredStorageMigrateSpeedLimitBytesPerSec();
-    config.setTieredStorageMigrateSpeedLimitBytesPerSec(new long[] {1024 * 1024, 1024 * 1024});
+    config.setTieredStorageMigrateSpeedLimitBytesPerSec(new long[] {1024 * 1024});
     MigrationTaskManager.getInstance().start();
   }
 
@@ -141,6 +141,7 @@ public class MigrationTaskManagerTest {
         MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_OS_DIR);
     long startTime = System.currentTimeMillis();
     task.migrate();
+    System.out.println(System.currentTimeMillis() - startTime);
     assertTrue(System.currentTimeMillis() - startTime > 5_000);
     // check
     assertFalse(srcFile.exists());

@@ -21,7 +21,9 @@ package org.apache.iotdb.db.storageengine.dataregion.compaction.execute.recover;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InsertionCrossSpaceCompactionTask;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.CompactionLogger;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 
@@ -103,6 +105,7 @@ public class CompactionRecoverManager {
             "{} [Compaction][Recover] recover compaction in time partition dir {}",
             logicalStorageGroupName,
             timePartitionDir.getAbsolutePath());
+        deleteSharedCompactionTmpFiles(timePartitionDir);
         // recover temporary files generated during compacted
         recoverCompaction(isInnerSpace, timePartitionDir);
 
@@ -150,11 +153,22 @@ public class CompactionRecoverManager {
         new InsertionCrossSpaceCompactionTask(
                 logicalStorageGroupName, dataRegionId, tsFileManager, compactionLog)
             .recover();
+      } else if (compactionLog.getName().equals(SharedStorageCompactionTask.LOG_FILE_NAME)) {
+        new SharedStorageCompactionRecoverTask(dataRegionId, tsFileManager, compactionLog)
+            .recover();
       } else {
         new CompactionRecoverTask(
                 logicalStorageGroupName, dataRegionId, tsFileManager, compactionLog, isInnerSpace)
             .doCompaction();
       }
+    }
+  }
+
+  private void deleteSharedCompactionTmpFiles(File timePartitionDir) {
+    try {
+      SharedStorageCompactionUtils.deleteRemoteTmpFiles(timePartitionDir);
+    } catch (IOException e) {
+      logger.warn("Fail to delete remote tmp files in the dir {}", timePartitionDir, e);
     }
   }
 }

@@ -693,6 +693,7 @@ public class CompactionMetrics implements IMetricSet {
   private Gauge crossInnerSpaceCompactionTaskSelectedNum = DoNothingMetricManager.DO_NOTHING_GAUGE;
   private Gauge insertionCrossSpaceCompactionTaskSelectedNum =
       DoNothingMetricManager.DO_NOTHING_GAUGE;
+  private Gauge sharedStorageCompactionTaskSelectedNum = DoNothingMetricManager.DO_NOTHING_GAUGE;
 
   private Histogram seqSpaceCompactionTaskSelectionTimeCost =
       DoNothingMetricManager.DO_NOTHING_HISTOGRAM;
@@ -701,6 +702,8 @@ public class CompactionMetrics implements IMetricSet {
   private Histogram crossSpaceCompactionTaskSelectionTimeCost =
       DoNothingMetricManager.DO_NOTHING_HISTOGRAM;
   private Histogram insertionCrossSpaceCompactionTaskSelectionTimeCost =
+      DoNothingMetricManager.DO_NOTHING_HISTOGRAM;
+  private Histogram sharedStorageCompactionTaskSelectionTimeCost =
       DoNothingMetricManager.DO_NOTHING_HISTOGRAM;
 
   private Histogram seqInnerSpaceCompactionTaskSelectedFileNum =
@@ -717,6 +720,7 @@ public class CompactionMetrics implements IMetricSet {
     crossInnerSpaceCompactionTaskSelectedNum.set(summary.getSubmitCrossSpaceCompactionTaskNum());
     insertionCrossSpaceCompactionTaskSelectedNum.set(
         summary.getSubmitInsertionCrossSpaceCompactionTaskNum());
+    sharedStorageCompactionTaskSelectedNum.set(summary.getSubmitSharedStorageCompactionTaskNum());
   }
 
   public void updateCompactionTaskSelectionTimeCost(CompactionTaskType taskType, long time) {
@@ -732,6 +736,9 @@ public class CompactionMetrics implements IMetricSet {
         break;
       case INSERTION:
         insertionCrossSpaceCompactionTaskSelectionTimeCost.update(time);
+        break;
+      case SHARED_STORAGE:
+        sharedStorageCompactionTaskSelectionTimeCost.update(time);
         break;
       default:
         break;
@@ -781,6 +788,12 @@ public class CompactionMetrics implements IMetricSet {
             MetricLevel.IMPORTANT,
             Tag.NAME.toString(),
             "insertion");
+    sharedStorageCompactionTaskSelectedNum =
+        metricService.getOrCreateGauge(
+            Metric.COMPACTION_TASK_SELECTION.toString(),
+            MetricLevel.IMPORTANT,
+            Tag.NAME.toString(),
+            "shared-storage");
     seqSpaceCompactionTaskSelectionTimeCost =
         metricService.getOrCreateHistogram(
             Metric.COMPACTION_TASK_SELECTION_COST.toString(),
@@ -805,6 +818,12 @@ public class CompactionMetrics implements IMetricSet {
             MetricLevel.IMPORTANT,
             Tag.NAME.toString(),
             "insertion");
+    sharedStorageCompactionTaskSelectionTimeCost =
+        metricService.getOrCreateHistogram(
+            Metric.COMPACTION_TASK_SELECTION_COST.toString(),
+            MetricLevel.IMPORTANT,
+            Tag.NAME.toString(),
+            "shared-storage");
     seqInnerSpaceCompactionTaskSelectedFileNum =
         metricService.getOrCreateHistogram(
             Metric.COMPACTION_TASK_SELECTED_FILE.toString(),

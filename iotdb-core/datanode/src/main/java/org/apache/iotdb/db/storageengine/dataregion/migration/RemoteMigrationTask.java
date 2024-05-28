@@ -19,9 +19,11 @@
 
 package org.apache.iotdb.db.storageengine.dataregion.migration;
 
+import org.apache.iotdb.db.storageengine.dataregion.tsfile.RemoteStorageBlock;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResourceStatus;
 
+import org.apache.tsfile.utils.FSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,19 @@ public class RemoteMigrationTask extends MigrationTask {
     // shutdown.
     filesShouldDelete.addAll(Arrays.asList(destTsFile, destResourceFile, destModsFile));
     cleanup();
+
+    tsFileResource.writeLock();
+    try {
+      tsFileResource.setRemoteStorageBlock(
+          new RemoteStorageBlock(FSUtils.getFSType(destTsFile), destTsFile.getAbsolutePath()));
+      tsFileResource.serialize();
+    } catch (Exception e) {
+      logger.error("Fail to serialize remote storage info into file {}", srcFile, e);
+      cleanup();
+      return;
+    } finally {
+      tsFileResource.writeUnlock();
+    }
 
     // copy TsFile and resource file
     tsFileResource.readLock();

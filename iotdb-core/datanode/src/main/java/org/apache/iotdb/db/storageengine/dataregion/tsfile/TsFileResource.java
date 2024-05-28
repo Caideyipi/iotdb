@@ -40,10 +40,12 @@ import org.apache.iotdb.db.storageengine.dataregion.tsfile.timeindex.ITimeIndex;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.timeindex.TimeIndexLevel;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 
+import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
 import org.apache.tsfile.file.metadata.IChunkMetadata;
 import org.apache.tsfile.file.metadata.IDeviceID;
 import org.apache.tsfile.file.metadata.ITimeSeriesMetadata;
 import org.apache.tsfile.fileSystem.FSFactoryProducer;
+import org.apache.tsfile.fileSystem.FSPath;
 import org.apache.tsfile.fileSystem.fsFactory.FSFactory;
 import org.apache.tsfile.read.filter.basic.Filter;
 import org.apache.tsfile.utils.FSUtils;
@@ -161,6 +163,8 @@ public class TsFileResource {
 
   private ProgressIndex maxProgressIndex;
 
+  private RemoteStorageBlock remoteStorageBlock;
+
   private boolean isInsertionCompactionTaskCandidate = true;
 
   @TestOnly
@@ -256,10 +260,18 @@ public class TsFileResource {
       ReadWriteIOUtils.write((String) null, outputStream);
     }
 
+    boolean hasTsFileResourceBlock = false;
     if (maxProgressIndex != null) {
+      hasTsFileResourceBlock = true;
       TsFileResourceBlockType.PROGRESS_INDEX.serialize(outputStream);
       maxProgressIndex.serialize(outputStream);
-    } else {
+    }
+    if (remoteStorageBlock != null) {
+      hasTsFileResourceBlock = true;
+      TsFileResourceBlockType.REMOTE_STORAGE_BLOCK.serialize(outputStream);
+      remoteStorageBlock.serialize(outputStream);
+    }
+    if (!hasTsFileResourceBlock) {
       TsFileResourceBlockType.EMPTY_BLOCK.serialize(outputStream);
     }
   }
@@ -286,6 +298,9 @@ public class TsFileResource {
             TsFileResourceBlockType.deserialize(ReadWriteIOUtils.readByte(inputStream));
         if (blockType == TsFileResourceBlockType.PROGRESS_INDEX) {
           maxProgressIndex = ProgressIndexType.deserializeFrom(inputStream);
+        }
+        if (blockType == TsFileResourceBlockType.REMOTE_STORAGE_BLOCK) {
+          setRemoteStorageBlock(RemoteStorageBlock.deserializeFrom(inputStream));
         }
       }
     }
@@ -370,6 +385,10 @@ public class TsFileResource {
 
   public void increaseTierLevel() {
     this.tierLevel.addAndGet(1);
+  }
+
+  public void setTierLevel(int tierLevel) {
+    this.tierLevel.set(tierLevel);
   }
 
   public int getTierLevel() {
@@ -562,6 +581,7 @@ public class TsFileResource {
       onRemote = !fsFactory.deleteIfExists(file) && CONFIG.isEnableObjectStorage();
       if (onRemote) {
         fsFactory.deleteIfExists(getOSFile(file));
+        HybridFileInputFactoryDecorator.removeRemotePathInfo(file);
       }
       fsFactory.deleteIfExists(
           new File(file.getAbsolutePath() + TsFileIOWriter.CHUNK_METADATA_TEMP_FILE_SUFFIX));
@@ -597,9 +617,16 @@ public class TsFileResource {
   }
 
   private File getOSFile(File file) throws IOException {
+    if (file.getName().endsWith(RESOURCE_SUFFIX)) {
+      String tsFileName = file.getName().substring(0, file.getName().indexOf(RESOURCE_SUFFIX));
+      FSPath fsPath =
+          HybridFileInputFactoryDecorator.getTsFileRemotePath(
+              fsFactory.getFile(file.getParent(), tsFileName), CONFIG.getDataNodeId());
+      return fsFactory.getFile(
+          new FSPath(fsPath.getFsType(), fsPath.getPath() + RESOURCE_SUFFIX).getPath());
+    }
     return fsFactory.getFile(
-        FSUtils.parseLocalTsFile2OSFile(
-                file, CONFIG.getObjectStorageBucket(), CONFIG.getDataNodeId())
+        HybridFileInputFactoryDecorator.getTsFileRemotePath(file, CONFIG.getDataNodeId())
             .getPath());
   }
 
@@ -688,7 +715,11 @@ public class TsFileResource {
                 TsFileResourceStatus.COMPACTION_CANDIDATE, TsFileResourceStatus.NORMAL);
       case NORMAL_ON_REMOTE:
         return compareAndSetStatus(
-            TsFileResourceStatus.MIGRATING, TsFileResourceStatus.NORMAL_ON_REMOTE);
+                TsFileResourceStatus.MIGRATING, TsFileResourceStatus.NORMAL_ON_REMOTE)
+            || compareAndSetStatus(
+                TsFileResourceStatus.COMPACTING, TsFileResourceStatus.NORMAL_ON_REMOTE)
+            || compareAndSetStatus(
+                TsFileResourceStatus.COMPACTION_CANDIDATE, TsFileResourceStatus.NORMAL_ON_REMOTE);
       case UNCLOSED:
         // TsFile cannot be set back to UNCLOSED so false is always returned
         return false;
@@ -709,6 +740,14 @@ public class TsFileResource {
       default:
         return false;
     }
+  }
+
+  public boolean setStatusForShareStorageCompaction(TsFileResourceStatus status) {
+    if (status != TsFileResourceStatus.COMPACTION_CANDIDATE) {
+      return false;
+    }
+    return compareAndSetStatus(
+        TsFileResourceStatus.NORMAL_ON_REMOTE, TsFileResourceStatus.COMPACTION_CANDIDATE);
   }
 
   public TsFileRepairStatus getTsFileRepairStatus() {
@@ -1198,6 +1237,16 @@ public class TsFileResource {
 
   public ProgressIndex getMaxProgressIndex() {
     return maxProgressIndex == null ? MinimumProgressIndex.INSTANCE : maxProgressIndex;
+  }
+
+  public void setRemoteStorageBlock(RemoteStorageBlock remoteStorageBlock) {
+    this.remoteStorageBlock = remoteStorageBlock;
+    HybridFileInputFactoryDecorator.putRemotePathInfo(
+        file, FSUtils.parse(remoteStorageBlock.getPath()));
+  }
+
+  public RemoteStorageBlock getRemoteStorageBlock() {
+    return remoteStorageBlock;
   }
 
   public boolean isEmpty() {

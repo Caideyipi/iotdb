@@ -21,6 +21,7 @@ package com.timecho.iotdb.os;
 import com.timecho.iotdb.os.conf.ObjectStorageConfig;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
+import org.apache.tsfile.fileSystem.FSPath;
 import org.apache.tsfile.fileSystem.fileInputFactory.FileInputFactory;
 import org.apache.tsfile.fileSystem.fileInputFactory.HybridFileInputFactory;
 import org.apache.tsfile.read.reader.TsFileInput;
@@ -30,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HybridFileInputFactoryDecorator implements FileInputFactory {
   private static final Logger logger =
@@ -37,6 +40,8 @@ public class HybridFileInputFactoryDecorator implements FileInputFactory {
   private static final ObjectStorageConfig config =
       ObjectStorageDescriptor.getInstance().getConfig();
   private static final FileInputFactory fileInputFactory = new HybridFileInputFactory();
+
+  private static final Map<String, FSPath> localPath2RemotePath = new ConcurrentHashMap<>();
 
   private int dataNodeId;
 
@@ -52,5 +57,30 @@ public class HybridFileInputFactoryDecorator implements FileInputFactory {
           FSUtils.parseLocalTsFile2OSFile(file, config.getBucketName(), dataNodeId).getPath());
     }
     return fileInputFactory.getTsFileInput(filePath);
+  }
+
+  public static void putRemotePathInfo(File localFile, FSPath remotePath) {
+    try {
+      localPath2RemotePath.put(localFile.getCanonicalPath(), remotePath);
+    } catch (IOException e) {
+      logger.warn("Fail to get canonical path of file {}", localFile);
+      localPath2RemotePath.remove(localFile.getPath(), remotePath);
+    }
+  }
+
+  public static FSPath removeRemotePathInfo(File localFile) {
+    try {
+      return localPath2RemotePath.remove(localFile.getCanonicalPath());
+    } catch (IOException e) {
+      logger.warn("Fail to get canonical path of file {}", localFile);
+      return localPath2RemotePath.remove(localFile.getPath());
+    }
+  }
+
+  public static FSPath getTsFileRemotePath(File localFile, int dataNodeId) throws IOException {
+    String canonicalPath = localFile.getCanonicalPath();
+    return localPath2RemotePath.getOrDefault(
+        canonicalPath,
+        FSUtils.parseLocalTsFile2OSFile(localFile, config.getBucketName(), dataNodeId));
   }
 }

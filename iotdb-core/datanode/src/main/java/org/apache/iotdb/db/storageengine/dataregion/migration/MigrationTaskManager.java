@@ -69,7 +69,7 @@ public class MigrationTaskManager implements IService {
   private ExecutorService workers;
 
   /** migrate rate limiter, KB/s */
-  private RateLimiter[] migrateRateLimiters;
+  private volatile RateLimiter[] migrateRateLimiters;
 
   @Override
   public void start() throws StartupException {
@@ -83,12 +83,7 @@ public class MigrationTaskManager implements IService {
     // metrics
     MetricService.getInstance().addMetricSet(MigrationMetrics.getInstance());
     // threads and tasks
-    long[] limitRates = iotdbConfig.getTieredStorageMigrateSpeedLimitBytesPerSec();
-    migrateRateLimiters = new RateLimiter[limitRates.length];
-    for (int i = 0; i < migrateRateLimiters.length; ++i) {
-      migrateRateLimiters[i] =
-          RateLimiter.create(limitRates[i] <= 0 ? Double.MAX_VALUE : (double) limitRates[i] / 1024);
-    }
+    reloadMigrateSpeedLimit();
     scheduler =
         IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
             ThreadName.MIGRATION_SCHEDULER.getName());
@@ -273,7 +268,7 @@ public class MigrationTaskManager implements IService {
   }
 
   void acquireMigrateSpeedLimiter(int tierLevel, long size) {
-    long sizeInKb = size / 1024;
+    long sizeInKb = size / 1024 + 1;
     while (sizeInKb > 0) {
       if (sizeInKb > Integer.MAX_VALUE) {
         migrateRateLimiters[tierLevel].acquire(Integer.MAX_VALUE);
@@ -286,14 +281,17 @@ public class MigrationTaskManager implements IService {
   }
 
   public void reloadMigrateSpeedLimit() {
-    if (migrateRateLimiters == null) {
+    long[] limitRates = iotdbConfig.getTieredStorageMigrateSpeedLimitBytesPerSec();
+    if (limitRates == null) {
+      migrateRateLimiters = null;
       return;
     }
-    long[] limitRates = iotdbConfig.getTieredStorageMigrateSpeedLimitBytesPerSec();
-    for (int i = 0; i < migrateRateLimiters.length; ++i) {
-      migrateRateLimiters[i].setRate(
-          limitRates[i] <= 0 ? Double.MAX_VALUE : (double) limitRates[i] / 1024);
+    RateLimiter[] newRateLimiters = new RateLimiter[limitRates.length];
+    for (int i = 0; i < newRateLimiters.length; ++i) {
+      newRateLimiters[i] =
+          RateLimiter.create(limitRates[i] <= 0 ? Double.MAX_VALUE : (double) limitRates[i] / 1024);
     }
+    migrateRateLimiters = newRateLimiters;
   }
 
   @Override

@@ -66,6 +66,7 @@ public class LocalMigrationTaskTest {
   public void setUp() throws Exception {
     new File(MIGRATION_SOURCE_TIME_PARTITION_DIR).mkdirs();
     new File(MIGRATION_DESTINATION_TIME_PARTITION_DIR).mkdirs();
+    MigrationTaskManager.getInstance().reloadMigrateSpeedLimit();
   }
 
   @After

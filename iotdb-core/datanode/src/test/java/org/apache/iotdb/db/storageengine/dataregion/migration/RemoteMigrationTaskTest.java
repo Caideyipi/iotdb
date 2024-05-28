@@ -93,6 +93,7 @@ public class RemoteMigrationTaskTest {
     ((TestConfig) osConfig.getProviderConfig()).setTestDir(MIGRATION_DESTINATION_BASE_DIR);
     new File(MIGRATION_SOURCE_TIME_PARTITION_DIR).mkdirs();
     new File(MIGRATION_DESTINATION_TIME_PARTITION_DIR).mkdirs();
+    MigrationTaskManager.getInstance().reloadMigrateSpeedLimit();
   }
 
   @After

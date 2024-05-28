@@ -132,8 +132,10 @@ import org.apache.iotdb.db.schemaengine.template.TemplateInternalRPCUpdateType;
 import org.apache.iotdb.db.service.DataNode;
 import org.apache.iotdb.db.service.RegionMigrateService;
 import org.apache.iotdb.db.storageengine.StorageEngine;
+import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.repair.RepairTaskStatus;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleTaskManager;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.settle.SettleRequestHandler;
 import org.apache.iotdb.db.storageengine.rescon.quotas.DataNodeSpaceQuotaManager;
 import org.apache.iotdb.db.storageengine.rescon.quotas.DataNodeThrottleQuotaManager;
@@ -183,6 +185,10 @@ import org.apache.iotdb.mpp.rpc.thrift.TExecuteCQ;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchFragmentInstanceInfoReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchFragmentInstanceStatisticsReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchFragmentInstanceStatisticsResp;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchIoTConsensusProgressReq;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchIoTConsensusProgressResp;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaReq;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFireTriggerReq;
@@ -2291,6 +2297,40 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
       status.setMessage(e.getMessage());
     }
     return status;
+  }
+
+  @Override
+  public TFetchLeaderRemoteReplicaResp fetchLeaderRemoteReplica(TFetchLeaderRemoteReplicaReq req) {
+    try {
+      return SharedStorageCompactionSelector.selectLeaderFiles(
+          req.getDataRegionId(), req.getTimePartition());
+    } catch (Exception e) {
+      LOGGER.warn(
+          "Error occurred when select leader files for shared storage compaction, abort this share operation.",
+          e);
+      return new TFetchLeaderRemoteReplicaResp();
+    }
+  }
+
+  @Override
+  public TFetchIoTConsensusProgressResp fetchIoTConsensusProgress(
+      TFetchIoTConsensusProgressReq req) {
+    try {
+      boolean isAllSearchIndexSafelyDeleted = false;
+      DataRegion dataRegion =
+          StorageEngine.getInstance().getDataRegion(new DataRegionId(req.getDataRegionId()));
+      if (dataRegion == null) {
+        LOGGER.warn(
+            "Cannot get the data region of id {}, mark all search index safely deleted flag as false.",
+            req.getDataRegionId());
+      } else {
+        isAllSearchIndexSafelyDeleted = dataRegion.isAllSearchIndexSafelyDeleted();
+      }
+      return new TFetchIoTConsensusProgressResp(isAllSearchIndexSafelyDeleted);
+    } catch (Exception e) {
+      LOGGER.warn("Error occurred when fetch iot consensus progress.", e);
+      return new TFetchIoTConsensusProgressResp(false);
+    }
   }
 
   public void handleClientExit() {

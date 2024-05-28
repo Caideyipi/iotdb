@@ -679,6 +679,29 @@ struct TFetchFragmentInstanceStatisticsResp {
 * END: Used for EXPLAIN ANALYZE
 **/
 
+// ====================================================
+// Shared Storage
+// ====================================================
+
+struct TFetchLeaderRemoteReplicaReq {
+  1: required i32 dataRegionId
+  2: required i64 timePartition
+}
+
+struct TFetchLeaderRemoteReplicaResp {
+  1: required list<string> fileNames
+  2: required list<binary> resourceFiles
+  3: required list<binary> modsFiles
+}
+
+struct TFetchIoTConsensusProgressReq {
+  1: required i32 dataRegionId
+}
+
+struct TFetchIoTConsensusProgressResp {
+  1: required bool isAllSearchIndexSafelyDeleted
+}
+
 service IDataNodeRPCService {
 
   // -----------------------------------For Data Node-----------------------------------------------
@@ -1057,6 +1080,16 @@ service IDataNodeRPCService {
   * Fetch fragment instance statistics for EXPLAIN ANALYZE
   */
   TFetchFragmentInstanceStatisticsResp fetchFragmentInstanceStatistics(TFetchFragmentInstanceStatisticsReq req)
+
+  /**
+  * Fetch leader‘s remote replica for shared storage compaction
+  **/
+  TFetchLeaderRemoteReplicaResp fetchLeaderRemoteReplica(TFetchLeaderRemoteReplicaReq req)
+
+  /**
+  * Fetch the iot consensus sync progress
+  **/
+  TFetchIoTConsensusProgressResp fetchIoTConsensusProgress(TFetchIoTConsensusProgressReq req)
 }
 
 service MPPDataExchangeService {

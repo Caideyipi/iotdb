@@ -936,6 +936,11 @@ public class WALNode implements IWALNode {
     return WALManager.getInstance().getTotalDiskUsage();
   }
 
+  public boolean isAllSearchIndexSafelyDeleted() {
+    return safelyDeletedSearchIndex == DEFAULT_SAFELY_DELETED_SEARCH_INDEX
+        || safelyDeletedSearchIndex == getCurrentSearchIndex();
+  }
+
   // endregion
 
   @Override
