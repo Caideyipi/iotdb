@@ -297,7 +297,7 @@ public class Analysis implements IAnalysis {
   private Template deviceTemplate;
   // when deviceTemplate is not empty and all expressions in this query are templated measurements,
   // i.e. no aggregation and arithmetic expression
-  private boolean onlyQueryTemplateMeasurements = true;
+  private boolean noWhereAndAggregation = true;
   // if it is wildcard query in templated align by device query
   private boolean templateWildCardQuery;
   // all queried measurementList and schemaList in deviceTemplate.
@@ -441,8 +441,8 @@ public class Analysis implements IAnalysis {
       return null;
     }
 
-    if (isAllDevicesInOneTemplate()
-        && (isOnlyQueryTemplateMeasurements() || expression instanceof TimeSeriesOperand)) {
+    if (allDevicesInOneTemplate()
+        && (noWhereAndAggregation() || expression instanceof TimeSeriesOperand)) {
       TimeSeriesOperand seriesOperand = (TimeSeriesOperand) expression;
       return deviceTemplate.getSchemaMap().get(seriesOperand.getPath().getMeasurement()).getType();
     }
@@ -940,7 +940,7 @@ public class Analysis implements IAnalysis {
   // All Queries Devices Set In One Template
   /////////////////////////////////////////////////////////////////////////////////////////////////
 
-  public boolean isAllDevicesInOneTemplate() {
+  public boolean allDevicesInOneTemplate() {
     return this.deviceTemplate != null;
   }
 
@@ -952,12 +952,12 @@ public class Analysis implements IAnalysis {
     this.deviceTemplate = template;
   }
 
-  public boolean isOnlyQueryTemplateMeasurements() {
-    return onlyQueryTemplateMeasurements;
+  public boolean noWhereAndAggregation() {
+    return noWhereAndAggregation;
   }
 
-  public void setOnlyQueryTemplateMeasurements(boolean onlyQueryTemplateMeasurements) {
-    this.onlyQueryTemplateMeasurements = onlyQueryTemplateMeasurements;
+  public void setNoWhereAndAggregation(boolean value) {
+    this.noWhereAndAggregation = value;
   }
 
   public List<String> getMeasurementList() {
