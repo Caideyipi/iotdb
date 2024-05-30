@@ -29,7 +29,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
@@ -54,7 +53,7 @@ public class ActivationVerifier {
     checkSystemInfo(systemProperties, licenseProperties);
     checkLicense(licenseProperties);
     System.out.println(
-        "License has been successfully verified. Now, it is recommended to start the cluster and use 'show cluster' to perform further verification of the activation status.");
+        "License has been successfully verified. Now, it is recommended to start the cluster, then use 'show cluster' and 'show activation' to perform further verification of the activation status.");
     exit(SUCCESS_CODE);
   }
 
@@ -74,7 +73,8 @@ public class ActivationVerifier {
         stringBuilder.append(line);
       }
       encryptedLicenseContent = stringBuilder.toString();
-      licenseProperties.load(new StringReader(RSA.publicDecrypt(encryptedLicenseContent)));
+      licenseProperties =
+          ActivationManager.loadLicenseFromEveryVersionStatic(encryptedLicenseContent);
     } catch (Exception e) {
       errorThenExit(LOAD_FAIL_MESSAGE);
     }
@@ -131,7 +131,7 @@ public class ActivationVerifier {
             License.IS_SEED_CONFIGNODE_NODE_NAME,
             () -> String.valueOf(systemProperties.get("is_seed_config_node")));
 
-    if (!ActivationManager.verifyAllSystemInfoStatic(
+    if (!ActivationManager.verifyAllSystemInfoOfEveryVersion(
         licenseProperties,
         ActivationManager.hardwareSystemInfoNameToItsGetter,
         configurableSystemInfoNameToItsGetter)) {

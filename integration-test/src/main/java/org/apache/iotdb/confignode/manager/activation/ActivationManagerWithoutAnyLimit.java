@@ -53,13 +53,9 @@ public class ActivationManagerWithoutAnyLimit extends ActivationManager {
     // do nothing
   }
 
+  /** Override this method in order to make sure license won't be reloaded. */
   @Override
-  protected String encrypt(String src) {
-    return src;
-  }
-
-  @Override
-  protected String decrypt(String src) {
-    return src;
+  protected void tryLoadLicenseFromFile() {
+    // do nothing
   }
 }

@@ -24,6 +24,8 @@ import org.apache.iotdb.confignode.manager.ConfigManager;
 
 import com.timecho.iotdb.manager.activation.ActivationManager;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Properties;
 
 /** License Manager without system info check, only for IoTDBActivationTest */
@@ -40,12 +42,9 @@ public class ActivationManagerWithoutEncryptionAndMachineBinding extends Activat
   }
 
   @Override
-  protected String encrypt(String src) {
-    return src;
-  }
-
-  @Override
-  protected String decrypt(String src) {
-    return src;
+  protected Properties loadLicenseFromEveryVersion(String licenseContent) throws IOException {
+    Properties licenseProperties = new Properties();
+    licenseProperties.load(new StringReader(licenseContent));
+    return licenseProperties;
   }
 }

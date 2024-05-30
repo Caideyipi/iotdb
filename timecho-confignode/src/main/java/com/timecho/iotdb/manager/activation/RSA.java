@@ -21,6 +21,7 @@ package com.timecho.iotdb.manager.activation;
 
 import org.apache.iotdb.commons.exception.LicenseException;
 
+import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -33,6 +34,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.function.Function;
 
 public class RSA {
   private static final String RSA_PUBLIC_KEY =
@@ -62,7 +64,13 @@ public class RSA {
     return keyFactory.generatePublic(x509EncodedKeySpec);
   }
 
-  public static String section(String type, String src, Cipher cipher) throws LicenseException {
+  private static String section(
+      String type,
+      String src,
+      Cipher cipher,
+      Function<byte[], String> encoder,
+      Function<String, byte[]> decoder)
+      throws LicenseException {
     try {
       if (CIPHER_ENCRYPT.equals(type)) {
         byte[] bytes = src.getBytes(DEFAULT_CHARSET);
@@ -84,9 +92,9 @@ public class RSA {
         byte[] encryptedData = out.toByteArray();
         out.close();
 
-        return Base64.encodeBase64String(encryptedData);
+        return encoder.apply(encryptedData);
       } else if (CIPHER_DECRYPT.equals(type)) {
-        byte[] bytes = Base64.decodeBase64(src);
+        byte[] bytes = decoder.apply(src);
         int inputLen = bytes.length;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int offSet = 0;
@@ -112,21 +120,40 @@ public class RSA {
     return "";
   }
 
+  private static String sectionV00(String type, String src, Cipher cipher) throws LicenseException {
+    return section(type, src, cipher, Base64::encodeBase64String, Base64::decodeBase64);
+  }
+
+  private static String sectionV01(String type, String src, Cipher cipher) throws LicenseException {
+    Base32 base32 = new Base32();
+    return section(type, src, cipher, base32::encodeAsString, base32::decode);
+  }
+
   public static String publicEncrypt(String src) throws LicenseException {
     try {
       Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
       cipher.init(Cipher.ENCRYPT_MODE, getPublicKey());
-      return section(CIPHER_ENCRYPT, src, cipher);
+      return sectionV01(CIPHER_ENCRYPT, src, cipher);
     } catch (Exception e) {
       throw new LicenseException(ILLEGAL_LICENSE);
     }
   }
 
-  public static String publicDecrypt(String src) throws LicenseException {
+  public static String publicDecryptV00(String src) throws LicenseException {
     try {
       Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
       cipher.init(Cipher.DECRYPT_MODE, getPublicKey());
-      return section(CIPHER_DECRYPT, src, cipher);
+      return sectionV00(CIPHER_DECRYPT, src, cipher);
+    } catch (Exception e) {
+      throw new LicenseException(ILLEGAL_LICENSE);
+    }
+  }
+
+  public static String publicDecryptV01(String src) throws LicenseException {
+    try {
+      Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
+      cipher.init(Cipher.DECRYPT_MODE, getPublicKey());
+      return sectionV01(CIPHER_DECRYPT, src, cipher);
     } catch (Exception e) {
       throw new LicenseException(ILLEGAL_LICENSE);
     }

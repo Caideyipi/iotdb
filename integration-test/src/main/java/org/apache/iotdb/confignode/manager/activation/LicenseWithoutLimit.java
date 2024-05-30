@@ -39,15 +39,16 @@ public class LicenseWithoutLimit extends License {
 
   public LicenseWithoutLimit(Runnable onLicenseChange) {
     super(onLicenseChange);
-    this.licenseIssueTimestamp = LICENSE_ISSUE_TIMESTAMP_UNLIMITED;
-    this.licenseExpireTimestamp = LICENSE_EXPIRE_TIMESTAMP_UNLIMITED;
-    this.dataNodeNumLimit = DATA_NODE_NUM_UNLIMITED;
-    this.dataNodeCpuCoreNumLimit = DATA_NODE_CPU_CORE_NUM_UNLIMITED;
-    this.deviceNumLimit = DEVICE_NUM_UNLIMITED;
-    this.sensorNumLimit = SENSOR_NUM_UNLIMITED;
-    this.disconnectionFromActiveNodeTimeLimit = DISCONNECTION_FROM_ACTIVE_NODE_TIME_UNLIMITED;
+    this.licenseIssueTimestamp.setValue(LICENSE_ISSUE_TIMESTAMP_UNLIMITED);
+    this.licenseExpireTimestamp.setValue(LICENSE_EXPIRE_TIMESTAMP_UNLIMITED);
+    this.dataNodeNumLimit.setValue(DATA_NODE_NUM_UNLIMITED);
+    this.dataNodeCpuCoreNumLimit.setValue(DATA_NODE_CPU_CORE_NUM_UNLIMITED);
+    this.deviceNumLimit.setValue(DEVICE_NUM_UNLIMITED);
+    this.sensorNumLimit.setValue(SENSOR_NUM_UNLIMITED);
+    this.disconnectionFromActiveNodeTimeLimit.setValue(
+        DISCONNECTION_FROM_ACTIVE_NODE_TIME_UNLIMITED);
     this.licenseSource = LICENSE_SOURCE_UNLIMITED;
-    this.aiNodeNumLimit = AI_NODE_NUM_UNLIMITED;
+    this.aiNodeNumLimit.setValue(AI_NODE_NUM_UNLIMITED);
     this.onLicenseChange.run();
   }
 }

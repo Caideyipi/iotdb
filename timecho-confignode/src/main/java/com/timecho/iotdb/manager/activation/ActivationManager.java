@@ -42,6 +42,7 @@ import com.timecho.iotdb.manager.activation.systeminfo.LinuxSystemInfoGetter;
 import com.timecho.iotdb.manager.activation.systeminfo.MacSystemInfoGetter;
 import com.timecho.iotdb.manager.activation.systeminfo.SystemInfoGetter;
 import com.timecho.iotdb.manager.activation.systeminfo.WindowsSystemInfoGetter;
+import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
@@ -58,19 +59,29 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.NODE_UUID_IN_ENV_FILE;
 
 public class ActivationManager {
+  private static String VERSION = "01";
   static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
 
   private final ConfigManager configManager;
@@ -84,6 +95,8 @@ public class ActivationManager {
       ACTIVATION_DIR_PATH + File.separatorChar + LICENSE_FILE_NAME;
   public static final String SYSTEM_INFO_FILE_PATH =
       ACTIVATION_DIR_PATH + File.separatorChar + "system_info";
+  public static final String HISTORY_FILE_PATH =
+      ACTIVATION_DIR_PATH + File.separatorChar + ".history";
   public static final String ENV_FILE_PATH =
       CONFIGNODE_HOME_PATH + File.separatorChar + IoTDBConstant.ENV_FILE_NAME;
 
@@ -114,24 +127,22 @@ public class ActivationManager {
 
   private static final ISystemInfoGetter systemInfoGetter = generateSystemInfoGetter();
 
-  private final ConfigNodeDescriptor configNodeDescriptor = ConfigNodeDescriptor.getInstance();
-
   static final ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter =
       ImmutableMap.of(
           License.CPU_ID_NAME, systemInfoGetter::getCPUId,
           License.MAIN_BOARD_ID_NAME, systemInfoGetter::getMainBoardId,
           License.SYSTEM_UUID_NAME, systemInfoGetter::getSystemUUID);
 
-  private final ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
+  static final ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
       ImmutableMap.of(
           License.IP_ADDRESS_NAME,
-          () -> this.configNodeDescriptor.getConf().getInternalAddress(),
+          () -> ConfigNodeDescriptor.getInstance().getConf().getInternalAddress(),
           License.INTERNAL_PORT_NAME,
-          () -> String.valueOf(this.configNodeDescriptor.getConf().getInternalPort()),
+          () -> String.valueOf(ConfigNodeDescriptor.getInstance().getConf().getInternalPort()),
           License.IS_SEED_CONFIGNODE_NODE_NAME,
-          () -> String.valueOf(this.configNodeDescriptor.isSeedConfigNode()));
+          () -> String.valueOf(ConfigNodeDescriptor.getInstance().isSeedConfigNode()));
 
-  private final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
+  private static final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
       ImmutableMap.<String, Supplier<String>>builder()
           .putAll(hardwareSystemInfoNameToItsGetter)
           .putAll(configurableSystemInfoNameToItsGetter)
@@ -360,7 +371,7 @@ public class ActivationManager {
     long lastTimeWarn = 0;
     while (true) {
       final long now = System.currentTimeMillis();
-      final long timeRemain = license.licenseExpireTimestamp - now;
+      final long timeRemain = license.getLicenseExpireTimestamp() - now;
       if (license.getLicenseExpireTimestamp() == 0) {
         if (now - lastTimeWarn > ONE_HOUR) {
           logger.warn(
@@ -406,7 +417,8 @@ public class ActivationManager {
     String expirationTimeStr =
         DateTimeUtils.convertLongToDate(license.getLicenseExpireTimestamp(), "ms");
     String timeRemainStr =
-        CommonDateTimeUtils.convertMillisecondToDurationStr(license.licenseExpireTimestamp - now);
+        CommonDateTimeUtils.convertMillisecondToDurationStr(
+            license.getLicenseExpireTimestamp() - now);
     logger.warn(
         "License will expire at {}, there is {} left. Cluster will only allow reading when the time comes. Contact Timecho for more information.",
         expirationTimeStr,
@@ -427,14 +439,11 @@ public class ActivationManager {
         builder.append((char) data);
       }
       final String encryptedLicenseContent = builder.toString();
-      logger.info("Loading license: \n{}", encryptedLicenseContent);
-      String licenseContent = decrypt(encryptedLicenseContent);
-      Properties properties = new Properties();
-      properties.load(new StringReader(licenseContent));
-      if (!verifyAllSystemInfo(properties)) {
+      Properties licenseProperties = loadLicenseFromEveryVersion(encryptedLicenseContent);
+      if (!verifyAllSystemInfo(licenseProperties)) {
         throw new LicenseException("This license is not allowed to activate this ConfigNode.");
       }
-      if (license.loadFromProperties(properties, true)) {
+      if (license.loadFromProperties(licenseProperties, true)) {
         logger.info("Load license success.");
       }
       checkSystemTimeAndIssueTime();
@@ -442,6 +451,35 @@ public class ActivationManager {
       logger.error("Load license fail.", e);
       license.licenseFileNotExistOrInvalid();
     }
+  }
+
+  protected Properties loadLicenseFromEveryVersion(String encryptedLicenseContent)
+      throws LicenseException, IOException {
+    return ActivationManager.loadLicenseFromEveryVersionStatic(encryptedLicenseContent);
+  }
+
+  protected static Properties loadLicenseFromEveryVersionStatic(String encryptedLicenseContent)
+      throws LicenseException, IOException {
+    logger.info("Loading license: \n{}", encryptedLicenseContent);
+    String licenseVersion = checkLicenseVersion(encryptedLicenseContent);
+    String deprecatedLicenseContent;
+    if ("00".equals(licenseVersion)) {
+      deprecatedLicenseContent = decryptV00(encryptedLicenseContent);
+    } else if ("01".equals(licenseVersion)) {
+      deprecatedLicenseContent = decryptV01(encryptedLicenseContent);
+    } else {
+      throw new LicenseException("license version " + licenseVersion + " is not supported");
+    }
+    Properties licenseProperties = new Properties();
+    licenseProperties.load(new StringReader(deprecatedLicenseContent));
+    return licenseProperties;
+  }
+
+  private static String checkLicenseVersion(String encryptedLicenseContent) {
+    if (encryptedLicenseContent.charAt(2) != '-') {
+      return "00";
+    }
+    return encryptedLicenseContent.substring(0, 2);
   }
 
   @TestOnly
@@ -458,14 +496,14 @@ public class ActivationManager {
         // do nothing
       } else if (remoteLicense.licenseIssueTimestamp < this.license.getLicenseIssueTimestamp()) {
         // remote license is older, do nothing
-        final String myIssueTime = dateFormat.format(this.license.licenseIssueTimestamp);
+        final String myIssueTime = dateFormat.format(this.license.getLicenseIssueTimestamp());
         final String remoteIssueTime = dateFormat.format(remoteLicense.licenseIssueTimestamp);
         logger.info(
             "Receive remote license which issue timestamp {} ({}) is older than mine {} ({}), ignored",
             remoteIssueTime,
             remoteLicense.licenseIssueTimestamp,
             myIssueTime,
-            this.license.licenseIssueTimestamp);
+            this.license.getLicenseIssueTimestamp());
       } else if (remoteLicense.licenseIssueTimestamp == this.license.getLicenseIssueTimestamp()) {
         // remote license is the same, just update my lastTimeHeardActiveNode
         this.heardActiveNode();
@@ -588,9 +626,47 @@ public class ActivationManager {
    * system_info file will be treated as a signal, which means timecho-ConfigNode has started
    * successfully.
    */
-  public void generateSystemInfoFile() {
-    Properties systemInfoProperties = new Properties();
+  public static void generateSystemInfoFile() {
     try (FileOutputStream fos = new FileOutputStream(SYSTEM_INFO_FILE_PATH)) {
+      String content = generateSystemInfoContentWithVersion();
+      fos.write(content.getBytes());
+      fos.getFD().sync();
+      logger.info("{} file generated successfully. Content is {}", SYSTEM_INFO_FILE_PATH, content);
+    } catch (Exception e) {
+      logger.error("{} file generated fail.", SYSTEM_INFO_FILE_PATH);
+    }
+  }
+
+  private static String generateSystemInfoContentWithVersion() throws LicenseException {
+    return VERSION + "-" + generateSystemInfoContent();
+  }
+
+  private static String systemInfoContentRemoveVersion(String contentWithVersion)
+      throws LicenseException {
+    if (contentWithVersion.charAt(2) != '-') {
+      throw new LicenseException("Cannot remove version from system info " + contentWithVersion);
+    }
+    return contentWithVersion.substring(3);
+  }
+
+  private static String generateSystemInfoContent() throws LicenseException {
+    // create a Properties which has defined order during serializing
+    Properties systemInfoProperties =
+        new Properties() {
+          @Override
+          public synchronized Enumeration<Object> keys() {
+            return Collections.enumeration(new TreeSet<>(super.keySet()));
+          }
+
+          @Override
+          public Set<Entry<Object, Object>> entrySet() {
+            return Collections.synchronizedSet(
+                super.entrySet().stream()
+                    .sorted(Comparator.comparing(e -> e.getKey().toString()))
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
+          }
+        };
+    try {
       // generate properties
       for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
         systemInfoProperties.setProperty(entry.getKey(), entry.getValue().get());
@@ -599,61 +675,92 @@ public class ActivationManager {
       // store properties to file
       StringWriter stringWriter = new StringWriter();
       systemInfoProperties.store(stringWriter, null);
-      String beforeEncrypt = stringWriter.toString();
-      // remove time comment
-      if (beforeEncrypt.charAt(0) == '#') {
-        beforeEncrypt = beforeEncrypt.substring(beforeEncrypt.indexOf('\n') + 1);
+      String originSystemInfo = stringWriter.toString();
+      // save original system info
+      try (FileOutputStream fos = new FileOutputStream(HISTORY_FILE_PATH, true)) {
+        fos.write(RSA.publicEncrypt(originSystemInfo).getBytes());
+        fos.write("\n".getBytes());
+        fos.getFD().sync();
       }
-      String afterEncrypt = encrypt(beforeEncrypt);
-      fos.write(afterEncrypt.getBytes());
-      fos.getFD().sync();
-      logger.info("{} file generated successfully.", SYSTEM_INFO_FILE_PATH);
+      // remove time comment
+      if (originSystemInfo.charAt(0) == '#') {
+        originSystemInfo = originSystemInfo.substring(originSystemInfo.indexOf('\n') + 1);
+      }
+      return systemInfoEncode(originSystemInfo);
     } catch (Exception e) {
-      logger.error("{} file generated fail.", SYSTEM_INFO_FILE_PATH);
+      logger.error("generate system info content fail");
+      throw new LicenseException(e);
     }
   }
 
-  public static boolean verifyAllSystemInfoStatic(
+  private static String systemInfoEncode(String originInfo) throws NoSuchAlgorithmException {
+    MessageDigest md5 = MessageDigest.getInstance("MD5");
+    Base32 base32 = new Base32();
+    String temp = base32.encodeAsString(md5.digest(originInfo.getBytes())).substring(8, 24);
+    return temp.substring(0, 8) + "-" + temp.substring(8, 16);
+  }
+
+  public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
+    return verifyAllSystemInfoOfEveryVersion(
+        licenseProperties,
+        hardwareSystemInfoNameToItsGetter,
+        configurableSystemInfoNameToItsGetter);
+  }
+
+  public static boolean verifyAllSystemInfoOfEveryVersion(
       Properties licenseProperties,
       ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter,
       ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter) {
-    final boolean skipHardwareSystemInfoCheck =
-        Boolean.parseBoolean(
-            licenseProperties.getProperty(License.SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME, "false"));
     try {
-      if (skipHardwareSystemInfoCheck) {
-        logger.info(RSA.publicEncrypt("skip hardware system info check"));
+      if (licenseProperties.containsKey(License.SYSTEM_INFO_HASH)) {
+        return verifyAllSystemInfoOfV01(licenseProperties);
       } else {
-        for (Entry<String, Supplier<String>> entry : hardwareSystemInfoNameToItsGetter.entrySet()) {
-          if (!verifySystemInfo(licenseProperties, entry.getKey(), entry.getValue().get(), true)) {
-            return false;
-          }
-        }
-      }
-      for (Entry<String, Supplier<String>> entry :
-          configurableSystemInfoNameToItsGetter.entrySet()) {
-        if (!verifySystemInfo(licenseProperties, entry.getKey(), entry.getValue().get(), false)) {
-          return false;
-        }
-      }
-      if (licenseProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()
-          || skipHardwareSystemInfoCheck) {
-        if (!verifySystemInfo(licenseProperties, License.NODE_UUID_NAME, getNodeUUID(), false)) {
-          return false;
-        }
+        return verifyAllSystemInfoOfV00(
+            licenseProperties,
+            hardwareSystemInfoNameToItsGetter,
+            configurableSystemInfoNameToItsGetter);
       }
     } catch (Exception ignored) {
       logger.error("Verify system info fail.");
       return false;
     }
-    return true;
   }
 
-  public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
-    return verifyAllSystemInfoStatic(
-        licenseProperties,
-        hardwareSystemInfoNameToItsGetter,
-        configurableSystemInfoNameToItsGetter);
+  public static boolean verifyAllSystemInfoOfV01(Properties licenseProperties) throws Exception {
+    String actualSystemInfo = generateSystemInfoContent();
+    String licenseSystemInfo = licenseProperties.getProperty(License.SYSTEM_INFO_HASH);
+    return actualSystemInfo.equals(systemInfoContentRemoveVersion(licenseSystemInfo));
+  }
+
+  public static boolean verifyAllSystemInfoOfV00(
+      Properties licenseProperties,
+      ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter,
+      ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter)
+      throws Exception {
+    final boolean skipHardwareSystemInfoCheck =
+        Boolean.parseBoolean(
+            licenseProperties.getProperty(License.SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME, "false"));
+    if (skipHardwareSystemInfoCheck) {
+      logger.info(RSA.publicEncrypt("skip hardware system info check"));
+    } else {
+      for (Entry<String, Supplier<String>> entry : hardwareSystemInfoNameToItsGetter.entrySet()) {
+        if (!verifySystemInfo(licenseProperties, entry.getKey(), entry.getValue().get(), true)) {
+          return false;
+        }
+      }
+    }
+    for (Entry<String, Supplier<String>> entry : configurableSystemInfoNameToItsGetter.entrySet()) {
+      if (!verifySystemInfo(licenseProperties, entry.getKey(), entry.getValue().get(), false)) {
+        return false;
+      }
+    }
+    if (licenseProperties.get(License.SYSTEM_UUID_NAME).toString().isEmpty()
+        || skipHardwareSystemInfoCheck) {
+      if (!verifySystemInfo(licenseProperties, License.NODE_UUID_NAME, getNodeUUID(), false)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static boolean verifySystemInfo(
@@ -748,12 +855,15 @@ public class ActivationManager {
   // endregion
 
   // region security
-  protected String encrypt(String src) throws LicenseException {
-    return RSA.publicEncrypt(src);
+
+  protected static String decryptV00(String src) throws LicenseException {
+    return RSA.publicDecryptV00(src);
   }
 
-  protected String decrypt(String src) throws LicenseException {
-    return RSA.publicDecrypt(src);
+  protected static String decryptV01(String src) throws LicenseException {
+    // remove version
+    String base32Raw = src.substring(3).replaceAll("-", "");
+    return RSA.publicDecryptV01(base32Raw);
   }
 
   private void checkSystemTimeAndIssueTime() {
@@ -766,7 +876,8 @@ public class ActivationManager {
 
   static boolean checkSystemTimeAndIssueTimeImpl(License license) {
     long now = System.currentTimeMillis();
-    return now >= license.licenseIssueTimestamp || license.licenseIssueTimestamp - now < ONE_DAY;
+    return now >= license.getLicenseIssueTimestamp()
+        || license.getLicenseIssueTimestamp() - now < ONE_DAY;
   }
 
   // endregion
@@ -785,4 +896,6 @@ public class ActivationManager {
     properties.setProperty(License.AINODE_NUM_LIMIT_NAME, "9999");
     return properties;
   }
+
+  // endregion
 }
