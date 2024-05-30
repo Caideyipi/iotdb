@@ -7,6 +7,7 @@ import org.apache.iotdb.commons.utils.TimePartitionUtils;
 import org.apache.iotdb.db.service.metrics.FileMetrics;
 import org.apache.iotdb.db.storageengine.StorageEngine;
 import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionTaskType;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.CompactionLogger;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.SimpleCompactionLogger;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
@@ -88,8 +89,6 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
     this.sourceFiles = new ArrayList<>();
     this.sourceFiles.addAll(taskResource.getSeqFiles());
     this.sourceFiles.addAll(taskResource.getUnseqFiles());
-    this.crossTask = true;
-    this.innerSeqTask = false;
     createSummary();
   }
 
@@ -327,6 +326,11 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
   @Override
   protected void createSummary() {
     this.summary = new CompactionTaskSummary();
+  }
+
+  @Override
+  public CompactionTaskType getCompactionTaskType() {
+    return CompactionTaskType.SHARED_STORAGE;
   }
 
   public synchronized void deleteData(String databaseName, Deletion deletion) throws IOException {
