@@ -27,8 +27,8 @@ import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
+import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
-import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -57,10 +57,8 @@ public class ClusterNodeStartUtils {
   }
 
   private static String getConfigFileName(NodeType nodeType) {
-    if (NodeType.ConfigNode.equals(nodeType)) {
-      return ConfigNodeConstant.CONF_FILE_NAME;
-    } else if (NodeType.DataNode.equals(nodeType)) {
-      return IoTDBConstant.DATA_NODE_CONF_FILE_NAME;
+    if (NodeType.ConfigNode.equals(nodeType) || NodeType.DataNode.equals(nodeType)) {
+      return CommonConfig.SYSTEM_CONFIG_NAME;
     } else {
       return IoTDBConstant.AI_NODE_CONF_FILE_NAME;
     }
