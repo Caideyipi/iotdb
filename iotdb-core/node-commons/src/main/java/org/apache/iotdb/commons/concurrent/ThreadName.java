@@ -170,7 +170,6 @@ public enum ThreadName {
   PROMETHEUS_REACTOR_HTTP_NIO("reactor-http-nio"),
   PROMETHEUS_BOUNDED_ELASTIC("boundedElastic-evictor"),
   // -------------------------- Other --------------------------
-  TTL_CHECK("TTL-CHECK"),
   SETTLE("Settle"),
   INFLUXDB_RPC_SERVICE("InfluxdbRPC-Service"),
   INFLUXDB_RPC_PROCESSOR("InfluxdbRPC-Processor"),
@@ -355,7 +354,6 @@ public enum ThreadName {
   private static final Set<ThreadName> otherThreadNames =
       new HashSet<>(
           Arrays.asList(
-              TTL_CHECK,
               SETTLE,
               INFLUXDB_RPC_SERVICE,
               INFLUXDB_RPC_PROCESSOR,

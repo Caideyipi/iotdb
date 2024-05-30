@@ -25,4 +25,6 @@ public enum CompactionTaskType {
   CROSS,
   INSERTION,
   SHARED_STORAGE,
+  SETTLE,
+  REPAIR
 }

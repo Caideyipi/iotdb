@@ -20,6 +20,8 @@
 package org.apache.iotdb.db.storageengine.dataregion.compaction.schedule;
 
 import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionTaskType;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.AbstractCompactionTask;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SettleCompactionTask;
 
 public class CompactionScheduleSummary {
   private int submitSeqInnerSpaceCompactionTaskNum = 0;
@@ -27,6 +29,14 @@ public class CompactionScheduleSummary {
   private int submitCrossSpaceCompactionTaskNum = 0;
   private int submitInsertionCrossSpaceCompactionTaskNum = 0;
   private int submitSharedStorageCompactionTaskNum = 0;
+  private int submitSettleCompactionTaskNum = 0;
+
+  // region TTL info
+  private int fullyDirtyFileNum = 0;
+
+  private int partiallyDirtyFileNum = 0;
+
+  // end region
 
   public void incrementSubmitTaskNum(CompactionTaskType taskType, int num) {
     switch (taskType) {
@@ -44,6 +54,29 @@ public class CompactionScheduleSummary {
         break;
       case SHARED_STORAGE:
         submitSharedStorageCompactionTaskNum += num;
+        break;
+      case SETTLE:
+        submitSettleCompactionTaskNum += num;
+        break;
+      default:
+        break;
+    }
+  }
+
+  public void updateTTLInfo(AbstractCompactionTask task) {
+    switch (task.getCompactionTaskType()) {
+      case INNER_SEQ:
+        submitSeqInnerSpaceCompactionTaskNum += 1;
+        partiallyDirtyFileNum += task.getProcessedFileNum();
+        break;
+      case INNER_UNSEQ:
+        submitUnseqInnerSpaceCompactionTaskNum += 1;
+        partiallyDirtyFileNum += task.getProcessedFileNum();
+        break;
+      case SETTLE:
+        submitSettleCompactionTaskNum += 1;
+        partiallyDirtyFileNum += ((SettleCompactionTask) task).getPartiallyDirtyFiles().size();
+        fullyDirtyFileNum += ((SettleCompactionTask) task).getFullyDirtyFiles().size();
         break;
       default:
         break;
@@ -70,12 +103,25 @@ public class CompactionScheduleSummary {
     return submitUnseqInnerSpaceCompactionTaskNum;
   }
 
+  public int getSubmitSettleCompactionTaskNum() {
+    return submitSettleCompactionTaskNum;
+  }
+
   public boolean hasSubmitTask() {
     return submitCrossSpaceCompactionTaskNum
             + submitInsertionCrossSpaceCompactionTaskNum
             + submitSeqInnerSpaceCompactionTaskNum
             + submitUnseqInnerSpaceCompactionTaskNum
             + submitSharedStorageCompactionTaskNum
+            + submitSettleCompactionTaskNum
         > 0;
+  }
+
+  public int getFullyDirtyFileNum() {
+    return fullyDirtyFileNum;
+  }
+
+  public int getPartiallyDirtyFileNum() {
+    return partiallyDirtyFileNum;
   }
 }

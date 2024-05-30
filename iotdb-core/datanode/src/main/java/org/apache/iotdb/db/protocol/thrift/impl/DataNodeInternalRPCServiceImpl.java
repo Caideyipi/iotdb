@@ -482,8 +482,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   @Override
   public TSStatus createDataRegion(TCreateDataRegionReq req) {
-    return regionManager.createDataRegion(
-        req.getRegionReplicaSet(), req.getStorageGroup(), req.getTtl());
+    return regionManager.createDataRegion(req.getRegionReplicaSet(), req.getStorageGroup());
   }
 
   @Override
@@ -1959,7 +1958,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
                         location.getDataNodeId(),
                         getConsensusEndPoint(location, regionId)))
             .collect(Collectors.toList());
-    TSStatus status = createNewRegion(regionId, req.getStorageGroup(), req.getTtl());
+    TSStatus status = createNewRegion(regionId, req.getStorageGroup());
     if (!isSucceed(status)) {
       return status;
     }
@@ -2031,8 +2030,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     return RegionMigrateService.getInstance().getRegionMaintainResult(taskId);
   }
 
-  private TSStatus createNewRegion(ConsensusGroupId regionId, String storageGroup, long ttl) {
-    return regionManager.createNewRegion(regionId, storageGroup, ttl);
+  private TSStatus createNewRegion(ConsensusGroupId regionId, String storageGroup) {
+    return regionManager.createNewRegion(regionId, storageGroup);
   }
 
   @Override

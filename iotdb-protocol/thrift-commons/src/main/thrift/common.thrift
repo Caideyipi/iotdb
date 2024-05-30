@@ -132,8 +132,9 @@ struct TSchemaNode {
 }
 
 struct TSetTTLReq {
-  1: required list<string> storageGroupPathPattern
+  1: required list<string> pathPattern
   2: required i64 TTL
+  3: required bool isDataBase
 }
 
 // for File
