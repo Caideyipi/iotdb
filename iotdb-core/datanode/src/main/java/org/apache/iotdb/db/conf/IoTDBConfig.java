@@ -1114,6 +1114,9 @@ public class IoTDBConfig {
   private double maxMemoryRatioForQueue = 0.6;
   private long regionMigrationSpeedLimitBytesPerSecond = 32 * 1024 * 1024L;
 
+  // PipeConsensus Config
+  private int pipeConsensusPipelineSize = 5;
+
   /** Load related */
   private double maxAllocateMemoryRatioForLoad = 0.8;
 
@@ -1131,6 +1134,8 @@ public class IoTDBConfig {
   /** Pipe related */
   /** initialized as empty, updated based on the latest `systemDir` during querying */
   private String[] pipeReceiverFileDirs = new String[0];
+
+  private String[] pipeConsensusReceiverFileDirs = new String[0];
 
   /** Resource control */
   private boolean quotaEnable = false;
@@ -1196,6 +1201,14 @@ public class IoTDBConfig {
   public void setRegionMigrationSpeedLimitBytesPerSecond(
       long regionMigrationSpeedLimitBytesPerSecond) {
     this.regionMigrationSpeedLimitBytesPerSecond = regionMigrationSpeedLimitBytesPerSecond;
+  }
+
+  public int getPipeConsensusPipelineSize() {
+    return pipeConsensusPipelineSize;
+  }
+
+  public void setPipeConsensusPipelineSize(int pipeConsensusPipelineSize) {
+    this.pipeConsensusPipelineSize = pipeConsensusPipelineSize;
   }
 
   public void setMaxSizePerBatch(int maxSizePerBatch) {
@@ -1315,6 +1328,9 @@ public class IoTDBConfig {
     pipeTemporaryLibDir = addDataHomeDir(pipeTemporaryLibDir);
     for (int i = 0; i < pipeReceiverFileDirs.length; i++) {
       pipeReceiverFileDirs[i] = addDataHomeDir(pipeReceiverFileDirs[i]);
+    }
+    for (int i = 0; i < pipeConsensusReceiverFileDirs.length; i++) {
+      pipeConsensusReceiverFileDirs[i] = addDataHomeDir(pipeConsensusReceiverFileDirs[i]);
     }
     mqttDir = addDataHomeDir(mqttDir);
     extPipeDir = addDataHomeDir(extPipeDir);
@@ -3901,6 +3917,25 @@ public class IoTDBConfig {
     return (Objects.isNull(this.pipeReceiverFileDirs) || this.pipeReceiverFileDirs.length == 0)
         ? new String[] {systemDir + File.separator + "pipe" + File.separator + "receiver"}
         : this.pipeReceiverFileDirs;
+  }
+
+  public void setPipeConsensusReceiverFileDirs(String[] pipeConsensusReceiverFileDirs) {
+    this.pipeConsensusReceiverFileDirs = pipeConsensusReceiverFileDirs;
+  }
+
+  public String[] getPipeConsensusReceiverFileDirs() {
+    return (Objects.isNull(this.pipeConsensusReceiverFileDirs)
+            || this.pipeConsensusReceiverFileDirs.length == 0)
+        ? new String[] {
+          systemDir
+              + File.separator
+              + "pipe"
+              + File.separator
+              + "consensus"
+              + File.separator
+              + "receiver"
+        }
+        : this.pipeConsensusReceiverFileDirs;
   }
 
   public void setSortBufferSize(long sortBufferSize) {
