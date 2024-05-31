@@ -19,6 +19,7 @@
 
 package com.timecho.iotdb.manager.activation;
 
+import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 
@@ -88,7 +89,7 @@ public class ActivationVerifier {
     if (confVar != null && !confVar.isEmpty()) {
       confDir = confVar;
     }
-    String confPropertiesPath = confDir + File.separator + ConfigNodeConstant.CONF_FILE_NAME;
+    String confPropertiesPath = confDir + File.separator + CommonConfig.SYSTEM_CONFIG_NAME;
     Properties confProperties;
     try {
       confProperties = pathToProperties(confPropertiesPath);

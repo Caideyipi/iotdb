@@ -42,8 +42,8 @@ import static org.apache.iotdb.it.env.cluster.ClusterConstant.DATA_REGION_CONSEN
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.DATA_REPLICATION_FACTOR;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.DEFAULT_CONFIG_NODE_COMMON_PROPERTIES;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.DEFAULT_CONFIG_NODE_PROPERTIES;
-import static org.apache.iotdb.it.env.cluster.ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_IT;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.IOTDB_SYSTEM_PROPERTIES_FILE;
+import static org.apache.iotdb.it.env.cluster.ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_IT;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.SCHEMA_REGION_CONSENSUS_PROTOCOL_CLASS;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.SCHEMA_REPLICATION_FACTOR;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TARGET;
