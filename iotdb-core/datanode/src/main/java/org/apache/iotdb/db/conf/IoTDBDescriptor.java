@@ -1998,6 +1998,9 @@ public class IoTDBDescriptor {
 
       // update Consensus config
       reloadConsensusProps(properties);
+
+      // update retry config
+      commonDescriptor.loadRetryProperties(properties);
     } catch (Exception e) {
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }
