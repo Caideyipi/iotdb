@@ -87,7 +87,7 @@ public class CompactionRecoverManager {
         }
         for (File timePartitionDir : timePartitionDirs) {
           if (!timePartitionDir.isDirectory()
-              || !Pattern.compile("\\d*").matcher(timePartitionDir.getName()).matches()) {
+              || !Pattern.compile("-?\\d+").matcher(timePartitionDir.getName()).matches()) {
             continue;
           }
           logger.info(
