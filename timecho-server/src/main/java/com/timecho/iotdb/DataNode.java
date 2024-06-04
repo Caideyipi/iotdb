@@ -20,6 +20,7 @@ package com.timecho.iotdb;
 
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
+import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
@@ -30,6 +31,8 @@ import com.timecho.iotdb.service.ClientRPCServiceImplNew;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.charset.Charset;
 
 public class DataNode extends org.apache.iotdb.db.service.DataNode {
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
@@ -50,6 +53,9 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
     TSFileDescriptor.getInstance()
         .getConfig()
         .setObjectStorageTsFileOutput("com.timecho.iotdb.os.fileSystem.OSTsFileOutput");
+
+    logger.info("IoTDB-DataNode environment variables: {}", IoTDBConfig.getEnvironmentVariables());
+    logger.info("IoTDB-DataNode default charset is: {}", Charset.defaultCharset().displayName());
 
     new DataNodeServerCommandLineNew().doMain(args);
   }
