@@ -3104,6 +3104,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
             analyzeTimeseriesRegionScan(
                 showTimeSeriesStatement.getTimeCondition(), patternTree, analysis, context);
         if (!hasSchema) {
+          analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
           return analysis;
         }
       } catch (IllegalPathException e) {
@@ -3183,7 +3184,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     schemaTree.removeLogicalView();
   }
 
-  private boolean analyzeDeviceRegionScan(
+  private void analyzeDeviceRegionScan(
       WhereCondition timeCondition,
       PathPatternTree patternTree,
       Analysis analysis,
@@ -3195,7 +3196,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     ISchemaTree schemaTree = schemaFetcher.fetchSchemaInDeviceLevel(patternTree, context);
     if (schemaTree.isEmpty()) {
       analysis.setFinishQueryAfterAnalyze(true);
-      return false;
+      return;
     }
 
     // fetch Data partition
@@ -3213,7 +3214,6 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
             schemaTree,
             context);
     analysis.setDataPartitionInfo(dataPartition);
-    return true;
   }
 
   @Override
@@ -3227,12 +3227,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         showDevicesStatement.getPathPattern().concatNode(IoTDBConstant.ONE_LEVEL_PATH_WILDCARD));
 
     if (showDevicesStatement.hasTimeCondition()) {
-      boolean hasSchema =
-          analyzeDeviceRegionScan(
-              showDevicesStatement.getTimeCondition(), patternTree, analysis, context);
-      if (!hasSchema) {
-        return analysis;
-      }
+      analyzeDeviceRegionScan(
+          showDevicesStatement.getTimeCondition(), patternTree, analysis, context);
     } else {
       SchemaPartition schemaPartitionInfo = partitionFetcher.getSchemaPartition(patternTree);
       analysis.setSchemaPartitionInfo(schemaPartitionInfo);
@@ -3293,12 +3289,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     patternTree.appendPathPattern(
         countDevicesStatement.getPathPattern().concatNode(IoTDBConstant.ONE_LEVEL_PATH_WILDCARD));
     if (countDevicesStatement.hasTimeCondition()) {
-      boolean hasSchema =
-          analyzeDeviceRegionScan(
-              countDevicesStatement.getTimeCondition(), patternTree, analysis, context);
-      if (!hasSchema) {
-        return analysis;
-      }
+      analyzeDeviceRegionScan(
+          countDevicesStatement.getTimeCondition(), patternTree, analysis, context);
     } else {
       SchemaPartition schemaPartitionInfo = partitionFetcher.getSchemaPartition(patternTree);
       analysis.setSchemaPartitionInfo(schemaPartitionInfo);
@@ -3323,6 +3315,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
             analyzeTimeseriesRegionScan(
                 countTimeSeriesStatement.getTimeCondition(), patternTree, analysis, context);
         if (!hasSchema) {
+          analysis.setRespDatasetHeader(DatasetHeaderFactory.getCountTimeSeriesHeader());
           return analysis;
         }
       } catch (IllegalPathException e) {

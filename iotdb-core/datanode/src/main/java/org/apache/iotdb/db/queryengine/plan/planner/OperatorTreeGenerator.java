@@ -3587,7 +3587,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
     }
     ActiveDeviceRegionScanOperator regionScanOperator =
         new ActiveDeviceRegionScanOperator(
-            operatorContext, node.getPlanNodeId(), deviceIDToAligned, filter);
+            operatorContext, node.getPlanNodeId(), deviceIDToAligned, filter, node.isOutputCount());
 
     DataDriverContext dataDriverContext = (DataDriverContext) context.getDriverContext();
     dataDriverContext.addSourceOperator(regionScanOperator);
@@ -3620,7 +3620,11 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
     }
     ActiveTimeSeriesRegionScanOperator regionScanOperator =
         new ActiveTimeSeriesRegionScanOperator(
-            operatorContext, node.getPlanNodeId(), timeseriesToSchemaInfo, filter);
+            operatorContext,
+            node.getPlanNodeId(),
+            timeseriesToSchemaInfo,
+            filter,
+            node.isOutputCount());
 
     dataDriverContext.addSourceOperator(regionScanOperator);
     dataDriverContext.setQueryDataSourceType(QueryDataSourceType.TIME_SERIES_REGION_SCAN);
