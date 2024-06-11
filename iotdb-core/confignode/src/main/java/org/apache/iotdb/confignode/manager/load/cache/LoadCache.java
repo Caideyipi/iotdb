@@ -253,6 +253,8 @@ public class LoadCache {
    * @param sample the latest heartbeat sample
    */
   public void cacheAINodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
+    activationStatusCacheMap.put(
+        nodeId, new ActivationStatusCache(System.nanoTime(), ActivateStatus.ACTIVATED));
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new AINodeHeartbeatCache(nodeId))
         .cacheHeartbeatSample(sample);
