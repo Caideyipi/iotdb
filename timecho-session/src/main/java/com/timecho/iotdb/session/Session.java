@@ -18,6 +18,8 @@
  */
 package com.timecho.iotdb.session;
 
+import org.apache.iotdb.common.rpc.thrift.TShowConfigurationResp;
+import org.apache.iotdb.common.rpc.thrift.TShowConfigurationTemplateResp;
 import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.isession.util.Version;
@@ -263,6 +265,48 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
             .append(startTime)
             .append(SPECIFY_DB_SQL_SUFFIX);
     return getTotalPointsFromDataset(finalSql);
+  }
+
+  @Override
+  public TShowConfigurationTemplateResp showConfigurationTemplate()
+      throws StatementExecutionException, IoTDBConnectionException {
+    TShowConfigurationTemplateResp resp;
+    try {
+      resp = defaultSessionConnection.getClient().showConfigurationTemplate();
+    } catch (Exception e) {
+      if (defaultSessionConnection.reconnect()) {
+        try {
+          resp = defaultSessionConnection.getClient().showConfigurationTemplate();
+          RpcUtils.verifySuccess(resp.getStatus());
+        } catch (TException tException) {
+          throw new IoTDBConnectionException(tException);
+        }
+      } else {
+        throw new IoTDBConnectionException(defaultSessionConnection.logForReconnectionFailure());
+      }
+    }
+    return resp;
+  }
+
+  @Override
+  public TShowConfigurationResp showConfiguration(int nodeId)
+      throws StatementExecutionException, IoTDBConnectionException {
+    TShowConfigurationResp resp;
+    try {
+      resp = defaultSessionConnection.getClient().showConfiguration(nodeId);
+    } catch (Exception e) {
+      if (defaultSessionConnection.reconnect()) {
+        try {
+          resp = defaultSessionConnection.getClient().showConfiguration(nodeId);
+          RpcUtils.verifySuccess(resp.getStatus());
+        } catch (TException tException) {
+          throw new IoTDBConnectionException(tException);
+        }
+      } else {
+        throw new IoTDBConnectionException(defaultSessionConnection.logForReconnectionFailure());
+      }
+    }
+    return resp;
   }
 
   private long getTotalPointsFromDataset(StringBuilder baseSql)

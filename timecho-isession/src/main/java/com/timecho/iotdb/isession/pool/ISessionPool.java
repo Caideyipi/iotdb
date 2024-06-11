@@ -18,6 +18,8 @@
  */
 package com.timecho.iotdb.isession.pool;
 
+import org.apache.iotdb.common.rpc.thrift.TShowConfigurationResp;
+import org.apache.iotdb.common.rpc.thrift.TShowConfigurationTemplateResp;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
@@ -50,4 +52,12 @@ public interface ISessionPool extends org.apache.iotdb.isession.pool.ISessionPoo
   /** Similar to the above method, start timestamp parameters are added to filter the data * */
   long getTotalPoints(Set<String> databaseSet, long startTime)
       throws StatementExecutionException, IoTDBConnectionException;
+
+  /** Show all content of configuration template file */
+  TShowConfigurationTemplateResp showConfigurationTemplate()
+      throws IoTDBConnectionException, StatementExecutionException;
+
+  /** Show all content of configuration file */
+  TShowConfigurationResp showConfiguration(int nodeId)
+      throws IoTDBConnectionException, StatementExecutionException;
 }

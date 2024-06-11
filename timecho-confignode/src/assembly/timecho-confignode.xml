@@ -44,8 +44,12 @@
     </fileSets>
     <files>
         <file>
-            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/conf/iotdb-system.properties</source>
+            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/target/conf/iotdb-system.properties</source>
             <destName>conf/iotdb-system.properties</destName>
+        </file>
+        <file>
+            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/target/conf/iotdb-system.properties.template</source>
+            <destName>conf/iotdb-system.properties.template</destName>
         </file>
         <file>
             <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/sbin/iotdb-common.sh</source>

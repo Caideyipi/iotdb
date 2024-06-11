@@ -18,6 +18,8 @@
  */
 package com.timecho.iotdb.session.pool;
 
+import org.apache.iotdb.common.rpc.thrift.TShowConfigurationResp;
+import org.apache.iotdb.common.rpc.thrift.TShowConfigurationTemplateResp;
 import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
@@ -333,6 +335,48 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
       }
     }
     return 0;
+  }
+
+  @Override
+  public TShowConfigurationTemplateResp showConfigurationTemplate()
+      throws IoTDBConnectionException, StatementExecutionException {
+    for (int i = 0; i < RETRY; i++) {
+      ISession session = (ISession) getSession();
+      try {
+        TShowConfigurationTemplateResp result = session.showConfigurationTemplate();
+        putBack(session);
+        return result;
+      } catch (IoTDBConnectionException e) {
+        // TException means the connection is broken, remove it and get a new one.
+        logger.warn("getTotalPoints failed", e);
+        cleanSessionAndMayThrowConnectionException(session, i, e);
+      } catch (StatementExecutionException | RuntimeException e) {
+        putBack(session);
+        throw e;
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public TShowConfigurationResp showConfiguration(int nodeId)
+      throws IoTDBConnectionException, StatementExecutionException {
+    for (int i = 0; i < RETRY; i++) {
+      ISession session = (ISession) getSession();
+      try {
+        TShowConfigurationResp result = session.showConfiguration(nodeId);
+        putBack(session);
+        return result;
+      } catch (IoTDBConnectionException e) {
+        // TException means the connection is broken, remove it and get a new one.
+        logger.warn("getTotalPoints failed", e);
+        cleanSessionAndMayThrowConnectionException(session, i, e);
+      } catch (StatementExecutionException | RuntimeException e) {
+        putBack(session);
+        throw e;
+      }
+    }
+    return null;
   }
 
   @Override
