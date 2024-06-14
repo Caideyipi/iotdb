@@ -123,6 +123,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.sys.ShowQueriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.ShowVersionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.StartRepairDataStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.StopRepairDataStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.sys.TestConnectionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.SetSpaceQuotaStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.SetThrottleQuotaStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.ShowSpaceQuotaStatement;
@@ -217,6 +218,10 @@ public abstract class StatementVisitor<R, C> {
 
   public R visitShowClusterId(ShowClusterIdStatement showClusterIdStatement, C context) {
     return visitStatement(showClusterIdStatement, context);
+  }
+
+  public R visitTestConnection(TestConnectionStatement testConnectionStatement, C context) {
+    return visitStatement(testConnectionStatement, context);
   }
 
   // UDF

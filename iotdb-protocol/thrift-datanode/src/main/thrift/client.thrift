@@ -665,6 +665,9 @@ service IClientRPCService {
   common.TSStatus updateWhiteList(1:set<string> ipSet)
 
   LicenseInfoResp getLicenseInfo()
+
+  /** For other node's call */
+  common.TSStatus testConnectionEmptyRPC()
 }
 
 struct LicenseInfoResp{

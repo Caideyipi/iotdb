@@ -1087,6 +1087,11 @@ service IDataNodeRPCService {
   */
   TFetchFragmentInstanceStatisticsResp fetchFragmentInstanceStatistics(TFetchFragmentInstanceStatisticsReq req)
 
+  common.TTestConnectionResp submitTestConnectionTask(common.TNodeLocations nodeLocations)
+
+  /** Empty rpc, only for connection test */
+  common.TSStatus testConnectionEmptyRPC()
+
   /**
   * Fetch leader‘s remote replica for shared storage compaction
   **/
@@ -1108,6 +1113,9 @@ service MPPDataExchangeService {
   void onNewDataBlockEvent(TNewDataBlockEvent e);
 
   void onEndOfDataBlockEvent(TEndOfDataBlockEvent e);
+
+  /** Empty rpc, only for connection test */
+  common.TSStatus testConnectionEmptyRPC()
 }
 
 service IAINodeInternalRPCService{

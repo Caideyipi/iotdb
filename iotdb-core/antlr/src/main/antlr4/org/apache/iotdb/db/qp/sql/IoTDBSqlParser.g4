@@ -63,10 +63,10 @@ ddlStatement
     // CQ
     | createContinuousQuery | dropContinuousQuery | showContinuousQueries
     // Cluster
-    | showVariables | showCluster | showClusterId | showRegions | showDataNodes | showConfigNodes | showAINodes
-    | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion
+    | showVariables | showCluster | showClusterId | showRegions | showDataNodes | showConfigNodes
+    | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion | verifyConnection
     // AI Model
-    | createModel | dropModel | showModels | showTrials | callInference
+    | showAINodes | createModel | dropModel | showModels | showTrials | callInference
     // Activation
     | showActivation
     // Quota
@@ -532,6 +532,10 @@ getSeriesSlotList
 // ---- Migrate Region
 migrateRegion
     : MIGRATE REGION regionId=INTEGER_LITERAL FROM fromId=INTEGER_LITERAL TO toId=INTEGER_LITERAL
+    ;
+
+verifyConnection
+    : VERIFY CONNECTION (DETAILS)?
     ;
 
 // Pipe Task =========================================================================================
