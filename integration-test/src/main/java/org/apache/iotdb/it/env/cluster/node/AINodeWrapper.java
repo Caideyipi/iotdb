@@ -270,11 +270,6 @@ public class AINodeWrapper implements BaseNodeWrapper {
     return this.getIp() + ":" + this.getPort();
   }
 
-  @Override
-  public void dumpJVMSnapshot(String testCaseName) {
-    // there is no JVM to dump for AINode
-  }
-
   private String getNodePath() {
     return System.getProperty(USER_DIR) + File.separator + TARGET + File.separator + getId();
   }
