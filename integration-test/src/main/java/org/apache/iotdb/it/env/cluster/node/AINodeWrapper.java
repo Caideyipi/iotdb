@@ -270,6 +270,21 @@ public class AINodeWrapper implements BaseNodeWrapper {
     return this.getIp() + ":" + this.getPort();
   }
 
+  @Override
+  public void executeJstack() {
+    throw new UnsupportedOperationException("AINode does not support executeJStack currently.");
+  }
+
+  @Override
+  public void executeJstack(String testCaseName) {
+    throw new UnsupportedOperationException("AINode does not support executeJStack currently.");
+  }
+
+  @Override
+  public long getPid() {
+    throw new UnsupportedOperationException("AINode does not support getPid currently.");
+  }
+
   private String getNodePath() {
     return System.getProperty(USER_DIR) + File.separator + TARGET + File.separator + getId();
   }
