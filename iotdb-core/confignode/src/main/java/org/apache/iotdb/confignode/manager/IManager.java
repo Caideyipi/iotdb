@@ -337,7 +337,7 @@ public interface IManager {
 
   TSStatus setTTL(SetTTLPlan configRequest);
 
-  DataSet showAllTTL(ShowTTLPlan showTTLPlan);
+  DataSet showTTL(ShowTTLPlan showTTLPlan);
 
   TSStatus setSchemaReplicationFactor(SetSchemaReplicationFactorPlan configPhysicalPlan);
 
