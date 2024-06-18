@@ -53,6 +53,7 @@ import com.timecho.iotdb.os.utils.ObjectStorageType;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.apache.tsfile.common.constant.TsFileConstant;
 import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.file.metadata.enums.CompressionType;
 import org.apache.tsfile.file.metadata.enums.TSEncoding;
 import org.apache.tsfile.fileSystem.FSType;
 import org.apache.tsfile.utils.FSUtils;
@@ -1174,6 +1175,8 @@ public class IoTDBConfig {
   /** Config for object storage */
   private ObjectStorageConfig osConfig = ObjectStorageDescriptor.getInstance().getConfig();
 
+  private CompressionType WALCompressionAlgorithm = CompressionType.UNCOMPRESSED;
+
   IoTDBConfig() {}
 
   public int getMaxLogEntriesNumPerBatch() {
@@ -1909,7 +1912,7 @@ public class IoTDBConfig {
     return walFileSizeThresholdInByte;
   }
 
-  void setWalFileSizeThresholdInByte(long walFileSizeThresholdInByte) {
+  public void setWalFileSizeThresholdInByte(long walFileSizeThresholdInByte) {
     this.walFileSizeThresholdInByte = walFileSizeThresholdInByte;
   }
 
@@ -4131,5 +4134,13 @@ public class IoTDBConfig {
     result.setSchemaRegionConsensusEndPoint(
         new TEndPoint(getInternalAddress(), getSchemaRegionConsensusPort()));
     return result;
+  }
+
+  public CompressionType getWALCompressionAlgorithm() {
+    return WALCompressionAlgorithm;
+  }
+
+  public void setWALCompressionAlgorithm(CompressionType WALCompressionAlgorithm) {
+    this.WALCompressionAlgorithm = WALCompressionAlgorithm;
   }
 }
