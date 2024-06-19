@@ -418,12 +418,7 @@ public class ConfigManager implements IManager {
   public DataSet registerDataNode(TDataNodeRegisterReq req) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      status =
-          ClusterNodeStartUtils.confirmNodeRegistration(
-              NodeType.DataNode,
-              req.getClusterName(),
-              req.getDataNodeConfiguration().getLocation(),
-              this);
+      status = ClusterNodeStartUtils.confirmDataNodeRegistration(req, this);
       if (!req.isPreCheck() && status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return nodeManager.registerDataNode(req);
       }
@@ -1263,12 +1258,7 @@ public class ConfigManager implements IManager {
       // Make sure the global configurations are consist
       status = checkConfigNodeGlobalConfig(req);
       if (status == null) {
-        status =
-            ClusterNodeStartUtils.confirmNodeRegistration(
-                NodeType.ConfigNode,
-                req.getClusterParameters().getClusterName(),
-                req.getConfigNodeLocation(),
-                this);
+        status = ClusterNodeStartUtils.confirmConfigNodeRegistration(req, this);
         if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
           return nodeManager.registerConfigNode(req);
         }

@@ -23,7 +23,6 @@ import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
 import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.cluster.NodeStatus;
-import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
@@ -119,12 +118,7 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
   public DataSet registerAINode(TAINodeRegisterReq req) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      status =
-          ClusterNodeStartUtils.confirmNodeRegistration(
-              NodeType.AINode,
-              req.getClusterName(),
-              req.getAiNodeConfiguration().getLocation(),
-              this);
+      status = ClusterNodeStartUtils.confirmAINodeRegistration(req, this);
       if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         return timechoNodeManager.registerAINode(req);
       }
