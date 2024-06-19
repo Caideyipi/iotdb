@@ -33,6 +33,7 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.performer
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.CompactionUtils;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.CompactionTaskStage;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.TsFileIdentifier;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.repair.RepairDataFileScanUtil;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionTaskManager;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
@@ -163,10 +164,10 @@ public abstract class AbstractCompactionTask {
       } else {
         CompactionValidationFailedException validationException =
             (CompactionValidationFailedException) e;
-        TsFileResource overlappedTsFileResource = validationException.getOverlappedTsFileResource();
-        if (overlappedTsFileResource != null) {
-          unsortedTsFileResources.add(overlappedTsFileResource);
-        }
+        List<TsFileResource> overlappedTsFileResource =
+            validationException.getOverlappedTsFileResources();
+        unsortedTsFileResources =
+            overlappedTsFileResource == null ? unsortedTsFileResources : overlappedTsFileResource;
       }
       // these exceptions generally caused by unsorted data, mark all source files as NEED_TO_REPAIR
       for (TsFileResource resource : unsortedTsFileResources) {
@@ -486,15 +487,15 @@ public abstract class AbstractCompactionTask {
                     Long.parseLong(f2.getTsFile().getName().split("-")[1]))
                 : timeDiff;
           });
-      if (!validator.validateTsFilesIsHasNoOverlap(timePartitionSeqFiles)) {
+      List<TsFileResource> overlapFilesInTimePartition =
+          RepairDataFileScanUtil.checkTimePartitionHasOverlap(timePartitionSeqFiles);
+      if (!overlapFilesInTimePartition.isEmpty()) {
         LOGGER.error(
             "Failed to pass compaction validation, source seq files: {}, source unseq files: {}, target files: {}",
             sourceSeqFiles,
             sourceUnseqFiles,
             targetFiles);
-        throw new CompactionValidationFailedException(
-            "Failed to pass compaction validation, sequence files has overlap, time partition id is "
-                + timePartition);
+        throw new CompactionValidationFailedException(overlapFilesInTimePartition);
       }
     }
     if (needToValidateTsFileCorrectness && !validator.validateTsFiles(validTargetFiles)) {
