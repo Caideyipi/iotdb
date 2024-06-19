@@ -276,17 +276,6 @@ public class NodeManager {
   public synchronized DataSet registerDataNode(TDataNodeRegisterReq req) {
     DataNodeRegisterResp resp = new DataNodeRegisterResp();
     resp.setConfigNodeList(getRegisteredConfigNodes());
-    final String clusterId =
-        configManager
-            .getClusterManager()
-            .getClusterIdWithRetry(
-                CommonDescriptor.getInstance().getConfig().getConnectionTimeoutInMS() / 2);
-    if (clusterId == null) {
-      resp.setStatus(
-          new TSStatus(TSStatusCode.GET_CLUSTER_ID_ERROR.getStatusCode())
-              .setMessage("clusterId has not generated, please try again later"));
-      return resp;
-    }
 
     resp = registerDataNodeActivationCheck(req);
     if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != resp.getStatus().getCode()) {
@@ -327,6 +316,7 @@ public class NodeManager {
     resp.setStatus(ClusterNodeStartUtils.ACCEPT_NODE_REGISTRATION);
     resp.setDataNodeId(
         registerDataNodePlan.getDataNodeConfiguration().getLocation().getDataNodeId());
+    String clusterId = configManager.getClusterManager().getClusterId();
     resp.setRuntimeConfiguration(getRuntimeConfiguration().setClusterId(clusterId));
 
     printDataNodeRegistrationResult();
