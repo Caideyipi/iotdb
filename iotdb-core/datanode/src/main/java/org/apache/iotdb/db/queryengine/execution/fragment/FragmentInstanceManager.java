@@ -184,6 +184,7 @@ public class FragmentInstanceManager {
                       instance.isExplainAnalyze(),
                       exchangeManager);
                 } catch (Throwable t) {
+                  clearFIRelatedResources(instanceId);
                   logger.warn("error when create FragmentInstanceExecution.", t);
                   stateMachine.failed(t);
                   return null;
@@ -210,6 +211,14 @@ public class FragmentInstanceManager {
       QUERY_EXECUTION_METRIC_SET.recordExecutionCost(
           LOCAL_EXECUTION_PLANNER, System.nanoTime() - startTime);
     }
+  }
+
+  private void clearFIRelatedResources(FragmentInstanceId instanceId) {
+    // close and remove all the handles of the fragment instance
+    exchangeManager.forceDeregisterFragmentInstance(instanceId.toThrift());
+    // clear MemoryPool
+    exchangeManager.deRegisterFragmentInstanceFromMemoryPool(
+        instanceId.getQueryId().getId(), instanceId.getFragmentInstanceId(), false);
   }
 
   private DataNodeQueryContext getOrCreateDataNodeQueryContext(QueryId queryId, int dataNodeFINum) {
@@ -256,6 +265,7 @@ public class FragmentInstanceManager {
                     false,
                     exchangeManager);
               } catch (Throwable t) {
+                clearFIRelatedResources(instanceId);
                 logger.warn("Execute error caused by ", t);
                 stateMachine.failed(t);
                 return null;
