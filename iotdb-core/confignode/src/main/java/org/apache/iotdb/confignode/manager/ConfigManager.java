@@ -415,7 +415,7 @@ public class ConfigManager implements IManager {
   }
 
   @Override
-  public DataSet registerDataNode(TDataNodeRegisterReq req) {
+  public synchronized DataSet registerDataNode(TDataNodeRegisterReq req) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       status = ClusterNodeStartUtils.confirmDataNodeRegistration(req, this);

@@ -143,6 +143,11 @@ public class ClusterNodeStartUtils {
     if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       return status;
     }
+    // Confirm activation
+    status = configManager.getNodeManager().registerDataNodeActivationCheck(req);
+    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != status.getCode()) {
+      return status;
+    }
     // Success
     return ACCEPT_NODE_REGISTRATION;
   }

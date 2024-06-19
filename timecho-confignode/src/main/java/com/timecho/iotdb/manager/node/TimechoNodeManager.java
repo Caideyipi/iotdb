@@ -45,7 +45,7 @@ public class TimechoNodeManager extends NodeManager {
   }
 
   @Override
-  protected DataNodeRegisterResp registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
+  protected TSStatus registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
     License license = configManager.getActivationManager().getLicense();
     DataNodeRegisterResp resp = new DataNodeRegisterResp();
     resp.setConfigNodeList(getRegisteredConfigNodes());
@@ -54,8 +54,7 @@ public class TimechoNodeManager extends NodeManager {
       final String message =
           "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
       LOGGER.warn(message);
-      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
-      return resp;
+      return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     }
     // check DataNode num limit
     if (nodeInfo.getRegisteredDataNodeCount() + 1 > license.getDataNodeNumLimit()) {
@@ -66,8 +65,7 @@ public class TimechoNodeManager extends NodeManager {
               nodeInfo.getRegisteredDataNodeCount() + 1,
               license.getDataNodeNumLimit());
       LOGGER.warn(message);
-      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
-      return resp;
+      return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     } else {
       String message =
           String.format(
@@ -87,8 +85,7 @@ public class TimechoNodeManager extends NodeManager {
               "Deny DataNode's registration: DataNodes' CPU cores number limit exceeded, %d + %d = %d, greater than %d (clusterCores + newDataNodeCores = allCores, greater than limit)",
               clusterCpuCores, newNodeCpuCores, clusterCpuCores + newNodeCpuCores, cpuCoreLimit);
       LOGGER.warn(message);
-      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
-      return resp;
+      return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     } else {
       String message =
           String.format(
@@ -101,8 +98,7 @@ public class TimechoNodeManager extends NodeManager {
               cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
       LOGGER.info(message);
     }
-    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    return resp;
+    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
   }
 
   @Override

@@ -273,14 +273,9 @@ public class NodeManager {
    * @return DataNodeConfigurationDataSet. The {@link TSStatus} will be set to {@link
    *     TSStatusCode#SUCCESS_STATUS} when register success.
    */
-  public synchronized DataSet registerDataNode(TDataNodeRegisterReq req) {
+  public DataSet registerDataNode(TDataNodeRegisterReq req) {
     DataNodeRegisterResp resp = new DataNodeRegisterResp();
     resp.setConfigNodeList(getRegisteredConfigNodes());
-
-    resp = registerDataNodeActivationCheck(req);
-    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != resp.getStatus().getCode()) {
-      return resp;
-    }
 
     // Create a new DataNodeHeartbeatCache and force update NodeStatus
     int dataNodeId = nodeInfo.generateNextNodeId();
@@ -328,7 +323,7 @@ public class NodeManager {
     throw new UnsupportedOperationException();
   }
 
-  protected DataNodeRegisterResp registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
+  protected TSStatus registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
     throw new UnsupportedOperationException();
   }
 
