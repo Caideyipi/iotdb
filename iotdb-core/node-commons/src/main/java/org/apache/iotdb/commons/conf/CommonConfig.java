@@ -214,6 +214,7 @@ public class CommonConfig {
   private int pipeAsyncConnectorMaxClientNumber = 16;
 
   private double pipeAllSinksRateLimitBytesPerSecond = -1;
+  private int pipeEndPointRateLimiterDropCheckIntervalMs = 1000;
 
   private boolean isSeperatedPipeHeartbeatEnabled = true;
   private int pipeHeartbeatIntervalSecondsForCollectingPipeMeta = 100;
@@ -1107,6 +1108,15 @@ public class CommonConfig {
 
   public void setPipeAllSinksRateLimitBytesPerSecond(double pipeAllSinksRateLimitBytesPerSecond) {
     this.pipeAllSinksRateLimitBytesPerSecond = pipeAllSinksRateLimitBytesPerSecond;
+  }
+
+  public int getPipeEndPointRateLimiterDropCheckIntervalMs() {
+    return pipeEndPointRateLimiterDropCheckIntervalMs;
+  }
+
+  public void setPipeEndPointRateLimiterDropCheckIntervalMs(
+      int pipeEndPointRateLimiterDropCheckIntervalMs) {
+    this.pipeEndPointRateLimiterDropCheckIntervalMs = pipeEndPointRateLimiterDropCheckIntervalMs;
   }
 
   public long getTwoStageAggregateMaxCombinerLiveTimeInMs() {
