@@ -1235,7 +1235,7 @@ public class IoTDBDescriptor {
           "dn_default_space_usage_thresholds should have the same tiers number with dn_data_dirs, iotdb will use default value {}.",
           Arrays.toString(moveThresholds));
     }
-    if (conf.getTieredStorageMigrateSpeedLimitBytesPerSec().length != tierNum - 1) {
+    if (tierNum > 1 && conf.getTieredStorageMigrateSpeedLimitBytesPerSec().length != tierNum - 1) {
       long[] speedLimit = new long[tierNum];
       Arrays.fill(speedLimit, IoTDBConfig.DEFAULT_TIERED_STORAGE_MIGRATE_SPEED_LIMIT_BYTES_PER_SEC);
       conf.setTieredStorageMigrateSpeedLimitBytesPerSec(speedLimit);
