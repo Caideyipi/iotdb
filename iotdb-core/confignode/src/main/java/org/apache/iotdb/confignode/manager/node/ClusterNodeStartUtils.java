@@ -30,6 +30,7 @@ import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
@@ -45,8 +46,7 @@ import java.util.Set;
 /** Startup check utils before register/restart a ConfigNode/DataNode. */
 public class ClusterNodeStartUtils {
 
-  private static final String CLUSTER_NAME =
-      ConfigNodeDescriptor.getInstance().getConf().getClusterName();
+  private static final ConfigNodeConfig CONF = ConfigNodeDescriptor.getInstance().getConf();
 
   private static final String POSSIBLE_SOLUTIONS = " Possible solutions are as follows:\r\n";
 
@@ -70,7 +70,7 @@ public class ClusterNodeStartUtils {
 
   private static TSStatus confirmClusterName(NodeType nodeType, String clusterName) {
     TSStatus status = new TSStatus();
-    if (!CLUSTER_NAME.equals(clusterName)) {
+    if (!CONF.getClusterName().equals(clusterName)) {
       status.setCode(TSStatusCode.REJECT_NODE_START.getStatusCode());
       status.setMessage(
           String.format(
@@ -82,7 +82,7 @@ public class ClusterNodeStartUtils {
               nodeType.getNodeType(),
               nodeType.getNodeType(),
               clusterName,
-              CLUSTER_NAME,
+              CONF.getClusterName(),
               CommonConfig.SYSTEM_CONFIG_NAME,
               CommonConfig.SYSTEM_CONFIG_NAME));
       return status;
@@ -212,7 +212,7 @@ public class ClusterNodeStartUtils {
     TSStatus status = new TSStatus();
 
     /* Reject restart if the cluster name is error */
-    if (!CLUSTER_NAME.equals(clusterName)) {
+    if (!CONF.getClusterName().equals(clusterName)) {
       status.setCode(TSStatusCode.REJECT_NODE_START.getStatusCode());
       status.setMessage(
           String.format(
@@ -224,7 +224,7 @@ public class ClusterNodeStartUtils {
               nodeType.getNodeType(),
               nodeType.getNodeType(),
               clusterName,
-              CLUSTER_NAME,
+              CONF.getClusterName(),
               CONF_FILE_NAME,
               CONF_FILE_NAME));
       return status;
