@@ -42,6 +42,7 @@ import org.apache.iotdb.db.storageengine.dataregion.migration.TierFullPolicy;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.timeindex.TimeIndexLevel;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.utils.datastructure.TVListSortAlgorithm;
+import org.apache.iotdb.metrics.config.MetricConfigDescriptor;
 import org.apache.iotdb.metrics.metricsets.system.SystemMetrics;
 import org.apache.iotdb.rpc.BaseRpcTransportFactory;
 import org.apache.iotdb.rpc.RpcUtils;
@@ -3193,6 +3194,7 @@ public class IoTDBConfig {
 
   public void setClusterName(String clusterName) {
     this.clusterName = clusterName;
+    MetricConfigDescriptor.getInstance().getMetricConfig().updateClusterName(clusterName);
   }
 
   public String getClusterId() {
