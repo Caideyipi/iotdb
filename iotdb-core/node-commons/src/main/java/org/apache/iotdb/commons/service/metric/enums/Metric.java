@@ -76,21 +76,17 @@ public enum Metric {
   WAL_COST("wal_cost"),
   FLUSH_COST("flush_cost"),
   FLUSH_SUB_TASK_COST("flush_sub_task_cost"),
+  MEMTABLE_THRESHOLD("memtable_threshold"),
+  FLUSH_MEMTABLE_COUNT("flush_memtable_count"),
+  ACTIVE_MEMTABLE_COUNT("active_memtable_count"),
+  ACTIVE_TIME_PARTITION_COUNT("active_time_partition_count"),
+  MEMTABLE_LIVE_DURATION("memtable_live_duration"),
   // migration related
   MIGRATION_TASK_CAUSE("migration_task_cause"),
   MIGRATION_TASK_SIZE("migration_task_size"),
   MIGRATION_TASK_COST("migration_task_cost"),
   // object storage related
   OBJECT_STORAGE_CACHE("object_storage_cache"),
-  FLUSH_THRESHOLD("flush_threshold"),
-  REJECT_THRESHOLD("reject_threshold"),
-  TIMED_FLUSH_MEMTABLE_COUNT("timed_flush_memtable_count"),
-  WAL_FLUSH_MEMTABLE_COUNT("wal_flush_memtable_count"),
-  SERIES_FULL_FLUSH_MEMTABLE("series_full_flush_memtable"),
-  ACTIVE_MEMTABLE_COUNT("active_memtable_count"),
-  ACTIVE_TIME_PARTITION_COUNT("active_time_partition_count"),
-  MEMTABLE_LIVE_DURATION("memtable_live_duration"),
-
   // compaction related
   DATA_WRITTEN("data_written"),
   DATA_READ("data_read"),
