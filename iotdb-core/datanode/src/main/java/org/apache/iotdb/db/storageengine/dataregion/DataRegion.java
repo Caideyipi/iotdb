@@ -1270,6 +1270,9 @@ public class DataRegion implements IDataRegionForQuery {
               v = new InsertRowsNode(insertRowsNode.getPlanNodeId());
               v.setSearchIndex(insertRowNode.getSearchIndex());
               v.setAligned(insertRowNode.isAligned());
+              if (insertRowNode.isGeneratedByPipe()) {
+                v.markAsGeneratedByPipe();
+              }
             }
             v.addOneInsertRowNode(insertRowNode, finalI);
             v.updateProgressIndex(insertRowNode.getProgressIndex());
@@ -3391,6 +3394,9 @@ public class DataRegion implements IDataRegionForQuery {
                 v = new InsertRowsNode(insertRowsOfOneDeviceNode.getPlanNodeId());
                 v.setSearchIndex(insertRowNode.getSearchIndex());
                 v.setAligned(insertRowNode.isAligned());
+                if (insertRowNode.isGeneratedByPipe()) {
+                  v.markAsGeneratedByPipe();
+                }
               }
               v.addOneInsertRowNode(insertRowNode, finalI);
               v.updateProgressIndex(insertRowNode.getProgressIndex());
