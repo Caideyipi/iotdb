@@ -1175,7 +1175,7 @@ public class IoTDBConfig {
   /** Config for object storage */
   private ObjectStorageConfig osConfig = ObjectStorageDescriptor.getInstance().getConfig();
 
-  private CompressionType WALCompressionAlgorithm = CompressionType.UNCOMPRESSED;
+  private CompressionType WALCompressionAlgorithm = CompressionType.LZ4;
 
   IoTDBConfig() {}
 
