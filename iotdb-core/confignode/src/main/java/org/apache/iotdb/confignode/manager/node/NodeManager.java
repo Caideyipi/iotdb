@@ -162,6 +162,7 @@ public class NodeManager {
         configNodeConfig.getSeriesPartitionExecutorClass());
     globalConfig.setTimePartitionInterval(commonConfig.getTimePartitionInterval());
     globalConfig.setIsEnterprise(true);
+    globalConfig.setTimePartitionOrigin(commonConfig.getTimePartitionOrigin());
     globalConfig.setReadConsistencyLevel(configNodeConfig.getReadConsistencyLevel());
     globalConfig.setDiskSpaceWarningThreshold(commonConfig.getDiskSpaceWarningThreshold());
     globalConfig.setTimestampPrecision(commonConfig.getTimestampPrecision());

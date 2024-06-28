@@ -166,6 +166,9 @@ public class CommonConfig {
   /** Ip and port of target AI node. */
   private TEndPoint targetAINodeEndPoint = new TEndPoint("127.0.0.1", 10810);
 
+  /** Time partition origin in milliseconds. */
+  private long timePartitionOrigin = 0;
+
   /** Time partition interval in milliseconds. */
   private long timePartitionInterval = 604_800_000;
 
@@ -609,6 +612,14 @@ public class CommonConfig {
 
   public void setStopping(boolean stopping) {
     isStopping = stopping;
+  }
+
+  public long getTimePartitionOrigin() {
+    return timePartitionOrigin;
+  }
+
+  public void setTimePartitionOrigin(long timePartitionOrigin) {
+    this.timePartitionOrigin = timePartitionOrigin;
   }
 
   public long getTimePartitionInterval() {
