@@ -2856,7 +2856,7 @@ public class DataRegion implements IDataRegionForQuery {
       throw new LoadFileException(e);
     } finally {
       writeUnlock();
-      DataNodeSchemaCache.getInstance().invalidateLastCacheInDataRegion(databaseName);
+      DataNodeSchemaCache.getInstance().invalidateAll();
     }
   }
 
