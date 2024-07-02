@@ -441,10 +441,6 @@ public class CommonConfig {
     this.systemFileStorageFs = systemFileStorageFs;
   }
 
-  public long getDefaultTTLInMs() {
-    return tierTTLInMs[tierTTLInMs.length - 1];
-  }
-
   public long[] getTierTTLInMs() {
     return tierTTLInMs;
   }
