@@ -47,23 +47,23 @@ public class BasicInternalMNode extends BasicMNode implements IInternalMNode<IMe
   private volatile IDeviceInfo<IMemMNode> deviceInfo = null;
 
   /** Constructor of MNode. */
-  public BasicInternalMNode(IMemMNode parent, String name) {
+  public BasicInternalMNode(final IMemMNode parent, final String name) {
     super(parent, name);
   }
 
   /** Check whether the MNode has a child with the name. */
   @Override
-  public boolean hasChild(String name) {
+  public boolean hasChild(final String name) {
     return (children != null && children.containsKey(name)) || hasChildInDeviceInfo(name);
   }
 
-  private boolean hasChildInDeviceInfo(String name) {
+  private boolean hasChildInDeviceInfo(final String name) {
     return deviceInfo != null && deviceInfo.hasAliasChild(name);
   }
 
   /** Get the child with the name. */
   @Override
-  public IMemMNode getChild(String name) {
+  public IMemMNode getChild(final String name) {
     IMemMNode child = null;
     if (children != null) {
       child = children.get(name);
@@ -82,7 +82,7 @@ public class BasicInternalMNode extends BasicMNode implements IInternalMNode<IMe
    * @return the child of this node after addChild
    */
   @Override
-  public IMemMNode addChild(String name, IMemMNode child) {
+  public IMemMNode addChild(final String name, final IMemMNode child) {
     /* use cpu time to exchange memory
      * measurementNode's children should be null to save memory
      * add child method will only be called when writing MTree, which is not a frequent operation
@@ -96,7 +96,7 @@ public class BasicInternalMNode extends BasicMNode implements IInternalMNode<IMe
       }
     }
     child.setParent(this);
-    IMemMNode existingChild = children.putIfAbsent(name, child);
+    final IMemMNode existingChild = children.putIfAbsent(name, child);
     return existingChild == null ? child : existingChild;
   }
 
@@ -112,7 +112,7 @@ public class BasicInternalMNode extends BasicMNode implements IInternalMNode<IMe
    * @return return the MNode already added
    */
   @Override
-  public IMemMNode addChild(IMemMNode child) {
+  public IMemMNode addChild(final IMemMNode child) {
     /* use cpu time to exchange memory
      * measurementNode's children should be null to save memory
      * add child method will only be called when writing MTree, which is not a frequent operation
@@ -133,7 +133,7 @@ public class BasicInternalMNode extends BasicMNode implements IInternalMNode<IMe
 
   /** Delete a child. */
   @Override
-  public IMemMNode deleteChild(String name) {
+  public IMemMNode deleteChild(final String name) {
     if (children != null) {
       return children.remove(name);
     }

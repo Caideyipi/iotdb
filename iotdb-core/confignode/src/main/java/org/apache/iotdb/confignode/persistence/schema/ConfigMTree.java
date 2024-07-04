@@ -35,6 +35,7 @@ import org.apache.iotdb.confignode.persistence.schema.mnode.factory.ConfigMNodeF
 import org.apache.iotdb.confignode.persistence.schema.mnode.impl.ConfigTableNode;
 import org.apache.iotdb.confignode.persistence.schema.mnode.impl.TableNodeStatus;
 import org.apache.iotdb.db.exception.metadata.DatabaseAlreadySetException;
+import org.apache.iotdb.db.exception.metadata.DatabaseConflictException;
 import org.apache.iotdb.db.exception.metadata.DatabaseNotSetException;
 import org.apache.iotdb.db.exception.metadata.PathAlreadyExistException;
 import org.apache.iotdb.db.exception.metadata.PathNotExistException;
@@ -123,7 +124,7 @@ public class ConfigMTree {
         store.addChild(cur, nodeNames[i], nodeFactory.createInternalMNode(cur, nodeNames[i]));
       } else if (temp.isDatabase()) {
         // before create database, check whether the database already exists
-        throw new DatabaseAlreadySetException(temp.getFullPath(), false);
+        throw new DatabaseConflictException(temp.getFullPath(), false);
       }
       cur = store.getChild(cur, nodeNames[i]);
       i++;
@@ -134,11 +135,9 @@ public class ConfigMTree {
     synchronized (this) {
       if (store.hasChild(cur, nodeNames[i])) {
         // node b has child sg
-        if (store.getChild(cur, nodeNames[i]).isDatabase()) {
-          throw new DatabaseAlreadySetException(path.getFullPath(), false);
-        } else {
-          throw new DatabaseAlreadySetException(path.getFullPath(), true);
-        }
+        throw store.getChild(cur, nodeNames[i]).isDatabase()
+            ? new DatabaseAlreadySetException(path.getFullPath(), true)
+            : new DatabaseConflictException(path.getFullPath(), true);
       } else {
         final IDatabaseMNode<IConfigMNode> databaseMNode =
             nodeFactory.createDatabaseMNode(cur, nodeNames[i]);
@@ -146,7 +145,7 @@ public class ConfigMTree {
         final IConfigMNode result = store.addChild(cur, nodeNames[i], databaseMNode.getAsMNode());
 
         if (result != databaseMNode) {
-          throw new DatabaseAlreadySetException(path.getFullPath(), true);
+          throw new DatabaseConflictException(path.getFullPath(), false);
         }
       }
     }
@@ -177,7 +176,8 @@ public class ConfigMTree {
    * @param pathPattern a path pattern or a full path
    * @return a list contains all databases related to given path
    */
-  public List<PartialPath> getBelongedDatabases(final PartialPath pathPattern) throws MetadataException {
+  public List<PartialPath> getBelongedDatabases(final PartialPath pathPattern)
+      throws MetadataException {
     return collectDatabases(pathPattern, ALL_MATCH_SCOPE, false, true);
   }
 
@@ -192,16 +192,16 @@ public class ConfigMTree {
    * @return a list contains all database names under given path pattern
    */
   public List<PartialPath> getMatchedDatabases(
-          final PartialPath pathPattern, final PathPatternTree scope, final boolean isPrefixMatch)
+      final PartialPath pathPattern, final PathPatternTree scope, final boolean isPrefixMatch)
       throws MetadataException {
     return collectDatabases(pathPattern, scope, isPrefixMatch, false);
   }
 
   private List<PartialPath> collectDatabases(
-          final PartialPath pathPattern,
-          final PathPatternTree scope,
-          final boolean isPrefixMatch,
-          final boolean collectInternal)
+      final PartialPath pathPattern,
+      final PathPatternTree scope,
+      final boolean isPrefixMatch,
+      final boolean collectInternal)
       throws MetadataException {
     final List<PartialPath> result = new LinkedList<>();
     try (final DatabaseCollector<?, ?> collector =
@@ -247,7 +247,8 @@ public class ConfigMTree {
    * @param scope traversing scope
    * @param isPrefixMatch if true, the path pattern is used to match prefix path
    */
-  public int getDatabaseNum(final PartialPath pathPattern, final PathPatternTree scope, final boolean isPrefixMatch)
+  public int getDatabaseNum(
+      final PartialPath pathPattern, final PathPatternTree scope, final boolean isPrefixMatch)
       throws MetadataException {
     try (DatabaseCounter<IConfigMNode> counter =
         new DatabaseCounter<>(root, pathPattern, store, isPrefixMatch, scope)) {
@@ -340,8 +341,8 @@ public class ConfigMTree {
    *
    * @param path a full path or a prefix path
    */
-  public void checkDatabaseAlreadySet(PartialPath path) throws DatabaseAlreadySetException {
-    String[] nodeNames = path.getNodes();
+  public void checkDatabaseAlreadySet(final PartialPath path) throws MetadataException {
+    final String[] nodeNames = path.getNodes();
     IConfigMNode cur = root;
     if (!nodeNames[0].equals(root.getName())) {
       return;
@@ -352,10 +353,12 @@ public class ConfigMTree {
       }
       cur = store.getChild(cur, nodeNames[i]);
       if (cur.isDatabase()) {
-        throw new DatabaseAlreadySetException(cur.getFullPath(), false);
+        throw i == nodeNames.length - 1
+            ? new DatabaseAlreadySetException(cur.getFullPath(), true)
+            : new DatabaseConflictException(cur.getFullPath(), false);
       }
     }
-    throw new DatabaseAlreadySetException(path.getFullPath(), true);
+    throw new DatabaseConflictException(cur.getFullPath(), true);
   }
 
   // endregion

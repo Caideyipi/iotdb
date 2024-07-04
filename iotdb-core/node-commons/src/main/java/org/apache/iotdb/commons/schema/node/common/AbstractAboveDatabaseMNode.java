@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.iotdb.commons.schema.node.common;
 
 import org.apache.iotdb.commons.path.PartialPath;
@@ -33,7 +34,7 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
 
   protected final BasicNode basicMNode;
 
-  public AbstractAboveDatabaseMNode(BasicNode basicMNode) {
+  protected AbstractAboveDatabaseMNode(final BasicNode basicMNode) {
     this.basicMNode = basicMNode;
   }
 
@@ -43,7 +44,7 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public void setName(String name) {
+  public void setName(final String name) {
     basicMNode.setName(name);
   }
 
@@ -56,12 +57,12 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public void setParent(N parent) {
+  public void setParent(final N parent) {
     basicMNode.setParent(parent);
   }
 
   @Override
-  public <R, C> R accept(MNodeVisitor<R, C> visitor, C context) {
+  public <R, C> R accept(final MNodeVisitor<R, C> visitor, final C context) {
     throw new UnsupportedOperationException("Wrong MNode Type");
   }
 
@@ -71,7 +72,7 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public void setFullPath(String fullPath) {
+  public void setFullPath(final String fullPath) {
     basicMNode.setFullPath(fullPath);
   }
 
@@ -81,17 +82,17 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public boolean hasChild(String name) {
+  public boolean hasChild(final String name) {
     return basicMNode.hasChild(name);
   }
 
   @Override
-  public N getChild(String name) {
+  public N getChild(final String name) {
     return basicMNode.getChild(name);
   }
 
   @Override
-  public N addChild(String name, N child) {
+  public N addChild(final String name, final N child) {
     N res = basicMNode.addChild(name, child);
     if (res == child) {
       child.setParent(this.getAsMNode());
@@ -100,7 +101,7 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public N addChild(N child) {
+  public N addChild(final N child) {
     N res = basicMNode.addChild(child);
     if (res == child) {
       child.setParent(this.getAsMNode());
@@ -109,7 +110,7 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public N deleteChild(String name) {
+  public N deleteChild(final String name) {
     return basicMNode.deleteChild(name);
   }
 
@@ -119,7 +120,7 @@ public abstract class AbstractAboveDatabaseMNode<N extends IMNode<N>, BasicNode 
   }
 
   @Override
-  public void setChildren(IMNodeContainer<N> children) {
+  public void setChildren(final IMNodeContainer<N> children) {
     basicMNode.setChildren(children);
   }
 

@@ -22,24 +22,31 @@ package org.apache.iotdb.db.exception.metadata;
 import org.apache.iotdb.commons.exception.MetadataException;
 import org.apache.iotdb.rpc.TSStatusCode;
 
-public class DatabaseNotSetException extends MetadataException {
+public class DatabaseConflictException extends MetadataException {
 
-  private static final long serialVersionUID = 3739300272099030533L;
+  private final boolean isChild;
 
-  public DatabaseNotSetException(final String path) {
-    super(String.format("Database is not set for current seriesPath: [%s]", path));
-    this.errorCode = TSStatusCode.DATABASE_NOT_EXIST.getStatusCode();
+  private final String storageGroupPath;
+
+  public DatabaseConflictException(final String path, final boolean isChild) {
+    super(getMessage(path, isChild), TSStatusCode.DATABASE_CONFLICTS.getStatusCode());
+    this.isChild = isChild;
+    storageGroupPath = path;
   }
 
-  public DatabaseNotSetException(String path, boolean isUserException) {
-    super(String.format("Database is not set for current seriesPath: [%s]", path));
-    this.isUserException = isUserException;
-    this.errorCode = TSStatusCode.DATABASE_NOT_EXIST.getStatusCode();
+  public boolean isChild() {
+    return isChild;
   }
 
-  public DatabaseNotSetException(String path, String reason) {
-    super(
-        String.format(
-            "Database is not set for current seriesPath: [%s], because %s", path, reason));
+  public String getStorageGroupPath() {
+    return storageGroupPath;
+  }
+
+  private static String getMessage(final String path, final boolean hasChild) {
+    if (hasChild) {
+      return String.format("some children of %s have already been created as database", path);
+    } else {
+      return String.format("%s has already been created as database", path);
+    }
   }
 }
