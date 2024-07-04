@@ -297,7 +297,8 @@ public class PartitionCache {
           TDatabaseSchema databaseSchema = new TDatabaseSchema();
           databaseSchema.setName(databaseName);
           TSStatus tsStatus = client.setDatabase(databaseSchema);
-          if (TSStatusCode.SUCCESS_STATUS.getStatusCode() == tsStatus.getCode()) {
+          if (TSStatusCode.SUCCESS_STATUS.getStatusCode() == tsStatus.getCode()
+              || TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode() == tsStatus.getCode()) {
             successFullyCreatedDatabase.add(databaseName);
           } else {
             // Try to update cache by databases successfully created
@@ -325,15 +326,15 @@ public class PartitionCache {
    * @param userName the username
    * @throws RuntimeException if failed to create database
    */
-  private void createDatabaseAndUpdateCache(String database, String userName)
+  private void createDatabaseAndUpdateCache(final String database, final String userName)
       throws ClientManagerException, TException {
     databaseCacheLock.writeLock().lock();
-    try (ConfigNodeClient client =
+    try (final ConfigNodeClient client =
         configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      long startTime = System.nanoTime();
+      final long startTime = System.nanoTime();
       try {
         if (!AuthorityChecker.SUPER_USER.equals(userName)) {
-          TSStatus status =
+          final TSStatus status =
               AuthorityChecker.getTSStatus(
                   AuthorityChecker.checkSystemPermission(
                       userName, PrivilegeType.MANAGE_DATABASE.ordinal()),
@@ -345,12 +346,13 @@ public class PartitionCache {
       } finally {
         PerformanceOverviewMetrics.getInstance().recordAuthCost(System.nanoTime() - startTime);
       }
-      TDatabaseSchema databaseSchema = new TDatabaseSchema();
+      final TDatabaseSchema databaseSchema = new TDatabaseSchema();
       databaseSchema.setName(database);
-      TSStatus tsStatus = client.setDatabase(databaseSchema);
-      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != tsStatus.getCode()) {
+      final TSStatus tsStatus = client.setDatabase(databaseSchema);
+      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() == tsStatus.getCode()
+          || TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode() == tsStatus.getCode()) {
         // Try to update database cache when database has already been created
-        updateDatabaseCache(new HashSet<>(Collections.singletonList(database)));
+        updateDatabaseCache(Collections.singleton(database));
       } else {
         // Try to update cache by databases successfully created
         logger.warn(

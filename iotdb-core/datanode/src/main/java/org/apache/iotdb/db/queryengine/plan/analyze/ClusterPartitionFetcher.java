@@ -57,6 +57,7 @@ import org.apache.tsfile.file.metadata.IDeviceID;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -285,19 +286,17 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
   }
 
   private SchemaPartition getOrCreateSchemaPartition(
-      String database, List<IDeviceID> deviceIDs, boolean isAutoCreate, String userName) {
-    try (ConfigNodeClient client =
+      final String database,
+      final List<IDeviceID> deviceIDs,
+      final boolean isAutoCreate,
+      final String userName) {
+    try (final ConfigNodeClient client =
         configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       partitionCache.checkAndAutoCreateDatabase(database, isAutoCreate, userName);
       SchemaPartition schemaPartition =
-          partitionCache.getSchemaPartition(
-              new HashMap<String, List<IDeviceID>>() {
-                {
-                  put(database, deviceIDs);
-                }
-              });
+          partitionCache.getSchemaPartition(Collections.singletonMap(database, deviceIDs));
       if (null == schemaPartition) {
-        PathPatternTree tree = new PathPatternTree();
+        final PathPatternTree tree = new PathPatternTree();
         tree.appendPathPattern(new PartialPath(database + "." + MULTI_LEVEL_PATH_WILDCARD));
         TSchemaPartitionTableResp schemaPartitionTableResp =
             client.getSchemaPartitionTable(constructSchemaPartitionReq(tree));
@@ -314,14 +313,14 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
         }
       }
       return schemaPartition;
-    } catch (ClientManagerException | TException | IllegalPathException e) {
+    } catch (final ClientManagerException | TException | IllegalPathException e) {
       throw new StatementAnalyzeException(
           "An error occurred when executing getSchemaPartition():" + e.getMessage());
     }
   }
 
   @Override
-  public SchemaPartition getSchemaPartition(String database) {
+  public SchemaPartition getSchemaPartition(final String database) {
     return partitionCache.getSchemaPartition(database);
   }
 

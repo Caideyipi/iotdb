@@ -136,7 +136,7 @@ public class ConfigMTree {
       if (store.hasChild(cur, nodeNames[i])) {
         // node b has child sg
         throw store.getChild(cur, nodeNames[i]).isDatabase()
-            ? new DatabaseAlreadySetException(path.getFullPath(), true)
+            ? new DatabaseAlreadySetException(path.getFullPath())
             : new DatabaseConflictException(path.getFullPath(), true);
       } else {
         final IDatabaseMNode<IConfigMNode> databaseMNode =
@@ -259,9 +259,9 @@ public class ConfigMTree {
   /**
    * E.g., root.sg is database given [root, sg], if the give path is not a database, throw exception
    */
-  public IDatabaseMNode<IConfigMNode> getDatabaseNodeByDatabasePath(PartialPath databasePath)
+  public IDatabaseMNode<IConfigMNode> getDatabaseNodeByDatabasePath(final PartialPath databasePath)
       throws MetadataException {
-    String[] nodes = databasePath.getNodes();
+    final String[] nodes = databasePath.getNodes();
     if (nodes.length == 0 || !nodes[0].equals(root.getName())) {
       throw new IllegalPathException(databasePath.getFullPath());
     }
@@ -272,7 +272,7 @@ public class ConfigMTree {
         throw new DatabaseNotSetException(databasePath.getFullPath());
       }
       if (cur.isDatabase()) {
-        throw new DatabaseAlreadySetException(cur.getFullPath(), false);
+        throw new DatabaseConflictException(cur.getFullPath(), false);
       }
     }
 
@@ -283,7 +283,7 @@ public class ConfigMTree {
     if (cur.isDatabase()) {
       return cur.getAsDatabaseMNode();
     } else {
-      throw new DatabaseAlreadySetException(databasePath.getFullPath(), true);
+      throw new DatabaseConflictException(databasePath.getFullPath(), true);
     }
   }
 
@@ -354,7 +354,7 @@ public class ConfigMTree {
       cur = store.getChild(cur, nodeNames[i]);
       if (cur.isDatabase()) {
         throw i == nodeNames.length - 1
-            ? new DatabaseAlreadySetException(cur.getFullPath(), true)
+            ? new DatabaseAlreadySetException(cur.getFullPath())
             : new DatabaseConflictException(cur.getFullPath(), false);
       }
     }
