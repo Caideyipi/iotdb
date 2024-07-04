@@ -39,6 +39,7 @@ import org.apache.iotdb.commons.client.property.ThriftClientProperty;
 import org.apache.iotdb.commons.client.sync.SyncThriftClientWithErrorHandler;
 import org.apache.iotdb.commons.consensus.ConfigRegionId;
 import org.apache.iotdb.confignode.rpc.thrift.IConfigNodeRPCService;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeConfigurationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRemoveReq;
@@ -448,6 +449,12 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TShowAINodesResp showAINodes() throws TException {
     return executeRemoteCallWithRetry(
         () -> client.showAINodes(), resp -> !updateConfigNodeLeader(resp.status));
+  }
+
+  @Override
+  public TAINodeConfigurationResp getAINodeConfiguration(int aiNodeId) throws TException {
+    throw new UnsupportedOperationException(
+        "GetAINodeConfiguration method is not supported in datanode");
   }
 
   @Override

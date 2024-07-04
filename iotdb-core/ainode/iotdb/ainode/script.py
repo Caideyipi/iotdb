@@ -19,6 +19,7 @@ import os
 import sys
 import shutil
 
+from iotdb.ainode.exception import MissingConfigError
 from iotdb.thrift.common.ttypes import TAINodeLocation, TEndPoint
 
 from iotdb.ainode.client import client_manager
@@ -28,7 +29,7 @@ from iotdb.ainode.log import logger
 from iotdb.ainode.service import AINode
 
 server: AINode = None
-
+POINT_COLON = ":"
 
 def main():
     global server
@@ -49,10 +50,36 @@ def main():
             logger.info("Removing AINode...")
             if len(arguments) >= 3:
                 target_ainode = arguments[2]
-                # parameter pattern: <ainode-id>/<ip>:<rpc-port>
-                target_ainode_id = int(target_ainode.split('/')[0])
-                target_rpc_address = target_ainode.split('/')[1].split(':')[0]
-                target_rpc_port = int(target_ainode.split('/')[1].split(':')[1])
+                # parameter pattern: <ainode-id> or <ip>:<rpc-port>
+                ainode_info = target_ainode.split(POINT_COLON)
+                target_ainode_id = -1
+                target_rpc_address = None
+                target_rpc_port = -1
+
+                # ainode id
+                if len(ainode_info) == 1:
+                    target_ainode_id = int(ainode_info[0])
+
+                    ainode_configuration_map = client_manager.borrow_config_node_client().get_ainode_configuration(ainode_id)
+
+                    end_point = ainode_configuration_map[target_ainode_id]
+                    target_rpc_address = end_point.ip
+                    target_rpc_port = end_point.port
+                elif len(ainode_info) == 2:
+                    target_rpc_address = ainode_info[0]
+                    target_rpc_port = int(ainode_info[1])
+
+                    ainode_configuration_map = client_manager.borrow_config_node_client().get_ainode_configuration(-1)
+
+                    for cur_ainode_id, cur_location in ainode_configuration_map:
+                        if cur_location.ip == target_rpc_address and cur_location.port == target_rpc_port:
+                            target_ainode_id = cur_ainode_id
+                            break
+                    if target_ainode_id == -1:
+                        raise MissingConfigError("Can't find ainode through {}:{}".format(target_rpc_port, target_rpc_address))
+                else:
+                    raise MissingConfigError("NodeId or IP:Port should be provided to remove AINode")
+
                 logger.info('Got target AINode id: {}, address: {}, port: {}'
                             .format(target_ainode_id, target_rpc_address, target_rpc_port))
             else:

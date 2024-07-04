@@ -27,6 +27,7 @@ import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.snapshot.SnapshotProcessor;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.conf.SystemPropertiesUtils;
+import org.apache.iotdb.confignode.consensus.request.read.ainode.GetAINodeConfigurationPlan;
 import org.apache.iotdb.confignode.consensus.request.read.datanode.GetDataNodeConfigurationPlan;
 import org.apache.iotdb.confignode.consensus.request.write.ainode.RegisterAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
@@ -37,6 +38,7 @@ import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateVers
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RegisterDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.RemoveDataNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.datanode.UpdateDataNodePlan;
+import org.apache.iotdb.confignode.consensus.response.ainode.AINodeConfigurationResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeConfigurationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -232,6 +234,28 @@ public class NodeInfo implements SnapshotProcessor {
       dataNodeInfoReadWriteLock.readLock().unlock();
     }
 
+    return result;
+  }
+
+  public AINodeConfigurationResp getAINodeConfiguration(
+      GetAINodeConfigurationPlan getAINodeConfigurationPlan) {
+    AINodeConfigurationResp result = new AINodeConfigurationResp();
+    result.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+
+    int aiNodeId = getAINodeConfigurationPlan.getAiNodeId();
+    aiNodeInfoReadWriteLock.readLock().lock();
+    try {
+      if (aiNodeId == -1) {
+        result.setAiNodeConfigurationMap(new HashMap<>(registeredAINodes));
+      } else {
+        result.setAiNodeConfigurationMap(
+            registeredAINodes.get(aiNodeId) == null
+                ? new HashMap<>(0)
+                : Collections.singletonMap(aiNodeId, registeredAINodes.get(aiNodeId)));
+      }
+    } finally {
+      aiNodeInfoReadWriteLock.readLock().unlock();
+    }
     return result;
   }
 

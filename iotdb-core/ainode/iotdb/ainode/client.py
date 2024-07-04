@@ -336,5 +336,20 @@ class ConfigNodeClient(object):
             self.__wait_and_reconnect()
         raise TException(self.__MSG_RECONNECTION_FAIL)
 
+    def get_ainode_configuration(self, node_id: int) -> map:
+        for _ in range(0, self.__RETRY_NUM):
+            try:
+                resp = self.__client.getAINodeConfiguration(node_id)
+                if not self.__update_config_node_leader(resp.status):
+                    verify_success(resp.status, "An error occurs when calling get_ainode_configuration()")
+                    return resp.aiNodeConfigurationMap
+            except TTransport.TException:
+                logger.warning("Failed to connect to ConfigNode {} from AINode when executing "
+                               "get_ainode_configuration()",
+                               self.__config_leader)
+                self.__config_leader = None
+            self.__wait_and_reconnect()
+        raise TException(self.__MSG_RECONNECTION_FAIL)
+
 
 client_manager = ClientManager()

@@ -994,6 +994,13 @@ struct TGetAllActivationStatusResp {
 // ====================================================
 // AINode
 // ====================================================
+
+struct TAINodeConfigurationResp {
+  1: required common.TSStatus status
+  2: optional map<i32, common.TAINodeConfiguration> aiNodeConfigurationMap
+}
+
+
 struct TAINodeRegisterReq{
   1: required string clusterName
   2: required common.TAINodeConfiguration aiNodeConfiguration
@@ -1062,6 +1069,11 @@ service IConfigNodeRPCService {
    */
   TDataNodeRestartResp restartDataNode(TDataNodeRestartReq req)
 
+
+   // ======================================================
+   // AINode
+   // ======================================================
+
   /**
   * node management for ainode, it's similar to datanode above
   */
@@ -1072,6 +1084,8 @@ service IConfigNodeRPCService {
   common.TSStatus removeAINode(TAINodeRemoveReq req)
 
   TShowAINodesResp showAINodes()
+
+  TAINodeConfigurationResp getAINodeConfiguration(i32 aiNodeId)
 
   /**
    * Get system configurations. i.e. configurations that is not associated with the DataNodeId

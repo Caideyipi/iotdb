@@ -21,6 +21,7 @@ package org.apache.iotdb.confignode.consensus.request;
 
 import org.apache.iotdb.commons.exception.runtime.SerializationRunTimeException;
 import org.apache.iotdb.confignode.consensus.request.auth.AuthorPlan;
+import org.apache.iotdb.confignode.consensus.request.read.ainode.GetAINodeConfigurationPlan;
 import org.apache.iotdb.confignode.consensus.request.read.database.CountDatabasePlan;
 import org.apache.iotdb.confignode.consensus.request.read.database.GetDatabasePlan;
 import org.apache.iotdb.confignode.consensus.request.read.datanode.GetDataNodeConfigurationPlan;
@@ -213,6 +214,9 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
           break;
         case RemoveAINode:
           plan = new RemoveAINodePlan();
+          break;
+        case GetAINodeConfiguration:
+          plan = new GetAINodeConfigurationPlan();
           break;
         case UpdateAINodeConfiguration:
           plan = new UpdateAINodePlan();

@@ -40,6 +40,7 @@ public enum ConfigPhysicalPlanType {
   RegisterAINode((short) 104),
   UpdateAINodeConfiguration((short) 105),
   RemoveAINode((short) 106),
+  GetAINodeConfiguration((short) 107),
 
   /** Database. */
   CreateDatabase((short) 200),
