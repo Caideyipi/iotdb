@@ -2878,9 +2878,9 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
   @Override
   public SettableFuture<ConfigTaskResult> createTable(
-      TsTable table, String database, boolean ifNotExists) {
-    SettableFuture<ConfigTaskResult> future = SettableFuture.create();
-    try (ConfigNodeClient configNodeClient =
+      final TsTable table, final String database, final boolean ifNotExists) {
+    final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
+    try (final ConfigNodeClient configNodeClient =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
 
       TSStatus tsStatus;
@@ -2889,7 +2889,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
           tsStatus =
               configNodeClient.createTable(
                   ByteBuffer.wrap(TsTableInternalRPCUtil.serializeSingleTsTable(database, table)));
-        } catch (TTransportException e) {
+        } catch (final TTransportException e) {
           if (e.getType() == TTransportException.TIMED_OUT
               || e.getCause() instanceof SocketTimeoutException) {
             // Time out mainly caused by slow execution, just wait
@@ -2913,7 +2913,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
             tsStatus);
         future.setException(new IoTDBException(tsStatus.getMessage(), tsStatus.getCode()));
       }
-    } catch (ClientManagerException | TException e) {
+    } catch (final ClientManagerException | TException e) {
       future.setException(e);
     }
     return future;

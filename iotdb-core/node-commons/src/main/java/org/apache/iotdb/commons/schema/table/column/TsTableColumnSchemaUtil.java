@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TsTableColumnSchemaUtil {
@@ -103,12 +104,12 @@ public class TsTableColumnSchemaUtil {
     }
   }
 
-  public static List<TsTableColumnSchema> deserializeColumnSchemaList(ByteBuffer buffer) {
+  public static List<TsTableColumnSchema> deserializeColumnSchemaList(final ByteBuffer buffer) {
     int size = ReadWriteIOUtils.readInt(buffer);
     if (size == -1) {
-      return null;
+      return Collections.emptyList();
     }
-    List<TsTableColumnSchema> columnSchemaList = new ArrayList<>(size);
+    final List<TsTableColumnSchema> columnSchemaList = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       columnSchemaList.add(deserialize(buffer));
     }

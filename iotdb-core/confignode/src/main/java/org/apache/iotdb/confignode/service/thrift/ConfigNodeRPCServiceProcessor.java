@@ -1144,12 +1144,12 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   }
 
   @Override
-  public TSStatus createTable(ByteBuffer tableInfo) throws TException {
+  public TSStatus createTable(final ByteBuffer tableInfo) throws TException {
     return configManager.createTable(tableInfo);
   }
 
   @Override
-  public TSStatus alterTable(TAlterTableReq req) throws TException {
+  public TSStatus alterTable(final TAlterTableReq req) throws TException {
     return configManager.alterTable(req);
   }
 }

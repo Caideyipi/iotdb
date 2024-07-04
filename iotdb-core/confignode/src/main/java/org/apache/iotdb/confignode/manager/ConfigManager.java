@@ -2368,10 +2368,10 @@ public class ConfigManager implements IManager {
         : new TThrottleQuotaResp(status);
   }
 
-  public TSStatus createTable(ByteBuffer tableInfo) {
-    TSStatus status = confirmLeader();
+  public TSStatus createTable(final ByteBuffer tableInfo) {
+    final TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      Pair<String, TsTable> pair =
+      final Pair<String, TsTable> pair =
           TsTableInternalRPCUtil.deserializeSingleTsTable(tableInfo.array());
       return procedureManager.createTable(pair.left, pair.right);
     } else {
@@ -2379,8 +2379,8 @@ public class ConfigManager implements IManager {
     }
   }
 
-  public TSStatus alterTable(TAlterTableReq req) {
-    TSStatus status = confirmLeader();
+  public TSStatus alterTable(final TAlterTableReq req) {
+    final TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       switch (AlterTableOperationType.getType(req.operationType)) {
         case ADD_COLUMN:

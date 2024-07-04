@@ -1251,13 +1251,13 @@ public class ProcedureManager {
     }
   }
 
-  public TSStatus createTable(String database, TsTable table) {
+  public TSStatus createTable(final String database, final TsTable table) {
     long procedureId = -1;
     synchronized (this) {
       boolean hasOverlappedTask = false;
       ProcedureType type;
       CreateTableProcedure createTableProcedure;
-      for (Procedure<?> procedure : executor.getProcedures().values()) {
+      for (final Procedure<?> procedure : executor.getProcedures().values()) {
         type = ProcedureFactory.getProcedureType(procedure);
         if (type == null || !type.equals(ProcedureType.CREATE_TABLE_PROCEDURE)) {
           continue;
@@ -1284,8 +1284,8 @@ public class ProcedureManager {
         procedureId = this.executor.submitProcedure(new CreateTableProcedure(database, table));
       }
     }
-    List<TSStatus> procedureStatus = new ArrayList<>();
-    boolean isSucceed =
+    final List<TSStatus> procedureStatus = new ArrayList<>();
+    final boolean isSucceed =
         waitingProcedureFinished(Collections.singletonList(procedureId), procedureStatus);
     if (isSucceed) {
       return StatusUtils.OK;

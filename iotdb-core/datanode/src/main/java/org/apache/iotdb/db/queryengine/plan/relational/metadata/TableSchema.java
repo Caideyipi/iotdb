@@ -19,15 +19,18 @@
 
 package org.apache.iotdb.db.queryengine.plan.relational.metadata;
 
+import com.google.errorprone.annotations.Immutable;
+
 import java.util.List;
 
+@Immutable
 public class TableSchema {
 
   private final String tableName;
 
   private final List<ColumnSchema> columns;
 
-  public TableSchema(String tableName, List<ColumnSchema> columns) {
+  public TableSchema(final String tableName, final List<ColumnSchema> columns) {
     this.tableName = tableName;
     this.columns = columns;
   }

@@ -119,7 +119,7 @@ public class DataNodeTableCache implements ITableCache {
     }
   }
 
-  private void removeTableFromPreCreateMap(String database, String tableName) {
+  private void removeTableFromPreCreateMap(final String database, final String tableName) {
     preCreateTableMap.compute(
         database,
         (k, v) -> {
@@ -136,10 +136,10 @@ public class DataNodeTableCache implements ITableCache {
   }
 
   @Override
-  public void commitCreateTable(String database, String tableName) {
+  public void commitCreateTable(final String database, final String tableName) {
     readWriteLock.writeLock().lock();
     try {
-      TsTable table = preCreateTableMap.get(database).get(tableName);
+      final TsTable table = preCreateTableMap.get(database).get(tableName);
       databaseTableMap
           .computeIfAbsent(database, k -> new ConcurrentHashMap<>())
           .put(tableName, table);
@@ -152,7 +152,9 @@ public class DataNodeTableCache implements ITableCache {
 
   @Override
   public void preAddTableColumn(
-      String database, String tableName, List<TsTableColumnSchema> columnSchemaList) {
+      final String database,
+      final String tableName,
+      final List<TsTableColumnSchema> columnSchemaList) {
     readWriteLock.writeLock().lock();
     try {
       preAddColumnMap

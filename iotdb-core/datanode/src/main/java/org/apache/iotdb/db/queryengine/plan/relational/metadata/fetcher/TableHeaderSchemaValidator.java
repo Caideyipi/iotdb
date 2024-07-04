@@ -26,7 +26,6 @@ import org.apache.iotdb.commons.schema.table.column.IdColumnSchema;
 import org.apache.iotdb.commons.schema.table.column.MeasurementColumnSchema;
 import org.apache.iotdb.commons.schema.table.column.TsTableColumnCategory;
 import org.apache.iotdb.commons.schema.table.column.TsTableColumnSchema;
-import org.apache.iotdb.db.exception.metadata.table.TableNotExistsException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
 import org.apache.iotdb.db.queryengine.plan.execution.config.ConfigTaskResult;
@@ -138,14 +137,12 @@ public class TableHeaderSchemaValidator {
       table = DataNodeTableCache.getInstance().getTable(database, tableSchema.getTableName());
       if (table == null) {
         throw new IllegalStateException(
-            "auto create table succeed, but cannot get table schema in current node's DataNodeTableCache, may be caused by concurrently auto creating table");
+            "Auto create table succeed, but cannot get table schema in current node's DataNodeTableCache, may be caused by concurrently auto creating table");
       }
     } else if (inputColumnList == null) {
       // do nothing
-    } else {
-      if (!missingColumnList.isEmpty()) {
-        autoCreateColumn(database, tableSchema.getTableName(), missingColumnList, context);
-      }
+    } else if (!missingColumnList.isEmpty()) {
+      autoCreateColumn(database, tableSchema.getTableName(), missingColumnList, context);
     }
     table
         .getColumnList()
@@ -160,34 +157,33 @@ public class TableHeaderSchemaValidator {
     return new TableSchema(tableSchema.getTableName(), resultColumnList);
   }
 
-  private void autoCreateTable(String database, TableSchema tableSchema) {
-    TsTable tsTable = new TsTable(tableSchema.getTableName());
+  private void autoCreateTable(final String database, final TableSchema tableSchema) {
+    final TsTable tsTable = new TsTable(tableSchema.getTableName());
     addColumnSchema(tableSchema.getColumns(), tsTable);
-    CreateTableTask createTableTask = new CreateTableTask(tsTable, database, true);
+    final CreateTableTask createTableTask = new CreateTableTask(tsTable, database, true);
     try {
-      ListenableFuture<ConfigTaskResult> future = createTableTask.execute(configTaskExecutor);
-      ConfigTaskResult result = future.get();
+      final ListenableFuture<ConfigTaskResult> future = createTableTask.execute(configTaskExecutor);
+      final ConfigTaskResult result = future.get();
       if (result.getStatusCode().getStatusCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         throw new RuntimeException(
             new IoTDBException(
-                "Auto create table column failed.", result.getStatusCode().getStatusCode()));
+                "Auto create table failed.", result.getStatusCode().getStatusCode()));
       }
-    } catch (ExecutionException | InterruptedException e) {
-      LOGGER.warn("Auto create table column failed.", e);
+    } catch (final ExecutionException | InterruptedException e) {
+      LOGGER.warn("Auto create table failed.", e);
       throw new RuntimeException(e);
     }
-    throw new SemanticException(new TableNotExistsException(database, tableSchema.getTableName()));
   }
 
-  private void addColumnSchema(List<ColumnSchema> columnSchemas, TsTable tsTable) {
-    for (ColumnSchema columnSchema : columnSchemas) {
-      TsTableColumnCategory category = columnSchema.getColumnCategory();
-      String columnName = columnSchema.getName();
+  private void addColumnSchema(final List<ColumnSchema> columnSchemas, final TsTable tsTable) {
+    for (final ColumnSchema columnSchema : columnSchemas) {
+      final TsTableColumnCategory category = columnSchema.getColumnCategory();
+      final String columnName = columnSchema.getName();
       if (tsTable.getColumnSchema(columnName) != null) {
         throw new SemanticException(
             String.format("Columns in table shall not share the same name %s.", columnName));
       }
-      TSDataType dataType = getTSDataType(columnSchema.getType());
+      final TSDataType dataType = getTSDataType(columnSchema.getType());
       generateColumnSchema(tsTable, category, columnName, dataType);
     }
   }
@@ -225,11 +221,11 @@ public class TableHeaderSchemaValidator {
   }
 
   private void autoCreateColumn(
-      String database,
-      String tableName,
-      List<ColumnSchema> inputColumnList,
-      MPPQueryContext context) {
-    AlterTableAddColumnTask task =
+      final String database,
+      final String tableName,
+      final List<ColumnSchema> inputColumnList,
+      final MPPQueryContext context) {
+    final AlterTableAddColumnTask task =
         new AlterTableAddColumnTask(
             database, tableName, inputColumnList, context.getQueryId().getId());
     try {
