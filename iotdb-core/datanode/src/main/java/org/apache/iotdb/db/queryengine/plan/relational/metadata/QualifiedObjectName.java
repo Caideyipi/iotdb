@@ -31,7 +31,7 @@ import static org.apache.iotdb.db.queryengine.plan.relational.metadata.MetadataU
 
 @Immutable
 public class QualifiedObjectName {
-  private static final Pattern UNQUOTED_COMPONENT = Pattern.compile("[a-zA-Z0-9_]+");
+  private static final Pattern UNQUOTED_COMPONENT = Pattern.compile("\\w+");
   private static final String COMPONENT = UNQUOTED_COMPONENT.pattern() + "|\"([^\"]|\"\")*\"";
   private static final Pattern PATTERN =
       Pattern.compile("(?<database>" + COMPONENT + ")\\.(?<table>" + COMPONENT + ")");
