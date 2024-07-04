@@ -300,9 +300,9 @@ public class TableMetadataImpl implements Metadata {
 
   @Override
   public List<DeviceEntry> indexScan(
-      QualifiedObjectName tableName,
-      List<Expression> expressionList,
-      List<String> attributeColumns) {
+      final QualifiedObjectName tableName,
+      final List<Expression> expressionList,
+      final List<String> attributeColumns) {
     return TableDeviceSchemaFetcher.getInstance()
         .fetchDeviceSchemaForDataQuery(
             tableName.getDatabaseName(),
@@ -313,14 +313,14 @@ public class TableMetadataImpl implements Metadata {
 
   @Override
   public TableSchema validateTableHeaderSchema(
-      String database, TableSchema tableSchema, MPPQueryContext context) {
+      final String database, final TableSchema tableSchema, final MPPQueryContext context) {
     return TableHeaderSchemaValidator.getInstance()
         .validateTableHeaderSchema(database, tableSchema, context);
   }
 
   @Override
   public void validateDeviceSchema(
-      ITableDeviceSchemaValidation schemaValidation, MPPQueryContext context) {
+      final ITableDeviceSchemaValidation schemaValidation, final MPPQueryContext context) {
     TableDeviceSchemaValidator.getInstance().validateDeviceSchema(schemaValidation, context);
   }
 

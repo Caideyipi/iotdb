@@ -79,13 +79,14 @@ public interface Metadata {
   /**
    * This method is used for table column validation and should be invoked before device validation.
    *
-   * <p>This method return all the existing column schemas in the target table.
+   * <p>This method returns all the existing column schemas in the target table.
    *
    * <p>When table or column is missing, this method will execute auto creation.
    *
-   * <p>When using SQL, the columnSchemaList could be null and there won't be any validation.
+   * <p>When using SQL, the columnSchemaList could be {@code null} and there won't be any
+   * validation.
    *
-   * <p>When the input dataType or category of one column is null, the column cannot be auto
+   * <p>When the input dataType or category of one column is {@code null}, the column cannot be auto
    * created.
    *
    * <p>If validation failed, a SemanticException will be thrown.

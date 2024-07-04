@@ -78,19 +78,19 @@ public class TableHeaderSchemaValidator {
   // All input column schemas will be validated and auto created when necessary.
   // When the input dataType or category of one column is null, the column cannot be auto created.
   public TableSchema validateTableHeaderSchema(
-      String database, TableSchema tableSchema, MPPQueryContext context) {
-    List<ColumnSchema> inputColumnList = tableSchema.getColumns();
+      final String database, final TableSchema tableSchema, final MPPQueryContext context) {
+    final List<ColumnSchema> inputColumnList = tableSchema.getColumns();
     TsTable table = DataNodeTableCache.getInstance().getTable(database, tableSchema.getTableName());
-    List<ColumnSchema> missingColumnList = new ArrayList<>();
-    List<ColumnSchema> resultColumnList = new ArrayList<>();
+    final List<ColumnSchema> missingColumnList = new ArrayList<>();
+    final List<ColumnSchema> resultColumnList = new ArrayList<>();
 
-    // first round validate, check existing schema
+    // First round validate, check existing schema
     if (table == null) {
       if (inputColumnList == null) {
         throw new SemanticException("Unknown column names. Cannot auto create table.");
       }
-      // check arguments for table auto creation
-      for (ColumnSchema columnSchema : inputColumnList) {
+      // Check arguments for table auto creation
+      for (final ColumnSchema columnSchema : inputColumnList) {
         if (columnSchema.getColumnCategory() == null) {
           throw new SemanticException("Unknown column category. Cannot auto create table.");
         }
@@ -102,9 +102,8 @@ public class TableHeaderSchemaValidator {
     } else if (inputColumnList == null) {
       // SQL insert without columnName, nothing to check
     } else {
-      for (int i = 0; i < inputColumnList.size(); i++) {
-        ColumnSchema columnSchema = inputColumnList.get(i);
-        TsTableColumnSchema existingColumn = table.getColumnSchema(columnSchema.getName());
+      for (final ColumnSchema columnSchema : inputColumnList) {
+        final TsTableColumnSchema existingColumn = table.getColumnSchema(columnSchema.getName());
         if (existingColumn == null) {
           // check arguments for column auto creation
           if (columnSchema.getColumnCategory() == null) {
