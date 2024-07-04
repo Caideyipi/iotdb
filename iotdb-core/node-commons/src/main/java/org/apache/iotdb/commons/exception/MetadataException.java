@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.iotdb.commons.exception;
 
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -26,37 +27,36 @@ import org.apache.iotdb.rpc.TSStatusCode;
  */
 public class MetadataException extends IoTDBException {
 
-  private static final long serialVersionUID = 3415275599091623570L;
-
-  public MetadataException(Throwable cause) {
+  public MetadataException(final Throwable cause) {
     super(cause, TSStatusCode.METADATA_ERROR.getStatusCode());
   }
 
-  public MetadataException(Throwable cause, int errorCode) {
+  public MetadataException(final Throwable cause, final int errorCode) {
     super(cause, errorCode);
   }
 
-  public MetadataException(String msg) {
+  public MetadataException(final String msg) {
     super(msg, TSStatusCode.METADATA_ERROR.getStatusCode());
   }
 
-  public MetadataException(String msg, boolean isUserException) {
+  public MetadataException(final String msg, final boolean isUserException) {
     super(msg, TSStatusCode.METADATA_ERROR.getStatusCode(), isUserException);
   }
 
-  public MetadataException(String message, Throwable cause) {
+  public MetadataException(final String message, final Throwable cause) {
     super(message + cause.getMessage(), TSStatusCode.METADATA_ERROR.getStatusCode());
   }
 
-  public MetadataException(IoTDBException exception) {
+  public MetadataException(final IoTDBException exception) {
     super(exception.getMessage(), exception.getErrorCode());
   }
 
-  public MetadataException(String message, int errorCode) {
+  public MetadataException(final String message, final int errorCode) {
     super(message, errorCode);
   }
 
-  public MetadataException(String message, int errorCode, boolean isUserException) {
+  public MetadataException(
+      final String message, final int errorCode, final boolean isUserException) {
     super(message, errorCode, isUserException);
   }
 }

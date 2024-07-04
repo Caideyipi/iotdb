@@ -25,7 +25,7 @@ public class AllTemplateSetInfoResp implements DataSet {
 
   private byte[] templateInfo;
 
-  public AllTemplateSetInfoResp(byte[] templateInfo) {
+  public AllTemplateSetInfoResp(final byte[] templateInfo) {
     this.templateInfo = templateInfo;
   }
 
