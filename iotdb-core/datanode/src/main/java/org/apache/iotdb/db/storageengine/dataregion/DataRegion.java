@@ -3691,7 +3691,7 @@ public class DataRegion implements IDataRegionForQuery {
   }
 
   public boolean isAllSearchIndexSafelyDeleted() {
-    return ((WALNode) getWALNode()).isAllSearchIndexSafelyDeleted();
+    return ((WALNode) getWALNode().get()).isAllSearchIndexSafelyDeleted();
   }
 
   /** Wait for this data region successfully deleted */
