@@ -279,6 +279,7 @@ public class CommonConfig {
   private long subscriptionLaunchRetryIntervalMs = 1000;
   private int subscriptionRecycleUncommittedEventIntervalMs = 60000; // 60s
   private long subscriptionReadFileBufferSize = 8 * MB;
+  private long subscriptionTsFileDeduplicationWindowSeconds = 120; // 120s
 
   /** Whether to use persistent schema mode. */
   private String schemaEngineMode = "Memory";
@@ -1278,6 +1279,16 @@ public class CommonConfig {
 
   public void setSubscriptionReadFileBufferSize(long subscriptionReadFileBufferSize) {
     this.subscriptionReadFileBufferSize = subscriptionReadFileBufferSize;
+  }
+
+  public long getSubscriptionTsFileDeduplicationWindowSeconds() {
+    return subscriptionTsFileDeduplicationWindowSeconds;
+  }
+
+  public void setSubscriptionTsFileDeduplicationWindowSeconds(
+      long subscriptionTsFileDeduplicationWindowSeconds) {
+    this.subscriptionTsFileDeduplicationWindowSeconds =
+        subscriptionTsFileDeduplicationWindowSeconds;
   }
 
   public String getSchemaEngineMode() {
