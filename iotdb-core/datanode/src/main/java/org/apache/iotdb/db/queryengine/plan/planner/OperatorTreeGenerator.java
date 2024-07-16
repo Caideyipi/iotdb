@@ -1343,12 +1343,18 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
           constantFill[i] = new BooleanConstantFill(literal.getBoolean());
           break;
         case TEXT:
+        case BLOB:
+        case STRING:
           constantFill[i] = new BinaryConstantFill(literal.getBinary());
           break;
         case INT32:
           constantFill[i] = new IntConstantFill(literal.getInt());
           break;
+        case DATE:
+          constantFill[i] = new IntConstantFill(literal.getDate());
+          break;
         case INT64:
+        case TIMESTAMP:
           constantFill[i] = new LongConstantFill(literal.getLong());
           break;
         case FLOAT:
@@ -1411,12 +1417,16 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
           previousFill[i] = new BooleanPreviousFill(filter);
           break;
         case TEXT:
+        case STRING:
+        case BLOB:
           previousFill[i] = new BinaryPreviousFill(filter);
           break;
         case INT32:
+        case DATE:
           previousFill[i] = new IntPreviousFill(filter);
           break;
         case INT64:
+        case TIMESTAMP:
           previousFill[i] = new LongPreviousFill(filter);
           break;
         case FLOAT:
@@ -1437,9 +1447,11 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
     for (int i = 0; i < inputColumns; i++) {
       switch (inputDataTypes.get(i)) {
         case INT32:
+        case DATE:
           linearFill[i] = new IntLinearFill();
           break;
         case INT64:
+        case TIMESTAMP:
           linearFill[i] = new LongLinearFill();
           break;
         case FLOAT:
@@ -1450,6 +1462,8 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
           break;
         case BOOLEAN:
         case TEXT:
+        case STRING:
+        case BLOB:
           linearFill[i] = IDENTITY_LINEAR_FILL;
           break;
         default:
@@ -2394,8 +2408,10 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
   private static long getValueSizePerLine(TSDataType tsDataType) {
     switch (tsDataType) {
       case INT32:
+      case DATE:
         return Integer.BYTES;
       case INT64:
+      case TIMESTAMP:
         return Long.BYTES;
       case FLOAT:
         return Float.BYTES;
@@ -2404,9 +2420,11 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
       case BOOLEAN:
         return Byte.BYTES;
       case TEXT:
+      case BLOB:
+      case STRING:
         return StatisticsManager.getInstance().getMaxBinarySizeInBytes();
       default:
-        throw new UnsupportedOperationException("Unknown data type " + tsDataType);
+        throw new UnsupportedOperationException(UNKNOWN_DATATYPE + tsDataType);
     }
   }
 
