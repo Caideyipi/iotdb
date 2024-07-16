@@ -37,6 +37,12 @@
             <version>1.3.3-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.timecho.iotdb</groupId>
+            <artifactId>timechodb-thrift</artifactId>
+            <version>1.3.3-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     <build>
         <resources>
@@ -188,6 +194,7 @@
                     <usedDependencies>
                         <!-- This dependency is only used for ensuring the build order -->
                         <usedDependency>com.timecho.iotdb:iotdb-thrift-commons</usedDependency>
+                        <usedDependency>org.timecho.iotdb:timechodb-thrift</usedDependency>
                     </usedDependencies>
                 </configuration>
             </plugin>
