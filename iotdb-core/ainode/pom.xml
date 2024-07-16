@@ -98,6 +98,9 @@
                                 <exclude>**/*ainode*</exclude>
                             </excludes>
                         </fileset>
+                        <fileset>
+                            <directory>dist</directory>
+                        </fileset>
                     </filesets>
                 </configuration>
             </plugin>
