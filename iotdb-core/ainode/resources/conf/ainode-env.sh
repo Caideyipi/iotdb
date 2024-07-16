@@ -30,7 +30,7 @@ ain_install_offline=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # fetch parameters with names
-while getopts "i:t:rn" opt; do
+while getopts "i:t:rnm:" opt; do
   case $opt in
   i)
     p_ain_interpreter_dir="$OPTARG"
@@ -39,9 +39,11 @@ while getopts "i:t:rn" opt; do
     p_ain_force_reinstall=1
     ;;
   t) ;;
-
   n)
     p_ain_no_dependencies="--no-dependencies"
+    ;;
+  m)
+    p_pypi_mirror="$OPTARG"
     ;;
   \?)
     echo "Invalid option -$OPTARG" >&2
@@ -111,12 +113,20 @@ shopt -s nullglob
 for i in *.whl *.tar.gz; do
   if [[ $i =~ "ainode" ]]; then
     echo Installing AINode body: $i
-    $ain_interpreter_dir -m pip install "$i" $p_ain_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_ain_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+    if [ -z "$p_pypi_mirror" ]; then
+      $ain_interpreter_dir -m pip install "$i" $p_ain_force_reinstall --no-warn-script-location $p_ain_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+    else
+      $ain_interpreter_dir -m pip install "$i" $p_ain_force_reinstall -i $p_pypi_mirror --no-warn-script-location $p_ain_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+    fi
   else
     # if ain_only_ainode is 0 then install dependencies
     if [ $ain_only_ainode -eq 0 ]; then
       echo Installing dependencies $i
-      $ain_interpreter_dir -m pip install "$i" $p_ain_force_reinstall -i https://pypi.tuna.tsinghua.edu.cn/simple --no-warn-script-location $p_ain_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+      if [ -z "$p_pypi_mirror" ]; then
+        $ain_interpreter_dir -m pip install "$i" $p_ain_force_reinstall --no-warn-script-location $p_ain_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+      else
+        $ain_interpreter_dir -m pip install "$i" $p_ain_force_reinstall -i $p_pypi_mirror --no-warn-script-location $p_ain_no_dependencies --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+      fi
     fi
   fi
   if [ $? -eq 1 ]; then
