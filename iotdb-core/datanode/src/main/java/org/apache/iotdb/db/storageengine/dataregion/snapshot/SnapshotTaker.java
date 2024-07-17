@@ -34,8 +34,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * SnapshotTaker takes data snapshot for a DataRegion in one time. It does so by creating hard link
@@ -88,6 +91,19 @@ public class SnapshotTaker {
 
       try {
         readLockTheFile();
+        // check file version
+        Stream<TsFileResource> tsfiles = Stream.concat(seqFiles.stream(), unseqFiles.stream());
+        Map<String, TsFileResource> versionMap = new HashMap<>();
+        tsfiles.forEach(tsFileResource -> {
+          String version = tsFileResource.getTimePartition() + "-" + tsFileResource.getTsFileID().fileVersion;
+          if (versionMap.containsKey(version)) {
+             LOGGER.warn("[TIMESTAMP-OVERLAP-PROBLEM] Two tsfile resource has same version {}: {}, {}", version,
+                     versionMap.get(version).getTsFile().getAbsolutePath(),
+                     tsFileResource.getTsFile().getAbsolutePath());
+          } else {
+            versionMap.put(version, tsFileResource);
+          }
+        });
         if (flushBeforeSnapshot) {
           try {
             dataRegion.writeLock("snapshotTaker");
@@ -98,6 +114,7 @@ public class SnapshotTaker {
         }
         success = createSnapshot(seqFiles, tempSnapshotId);
         success = success && createSnapshot(unseqFiles, tempSnapshotId);
+
       } finally {
         readUnlockTheFile();
       }
@@ -198,6 +215,8 @@ public class SnapshotTaker {
     }
     Files.deleteIfExists(target.toPath());
     Files.createLink(target.toPath(), source.toPath());
+    LOGGER.info("[TIMESTAMP-OVERLAP-PROBLEM] create hard link: {} -> {}",
+            source.getAbsolutePath(), target.getAbsolutePath());
     snapshotLogger.logFile(source);
   }
 
