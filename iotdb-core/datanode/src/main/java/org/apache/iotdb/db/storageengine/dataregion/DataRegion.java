@@ -2235,18 +2235,18 @@ public class DataRegion implements IDataRegionForQuery {
     return walFlushListeners;
   }
 
-    /**
-     * For IoTConsensus sync. See <a href="https://github.com/apache/iotdb/pull/12955">github pull
-     * request</a> for details.
-     */
-    public void insertSeparatorToWAL() {
-        getWALNode()
-                .ifPresent(
-                        walNode ->
-                                walNode.log(
-                                        TsFileProcessor.MEMTABLE_NOT_EXIST,
-                                        new ContinuousSameSearchIndexSeparatorNode()));
-    }
+  /**
+   * For IoTConsensus sync. See <a href="https://github.com/apache/iotdb/pull/12955">github pull
+   * request</a> for details.
+   */
+  public void insertSeparatorToWAL() {
+    getWALNode()
+        .ifPresent(
+            walNode ->
+                walNode.log(
+                    TsFileProcessor.MEMTABLE_NOT_EXIST,
+                    new ContinuousSameSearchIndexSeparatorNode()));
+  }
 
   public static boolean canSkipDelete(
       String databaseName,
