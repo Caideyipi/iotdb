@@ -146,7 +146,7 @@ public class SchemaRegionSnapshotViewParserTest {
     }
     ISchemaRegion schemaRegion = getSchemaRegion("root.sg", 0);
     PartialPath databasePath = new PartialPath("root.sg");
-    schemaRegion.createTimeseries(
+    schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
             new PartialPath("root.sg.s1.g1.temp"),
             TSDataType.FLOAT,
@@ -157,7 +157,7 @@ public class SchemaRegionSnapshotViewParserTest {
             null,
             null),
         0);
-    schemaRegion.createTimeseries(
+    schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
             new PartialPath("root.sg.s1.g1.level"),
             TSDataType.FLOAT,
@@ -218,7 +218,7 @@ public class SchemaRegionSnapshotViewParserTest {
     }
     ISchemaRegion schemaRegion = getSchemaRegion("root.sg", 0);
     PartialPath databasePath = new PartialPath("root.sg");
-    schemaRegion.createTimeseries(
+    schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
             new PartialPath("root.sg.s1.g1.temp"),
             TSDataType.FLOAT,
@@ -229,7 +229,7 @@ public class SchemaRegionSnapshotViewParserTest {
             null,
             null),
         0);
-    schemaRegion.createTimeseries(
+    schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
             new PartialPath("root.sg.s1.g1.level"),
             TSDataType.FLOAT,
