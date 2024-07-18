@@ -166,6 +166,9 @@ public class TsFileResource {
 
   private RemoteStorageBlock remoteStorageBlock;
 
+  /** used to prevent circular replication in PipeConsensus */
+  private boolean isGeneratedByPipeConsensus = false;
+
   private InsertionCompactionCandidateStatus insertionCompactionCandidateStatus =
       InsertionCompactionCandidateStatus.NOT_CHECKED;
 
@@ -539,6 +542,14 @@ public class TsFileResource {
 
   public TsFileProcessor getProcessor() {
     return processor;
+  }
+
+  public boolean isGeneratedByPipeConsensus() {
+    return isGeneratedByPipeConsensus;
+  }
+
+  public void setGeneratedByPipeConsensus(boolean generatedByPipeConsensus) {
+    isGeneratedByPipeConsensus = generatedByPipeConsensus;
   }
 
   public void writeLock() {
