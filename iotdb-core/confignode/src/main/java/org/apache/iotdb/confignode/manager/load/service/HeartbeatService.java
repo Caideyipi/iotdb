@@ -41,6 +41,7 @@ import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
 import org.apache.iotdb.confignode.manager.load.cache.node.ConfigNodeHeartbeatCache;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
+import org.apache.iotdb.confignode.service.ConfigNode;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatReq;
 
 import org.apache.tsfile.utils.Pair;
@@ -170,7 +171,7 @@ public class HeartbeatService {
   }
 
   protected void setActivation(TDataNodeHeartbeatReq req) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   private void addConfigNodeLocationsToReq(int dataNodeId, TDataNodeHeartbeatReq req) {
@@ -201,7 +202,7 @@ public class HeartbeatService {
   }
 
   protected void setActivationRelatedInfo(TConfigNodeHeartbeatReq req) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   private TAIHeartbeatReq genMLHeartbeatReq() {

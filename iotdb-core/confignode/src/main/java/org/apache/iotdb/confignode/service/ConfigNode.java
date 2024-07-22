@@ -89,6 +89,8 @@ public class ConfigNode implements ConfigNodeMBean {
 
   private static final int INIT_NON_SEED_CONFIG_NODE_ID = -1;
 
+  public static final String WRONG_MAIN_CLASS_MESSAGE =
+      "You are not using the correct main class. If the ConfigNode is started through start-confignode.sh, please check this script's version.";
   private static final String CONFIGURATION = "IoTDB configuration: {}";
 
   private final String mbeanName =
@@ -246,7 +248,7 @@ public class ConfigNode implements ConfigNodeMBean {
   }
 
   protected void generateSystemInfoFile() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(WRONG_MAIN_CLASS_MESSAGE);
   }
 
   void processPid() {

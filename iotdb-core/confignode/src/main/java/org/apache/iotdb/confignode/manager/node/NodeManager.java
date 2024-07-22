@@ -92,6 +92,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TNodeVersionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TRatisConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TRuntimeConfiguration;
 import org.apache.iotdb.confignode.rpc.thrift.TSetDataNodeStatusReq;
+import org.apache.iotdb.confignode.service.ConfigNode;
 import org.apache.iotdb.consensus.common.DataSet;
 import org.apache.iotdb.consensus.common.Peer;
 import org.apache.iotdb.consensus.exception.ConsensusException;
@@ -323,11 +324,11 @@ public class NodeManager {
   }
 
   protected void printDataNodeRegistrationResult() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   protected TSStatus registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   public TDataNodeRestartResp updateDataNodeIfNecessary(TDataNodeRestartReq req) {
@@ -384,7 +385,7 @@ public class NodeManager {
   }
 
   protected TDataNodeRestartResp updateDataNodeActivationCheck(TDataNodeRestartReq req) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   /**
@@ -535,7 +536,7 @@ public class NodeManager {
   }
 
   protected AINodeRegisterResp registerAINodeActivationCheck(TAINodeRegisterReq req) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   /**
