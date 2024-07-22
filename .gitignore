@@ -102,6 +102,10 @@ node_identifier
 remote/
 !integration-test/src/main/java/org/apache/iotdb/it/env/remote/
 
+# activation
+activation/
+.env
+
 # gitpod
 .theia/
 
