@@ -49,12 +49,10 @@ def main():
         try:
             logger.info("Removing AINode...")
             if len(arguments) >= 3:
-                target_ainode = arguments[3]
+                target_ainode = arguments[2]
                 # parameter pattern: <ainode-id> or <ip>:<rpc-port>
                 ainode_info = target_ainode.split(POINT_COLON)
                 target_ainode_id = -1
-                target_rpc_address = None
-                target_rpc_port = -1
 
                 # ainode id
                 if len(ainode_info) == 1:
