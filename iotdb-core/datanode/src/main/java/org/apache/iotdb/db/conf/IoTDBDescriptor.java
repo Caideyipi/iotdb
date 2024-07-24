@@ -114,6 +114,9 @@ public class IoTDBDescriptor {
       ConfigurationFileUtils.checkAndMayUpdate(
           systemConfigUrl, configNodeUrl, dataNodeUrl, commonConfigUrl);
     } catch (Exception e) {
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       LOGGER.error("Failed to update config file", e);
     }
   }
@@ -2042,6 +2045,9 @@ public class IoTDBDescriptor {
       // update retry config
       commonDescriptor.loadRetryProperties(properties);
     } catch (Exception e) {
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       throw new QueryProcessException(String.format("Fail to reload configuration because %s", e));
     }
   }
@@ -2197,6 +2203,7 @@ public class IoTDBDescriptor {
     }
   }
 
+  @SuppressWarnings("java:S3518")
   private void initStorageEngineAllocate(Properties properties) {
     long storageMemoryTotal = conf.getAllocateMemoryForStorageEngine();
     String valueOfStorageEngineMemoryProportion =
@@ -2251,6 +2258,7 @@ public class IoTDBDescriptor {
     }
   }
 
+  @SuppressWarnings("squid:S3518")
   private void initSchemaMemoryAllocate(Properties properties) {
     long schemaMemoryTotal = conf.getAllocateMemoryForSchema();
 
