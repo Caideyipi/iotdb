@@ -47,7 +47,7 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
   private final TimechoConfigManager configManager;
 
   public TimechoConfigNodeRPCServiceProcessor(TimechoConfigManager configManager) {
-    super.configManager = configManager;
+    super(configManager);
     this.configManager = configManager;
   }
 
