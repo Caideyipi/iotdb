@@ -968,6 +968,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   public Statement visitCreatePipePlugin(IoTDBSqlParser.CreatePipePluginContext ctx) {
     return new CreatePipePluginStatement(
         parseIdentifier(ctx.pluginName.getText()),
+        ctx.IF() != null && ctx.NOT() != null && ctx.EXISTS() != null,
         parseStringLiteral(ctx.className.getText()),
         parseAndValidateURI(ctx.uriClause()));
   }
@@ -975,7 +976,10 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   // Drop PipePlugin =====================================================================
   @Override
   public Statement visitDropPipePlugin(IoTDBSqlParser.DropPipePluginContext ctx) {
-    return new DropPipePluginStatement(parseIdentifier(ctx.pluginName.getText()));
+    final DropPipePluginStatement dropPipePluginStatement = new DropPipePluginStatement();
+    dropPipePluginStatement.setPluginName(parseIdentifier(ctx.pluginName.getText()));
+    dropPipePluginStatement.setIfExists(ctx.IF() != null && ctx.EXISTS() != null);
+    return dropPipePluginStatement;
   }
 
   // Show PipePlugins =====================================================================
@@ -3753,6 +3757,10 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       throw new SemanticException(
           "Not support for this sql in CREATE PIPE, please enter pipe name.");
     }
+
+    createPipeStatement.setIfNotExists(
+        ctx.IF() != null && ctx.NOT() != null && ctx.EXISTS() != null);
+
     if (ctx.extractorAttributesClause() != null) {
       createPipeStatement.setExtractorAttributes(
           parseExtractorAttributesClause(
@@ -3782,6 +3790,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       throw new SemanticException(
           "Not support for this sql in ALTER PIPE, please enter pipe name.");
     }
+
+    alterPipeStatement.setIfExists(ctx.IF() != null && ctx.EXISTS() != null);
 
     if (ctx.alterExtractorAttributesClause() != null) {
       alterPipeStatement.setExtractorAttributes(
@@ -3815,6 +3825,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       alterPipeStatement.setConnectorAttributes(new HashMap<>());
       alterPipeStatement.setReplaceAllConnectorAttributes(false);
     }
+
     return alterPipeStatement;
   }
 
@@ -3860,6 +3871,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
     } else {
       throw new SemanticException("Not support for this sql in DROP PIPE, please enter pipename.");
     }
+
+    dropPipeStatement.setIfExists(ctx.IF() != null && ctx.EXISTS() != null);
 
     return dropPipeStatement;
   }
@@ -3913,6 +3926,9 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
           "Not support for this sql in CREATE TOPIC, please enter topicName.");
     }
 
+    createTopicStatement.setIfNotExists(
+        ctx.IF() != null && ctx.NOT() != null && ctx.EXISTS() != null);
+
     if (ctx.topicAttributesClause() != null) {
       createTopicStatement.setTopicAttributes(
           parseTopicAttributesClause(ctx.topicAttributesClause().topicAttributeClause()));
@@ -3944,6 +3960,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       throw new SemanticException(
           "Not support for this sql in DROP TOPIC, please enter topicName.");
     }
+
+    dropTopicStatement.setIfExists(ctx.IF() != null && ctx.EXISTS() != null);
 
     return dropTopicStatement;
   }

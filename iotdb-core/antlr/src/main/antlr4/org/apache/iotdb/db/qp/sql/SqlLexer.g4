@@ -294,6 +294,10 @@ EVERY
     : E V E R Y
     ;
 
+EXISTS
+    : E X I S T S
+    ;
+
 EXPLAIN
     : E X P L A I N
     ;
@@ -978,9 +982,14 @@ ELSE
     : E L S E
     ;
 
+IF
+    : I F
+    ;
+
 INF
     : I N F
     ;
+
 
 // Privileges Keywords
 
