@@ -106,6 +106,7 @@ struct TRuntimeConfiguration {
   4: required binary allTTLInformation
   5: required list<binary> allPipeInformation
   6: optional string clusterId
+  7: optional binary tableInfo
 }
 
 struct TDataNodeRegisterReq {
@@ -256,7 +257,7 @@ struct TDataPartitionTableResp {
 struct TGetRegionIdReq {
     1: required common.TConsensusGroupType type
     2: optional string database
-    3: optional string device
+    3: optional binary device
     4: optional common.TTimePartitionSlot startTimeSlot
     5: optional common.TTimePartitionSlot endTimeSlot
 }
@@ -268,7 +269,7 @@ struct TGetRegionIdResp {
 
 struct TGetTimeSlotListReq {
     1: optional string database
-    3: optional string device
+    3: optional binary device
     4: optional i64 regionId
     5: optional i64 startTime
     6: optional i64 endTime
@@ -281,7 +282,7 @@ struct TGetTimeSlotListResp {
 
 struct TCountTimeSlotListReq {
     1: optional string database
-    3: optional string device
+    3: optional binary device
     4: optional i64 regionId
     5: optional i64 startTime
     6: optional i64 endTime
@@ -989,6 +990,7 @@ struct TShowThrottleReq {
   1: optional string userName;
 }
 
+
 // ====================================================
 // Activation
 // ====================================================
@@ -1051,6 +1053,29 @@ struct TAINodeRemoveReq{
 enum TTestOperation {
   TEST_PROCEDURE_RECOVER,
   TEST_SUB_PROCEDURE,
+}
+
+// ====================================================
+// Table
+// ====================================================
+
+struct TAlterTableReq {
+    1: required string database
+    2: required string tableName
+    3: required string queryId
+    4: required byte operationType
+    5: required binary updateInfo
+}
+
+struct TShowTableResp {
+   1: required common.TSStatus status
+   2: optional list<TTableInfo> tableInfoList
+}
+
+struct TTableInfo {
+   1: required string tableName
+   // TTL is stored as string in table props
+   2: required string TTL
 }
 
 service IConfigNodeRPCService {
@@ -1211,6 +1236,11 @@ service IConfigNodeRPCService {
   TSchemaPartitionTableResp getSchemaPartitionTable(TSchemaPartitionReq req)
 
   /**
+  * Get SchemaPartitionTable by specific database name and series slots.
+  **/
+  TSchemaPartitionTableResp getSchemaPartitionTableWithSlots(map<string, list<common.TSeriesPartitionSlot>> dbSlotMap)
+
+  /**
    * Get or create SchemaPartitionTable by specific PathPatternTree,
    * the returned SchemaPartitionTable always contains all the SeriesPartitionSlots
    * since the unallocated SeriesPartitionSlots will be allocated by the way
@@ -1220,6 +1250,11 @@ service IConfigNodeRPCService {
    *         DATABASE_NOT_EXIST if some Databases don't exist
    */
   TSchemaPartitionTableResp getOrCreateSchemaPartitionTable(TSchemaPartitionReq req)
+
+  /**
+   * Get or create SchemaPartitionTable by specific database name and series slots.
+   **/
+   TSchemaPartitionTableResp getOrCreateSchemaPartitionTableWithSlots(map<string, list<common.TSeriesPartitionSlot>> dbSlotMap)
 
   // ======================================================
   // Node Management
@@ -1783,5 +1818,15 @@ service IConfigNodeRPCService {
 
   /** Get throttle quota information */
   TThrottleQuotaResp getThrottleQuota()
+
+  // ======================================================
+  // Table
+  // ======================================================
+
+  common.TSStatus createTable(binary tableInfo)
+
+  common.TSStatus alterTable(TAlterTableReq req)
+
+  TShowTableResp showTables(string database)
 }
 

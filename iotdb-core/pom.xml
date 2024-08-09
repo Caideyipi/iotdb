@@ -36,6 +36,7 @@
         <module>datanode</module>
         <module>metrics</module>
         <module>node-commons</module>
+        <module>relational-grammar</module>
     </modules>
     <profiles>
         <profile>

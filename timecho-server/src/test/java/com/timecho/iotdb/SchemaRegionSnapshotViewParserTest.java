@@ -21,6 +21,7 @@ package com.timecho.iotdb;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.consensus.SchemaRegionId;
+import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.schema.SchemaConstant;
 import org.apache.iotdb.commons.schema.view.viewExpression.binary.arithmetic.AdditionViewExpression;
@@ -148,7 +149,7 @@ public class SchemaRegionSnapshotViewParserTest {
     PartialPath databasePath = new PartialPath("root.sg");
     schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
-            new PartialPath("root.sg.s1.g1.temp"),
+            new MeasurementPath("root.sg.s1.g1.temp"),
             TSDataType.FLOAT,
             TSEncoding.RLE,
             CompressionType.SNAPPY,
@@ -159,7 +160,7 @@ public class SchemaRegionSnapshotViewParserTest {
         0);
     schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
-            new PartialPath("root.sg.s1.g1.level"),
+            new MeasurementPath("root.sg.s1.g1.level"),
             TSDataType.FLOAT,
             TSEncoding.RLE,
             CompressionType.SNAPPY,
@@ -220,7 +221,7 @@ public class SchemaRegionSnapshotViewParserTest {
     PartialPath databasePath = new PartialPath("root.sg");
     schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
-            new PartialPath("root.sg.s1.g1.temp"),
+            new MeasurementPath("root.sg.s1.g1.temp"),
             TSDataType.FLOAT,
             TSEncoding.RLE,
             CompressionType.SNAPPY,
@@ -231,7 +232,7 @@ public class SchemaRegionSnapshotViewParserTest {
         0);
     schemaRegion.createTimeSeries(
         SchemaRegionWritePlanFactory.getCreateTimeSeriesPlan(
-            new PartialPath("root.sg.s1.g1.level"),
+            new MeasurementPath("root.sg.s1.g1.level"),
             TSDataType.FLOAT,
             TSEncoding.RLE,
             CompressionType.SNAPPY,

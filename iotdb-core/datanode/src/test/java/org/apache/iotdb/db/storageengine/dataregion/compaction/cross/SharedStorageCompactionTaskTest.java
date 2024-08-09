@@ -2,7 +2,7 @@ package org.apache.iotdb.db.storageengine.dataregion.compaction.cross;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.StartupException;
-import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.exception.StorageEngineException;
@@ -551,7 +551,7 @@ public class SharedStorageCompactionTaskTest {
         new SharedStorageCompactionTask(
             0, dataRegion, dataRegion.getTsFileManager(), taskResource, 0);
     task.setTargetFiles(targetFiles);
-    Deletion deletion = new Deletion(new PartialPath(COMPACTION_TEST_DEVICE_PATH), 0, 100, 102);
+    Deletion deletion = new Deletion(new MeasurementPath(COMPACTION_TEST_DEVICE_PATH), 0, 100, 102);
     task.deleteData(COMPACTION_TEST_SG, deletion);
     // verify
     assertFalse(

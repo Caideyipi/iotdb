@@ -20,7 +20,6 @@ import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaResp;
 
 import org.apache.tsfile.file.metadata.IDeviceID;
-import org.apache.tsfile.file.metadata.PlainDeviceID;
 import org.apache.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.tsfile.fileSystem.fsFactory.FSFactory;
 import org.slf4j.Logger;
@@ -92,19 +91,19 @@ public class SharedStorageCompactionUtils {
     }
     TsFileResource selectedResource = files.get(0);
     IDeviceID deviceID = selectedResource.getDevices().iterator().next();
-    String deviceName = ((PlainDeviceID) deviceID).toStringID();
     TTimePartitionSlot slot =
         TimePartitionUtils.getTimePartitionSlot(
             selectedResource.getTimeIndex().getStartTime(deviceID));
 
     Map<String, List<DataPartitionQueryParam>> map = new HashMap<>();
     DataPartitionQueryParam dataPartitionQueryParam = new DataPartitionQueryParam();
-    dataPartitionQueryParam.setDevicePath(deviceName);
+    dataPartitionQueryParam.setDatabaseName(dataRegion.getDatabaseName());
+    dataPartitionQueryParam.setDeviceID(deviceID);
     dataPartitionQueryParam.setTimePartitionSlotList(Collections.singletonList(slot));
     map.put(dataRegion.getDatabaseName(), Collections.singletonList(dataPartitionQueryParam));
     return ClusterPartitionFetcher.getInstance()
         .getDataPartition(map)
-        .getDataRegionReplicaSet(deviceName, slot);
+        .getDataRegionReplicaSet(deviceID, slot);
   }
 
   public static List<TsFileResource> pullRemoteReplica(

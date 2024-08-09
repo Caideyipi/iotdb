@@ -58,6 +58,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.component.ResultColumn;
 import org.apache.iotdb.db.utils.constant.SqlConstant;
 
 import org.apache.tsfile.common.constant.TsFileConstant;
+import org.apache.tsfile.file.metadata.IDeviceID;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -330,7 +331,7 @@ public class ExpressionAnalyzer {
         actualPaths.add(rawPath);
       } else {
         for (PartialPath prefixPath : prefixPaths) {
-          PartialPath concatPath = prefixPath.concatPath(rawPath);
+          PartialPath concatPath = prefixPath.concatAsMeasurementPath(rawPath);
           actualPaths.add(concatPath);
         }
       }
@@ -567,12 +568,12 @@ public class ExpressionAnalyzer {
   // Method can only be used in source expression
   /////////////////////////////////////////////////////////////////////////////////////////////////
 
-  public static String getDeviceNameInSourceExpression(Expression expression) {
+  public static IDeviceID getDeviceNameInSourceExpression(Expression expression) {
     if (!(expression instanceof TimeSeriesOperand)) {
       throw new IllegalArgumentException(
           "unsupported expression type for source expression: " + expression.getExpressionType());
     }
-    return ((TimeSeriesOperand) expression).getPath().getDevice();
+    return ((TimeSeriesOperand) expression).getPath().getIDeviceID();
   }
 
   public static Expression getMeasurementExpression(Expression expression, Analysis analysis) {

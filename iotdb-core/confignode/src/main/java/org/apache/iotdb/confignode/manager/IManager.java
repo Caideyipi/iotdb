@@ -23,6 +23,7 @@ import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TFlushReq;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.common.rpc.thrift.TSeriesPartitionSlot;
 import org.apache.iotdb.common.rpc.thrift.TSetConfigurationReq;
 import org.apache.iotdb.common.rpc.thrift.TSetSpaceQuotaReq;
 import org.apache.iotdb.common.rpc.thrift.TShowConfigurationResp;
@@ -59,6 +60,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TAINodeRestartResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterLogicalViewReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterSchemaTemplateReq;
+import org.apache.iotdb.confignode.rpc.thrift.TAlterTableReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCloseConsumerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeRegisterResp;
@@ -131,6 +133,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowPipeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTopicReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTopicResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowVariablesResp;
@@ -140,7 +143,9 @@ import org.apache.iotdb.confignode.rpc.thrift.TUnsubscribeReq;
 import org.apache.iotdb.consensus.common.DataSet;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A subset of services provided by {@link ConfigManager}. For use internally only, passed to
@@ -402,11 +407,26 @@ public interface IManager {
   TSchemaPartitionTableResp getSchemaPartition(PathPatternTree patternTree);
 
   /**
+   * Get SchemaPartition with <databaseName, seriesSlot>.
+   *
+   * @return TSchemaPartitionResp
+   */
+  TSchemaPartitionTableResp getSchemaPartition(Map<String, List<TSeriesPartitionSlot>> dbSlotMap);
+
+  /**
    * Get or create SchemaPartition.
    *
    * @return TSchemaPartitionResp
    */
   TSchemaPartitionTableResp getOrCreateSchemaPartition(PathPatternTree patternTree);
+
+  /**
+   * Get or create SchemaPartition with <databaseName, seriesSlot>.
+   *
+   * @return TSchemaPartitionResp
+   */
+  TSchemaPartitionTableResp getOrCreateSchemaPartition(
+      Map<String, List<TSeriesPartitionSlot>> dbSlotMap);
 
   /**
    * Create SchemaNodeManagementPartition for child paths node management.
@@ -797,4 +817,10 @@ public interface IManager {
 
   /** Set space quota. */
   TSStatus setSpaceQuota(TSetSpaceQuotaReq req);
+
+  TSStatus createTable(final ByteBuffer tableInfo);
+
+  TSStatus alterTable(final TAlterTableReq req);
+
+  TShowTableResp showTables(final String database);
 }
