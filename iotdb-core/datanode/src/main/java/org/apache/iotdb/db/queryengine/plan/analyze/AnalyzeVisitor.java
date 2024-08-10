@@ -2415,7 +2415,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       if (sourceExpression instanceof TimeSeriesOperand) {
         if (viewPath != null) {
           try {
-            sourcePath = new PartialPath(viewPath);
+            sourcePath = new MeasurementPath(viewPath);
           } catch (IllegalPathException e) {
             throw new SemanticException(
                 String.format(
