@@ -24,7 +24,6 @@ import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.consensus.SchemaRegionId;
-import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.exception.MetadataException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.utils.FileUtils;
@@ -153,32 +152,26 @@ public class SchemaEngine {
             ThreadName.SCHEMA_REGION_RECOVER_TASK.getName());
     List<Future<ISchemaRegion>> futures = new ArrayList<>();
 
-    for (File file : sgDirList) {
+    for (final File file : sgDirList) {
       if (!file.isDirectory()) {
         continue;
       }
 
-      PartialPath storageGroup;
-      try {
-        storageGroup = new PartialPath(file.getName());
-      } catch (IllegalPathException illegalPathException) {
-        // not a legal sg dir
-        continue;
-      }
+      final PartialPath storageGroup = new PartialPath(file.getName().split("\\."));
 
-      File sgDir = new File(config.getSchemaDir(), storageGroup.getFullPath());
+      final File sgDir = new File(config.getSchemaDir(), storageGroup.getFullPath());
 
       if (!sgDir.exists()) {
         continue;
       }
 
-      File[] schemaRegionDirs = sgDir.listFiles();
+      final File[] schemaRegionDirs = sgDir.listFiles();
       if (schemaRegionDirs == null) {
         continue;
       }
 
-      for (File schemaRegionDir : schemaRegionDirs) {
-        SchemaRegionId schemaRegionId;
+      for (final File schemaRegionDir : schemaRegionDirs) {
+        final SchemaRegionId schemaRegionId;
         try {
           schemaRegionId = new SchemaRegionId(Integer.parseInt(schemaRegionDir.getName()));
         } catch (NumberFormatException e) {

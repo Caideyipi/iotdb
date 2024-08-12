@@ -106,9 +106,10 @@ public class DataNodeRegionManager {
 
   public TSStatus createSchemaRegion(TRegionReplicaSet regionReplicaSet, String storageGroup) {
     TSStatus tsStatus;
-    SchemaRegionId schemaRegionId = new SchemaRegionId(regionReplicaSet.getRegionId().getId());
+    final SchemaRegionId schemaRegionId =
+        new SchemaRegionId(regionReplicaSet.getRegionId().getId());
     try {
-      PartialPath storageGroupPartitionPath = new PartialPath(storageGroup);
+      final PartialPath storageGroupPartitionPath = new PartialPath(storageGroup.split("\\."));
       schemaEngine.createSchemaRegion(storageGroupPartitionPath, schemaRegionId);
       schemaRegionLockMap.put(schemaRegionId, new ReentrantReadWriteLock(false));
       List<Peer> peers = new ArrayList<>();
@@ -180,7 +181,7 @@ public class DataNodeRegionManager {
         dataRegionLockMap.put(dataRegionId, new ReentrantReadWriteLock(false));
       } else {
         SchemaRegionId schemaRegionId = (SchemaRegionId) regionId;
-        schemaEngine.createSchemaRegion(new PartialPath(storageGroup), schemaRegionId);
+        schemaEngine.createSchemaRegion(new PartialPath(storageGroup.split("\\.")), schemaRegionId);
         schemaRegionLockMap.put(schemaRegionId, new ReentrantReadWriteLock(false));
       }
     } catch (Exception e) {
