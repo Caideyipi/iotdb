@@ -23,7 +23,7 @@
     <parent>
         <artifactId>iotdb-parent</artifactId>
         <groupId>org.apache.iotdb</groupId>
-        <version>1.3.3-SNAPSHOT</version>
+        <version>1.4.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.timecho.iotdb</groupId>
@@ -32,22 +32,22 @@
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>session-parent</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>isession-parent</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-isession</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>iotdb-thrift-commons</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tsfile</groupId>
@@ -57,12 +57,12 @@
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>service-rpc</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timechodb-thrift</artifactId>
-            <version>1.3.3-SNAPSHOT</version>
+            <version>1.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
