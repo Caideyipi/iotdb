@@ -27,7 +27,6 @@ import org.apache.iotdb.commons.client.IClientManager;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.consensus.ConfigRegionId;
-import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.exception.IoTDBException;
 import org.apache.iotdb.commons.partition.DataPartition;
 import org.apache.iotdb.commons.partition.DataPartitionQueryParam;
@@ -46,7 +45,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TSchemaPartitionTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TTimeSlotList;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
-import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.exception.sql.StatementAnalyzeException;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
@@ -99,8 +97,8 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
   }
 
   @Override
-  public SchemaPartition getSchemaPartition(PathPatternTree patternTree) {
-    try (ConfigNodeClient client =
+  public SchemaPartition getSchemaPartition(final PathPatternTree patternTree) {
+    try (final ConfigNodeClient client =
         configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       patternTree.constructTree();
       List<IDeviceID> deviceIDs = patternTree.getAllDevicePatterns();
@@ -130,16 +128,17 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
   }
 
   @Override
-  public SchemaPartition getOrCreateSchemaPartition(PathPatternTree patternTree, String userName) {
-    try (ConfigNodeClient client =
+  public SchemaPartition getOrCreateSchemaPartition(
+      final PathPatternTree patternTree, final String userName) {
+    try (final ConfigNodeClient client =
         configNodeClientManager.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       patternTree.constructTree();
-      List<IDeviceID> deviceIDs = patternTree.getAllDevicePatterns();
-      Map<String, List<IDeviceID>> storageGroupToDeviceMap =
+      final List<IDeviceID> deviceIDs = patternTree.getAllDevicePatterns();
+      final Map<String, List<IDeviceID>> storageGroupToDeviceMap =
           partitionCache.getDatabaseToDevice(deviceIDs, true, true, userName);
       SchemaPartition schemaPartition = partitionCache.getSchemaPartition(storageGroupToDeviceMap);
       if (null == schemaPartition) {
-        TSchemaPartitionTableResp schemaPartitionTableResp =
+        final TSchemaPartitionTableResp schemaPartitionTableResp =
             client.getOrCreateSchemaPartitionTable(constructSchemaPartitionReq(patternTree));
         if (schemaPartitionTableResp.getStatus().getCode()
             == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
@@ -347,17 +346,14 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
   }
 
   @Override
-  public SchemaPartition getSchemaPartition(String database) {
-    PathPatternTree patternTree = new PathPatternTree();
-    try {
-      patternTree.appendPathPattern(
-          new PartialPath(
-              PathUtils.qualifyDatabaseName(database)
-                  + IoTDBConstant.PATH_SEPARATOR
-                  + IoTDBConstant.MULTI_LEVEL_PATH_WILDCARD));
-    } catch (IllegalPathException e) {
-      throw new SemanticException(e);
-    }
+  public SchemaPartition getSchemaPartition(final String database) {
+    final PathPatternTree patternTree = new PathPatternTree();
+    patternTree.appendPathPattern(
+        new PartialPath(
+            (PathUtils.qualifyDatabaseName(database)
+                    + IoTDBConstant.PATH_SEPARATOR
+                    + IoTDBConstant.MULTI_LEVEL_PATH_WILDCARD)
+                .split("\\.")));
     return getSchemaPartition(patternTree);
   }
 

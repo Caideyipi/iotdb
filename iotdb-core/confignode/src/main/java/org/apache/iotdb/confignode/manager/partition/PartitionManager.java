@@ -172,7 +172,7 @@ public class PartitionManager {
    * @param req SchemaPartitionPlan with partitionSlotsMap
    * @return SchemaPartitionDataSet that contains only existing SchemaPartition
    */
-  public SchemaPartitionResp getSchemaPartition(GetSchemaPartitionPlan req) {
+  public SchemaPartitionResp getSchemaPartition(final GetSchemaPartitionPlan req) {
     try {
       return (SchemaPartitionResp) getConsensusManager().read(req);
     } catch (ConsensusException e) {
@@ -211,7 +211,7 @@ public class PartitionManager {
    */
   public SchemaPartitionResp getOrCreateSchemaPartition(GetOrCreateSchemaPartitionPlan req) {
     // Check if the related Databases exist
-    for (String database : req.getPartitionSlotsMap().keySet()) {
+    for (final String database : req.getPartitionSlotsMap().keySet()) {
       if (!isDatabaseExist(database)) {
         return new SchemaPartitionResp(
             new TSStatus(TSStatusCode.DATABASE_NOT_EXIST.getStatusCode())
@@ -245,14 +245,14 @@ public class PartitionManager {
       }
 
       // Filter unassigned SchemaPartitionSlots
-      Map<String, List<TSeriesPartitionSlot>> unassignedSchemaPartitionSlotsMap =
+      final Map<String, List<TSeriesPartitionSlot>> unassignedSchemaPartitionSlotsMap =
           partitionInfo.filterUnassignedSchemaPartitionSlots(req.getPartitionSlotsMap());
 
       // Here we ensure that each StorageGroup has at least one SchemaRegion.
       // And if some StorageGroups own too many slots, extend SchemaRegion for them.
 
       // Map<StorageGroup, unassigned SeriesPartitionSlot count>
-      Map<String, Integer> unassignedSchemaPartitionSlotsCountMap = new ConcurrentHashMap<>();
+      final Map<String, Integer> unassignedSchemaPartitionSlotsCountMap = new ConcurrentHashMap<>();
       unassignedSchemaPartitionSlotsMap.forEach(
           (storageGroup, unassignedSchemaPartitionSlots) ->
               unassignedSchemaPartitionSlotsCountMap.put(
