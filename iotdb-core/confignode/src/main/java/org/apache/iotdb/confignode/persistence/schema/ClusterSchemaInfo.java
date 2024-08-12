@@ -1011,13 +1011,14 @@ public class ClusterSchemaInfo implements SnapshotProcessor {
 
   // region table management
 
-  public TSStatus preCreateTable(PreCreateTablePlan preCreateTablePlan) {
-    String databaseName = PathUtils.qualifyDatabaseName(preCreateTablePlan.getDatabase());
+  public TSStatus preCreateTable(final PreCreateTablePlan preCreateTablePlan) {
+    final String databaseName = PathUtils.qualifyDatabaseName(preCreateTablePlan.getDatabase());
     databaseReadWriteLock.writeLock().lock();
     try {
-      mTree.preCreateTable(new PartialPath(databaseName), preCreateTablePlan.getTable());
+      mTree.preCreateTable(
+          new PartialPath(databaseName.split("\\.")), preCreateTablePlan.getTable());
       return RpcUtils.SUCCESS_STATUS;
-    } catch (MetadataException e) {
+    } catch (final MetadataException e) {
       return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
     } finally {
       databaseReadWriteLock.writeLock().unlock();
@@ -1038,13 +1039,14 @@ public class ClusterSchemaInfo implements SnapshotProcessor {
     }
   }
 
-  public TSStatus commitCreateTable(CommitCreateTablePlan commitCreateTablePlan) {
-    String databaseName = PathUtils.qualifyDatabaseName(commitCreateTablePlan.getDatabase());
+  public TSStatus commitCreateTable(final CommitCreateTablePlan commitCreateTablePlan) {
+    final String databaseName = PathUtils.qualifyDatabaseName(commitCreateTablePlan.getDatabase());
     databaseReadWriteLock.writeLock().lock();
     try {
-      mTree.commitCreateTable(new PartialPath(databaseName), commitCreateTablePlan.getTableName());
+      mTree.commitCreateTable(
+          new PartialPath(databaseName.split("\\.")), commitCreateTablePlan.getTableName());
       return RpcUtils.SUCCESS_STATUS;
-    } catch (MetadataException e) {
+    } catch (final MetadataException e) {
       return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
     } finally {
       databaseReadWriteLock.writeLock().unlock();
@@ -1100,7 +1102,7 @@ public class ClusterSchemaInfo implements SnapshotProcessor {
     databaseReadWriteLock.readLock().lock();
     try {
       return mTree.getTable(new PartialPath(database.split("\\.")), tableName);
-    } catch (MetadataException e) {
+    } catch (final MetadataException e) {
       LOGGER.warn(e.getMessage(), e);
       throw new RuntimeException(e);
     } finally {
