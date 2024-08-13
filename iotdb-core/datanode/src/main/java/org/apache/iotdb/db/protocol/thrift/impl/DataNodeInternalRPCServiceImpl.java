@@ -417,6 +417,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
           failureInfoList.add(failureInfo.serialize());
         }
         resp.setFailureInfoList(failureInfoList);
+        info.getErrorCode().ifPresent(resp::setErrorCode);
         return resp;
       } catch (IOException e) {
         return resp;
