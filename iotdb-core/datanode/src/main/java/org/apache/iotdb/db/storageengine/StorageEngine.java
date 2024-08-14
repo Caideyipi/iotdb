@@ -55,7 +55,7 @@ import org.apache.iotdb.db.exception.WriteProcessRejectException;
 import org.apache.iotdb.db.exception.runtime.StorageEngineFailureException;
 import org.apache.iotdb.db.protocol.metrics.ObjectStorageMetrics;
 import org.apache.iotdb.db.queryengine.execution.load.LoadTsFileManager;
-import org.apache.iotdb.db.queryengine.execution.load.LoadTsFileRateLimiter;
+import org.apache.iotdb.db.queryengine.execution.load.limiter.LoadTsFileRateLimiter;
 import org.apache.iotdb.db.queryengine.plan.analyze.cache.schema.DataNodeTTLCache;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.load.LoadTsFilePieceNode;
