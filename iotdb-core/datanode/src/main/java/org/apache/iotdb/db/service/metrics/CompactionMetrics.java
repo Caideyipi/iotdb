@@ -24,7 +24,7 @@ import org.apache.iotdb.commons.service.metric.enums.Tag;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionTaskStatus;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionTaskType;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.CompactionTaskSummary;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleSummary;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleContext;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionTaskManager;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant.CompactionIoDataType;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant.CompactionType;
@@ -816,15 +816,15 @@ public class CompactionMetrics implements IMetricSet {
   private Histogram settleCompactionTaskSelectedFileNum =
       DoNothingMetricManager.DO_NOTHING_HISTOGRAM;
 
-  public void updateCompactionTaskSelectionNum(CompactionScheduleSummary summary) {
-    seqInnerSpaceCompactionTaskSelectedNum.set(summary.getSubmitSeqInnerSpaceCompactionTaskNum());
+  public void updateCompactionTaskSelectionNum(CompactionScheduleContext context) {
+    seqInnerSpaceCompactionTaskSelectedNum.set(context.getSubmitSeqInnerSpaceCompactionTaskNum());
     unseqInnerSpaceCompactionTaskSelectedNum.set(
-        summary.getSubmitUnseqInnerSpaceCompactionTaskNum());
-    crossInnerSpaceCompactionTaskSelectedNum.set(summary.getSubmitCrossSpaceCompactionTaskNum());
+        context.getSubmitUnseqInnerSpaceCompactionTaskNum());
+    crossInnerSpaceCompactionTaskSelectedNum.set(context.getSubmitCrossSpaceCompactionTaskNum());
     insertionCrossSpaceCompactionTaskSelectedNum.set(
-        summary.getSubmitInsertionCrossSpaceCompactionTaskNum());
-    sharedStorageCompactionTaskSelectedNum.set(summary.getSubmitSharedStorageCompactionTaskNum());
-    settleCompactionTaskSelectedNum.set(summary.getSubmitSettleCompactionTaskNum());
+        context.getSubmitInsertionCrossSpaceCompactionTaskNum());
+    sharedStorageCompactionTaskSelectedNum.set(context.getSubmitSharedStorageCompactionTaskNum());
+    settleCompactionTaskSelectedNum.set(context.getSubmitSettleCompactionTaskNum());
   }
 
   public void updateCompactionTaskSelectionTimeCost(CompactionTaskType taskType, long time) {
