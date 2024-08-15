@@ -218,6 +218,7 @@ import static org.apache.iotdb.db.queryengine.plan.optimization.LimitOffsetPushD
 import static org.apache.iotdb.db.queryengine.plan.optimization.LimitOffsetPushDown.pushDownLimitOffsetInGroupByTimeForDevice;
 import static org.apache.iotdb.db.schemaengine.schemaregion.view.visitor.GetSourcePathsVisitor.getSourcePaths;
 import static org.apache.iotdb.db.utils.constant.SqlConstant.COUNT_TIME_HEADER;
+import static org.apache.iotdb.db.utils.constant.SqlConstant.ROOT_DOT;
 
 /** This visitor is used to analyze each type of Statement and returns the {@link Analysis}. */
 public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> {
@@ -2346,13 +2347,15 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       PartialPath targetDevice = constructTargetDevice(sourceDevice, deviceTemplate);
       deviceViewIntoPathDescriptor.specifyDeviceAlignment(targetDevice.toString(), isAlignedDevice);
 
-      for (Expression sourceColumn : sourceColumns) {
+      for (Pair<Expression, String> pair : outputExpressions) {
+        Expression sourceColumn = pair.left;
         String measurementTemplate = intoDeviceMeasurementIterator.getMeasurementTemplate();
         String targetMeasurement;
         if (sourceColumn instanceof TimeSeriesOperand) {
           targetMeasurement =
               constructTargetMeasurement(
-                  sourceDevice.concatAsMeasurementPath(sourceColumn.getExpressionString()),
+                  sourceDevice.concatAsMeasurementPath(
+                      pair.right == null ? sourceColumn.getExpressionString() : pair.right),
                   measurementTemplate);
         } else {
           targetMeasurement = measurementTemplate;
@@ -2404,6 +2407,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     IntoComponent.IntoPathIterator intoPathIterator = intoComponent.getIntoPathIterator();
     for (Pair<Expression, String> pair : outputExpressions) {
       Expression sourceExpression = pair.left;
+      // if it's really view path, it should start with root.
+      // otherwise it should just be an alias
       String viewPath = pair.right;
       PartialPath deviceTemplate = intoPathIterator.getDeviceTemplate();
       String measurementTemplate = intoPathIterator.getMeasurementTemplate();
@@ -2415,7 +2420,13 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       if (sourceExpression instanceof TimeSeriesOperand) {
         if (viewPath != null) {
           try {
-            sourcePath = new MeasurementPath(viewPath);
+            // if it's really view path, it should start with root.
+            if (viewPath.startsWith(ROOT_DOT)) {
+              sourcePath = new MeasurementPath(viewPath);
+            } else {
+              // otherwise it should just be an alias
+              sourcePath = new PartialPath(viewPath);
+            }
           } catch (IllegalPathException e) {
             throw new SemanticException(
                 String.format(
