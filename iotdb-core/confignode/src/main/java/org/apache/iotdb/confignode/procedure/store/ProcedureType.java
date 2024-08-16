@@ -65,6 +65,7 @@ public enum ProcedureType {
   CREATE_TABLE_PROCEDURE((short) 750),
   DROP_TABLE_PROCEDURE((short) 751),
   ADD_TABLE_COLUMN_PROCEDURE((short) 752),
+  SET_TABLE_PROPERTIES_PROCEDURE((short) 753),
 
   /** AI Model */
   CREATE_MODEL_PROCEDURE((short) 800),
