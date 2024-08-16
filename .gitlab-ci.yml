@@ -143,7 +143,7 @@ auto-create-schema:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
-    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2AutoCreateSchema'
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2AutoCreateSchema -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]
@@ -168,7 +168,7 @@ manual-create-schema:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
-    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2ManualCreateSchema'
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2ManualCreateSchema -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]
@@ -193,7 +193,7 @@ subscription:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
-    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2Subscription'
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2Subscription -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]
