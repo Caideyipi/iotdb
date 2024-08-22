@@ -28,8 +28,6 @@ from iotdb.thrift.ainode.ttypes import (TCreateTrainingTaskReq,
                                         TInferenceReq, TInferenceResp)
 
 from iotdb.ainode.constant import TaskType, TSStatusCode
-from iotdb.ainode.dataset.dataset import TsForecastDataset
-from iotdb.ainode.dataset.factory import create_dataset
 from iotdb.ainode.exception import InvaildUriError, BadConfigValueError
 from iotdb.ainode.inference import inference_with_registered_model, inference_with_built_in_model
 from iotdb.ainode.log import logger
@@ -81,37 +79,6 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
         except Exception as e:
             logger.warning(e)
             return get_status(TSStatusCode.AINODE_INTERNAL_ERROR, str(e))
-
-    def createTrainingTask(self, req: TCreateTrainingTaskReq):
-        logger.debug(f"create training task {req.modelId}")
-        task = None
-        try:
-            # parse options
-            task_options = parse_task_options(req.options)
-            dataset = create_dataset(req.datasetFetchSQL, task_options)
-
-            # create task according to task type
-            # currently, IoTDB-AI supports forecasting training task only
-            if task_options.get_task_type() == TaskType.FORECAST:
-                task_options = cast(ForecastTaskOptions, task_options)
-                dataset = cast(TsForecastDataset, dataset)
-                task = self.__task_manager.create_forecast_training_task(
-                    model_id=req.modelId,
-                    task_options=task_options,
-                    hyperparameters=req.hyperparameters,
-                    dataset=dataset
-                )
-            else:
-                raise NotImplementedError
-
-            return get_status(TSStatusCode.SUCCESS_STATUS)
-        except Exception as e:
-            logger.warning(e)
-            return get_status(TSStatusCode.AINODE_INTERNAL_ERROR, str(e))
-        finally:
-            if task is not None:
-                # submit task to process pool
-                self.__task_manager.submit_training_task(task)
 
     def inference(self, req: TInferenceReq):
         logger.info(f"infer {req.modelId}")

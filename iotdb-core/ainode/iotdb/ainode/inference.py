@@ -15,17 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import numpy as np
 import pandas as pd
 from torch import tensor
 
 from iotdb.ainode.constant import BuiltInModelType
 from iotdb.ainode.exception import InvalidWindowArgumentError, InferenceModelInternalError, \
     BuiltInModelNotSupportError
+from iotdb.ainode.factory import create_built_in_model
 from iotdb.ainode.log import logger
 from iotdb.ainode.parser import runtime_error_extractor
 from iotdb.ainode.storage import model_storage
-from iotdb.ainode.factory import create_built_in_model
 
 
 def inference_with_registered_model(model_id, full_data, window_interval, window_step, inference_attributes):
