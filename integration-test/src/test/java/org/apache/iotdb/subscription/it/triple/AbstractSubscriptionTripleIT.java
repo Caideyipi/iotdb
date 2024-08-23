@@ -27,7 +27,7 @@ import org.apache.iotdb.subscription.it.AbstractSubscriptionIT;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
+abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
 
   protected BaseEnv sender;
   protected BaseEnv receiver1;
@@ -35,7 +35,7 @@ public abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionI
 
   @Override
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     super.setUp();
 
     // increase the number of threads to speed up testing
@@ -68,11 +68,11 @@ public abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionI
 
   @Override
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
+    super.tearDown();
+
     sender.cleanClusterEnvironment();
     receiver1.cleanClusterEnvironment();
     receiver2.cleanClusterEnvironment();
-
-    super.tearDown();
   }
 }

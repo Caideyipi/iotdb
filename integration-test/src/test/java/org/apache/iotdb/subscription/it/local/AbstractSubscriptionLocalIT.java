@@ -25,11 +25,11 @@ import org.apache.iotdb.subscription.it.AbstractSubscriptionIT;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class AbstractSubscriptionLocalIT extends AbstractSubscriptionIT {
+abstract class AbstractSubscriptionLocalIT extends AbstractSubscriptionIT {
 
   @Override
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     super.setUp();
 
     EnvFactory.getEnv().initClusterEnvironment();
@@ -37,9 +37,9 @@ public abstract class AbstractSubscriptionLocalIT extends AbstractSubscriptionIT
 
   @Override
   @After
-  public void tearDown() throws Exception {
-    EnvFactory.getEnv().cleanClusterEnvironment();
-
+  public void tearDown() {
     super.tearDown();
+
+    EnvFactory.getEnv().cleanClusterEnvironment();
   }
 }

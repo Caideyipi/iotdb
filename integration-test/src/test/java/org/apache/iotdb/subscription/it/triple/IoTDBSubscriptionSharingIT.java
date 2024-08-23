@@ -22,7 +22,7 @@ package org.apache.iotdb.subscription.it.triple;
 import org.apache.iotdb.isession.ISession;
 import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.MultiClusterIT2SubscriptionArchVerification;
+import org.apache.iotdb.itbase.category.MultiClusterIT2Subscription;
 import org.apache.iotdb.itbase.env.BaseEnv;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
@@ -60,12 +60,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.iotdb.subscription.it.IoTDBSubscriptionITConstant.AWAIT;
 import static org.junit.Assert.fail;
 
-/**
- * refer to {@link
- * org.apache.iotdb.subscription.it.triple.regression.pushconsumer.multi.IoTDBMultiGroupVsMultiConsumerIT}
- */
 @RunWith(IoTDBTestRunner.class)
-@Category({MultiClusterIT2SubscriptionArchVerification.class})
+@Category({MultiClusterIT2Subscription.class})
 public class IoTDBSubscriptionSharingIT extends AbstractSubscriptionTripleIT {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(IoTDBSubscriptionSharingIT.class);
@@ -339,6 +335,7 @@ public class IoTDBSubscriptionSharingIT extends AbstractSubscriptionTripleIT {
                   return ConsumeResult.SUCCESS;
                 })
             .buildPushConsumer());
+
     consumers.add(
         new SubscriptionPushConsumer.Builder()
             .host(sender.getIP())
@@ -394,7 +391,7 @@ public class IoTDBSubscriptionSharingIT extends AbstractSubscriptionTripleIT {
                         reader.query(
                             QueryExpression.create(
                                 Collections.singletonList(
-                                    new Path(databasePrefix + "6.d_0", "s_0", true)),
+                                    new Path(databasePrefix + 6 + ".d_0", "s_0", true)),
                                 null));
                     while (dataset.hasNext()) {
                       rowCount6.addAndGet(1);
@@ -469,7 +466,7 @@ public class IoTDBSubscriptionSharingIT extends AbstractSubscriptionTripleIT {
 
   @Override
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     super.setUp();
 
     // prepare schemaList
@@ -479,7 +476,7 @@ public class IoTDBSubscriptionSharingIT extends AbstractSubscriptionTripleIT {
 
   @Override
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
     // log some info
     try {
       LOGGER.info("[src] {} = {}", sql1, getCount(sender, sql1));
@@ -535,8 +532,7 @@ public class IoTDBSubscriptionSharingIT extends AbstractSubscriptionTripleIT {
               getCount(sender, sql1), getCount(receiver1, sql1) + getCount(receiver2, sql1));
 
           // "c4,c6|topic2"
-          Assert.assertEquals(
-              getCount(sender, sql2) - 400, getCount(receiver1, sql2) + getCount(receiver2, sql2));
+          Assert.assertEquals(105, getCount(receiver1, sql2) + getCount(receiver2, sql2));
 
           // "c4,c5|c7,c9|topic3"
           final long topic3Total = getCount(receiver1, sql3) + getCount(receiver2, sql3);

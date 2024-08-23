@@ -162,7 +162,7 @@ public class IoTDBSubscriptionBasicIT extends AbstractSubscriptionLocalIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getDisplayName()));
+            String.format("%s - consumer", testName.getMethodName()));
     thread.start();
 
     // Check row count
@@ -391,7 +391,7 @@ public class IoTDBSubscriptionBasicIT extends AbstractSubscriptionLocalIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getDisplayName()));
+            String.format("%s - consumer", testName.getMethodName()));
     thread.start();
 
     // Check row count
