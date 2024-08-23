@@ -147,8 +147,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     IoTDBDescriptor.getInstance()
         .getConfig()
         .setTargetCompactionFileSize(2L * 1024L * 1024L * 1024L);
@@ -244,7 +244,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -266,8 +266,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     long origin = SystemInfo.getInstance().getMemorySizeForCompaction();
     SystemInfo.getInstance()
         .setMemorySizeForCompaction(
@@ -362,7 +362,7 @@ public class CompactionSchedulerTest {
             .setCompactionThreadCount(prevCompactionConcurrentThread);
         IoTDBDescriptor.getInstance()
             .getConfig()
-            .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+            .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
       }
     } finally {
       SystemInfo.getInstance().setMemorySizeForCompaction(origin);
@@ -386,8 +386,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     String sgName = COMPACTION_TEST_SG + "test3";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -460,7 +460,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -481,8 +481,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     IoTDBDescriptor.getInstance()
         .getConfig()
         .setTargetCompactionFileSize(2L * 1024L * 1024L * 1024L);
@@ -546,7 +546,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -568,8 +568,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     String sgName = COMPACTION_TEST_SG + "test5";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -661,7 +661,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -683,8 +683,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     String sgName = COMPACTION_TEST_SG + "test6";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -768,7 +768,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -789,8 +789,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     String sgName = COMPACTION_TEST_SG + "test7";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -870,7 +870,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -891,8 +891,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(100);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(100);
     String sgName = COMPACTION_TEST_SG + "test8";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -958,7 +958,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -979,8 +979,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test9";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1059,7 +1059,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -1083,8 +1083,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test10";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1167,7 +1167,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
       IoTDBDescriptor.getInstance()
           .getConfig()
           .setEnableCrossSpaceCompaction(prevEnableCrossCompaction);
@@ -1191,8 +1191,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test11";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1274,7 +1274,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -1295,8 +1295,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(50);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test12";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1383,7 +1383,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -1404,8 +1404,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test13";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1493,7 +1493,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -1514,8 +1514,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test14";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1611,7 +1611,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -1632,8 +1632,8 @@ public class CompactionSchedulerTest {
         IoTDBDescriptor.getInstance().getConfig().getCompactionThreadCount();
     IoTDBDescriptor.getInstance().getConfig().setCompactionThreadCount(1);
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     String sgName = COMPACTION_TEST_SG + "test16";
     try {
       CompactionTaskManager.getInstance().restart();
@@ -1716,7 +1716,7 @@ public class CompactionSchedulerTest {
           .setCompactionThreadCount(prevCompactionConcurrentThread);
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
     }
   }
 
@@ -1724,8 +1724,8 @@ public class CompactionSchedulerTest {
   public void testLargeFileInLowerLevel() throws Exception {
     logger.warn("Running test16");
     int prevMaxCompactionCandidateFileNum =
-        IoTDBDescriptor.getInstance().getConfig().getFileLimitPerInnerTask();
-    IoTDBDescriptor.getInstance().getConfig().setFileLimitPerInnerTask(2);
+        IoTDBDescriptor.getInstance().getConfig().getInnerCompactionCandidateFileNum();
+    IoTDBDescriptor.getInstance().getConfig().setInnerCompactionCandidateFileNum(2);
     long originTargetSize = IoTDBDescriptor.getInstance().getConfig().getTargetCompactionFileSize();
     IoTDBDescriptor.getInstance().getConfig().setTargetCompactionFileSize(1024 * 1024);
     String sgName = COMPACTION_TEST_SG + "test17";
@@ -1837,7 +1837,7 @@ public class CompactionSchedulerTest {
     } finally {
       IoTDBDescriptor.getInstance()
           .getConfig()
-          .setFileLimitPerInnerTask(prevMaxCompactionCandidateFileNum);
+          .setInnerCompactionCandidateFileNum(prevMaxCompactionCandidateFileNum);
       IoTDBDescriptor.getInstance().getConfig().setTargetCompactionFileSize(originTargetSize);
     }
   }
