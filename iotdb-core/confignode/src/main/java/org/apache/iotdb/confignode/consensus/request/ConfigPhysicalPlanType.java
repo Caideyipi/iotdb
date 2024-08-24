@@ -200,10 +200,8 @@ public enum ConfigPhysicalPlanType {
   /** AI model. */
   CreateModel((short) 1200),
   UpdateModelInfo((short) 1201),
-  UpdateModelState((short) 1202),
   DropModel((short) 1203),
   ShowModel((short) 1204),
-  ShowTrial((short) 1205),
   GetModelInfo((short) 1206),
   DropModelInNode((short) 1207),
 

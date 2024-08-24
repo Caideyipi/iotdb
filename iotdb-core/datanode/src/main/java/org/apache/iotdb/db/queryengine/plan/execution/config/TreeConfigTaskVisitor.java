@@ -622,7 +622,6 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
   }
 
   // Activation
-
   @Override
   public IConfigTask visitShowActivation(
       ShowActivationStatement showActivationStatement, MPPQueryContext context) {

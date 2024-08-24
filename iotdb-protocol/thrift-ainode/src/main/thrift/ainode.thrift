@@ -21,13 +21,6 @@ include "common.thrift"
 namespace java org.apache.iotdb.ainode.rpc.thrift
 namespace py iotdb.thrift.ainode
 
-struct TCreateTrainingTaskReq {
-  1: required string modelId
-  2: required map<string, string> options
-  3: required map<string, string> hyperparameters
-  4: required string datasetFetchSQL
-}
-
 struct TDeleteModelReq {
   1: required string modelId
 }
@@ -85,17 +78,13 @@ struct TInferenceResp {
 service IAINodeRPCService {
 
   // -------------- For Config Node --------------
-
-  common.TSStatus createTrainingTask(TCreateTrainingTaskReq req)
-
   common.TSStatus deleteModel(TDeleteModelReq req)
 
   TRegisterModelResp registerModel(TRegisterModelReq req)
 
+  TAIHeartbeatResp getAIHeartbeat(TAIHeartbeatReq req)
+
   // -------------- For Data Node --------------
 
   TInferenceResp inference(TInferenceReq req)
-
-
-  TAIHeartbeatResp getAIHeartbeat(TAIHeartbeatReq req)
 }

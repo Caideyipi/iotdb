@@ -22,9 +22,6 @@ package com.timecho.iotdb.service.thrift;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
-import org.apache.iotdb.confignode.consensus.response.ainode.AINodeRegisterResp;
-import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
-import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TActivationControl;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
@@ -116,15 +113,6 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
         ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId(),
         configManager.getActivationManager().getActivateStatus().toString());
     resp.setActivationStatusMap(activationMap);
-    return resp;
-  }
-
-  @Override
-  public TAINodeRegisterResp registerAINode(TAINodeRegisterReq req) {
-    TAINodeRegisterResp resp =
-        ((AINodeRegisterResp) configManager.registerAINode(req)).convertToAINodeRegisterResp();
-    LOGGER.info("Execute RegisterAINodeRequest {} with result {}", req, resp);
-
     return resp;
   }
 }

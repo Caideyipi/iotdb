@@ -35,7 +35,6 @@ import org.apache.iotdb.db.queryengine.plan.execution.ExecutionResult;
 import org.apache.iotdb.db.queryengine.plan.execution.IQueryExecution;
 import org.apache.iotdb.db.queryengine.plan.parser.StatementGenerator;
 import org.apache.iotdb.db.queryengine.plan.statement.Statement;
-import org.apache.iotdb.db.queryengine.plan.statement.crud.InsertRowStatement;
 import org.apache.iotdb.db.utils.ErrorHandlingUtils;
 import org.apache.iotdb.db.utils.QueryDataSetUtils;
 import org.apache.iotdb.db.utils.SetThreadName;
@@ -43,9 +42,6 @@ import org.apache.iotdb.mpp.rpc.thrift.TFetchMoreDataReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchMoreDataResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchTimeseriesReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchTimeseriesResp;
-import org.apache.iotdb.mpp.rpc.thrift.TFetchWindowBatchReq;
-import org.apache.iotdb.mpp.rpc.thrift.TFetchWindowBatchResp;
-import org.apache.iotdb.mpp.rpc.thrift.TRecordModelMetricsReq;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -182,31 +178,6 @@ public class AINodeRPCServiceImpl implements IAINodeRPCServiceWithHandler {
         COORDINATOR.cleanupQueryExecution(req.queryId, req, t);
       }
     }
-  }
-
-  @Override
-  public TSStatus recordModelMetrics(TRecordModelMetricsReq req) throws TException {
-    try {
-      InsertRowStatement insertRowStatement = StatementGenerator.createStatement(req);
-
-      long queryId = SESSION_MANAGER.requestQueryId();
-      ExecutionResult result =
-          COORDINATOR.executeForTreeModel(
-              insertRowStatement,
-              queryId,
-              SESSION_MANAGER.getSessionInfo(session),
-              "",
-              partitionFetcher,
-              schemaFetcher);
-      return result.status;
-    } catch (Exception e) {
-      return ErrorHandlingUtils.onQueryException(e, OperationType.INSERT_RECORD);
-    }
-  }
-
-  @Override
-  public TFetchWindowBatchResp fetchWindowBatch(TFetchWindowBatchReq req) throws TException {
-    throw new TException(new UnsupportedOperationException().getCause());
   }
 
   @Override

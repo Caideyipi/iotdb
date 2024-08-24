@@ -16,17 +16,17 @@
 # under the License.
 #
 import os
-import sys
-import shutil
 
-from iotdb.ainode.exception import MissingConfigError
-from iotdb.thrift.common.ttypes import TAINodeLocation, TEndPoint
+import shutil
+import sys
 
 from iotdb.ainode.client import client_manager
 from iotdb.ainode.config import descriptor
 from iotdb.ainode.constant import TSStatusCode
+from iotdb.ainode.exception import MissingConfigError
 from iotdb.ainode.log import logger
 from iotdb.ainode.service import AINode
+from iotdb.thrift.common.ttypes import TAINodeLocation, TEndPoint
 
 server: AINode = None
 POINT_COLON = ":"

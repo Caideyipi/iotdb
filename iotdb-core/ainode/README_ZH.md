@@ -21,13 +21,3 @@
 
 # Apache IoTDB AINode
 
-对于开发者来说，可以通过编译源码的方式获得可运行的AINode，使用以下的指令进行编译：
-```shell
-mvn clean package -DskipUTs -pl iotdb-core/ainode -am -P with-ainode
-```
-完成编译后，可以在ainode下的target文件夹下找到打包后的 `iotdb-enterprise-ainode-xxx`文件，运行sbin文件夹下的`start-ainode.sh`即可启动一个AINode实例。（AINode成功启动并注册的前提是已有一个运行中的IoTDB集群）
-
-```shell
-bash sbin/start-ainode.sh
-```
-如果想要停止正在运行中的AINode，可以运行`stop-ainode.sh`脚本。如果要将AINode移除出IoTDB集群，则运行`remove-ainode.sh`脚本。

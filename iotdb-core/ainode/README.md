@@ -20,14 +20,3 @@
 -->
 
 # Apache IoTDB AINode
-
-For developers, a runnable AINode can be obtained by compiling the source code using the following command:.
-
-```shell
-mvn clean package -DskipUTs -pl iotdb-core/ainode -am -P with-ainode
-```
-After the compilation is complete, you can find the packaged `iotdb-enterprise-ainode-xxx` file in the target folder under ainode. To start an AINode instance, run the `start-ainode.sh` script in the sbin folder. (Note: AINode can be successfully started and registered only if there is a running IoTDB cluster.)
-```shell
-bash sbin/start-ainode.sh
-```
-If you want to stop a running AINode, you can execute the `stop-ainode.sh` script. To remove AINode from the IoTDB cluster, run the `remove-ainode.sh` script.

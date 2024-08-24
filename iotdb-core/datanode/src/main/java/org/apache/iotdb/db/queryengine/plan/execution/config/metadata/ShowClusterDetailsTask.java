@@ -172,6 +172,56 @@ public class ShowClusterDetailsTask implements IConfigTask {
     builder.declarePosition();
   }
 
+  private static void buildAINodeTsBlock(
+      TsBlockBuilder builder,
+      int nodeId,
+      String nodeStatus,
+      String internalAddress,
+      int internalPort,
+      TNodeVersionInfo versionInfo) {
+
+    builder.getTimeColumnBuilder().writeLong(0L);
+    builder.getColumnBuilder(0).writeInt(nodeId);
+    builder
+        .getColumnBuilder(1)
+        .writeBinary(new Binary(NODE_TYPE_AI_NODE, TSFileConfig.STRING_CHARSET));
+    if (nodeStatus == null) {
+      builder.getColumnBuilder(2).appendNull();
+    } else {
+      builder.getColumnBuilder(2).writeBinary(new Binary(nodeStatus, TSFileConfig.STRING_CHARSET));
+    }
+
+    if (internalAddress == null) {
+      builder.getColumnBuilder(3).appendNull();
+    } else {
+      builder
+          .getColumnBuilder(3)
+          .writeBinary(new Binary(internalAddress, TSFileConfig.STRING_CHARSET));
+    }
+    builder.getColumnBuilder(4).writeInt(internalPort);
+    builder.getColumnBuilder(5).writeBinary(new Binary("", TSFileConfig.STRING_CHARSET));
+    builder.getColumnBuilder(6).writeBinary(new Binary("", TSFileConfig.STRING_CHARSET));
+    builder.getColumnBuilder(7).writeBinary(new Binary("", TSFileConfig.STRING_CHARSET));
+    builder.getColumnBuilder(8).writeBinary(new Binary("", TSFileConfig.STRING_CHARSET));
+    builder.getColumnBuilder(9).writeBinary(new Binary("", TSFileConfig.STRING_CHARSET));
+    builder.getColumnBuilder(10).writeBinary(new Binary("", TSFileConfig.STRING_CHARSET));
+    if (versionInfo == null || versionInfo.getVersion() == null) {
+      builder.getColumnBuilder(11).appendNull();
+    } else {
+      builder
+          .getColumnBuilder(11)
+          .writeBinary(new Binary(versionInfo.getVersion(), TSFileConfig.STRING_CHARSET));
+    }
+    if (versionInfo == null || versionInfo.getBuildInfo() == null) {
+      builder.getColumnBuilder(12).appendNull();
+    } else {
+      builder
+          .getColumnBuilder(12)
+          .writeBinary(new Binary(versionInfo.getBuildInfo(), TSFileConfig.STRING_CHARSET));
+    }
+    builder.declarePosition();
+  }
+
   @SuppressWarnings("squid:S107")
   private static void buildDataNodesTsBlock(
       TsBlockBuilder builder,
@@ -286,7 +336,6 @@ public class ShowClusterDetailsTask implements IConfigTask {
                     e.getDataRegionConsensusEndPoint().getPort(),
                     clusterNodeInfos.getNodeVersionInfo().get(e.getDataNodeId()),
                     clusterNodeInfos.getNodeActivateInfo().get(e.getDataNodeId())));
-
     clusterNodeInfos
         .getAiNodeList()
         .forEach(
@@ -299,7 +348,6 @@ public class ShowClusterDetailsTask implements IConfigTask {
                     e.getInternalEndPoint().getPort(),
                     clusterNodeInfos.getNodeVersionInfo().get(e.getAiNodeId()),
                     clusterNodeInfos.getNodeActivateInfo().get(e.getAiNodeId())));
-
     DatasetHeader datasetHeader = DatasetHeaderFactory.getShowClusterDetailsHeader();
     future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS, builder.build(), datasetHeader));
   }

@@ -263,8 +263,10 @@ public class LoadManager {
         break;
       case DataNode:
         loadCache.cacheDataNodeHeartbeatSample(nodeId, heartbeatSample);
+        break;
       case AINode:
         loadCache.cacheAINodeHeartbeatSample(nodeId, heartbeatSample);
+        break;
       default:
         break;
     }

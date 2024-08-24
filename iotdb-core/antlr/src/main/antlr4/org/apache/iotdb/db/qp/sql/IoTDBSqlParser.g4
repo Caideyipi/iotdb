@@ -65,8 +65,8 @@ ddlStatement
     // Cluster
     | showVariables | showCluster | showClusterId | showRegions | showDataNodes | showConfigNodes
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList | migrateRegion | verifyConnection
-    // AI Model
-    | showAINodes | createModel | dropModel | showModels | showTrials | callInference
+    // AINode
+    | showAINodes | createModel | dropModel | showModels | callInference
     // Activation
     | showActivation
     // Quota
@@ -713,11 +713,6 @@ dropModel
 showModels
     : SHOW MODELS
     | SHOW MODELS modelId=identifier
-    ;
-
-// ---- Show Trials
-showTrials
-    : SHOW TRIALS modelId=identifier
     ;
 
 // Create Logical View

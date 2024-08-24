@@ -207,11 +207,11 @@ struct TLicense {
 }
 
 struct TLoadSample {
-  // Percentage of occupied cpu in DataNode
+  // Percentage of occupied cpu in Node
   1: required double cpuUsageRate
-  // Percentage of occupied memory space in DataNode
+  // Percentage of occupied memory space in Node
   2: required double memoryUsageRate
-  // Percentage of occupied disk space in DataNode
+  // Percentage of occupied disk space in Node
   3: required double diskUsageRate
   // The size of free disk space
   // Unit: Byte
@@ -295,9 +295,4 @@ enum TrainingState {
   FINISHED,
   FAILED,
   DROPPING
-}
-
-enum TaskType {
-  FORECAST,
-  ANOMALY_DETECTION,
 }

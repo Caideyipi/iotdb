@@ -16,7 +16,6 @@
 # under the License.
 #
 import time
-from typing import Dict, List
 
 import pandas as pd
 from thrift.Thrift import TException
@@ -28,15 +27,13 @@ from iotdb.ainode.config import descriptor
 from iotdb.ainode.constant import TSStatusCode
 from iotdb.ainode.log import logger
 from iotdb.ainode.util import verify_success
-from iotdb.thrift.common.ttypes import TEndPoint, TrainingState, TSStatus, TAINodeLocation, TAINodeConfiguration
+from iotdb.thrift.common.ttypes import TEndPoint, TSStatus, TAINodeLocation, TAINodeConfiguration
 from iotdb.thrift.confignode import IConfigNodeRPCService
-from iotdb.thrift.confignode.ttypes import (TUpdateModelInfoReq,
-                                            TUpdateModelStateReq, TAINodeRemoveReq, TNodeVersionInfo,
+from iotdb.thrift.confignode.ttypes import (TAINodeRemoveReq, TNodeVersionInfo,
                                             TAINodeRegisterReq, TAINodeRestartReq)
 from iotdb.thrift.datanode import IAINodeInternalRPCService
 from iotdb.thrift.datanode.ttypes import (TFetchMoreDataReq,
-                                          TFetchTimeseriesReq,
-                                          TRecordModelMetricsReq)
+                                          TFetchTimeseriesReq)
 
 
 class ClientManager(object):
@@ -123,25 +120,6 @@ class DataNodeClient(object):
                 raise e
         return data
 
-    def record_model_metrics(self,
-                             model_id: str,
-                             trial_id: str,
-                             metrics: List[str],
-                             values: List) -> None:
-        req = TRecordModelMetricsReq(
-            modelId=model_id,
-            trialId=trial_id,
-            metrics=metrics,
-            timestamp=int(round(time.time() * 1000)),
-            values=values
-        )
-        try:
-            status = self.__client.recordModelMetrics(req)
-            verify_success(status, "An error occurs when calling record_model_metrics()")
-        except TTransport.TException as e:
-            logger.error(e.message)
-
-
 class ConfigNodeClient(object):
     def __init__(self, config_leader: TEndPoint):
         self.__config_leader = config_leader
@@ -223,55 +201,6 @@ class ConfigNodeClient(object):
                 self.__config_leader = None
             return True
         return False
-
-    def update_model_state(self,
-                           model_id: str,
-                           training_state: TrainingState,
-                           best_trail_id: str = None) -> None:
-        req = TUpdateModelStateReq(
-            modelId=model_id,
-            state=training_state,
-            bestTrialId=best_trail_id
-        )
-        for _ in range(0, self.__RETRY_NUM):
-            try:
-                status = self.__client.updateModelState(req)
-                if not self.__update_config_node_leader(status):
-                    verify_success(status, "An error occurs when calling update_model_state()")
-                    return
-            except TTransport.TException:
-                logger.warning("Failed to connect to ConfigNode {} from AINode when executing update_model_info()",
-                               self.__config_leader)
-                self.__config_leader = None
-            self.__wait_and_reconnect()
-
-        raise TException(self.__MSG_RECONNECTION_FAIL)
-
-    def update_model_info(self,
-                          model_id: str,
-                          trial_id: str,
-                          model_info: Dict) -> None:
-        if model_info is None:
-            model_info = {}
-        req = TUpdateModelInfoReq(
-            modelId=model_id,
-            trialId=trial_id,
-            modelInfo={k: str(v) for k, v in model_info.items()},
-        )
-
-        for _ in range(0, self.__RETRY_NUM):
-            try:
-                status = self.__client.updateModelInfo(req)
-                if not self.__update_config_node_leader(status):
-                    verify_success(status, "An error occurs when calling update_model_info()")
-                    return
-            except TTransport.TException:
-                logger.warning("Failed to connect to ConfigNode {} from AINode when executing update_model_info()",
-                               self.__config_leader)
-                self.__config_leader = None
-            self.__wait_and_reconnect()
-
-        raise TException(self.__MSG_RECONNECTION_FAIL)
 
     def node_register(self, cluster_name: str, configuration: TAINodeConfiguration,
                       version_info: TNodeVersionInfo) -> int:

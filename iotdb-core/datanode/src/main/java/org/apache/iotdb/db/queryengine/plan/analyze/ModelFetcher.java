@@ -49,7 +49,7 @@ public class ModelFetcher implements IModelFetcher {
   }
 
   public static ModelFetcher getInstance() {
-    return ModelFetcher.ModelFetcherHolder.INSTANCE;
+    return ModelFetcherHolder.INSTANCE;
   }
 
   private ModelFetcher() {}

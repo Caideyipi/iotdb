@@ -940,30 +940,8 @@ struct TShowModelResp {
   2: required list<binary> modelInfoList
 }
 
-struct TShowTrialReq {
-  1: required string modelId
-  2: optional string trialId
-}
-
 struct TGetModelInfoReq {
   1: required string modelId
-}
-
-struct TShowTrialResp {
-  1: required common.TSStatus status
-  2: required list<binary> trialInfoList
-}
-
-struct TUpdateModelInfoReq {
-  1: required string modelId
-  2: required string trialId
-  3: required map<string, string> modelInfo
-}
-
-struct TUpdateModelStateReq {
-  1: required string modelId
-  2: required common.TrainingState state
-  3: optional string bestTrialId
 }
 
 struct TGetModelInfoResp {

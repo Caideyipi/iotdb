@@ -200,8 +200,10 @@ public class LoadCache {
         nodeCacheMap.put(nodeId, new ConfigNodeHeartbeatCache(nodeId));
         break;
       case DataNode:
-      default:
         nodeCacheMap.put(nodeId, new DataNodeHeartbeatCache(nodeId));
+        break;
+      case AINode:
+        nodeCacheMap.put(nodeId, new AINodeHeartbeatCache(nodeId));
         break;
     }
     heartbeatProcessingMap.put(nodeId, new AtomicBoolean(false));

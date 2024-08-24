@@ -20,11 +20,9 @@
 package com.timecho.iotdb.manager.node;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
-import org.apache.iotdb.confignode.consensus.response.ainode.AINodeRegisterResp;
 import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.persistence.node.NodeInfo;
-import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartResp;
@@ -153,34 +151,6 @@ public class TimechoNodeManager extends NodeManager {
               restartNodeCpuCores,
               cpuCoreLimit - clusterCpuCoresExceptThisNode - restartNodeCpuCores);
       LOGGER.info(message);
-    }
-    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    return resp;
-  }
-
-  @Override
-  protected AINodeRegisterResp registerAINodeActivationCheck(TAINodeRegisterReq req) {
-    License license = configManager.getActivationManager().getLicense();
-    AINodeRegisterResp resp = new AINodeRegisterResp();
-    resp.setConfigNodeList(getRegisteredConfigNodes());
-    // check if unactivated
-    if (!license.isActivated()) {
-      final String message =
-          "Deny AINode registration: Cluster is unactivated now, AINode is not allowed to join.";
-      LOGGER.warn(message);
-      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
-    }
-    // check AINode num limit
-    if (nodeInfo.getRegisteredAINodeCount() + 1 > license.getAINodeNumLimit()) {
-      final String message =
-          String.format(
-              "Deny AINode registration: AINodes number limit exceeded, %d + 1 = %d. Only %d AINodes is allowed.",
-              nodeInfo.getRegisteredAINodeCount(),
-              nodeInfo.getRegisteredAINodeCount() + 1,
-              license.getAINodeNumLimit());
-      LOGGER.warn(message);
-      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message));
-      return resp;
     }
     resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     return resp;

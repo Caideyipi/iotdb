@@ -22,7 +22,7 @@ import os
 import random
 import sys
 
-from iotdb.ainode.constant import AINODE_LOG_DIR, STD_LEVEL, AINODE_LOG_FILE_NAMES, AINODE_LOG_FILE_LEVELS
+from iotdb.ainode.constant import STD_LEVEL, AINODE_LOG_FILE_NAMES, AINODE_LOG_FILE_LEVELS
 
 
 class LoggerFilter(logging.Filter):

@@ -462,7 +462,6 @@ public class NodeManager {
     return ClusterNodeStartUtils.ACCEPT_NODE_RESTART;
   }
 
-  // getRegisteredAINodeInfoList()
   public List<TAINodeInfo> getRegisteredAINodeInfoList() {
     List<TAINodeInfo> aiNodeInfoList = new ArrayList<>();
     for (TAINodeConfiguration aiNodeConfiguration : getRegisteredAINodes()) {
@@ -506,12 +505,7 @@ public class NodeManager {
     }
 
     int aiNodeId = nodeInfo.generateNextNodeId();
-
-    AINodeRegisterResp activationCheckResp = registerAINodeActivationCheck(req);
-    if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != activationCheckResp.getStatus().getCode()) {
-      return activationCheckResp;
-    }
-
+    getLoadManager().getLoadCache().createNodeHeartbeatCache(NodeType.AINode, aiNodeId);
     RegisterAINodePlan registerAINodePlan = new RegisterAINodePlan(req.getAiNodeConfiguration());
     // Register new DataNode
     registerAINodePlan.getAINodeConfiguration().getLocation().setAiNodeId(aiNodeId);
@@ -535,10 +529,6 @@ public class NodeManager {
     resp.setConfigNodeList(getRegisteredConfigNodes());
     resp.setAINodeId(registerAINodePlan.getAINodeConfiguration().getLocation().getAiNodeId());
     return resp;
-  }
-
-  protected AINodeRegisterResp registerAINodeActivationCheck(TAINodeRegisterReq req) {
-    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   /**

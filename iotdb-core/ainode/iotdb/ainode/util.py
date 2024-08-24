@@ -17,11 +17,11 @@
 #
 
 import torch
-from iotdb.thrift.common.ttypes import TEndPoint, TSStatus
 
 from iotdb.ainode.constant import TSStatusCode, ModelInputName
 from iotdb.ainode.exception import BadNodeUrlError
 from iotdb.ainode.log import logger
+from iotdb.thrift.common.ttypes import TEndPoint, TSStatus
 
 
 def parse_endpoint_url(endpoint_url: str) -> TEndPoint:

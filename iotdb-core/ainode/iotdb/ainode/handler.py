@@ -15,27 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-from typing import cast
 
 import psutil
 from yaml import YAMLError
 
-from iotdb.thrift.common.ttypes import TLoadSample
-from iotdb.thrift.ainode import IAINodeRPCService
-from iotdb.thrift.ainode.ttypes import (TCreateTrainingTaskReq,
-                                        TDeleteModelReq, TRegisterModelReq,
-                                        TRegisterModelResp, TAIHeartbeatReq, TAIHeartbeatResp,
-                                        TInferenceReq, TInferenceResp)
-
-from iotdb.ainode.constant import TaskType, TSStatusCode
+from iotdb.ainode.constant import TSStatusCode
 from iotdb.ainode.exception import InvaildUriError, BadConfigValueError
 from iotdb.ainode.inference import inference_with_registered_model, inference_with_built_in_model
 from iotdb.ainode.log import logger
-from iotdb.ainode.parser import (ForecastTaskOptions,
-                                 parse_task_options, parse_inference_request)
+from iotdb.ainode.parser import (parse_inference_request)
 from iotdb.ainode.serde import convert_to_binary
 from iotdb.ainode.storage import model_storage
 from iotdb.ainode.util import get_status
+from iotdb.thrift.ainode import IAINodeRPCService
+from iotdb.thrift.ainode.ttypes import (TDeleteModelReq, TRegisterModelReq,
+                                        TRegisterModelResp, TAIHeartbeatReq, TAIHeartbeatResp,
+                                        TInferenceReq, TInferenceResp)
+from iotdb.thrift.common.ttypes import TLoadSample
 
 
 class AINodeRPCServiceHandler(IAINodeRPCService.Iface):

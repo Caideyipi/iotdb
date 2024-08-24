@@ -17,10 +17,11 @@
 #
 from abc import abstractmethod
 
-from iotdb.ainode.constant import AttributeName, BuiltInModelType, TaskType
+from typing import List, Dict
+
+from iotdb.ainode.constant import AttributeName, BuiltInModelType
 from iotdb.ainode.exception import WrongAttributeTypeError, NumericalRangeException, StringRangeException, \
     ListRangeException, BuiltInModelNotSupportError
-from typing import List, Dict
 
 
 class Attribute(object):
@@ -650,7 +651,6 @@ stray_attribute_map = {
 
 
 def get_model_attributes(model_id: str):
-    attribute_map = None
     if model_id == BuiltInModelType.ARIMA.value:
         attribute_map = arima_attribute_map
     elif model_id == BuiltInModelType.NAIVE_FORECASTER.value:

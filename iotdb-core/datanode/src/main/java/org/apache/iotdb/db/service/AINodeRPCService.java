@@ -89,6 +89,6 @@ public class AINodeRPCService extends ThriftService implements AINodeRPCServiceM
   }
 
   public static AINodeRPCService getInstance() {
-    return AINodeRPCService.AINodeRPCServiceHolder.INSTANCE;
+    return AINodeRPCServiceHolder.INSTANCE;
   }
 }

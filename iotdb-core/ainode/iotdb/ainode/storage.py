@@ -24,10 +24,10 @@ from typing import Dict, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
-import torch.nn as nn
 import torch
-import yaml
 import torch._dynamo
+import torch.nn as nn
+import yaml
 from pylru import lrucache
 from requests.adapters import HTTPAdapter
 

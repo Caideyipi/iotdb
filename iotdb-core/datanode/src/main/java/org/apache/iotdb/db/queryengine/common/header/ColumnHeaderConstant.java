@@ -207,9 +207,6 @@ public class ColumnHeaderConstant {
 
   // column names for show models/trials
   public static final String MODEL_ID = "ModelId";
-  public static final String TRIAL_ID = "TrialId";
-  public static final String HYPERPARAMETER = "Hyperparameter";
-  public static final String MODEL_PATH = "ModelPath";
 
   // column names for show activation
   public static final String LICENSE_INFO = "LicenseInfo";
@@ -540,12 +537,6 @@ public class ColumnHeaderConstant {
           new ColumnHeader(LICENSE_INFO, TSDataType.TEXT),
           new ColumnHeader(USAGE, TSDataType.TEXT),
           new ColumnHeader(LIMIT, TSDataType.TEXT));
-
-  public static final List<ColumnHeader> showTrialsColumnHeaders =
-      ImmutableList.of(
-          new ColumnHeader(TRIAL_ID, TSDataType.TEXT),
-          new ColumnHeader(MODEL_PATH, TSDataType.TEXT),
-          new ColumnHeader(HYPERPARAMETER, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showLogicalViewColumnHeaders =
       ImmutableList.of(

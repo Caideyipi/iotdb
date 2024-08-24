@@ -29,7 +29,6 @@ import org.apache.iotdb.confignode.consensus.request.read.function.GetFunctionTa
 import org.apache.iotdb.confignode.consensus.request.read.function.GetUDFJarPlan;
 import org.apache.iotdb.confignode.consensus.request.read.model.GetModelInfoPlan;
 import org.apache.iotdb.confignode.consensus.request.read.model.ShowModelPlan;
-import org.apache.iotdb.confignode.consensus.request.read.model.ShowTrialPlan;
 import org.apache.iotdb.confignode.consensus.request.read.partition.CountTimeSlotListPlan;
 import org.apache.iotdb.confignode.consensus.request.read.partition.GetDataPartitionPlan;
 import org.apache.iotdb.confignode.consensus.request.read.partition.GetNodePathsPartitionPlan;
@@ -84,7 +83,6 @@ import org.apache.iotdb.confignode.consensus.request.write.model.CreateModelPlan
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelInNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.DropModelPlan;
 import org.apache.iotdb.confignode.consensus.request.write.model.UpdateModelInfoPlan;
-import org.apache.iotdb.confignode.consensus.request.write.model.UpdateModelStatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.partition.AddRegionLocationPlan;
 import org.apache.iotdb.confignode.consensus.request.write.partition.CreateDataPartitionPlan;
 import org.apache.iotdb.confignode.consensus.request.write.partition.CreateSchemaPartitionPlan;
@@ -584,9 +582,6 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
         case UpdateModelInfo:
           plan = new UpdateModelInfoPlan();
           break;
-        case UpdateModelState:
-          plan = new UpdateModelStatePlan();
-          break;
         case DropModel:
           plan = new DropModelPlan();
           break;
@@ -595,9 +590,6 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
           break;
         case DropModelInNode:
           plan = new DropModelInNodePlan();
-          break;
-        case ShowTrial:
-          plan = new ShowTrialPlan();
           break;
         case GetModelInfo:
           plan = new GetModelInfoPlan();

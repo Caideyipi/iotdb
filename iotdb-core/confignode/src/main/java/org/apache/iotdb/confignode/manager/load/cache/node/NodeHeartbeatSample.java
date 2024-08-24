@@ -71,9 +71,9 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
   /** Constructor for AINode sample. */
   public NodeHeartbeatSample(TAIHeartbeatResp heartbeatResp) {
     super(heartbeatResp.getHeartbeatTimestamp());
-    this.activateStatus = ActivateStatus.UNKNOWN;
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
+    this.activateStatus = ActivateStatus.ACTIVATED;
     if (heartbeatResp.isSetLoadSample()) {
       this.loadSample = heartbeatResp.getLoadSample();
     } else {

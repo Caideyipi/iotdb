@@ -209,10 +209,6 @@ public class DatasetHeaderFactory {
     return new DatasetHeader(ColumnHeaderConstant.showModelsColumnHeaders, true);
   }
 
-  public static DatasetHeader getShowTrialsHeader() {
-    return new DatasetHeader(ColumnHeaderConstant.showTrialsColumnHeaders, true);
-  }
-
   public static DatasetHeader getShowLogicalViewHeader() {
     return new DatasetHeader(ColumnHeaderConstant.showLogicalViewColumnHeaders, true);
   }
