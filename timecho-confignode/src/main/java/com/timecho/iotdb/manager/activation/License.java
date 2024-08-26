@@ -262,10 +262,10 @@ public class License {
     oldActivateStatus = nowActivateStatus;
   }
 
-  private void logFieldDifference(String name, Object mine, Object another)
+  private <T> void logFieldDifference(String name, Limit<T> mine, Limit<T> another)
       throws LicenseException {
-    if (!Objects.equals(mine, another)) {
-      String rawContent = String.format("%s: %s -> %s", name, mine, another);
+    if (!Objects.equals(mine.getValue(), another.getValue())) {
+      String rawContent = String.format("%s: %s -> %s", name, mine.getValue(), another.getValue());
       String encryptedContent = RSA.publicEncrypt(rawContent);
       logger.info(encryptedContent);
     }

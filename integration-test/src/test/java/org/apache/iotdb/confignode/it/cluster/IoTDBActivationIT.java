@@ -766,6 +766,7 @@ public class IoTDBActivationIT {
 
       // 4. modify license, set nodeNumLimit to 2, then second datanode start success
       leaderClient.setLicenseFile(LICENSE_FILE_NAME, nodeNumLimit2License);
+      waitLicenseReload();
       dataNodeWrappers.get(1).start();
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
     }
