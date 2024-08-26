@@ -62,7 +62,9 @@ unit-test:
   tags:
     - timechodb
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn clean install -Dtest.port.closed=true -s $MAVEN_SETTINGS_XML'
@@ -76,7 +78,9 @@ integration-test-1c1d:
   tags:
     - timechodb
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
@@ -97,7 +101,9 @@ integration-test-1c3d:
   tags:
     - timechodb
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
@@ -118,7 +124,9 @@ ainode-test-1c1d1a:
   tags:
     - ainode
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn clean package -DskipTests -pl iotdb-core/ainode -am -P with-ainode -s $MAVEN_SETTINGS_XML'
@@ -140,7 +148,9 @@ auto-create-schema:
   tags:
     - timechodb
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2AutoCreateSchema -s $MAVEN_SETTINGS_XML'
@@ -165,7 +175,9 @@ manual-create-schema:
   tags:
     - timechodb
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2ManualCreateSchema -s $MAVEN_SETTINGS_XML'
@@ -190,7 +202,9 @@ subscription:
   tags:
     - timechodb
   before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2Subscription -s $MAVEN_SETTINGS_XML'
