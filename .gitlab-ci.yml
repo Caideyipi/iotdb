@@ -93,7 +93,7 @@ integration-test-1c1d:
     name: 1c1d-log
     paths:
       - integration-test/target/cluster-logs
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 integration-test-1c3d:
@@ -116,7 +116,7 @@ integration-test-1c3d:
     name: 1c3d-log
     paths:
       - integration-test/target/cluster-logs
-    expire_in: 1 day
+    expire_in: 7 day
 
 ainode-test-1c1d1a:
   stage: test
@@ -141,7 +141,7 @@ ainode-test-1c1d1a:
     paths:
       - integration-test/target/cluster-logs
       - integration-test/target/ainode-logs
-    expire_in: 1 day
+    expire_in: 7 day
 
 auto-create-schema:
   stage: test
@@ -168,7 +168,7 @@ auto-create-schema:
     paths:
       - integration-test/target/cluster-logs
       - integration-test/target/pipeIT-logs
-    expire_in: 1 day
+    expire_in: 7 day
 
 manual-create-schema:
   stage: test
@@ -195,7 +195,7 @@ manual-create-schema:
     paths:
       - integration-test/target/cluster-logs
       - integration-test/target/pipeIT-logs
-    expire_in: 1 day
+    expire_in: 7 day
 
 subscription:
   stage: test
@@ -222,4 +222,4 @@ subscription:
     paths:
       - integration-test/target/cluster-logs
       - integration-test/target/pipeIT-logs
-    expire_in: 1 day
+    expire_in: 7 day
