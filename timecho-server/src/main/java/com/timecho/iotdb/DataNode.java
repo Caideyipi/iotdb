@@ -56,8 +56,11 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
 
     logger.info("IoTDB-DataNode environment variables: {}", IoTDBConfig.getEnvironmentVariables());
     logger.info("IoTDB-DataNode default charset is: {}", Charset.defaultCharset().displayName());
-
-    new DataNodeServerCommandLineNew().doMain(args);
+    DataNode dataNode = new DataNode();
+    int returnCode = dataNode.run(args);
+    if (returnCode != 0) {
+      System.exit(returnCode);
+    }
   }
 
   @Override

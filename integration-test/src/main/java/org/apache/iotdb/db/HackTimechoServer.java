@@ -38,7 +38,11 @@ public class HackTimechoServer extends DataNode {
     MNodeFactoryLoader.getInstance()
         .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
-    new HackTimechoServerCommandLineNew().doMain(args);
+    HackTimechoServer hackTimechoServer = new HackTimechoServer();
+    int returnCode = hackTimechoServer.run(args);
+    if (returnCode != 0) {
+      System.exit(returnCode);
+    }
   }
 
   // Fix the number of CPU cores for testing purposes

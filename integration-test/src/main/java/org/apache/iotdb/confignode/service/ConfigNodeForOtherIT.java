@@ -42,7 +42,12 @@ public class ConfigNodeForOtherIT extends ConfigNode {
         "{} default charset is: {}",
         ConfigNodeConstant.GLOBAL_NAME,
         Charset.defaultCharset().displayName());
-    new TimechoConfigNodeCommandLineForOtherIT().doMain(args);
+    ConfigNodeForOtherIT configNode = new ConfigNodeForOtherIT();
+    int returnCode = configNode.run(args);
+    if (returnCode != 0) {
+      System.exit(returnCode);
+    }
+    org.apache.iotdb.confignode.service.ConfigNode.setInstance(configNode);
   }
 
   @Override

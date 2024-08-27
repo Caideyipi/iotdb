@@ -447,7 +447,7 @@ public class ActivationManager {
         logger.info("Load license success.");
       }
       checkSystemTimeAndIssueTime();
-    } catch (LicenseException | IOException e) {
+    } catch (Exception e) {
       logger.error("Load license fail.", e);
       license.licenseFileNotExistOrInvalid();
     }

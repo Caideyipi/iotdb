@@ -45,7 +45,12 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
         "{} default charset is: {}",
         ConfigNodeConstant.GLOBAL_NAME,
         Charset.defaultCharset().displayName());
-    new TimechoConfigNodeCommandLine().doMain(args);
+    ConfigNode configNode = new ConfigNode();
+    int returnCode = configNode.run(args);
+    if (returnCode != 0) {
+      System.exit(returnCode);
+    }
+    org.apache.iotdb.confignode.service.ConfigNode.setInstance(configNode);
   }
 
   @Override
