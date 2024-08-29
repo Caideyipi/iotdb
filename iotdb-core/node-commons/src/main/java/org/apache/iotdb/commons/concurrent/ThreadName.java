@@ -190,6 +190,7 @@ public enum ThreadName {
   MIGRATION("Migration-Executor-Pool"),
 
   REPAIR_DATA("RepairData"),
+  FILE_TIME_INDEX_RECORD("FileTimeIndexRecord"),
 
   // the unknown thread name is used for metrics
   UNKOWN("UNKNOWN");
