@@ -204,6 +204,7 @@ public class CommonConfig {
   private int pipeNonForwardingEventsProgressReportInterval = 100;
 
   private int pipeDataStructureTabletRowSize = 2048;
+  private int pipeDataStructureTabletSizeInBytes = 2097152;
   private double pipeDataStructureTabletMemoryBlockAllocationRejectThreshold = 0.4;
 
   private int pipeSubtaskExecutorBasicCheckPointIntervalByConsumedEventCount = 10_000;
@@ -713,6 +714,14 @@ public class CommonConfig {
 
   public void setPipeDataStructureTabletRowSize(int pipeDataStructureTabletRowSize) {
     this.pipeDataStructureTabletRowSize = pipeDataStructureTabletRowSize;
+  }
+
+  public int getPipeDataStructureTabletSizeInBytes() {
+    return pipeDataStructureTabletSizeInBytes;
+  }
+
+  public void setPipeDataStructureTabletSizeInBytes(int pipeDataStructureTabletSizeInBytes) {
+    this.pipeDataStructureTabletSizeInBytes = pipeDataStructureTabletSizeInBytes;
   }
 
   public double getPipeDataStructureTabletMemoryBlockAllocationRejectThreshold() {
