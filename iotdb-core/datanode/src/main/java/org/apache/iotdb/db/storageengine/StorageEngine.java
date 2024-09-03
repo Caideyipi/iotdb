@@ -370,6 +370,7 @@ public class StorageEngine implements IService {
 
   private void asyncRecoverTsFileResource() {
     List<Future<Void>> futures = new LinkedList<>();
+    long startRecoverTime = System.currentTimeMillis();
     for (DataRegion dataRegion : dataRegionMap.values()) {
       if (dataRegion != null) {
         List<Callable<Void>> asyncTsFileResourceRecoverTasks =
@@ -393,6 +394,9 @@ public class StorageEngine implements IService {
               checkResults(futures, "async recover tsfile resource meets error.");
               recoverRepairData();
               isReadyForNonReadWriteFunctions.set(true);
+              LOGGER.info(
+                  "TsFile Resource recover cost: {}s.",
+                  (System.currentTimeMillis() - startRecoverTime) / 1000);
             },
             ThreadName.STORAGE_ENGINE_RECOVER_TRIGGER.getName());
     recoverEndTrigger.start();
