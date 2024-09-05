@@ -19,35 +19,27 @@
 
 package org.apache.iotdb.it.env.cluster.node;
 
+import org.apache.iotdb.it.env.cluster.config.MppJVMConfig;
 import org.apache.iotdb.it.framework.IoTDBTestLogger;
-import org.apache.iotdb.itbase.env.BaseNodeWrapper;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.file.PathUtils;
 import org.slf4j.Logger;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.AI_NODE_NAME;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TARGET;
-import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_PATH;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.USER_DIR;
 import static org.apache.iotdb.it.env.cluster.EnvUtils.getTimeForLogDirectory;
 
-public class AINodeWrapper implements BaseNodeWrapper {
+public class AINodeWrapper extends AbstractNodeWrapper {
 
   private static final Logger logger = IoTDBTestLogger.logger;
-  private final String testClassName;
-  private final String testMethodName;
-  private final String nodeAddress;
-  private Process instance;
-  private final int nodePort;
   private final long startTime;
   private final String seedConfigNode;
 
@@ -58,89 +50,34 @@ public class AINodeWrapper implements BaseNodeWrapper {
   private static final String PROPERTIES_FILE = "iotdb-ainode.properties";
   public static final String CONFIG_PATH = "conf";
   public static final String SCRIPT_PATH = "sbin";
-  private static final String INTERPRETER_PATH = "/root/.venv/bin/python3";
 
-  private String[] getReplaceCmd(String key, String value, String filePath) {
-    String s = String.format("sed -i s/^%s=.*/%s=%s/ %s", key, key, value, filePath);
-    return s.split("\\s+");
-  }
-
-  private void replaceAttribute(String key, String value, String filePath, File stdoutFile)
-      throws IOException, InterruptedException {
-    ProcessBuilder prepareProcessBuilder =
-        new ProcessBuilder(getReplaceCmd(key, value, filePath))
-            .redirectOutput(ProcessBuilder.Redirect.appendTo(stdoutFile))
-            .redirectError(ProcessBuilder.Redirect.appendTo(stdoutFile));
-    Process prepareProcess = prepareProcessBuilder.start();
-    prepareProcess.waitFor();
+  private void replaceAttribute(String[] keys, String[] values, String filePath) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
+      for (int i = 0; i < keys.length; i++) {
+        String line = keys[i] + "=" + values[i];
+        writer.newLine();
+        writer.write(line);
+      }
+    } catch (IOException e) {
+      logger.error(
+          "Failed to set attribute for AINode in file: {} because {}", filePath, e.getMessage());
+    }
   }
 
   public AINodeWrapper(
       String seedConfigNode,
       String testClassName,
       String testMethodName,
+      int clusterIndex,
       int[] port,
       long startTime) {
+    super(testClassName, testMethodName, port, clusterIndex, false, startTime);
     this.seedConfigNode = seedConfigNode;
-    this.testClassName = testClassName;
-    this.testMethodName = testMethodName;
-    this.nodeAddress = "127.0.0.1";
-    this.nodePort = port[0];
     this.startTime = startTime;
   }
 
   @Override
-  public void createNodeDir() {
-    // Copy templateNodePath to nodePath
-    String destPath = getNodePath();
-    try {
-      try {
-        if (new File(destPath).exists()) {
-          PathUtils.deleteDirectory(Paths.get(destPath));
-        }
-      } catch (NoSuchFileException e) {
-        // ignored
-      }
-      // Here we need to copy without follow symbolic links, so we can't use FileUtils directly.
-      try (Stream<Path> s = Files.walk(Paths.get(TEMPLATE_NODE_PATH))) {
-        s.forEach(
-            source -> {
-              Path destination =
-                  Paths.get(destPath, source.toString().substring(TEMPLATE_NODE_PATH.length()));
-              try {
-                Files.copy(
-                    source,
-                    destination,
-                    LinkOption.NOFOLLOW_LINKS,
-                    StandardCopyOption.COPY_ATTRIBUTES);
-              } catch (IOException e) {
-                logger.error("Got error copying files to node dest dir", e);
-                throw new RuntimeException(e);
-              }
-            });
-      }
-    } catch (IOException ex) {
-      logger.error("Copy node dir failed", ex);
-      throw new AssertionError();
-    }
-  }
-
-  @Override
-  public void createLogDir() {
-    try {
-      // Make sure the log dir exist, as the first file is output by starting script directly.
-      FileUtils.createParentDirectories(new File(getLogPath()));
-    } catch (IOException ex) {
-      logger.error("Copy node dir failed", ex);
-      throw new AssertionError();
-    }
-  }
-
-  private String getLogPath() {
-    return getLogDirPath() + File.separator + getId() + ".log";
-  }
-
-  private String getLogDirPath() {
+  public String getLogDirPath() {
     return System.getProperty(USER_DIR)
         + File.separator
         + TARGET
@@ -150,34 +87,6 @@ public class AINodeWrapper implements BaseNodeWrapper {
         + getTestLogDirName()
         + File.separator
         + getTimeForLogDirectory(startTime);
-  }
-
-  private String getTestLogDirName() {
-    if (testMethodName == null) {
-      return testClassName;
-    }
-    return testClassName + "_" + testMethodName;
-  }
-
-  @Override
-  public void destroyDir() {
-    Exception lastException = null;
-    for (int i = 0; i < 10; i++) {
-      try {
-        PathUtils.deleteDirectory(Paths.get(getNodePath()));
-        return;
-      } catch (IOException ex) {
-        lastException = ex;
-        try {
-          TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-          throw new AssertionError("Delete node dir failed. " + e);
-        }
-      }
-    }
-    logger.error(lastException.getMessage());
-    throw new AssertionError("Delete node dir failed.");
   }
 
   @Override
@@ -195,66 +104,31 @@ public class AINodeWrapper implements BaseNodeWrapper {
           filePrefix + File.separator + CONFIG_PATH + File.separator + PROPERTIES_FILE;
 
       // set attribute
-      replaceAttribute("ain_seed_config_node", this.seedConfigNode, propertiesFile, stdoutFile);
       replaceAttribute(
-          "ain_inference_rpc_port", Integer.toString(getPort()), propertiesFile, stdoutFile);
+          new String[] {"ain_seed_config_node", "ain_inference_rpc_port"},
+          new String[] {this.seedConfigNode, Integer.toString(getPort())},
+          propertiesFile);
 
       // start AINode
-      List<String> start_command = new ArrayList<>();
-      start_command.add(SHELL_COMMAND);
-      start_command.add(filePrefix + File.separator + SCRIPT_PATH + File.separator + SCRIPT_FILE);
-      start_command.add("-i");
-      start_command.add(INTERPRETER_PATH);
-      start_command.add("-r");
-      start_command.add("-n");
+      List<String> startCommand = new ArrayList<>();
+      startCommand.add(SHELL_COMMAND);
+      startCommand.add(filePrefix + File.separator + SCRIPT_PATH + File.separator + SCRIPT_FILE);
+      startCommand.add("-i");
+      startCommand.add("/root/.venv/bin/python3");
+      startCommand.add("-r");
+      startCommand.add("-n");
+
       ProcessBuilder processBuilder =
-          new ProcessBuilder(start_command)
+          new ProcessBuilder(startCommand)
               .redirectOutput(ProcessBuilder.Redirect.appendTo(stdoutFile))
               .redirectError(ProcessBuilder.Redirect.appendTo(stdoutFile));
       this.instance = processBuilder.start();
       logger.info("In test {} {} started.", getTestLogDirName(), getId());
-    } catch (IOException | InterruptedException e) {
+    } catch (Exception e) {
       throw new AssertionError("Start AI Node failed. " + e + Paths.get(""));
     }
   }
 
-  @Override
-  public void stop() {
-    if (this.instance == null) {
-      return;
-    }
-    this.instance.destroy();
-    try {
-      if (!this.instance.waitFor(20, TimeUnit.SECONDS)) {
-        this.instance.destroyForcibly().waitFor(10, TimeUnit.SECONDS);
-      }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      logger.error("Waiting AI Node to shutdown error. %s", e);
-    }
-  }
-
-  @Override
-  public void stopForcibly() {
-    stop();
-  }
-
-  @Override
-  public boolean isAlive() {
-    return this.instance != null && this.instance.isAlive();
-  }
-
-  @Override
-  public String getIp() {
-    return this.nodeAddress;
-  }
-
-  @Override
-  public int getPort() {
-    return this.nodePort;
-  }
-
-  @Override
   public int getMetricPort() {
     // no metric currently
     return -1;
@@ -265,27 +139,40 @@ public class AINodeWrapper implements BaseNodeWrapper {
     return AI_NODE_NAME + getPort();
   }
 
-  @Override
-  public String getIpAndPortString() {
-    return this.getIp() + ":" + this.getPort();
-  }
+  /* Abstract methods, which must be implemented in ConfigNode and DataNode. */
+  public void reloadMutableFields() {}
+  ;
 
-  @Override
-  public void executeJstack() {
-    throw new UnsupportedOperationException("AINode does not support executeJStack currently.");
-  }
+  public void renameFile() {}
+  ;
 
-  @Override
-  public void executeJstack(String testCaseName) {
-    throw new UnsupportedOperationException("AINode does not support executeJStack currently.");
+  public String getSystemConfigPath() {
+    return "";
   }
+  ;
 
-  @Override
-  public long getPid() {
-    throw new UnsupportedOperationException("AINode does not support getPid currently.");
+  /** Return the node config file path specified through system variable */
+  public String getDefaultNodeConfigPath() {
+    return "";
   }
+  ;
 
-  private String getNodePath() {
-    return System.getProperty(USER_DIR) + File.separator + TARGET + File.separator + getId();
+  /** Return the common config file path specified through system variable */
+  public String getDefaultCommonConfigPath() {
+    return "";
   }
+  ;
+
+  public void addStartCmdParams(List<String> params) {}
+  ;
+
+  public String getSystemPropertiesPath() {
+    return "";
+  }
+  ;
+
+  public MppJVMConfig initVMConfig() {
+    return null;
+  }
+  ;
 }

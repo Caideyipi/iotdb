@@ -146,8 +146,8 @@ public abstract class AbstractEnv implements BaseEnv {
     initEnvironment(configNodesNum, dataNodesNum, retryCount);
   }
 
-  protected void initEnvironment(int configNodesNum, int dataNodesNum, int retryCount) {
-    initEnvironment(configNodesNum, dataNodesNum, retryCount, false);
+  protected void initEnvironment(int configNodesNum, int dataNodesNum, int testWorkingRetryCount) {
+    initEnvironment(configNodesNum, dataNodesNum, testWorkingRetryCount, false);
   }
 
   protected void initEnvironment(
@@ -276,6 +276,7 @@ public abstract class AbstractEnv implements BaseEnv {
             seedConfigNode,
             testClassName,
             testMethodName,
+            index,
             EnvUtils.searchAvailablePorts(),
             startTime);
     aiNodeWrapperList.add(aiNodeWrapper);
@@ -398,7 +399,9 @@ public abstract class AbstractEnv implements BaseEnv {
   @Override
   public void cleanClusterEnvironment() {
     List<AbstractNodeWrapper> allNodeWrappers =
-        Stream.concat(this.dataNodeWrapperList.stream(), this.configNodeWrapperList.stream())
+        Stream.concat(
+                dataNodeWrapperList.stream(),
+                Stream.concat(configNodeWrapperList.stream(), aiNodeWrapperList.stream()))
             .collect(Collectors.toList());
     allNodeWrappers.stream()
         .findAny()
@@ -406,14 +409,6 @@ public abstract class AbstractEnv implements BaseEnv {
             nodeWrapper -> logger.info("You can find logs at {}", nodeWrapper.getLogDirPath()));
     for (AbstractNodeWrapper nodeWrapper : allNodeWrappers) {
       nodeWrapper.stopForcibly();
-      nodeWrapper.destroyDir();
-      String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());
-      if (!new File(lockPath).delete()) {
-        logger.error("Delete lock file {} failed", lockPath);
-      }
-    }
-    for (AINodeWrapper nodeWrapper : this.aiNodeWrapperList) {
-      nodeWrapper.stop();
       nodeWrapper.destroyDir();
       String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());
       if (!new File(lockPath).delete()) {
