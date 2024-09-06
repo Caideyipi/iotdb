@@ -381,6 +381,7 @@ public class StorageEngine implements IService {
                 for (Callable<Void> task : asyncTsFileResourceRecoverTasks) {
                   task.call();
                 }
+                dataRegion.clearAsyncTsFileResourceRecoverTaskList();
                 dataRegion.initCompactionSchedule();
                 return null;
               };
