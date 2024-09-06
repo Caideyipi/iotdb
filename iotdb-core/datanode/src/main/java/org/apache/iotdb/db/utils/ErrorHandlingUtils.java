@@ -160,6 +160,8 @@ public class ErrorHandlingUtils {
       return RpcUtils.getStatus(((ModelException) t).getStatusCode(), rootCause.getMessage());
     } else if (t instanceof IoTDBRuntimeException) {
       return RpcUtils.getStatus(((IoTDBRuntimeException) t).getErrorCode(), t.getMessage());
+    } else if (t instanceof ModelException) {
+      return RpcUtils.getStatus(((ModelException) t).getStatusCode(), rootCause.getMessage());
     } else if (t instanceof MemoryNotEnoughException) {
       return RpcUtils.getStatus(TSStatusCode.QUOTA_MEM_QUERY_NOT_ENOUGH, rootCause.getMessage());
     }
