@@ -1082,7 +1082,7 @@ public class DataRegion implements IDataRegionForQuery {
   public void insert(InsertRowNode insertRowNode) throws WriteProcessException {
     // reject insertions that are out of ttl
     long deviceTTL =
-        DataNodeTTLCache.getInstance().getTTL(insertRowNode.getDevicePath().getNodes());
+        DataNodeTTLCache.getInstance().getTTL(insertRowNode.getTargetPath().getNodes());
     if (!CommonUtils.isAlive(insertRowNode.getTime(), deviceTTL)) {
       throw new OutOfTTLException(
           insertRowNode.getTime(), (CommonDateTimeUtils.currentTime() - deviceTTL));
@@ -1429,7 +1429,7 @@ public class DataRegion implements IDataRegionForQuery {
     DataNodeSchemaCache.getInstance()
         .updateLastCache(
             getDatabaseName(),
-            node.getDevicePath(),
+            node.getTargetPath(),
             rawMeasurements,
             node.getMeasurementSchemas(),
             node.isAligned(),
@@ -1474,7 +1474,7 @@ public class DataRegion implements IDataRegionForQuery {
     DataNodeSchemaCache.getInstance()
         .updateLastCache(
             getDatabaseName(),
-            node.getDevicePath(),
+            node.getTargetPath(),
             rawMeasurements,
             node.getMeasurementSchemas(),
             node.isAligned(),
@@ -1569,7 +1569,7 @@ public class DataRegion implements IDataRegionForQuery {
         DataNodeSchemaCache.getInstance()
             .updateLastCacheWithoutLock(
                 getDatabaseName(),
-                node.getDevicePath(),
+                node.getTargetPath(),
                 rawMeasurements,
                 node.getMeasurementSchemas(),
                 node.isAligned(),
@@ -3570,7 +3570,7 @@ public class DataRegion implements IDataRegionForQuery {
       }
       long deviceTTL =
           DataNodeTTLCache.getInstance()
-              .getTTL(insertRowsOfOneDeviceNode.getDevicePath().getNodes());
+              .getTTL(insertRowsOfOneDeviceNode.getTargetPath().getNodes());
       long[] costsForMetrics = new long[4];
       Map<TsFileProcessor, InsertRowsNode> tsFileProcessorMap = new HashMap<>();
       for (int i = 0; i < insertRowsOfOneDeviceNode.getInsertRowNodeList().size(); i++) {
