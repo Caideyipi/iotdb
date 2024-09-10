@@ -19,7 +19,6 @@
 
 package org.apache.iotdb.pipe.it.single;
 
-import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipeReq;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -42,12 +41,38 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
 
       connectorAttributes.put("sink", "opc-ua-sink");
 
-      final TSStatus status =
-          client.createPipe(
-              new TCreatePipeReq("testPipe", connectorAttributes)
-                  .setExtractorAttributes(extractorAttributes)
-                  .setProcessorAttributes(processorAttributes));
-      Assert.assertEquals(TSStatusCode.SUCCESS_STATUS.getStatusCode(), status.getCode());
+      Assert.assertEquals(
+          TSStatusCode.SUCCESS_STATUS.getStatusCode(),
+          client
+              .createPipe(
+                  new TCreatePipeReq("testPipe", connectorAttributes)
+                      .setExtractorAttributes(Collections.emptyMap())
+                      .setProcessorAttributes(Collections.emptyMap()))
+              .getCode());
+      Assert.assertEquals(
+          TSStatusCode.SUCCESS_STATUS.getStatusCode(), client.dropPipe("testPipe").getCode());
+
+      // Test reconstruction
+      connectorAttributes.put("password", "test");
+      Assert.assertEquals(
+          TSStatusCode.SUCCESS_STATUS.getStatusCode(),
+          client
+              .createPipe(
+                  new TCreatePipeReq("testPipe", connectorAttributes)
+                      .setExtractorAttributes(Collections.emptyMap())
+                      .setProcessorAttributes(Collections.emptyMap()))
+              .getCode());
+
+      // Test conflict
+      connectorAttributes.put("password", "conflict");
+      Assert.assertEquals(
+          TSStatusCode.PIPE_ERROR.getStatusCode(),
+          client
+              .createPipe(
+                  new TCreatePipeReq("testPipe", connectorAttributes)
+                      .setExtractorAttributes(Collections.emptyMap())
+                      .setProcessorAttributes(Collections.emptyMap()))
+              .getCode());
     }
   }
 }
