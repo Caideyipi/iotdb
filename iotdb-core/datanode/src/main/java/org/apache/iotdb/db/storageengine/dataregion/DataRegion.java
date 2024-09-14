@@ -1523,6 +1523,9 @@ public class DataRegion implements IDataRegionForQuery {
                 v.markAsGeneratedByRemoteConsensusLeader();
               }
             }
+            if (v.isAligned() != insertRowNode.isAligned()) {
+              v.setMixingAlignment(true);
+            }
             v.addOneInsertRowNode(insertRowNode, finalI);
             v.updateProgressIndex(insertRowNode.getProgressIndex());
             return v;
@@ -3606,7 +3609,7 @@ public class DataRegion implements IDataRegionForQuery {
           TimePartitionManager.getInstance()
               .registerTimePartitionInfo(
                   new TimePartitionInfo(
-                      new DataRegionId(Integer.valueOf(dataRegionId)),
+                      new DataRegionId(Integer.parseInt(dataRegionId)),
                       timePartitionId,
                       true,
                       Long.MAX_VALUE,
