@@ -30,6 +30,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
@@ -77,6 +79,7 @@ public class ActivationVerifier {
       licenseProperties =
           ActivationManager.loadLicenseFromEveryVersionStatic(encryptedLicenseContent);
     } catch (Exception e) {
+      System.out.println(exceptionToEncryptedString(e));
       errorThenExit(LOAD_FAIL_MESSAGE);
     }
     return licenseProperties;
@@ -145,9 +148,11 @@ public class ActivationVerifier {
     try {
       license.loadFromProperties(licenseProperties, false);
     } catch (Exception e) {
+      System.out.println(exceptionToEncryptedString(e));
       errorThenExit(FAIL_MESSAGE);
     }
     if (!ActivationManager.checkSystemTimeAndIssueTimeImpl(license)) {
+      System.out.println("Time check failed");
       errorThenExit(FAIL_MESSAGE);
     }
   }
@@ -168,5 +173,15 @@ public class ActivationVerifier {
   private static void unableToVerifyThenExit(String pattern, Object... args) {
     System.out.printf(pattern + "\n", args);
     exit(UNABLE_TO_VERIFY_CODE);
+  }
+
+  private static String exceptionToEncryptedString(Exception e) {
+    StringWriter writer = new StringWriter();
+    e.printStackTrace(new PrintWriter(writer));
+    try {
+      return RSA.publicEncrypt(writer.toString());
+    } catch (Exception ee) {
+      return e.getMessage();
+    }
   }
 }

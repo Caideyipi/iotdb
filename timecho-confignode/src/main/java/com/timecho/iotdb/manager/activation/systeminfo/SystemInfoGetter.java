@@ -41,9 +41,6 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getCPUIdImpl();
     } catch (Exception e) {
-      if (logEnabled) {
-        getLogger().warn(GET_SYSTEM_INFO_FAIL);
-      }
       return "";
     }
   }
@@ -54,9 +51,6 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getMainBoardIdImpl();
     } catch (Exception e) {
-      if (logEnabled) {
-        getLogger().warn(GET_SYSTEM_INFO_FAIL);
-      }
       return "";
     }
   }
@@ -67,9 +61,6 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
     try {
       return getSystemUUIDImpl();
     } catch (Exception e) {
-      if (logEnabled) {
-        getLogger().warn(GET_SYSTEM_INFO_FAIL);
-      }
       return "";
     }
   }
