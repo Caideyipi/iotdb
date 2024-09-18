@@ -1324,6 +1324,15 @@ public class IoTDBDescriptor {
       conf.setWalBufferQueueCapacity(walBufferQueueCapacity);
     }
 
+    boolean WALInsertNodeCacheShrinkClearEnabled =
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "wal_cache_shrink_clear_enabled",
+                Boolean.toString(conf.getWALCacheShrinkClearEnabled())));
+    if (conf.getWALCacheShrinkClearEnabled() != WALInsertNodeCacheShrinkClearEnabled) {
+      conf.setWALCacheShrinkClearEnabled(WALInsertNodeCacheShrinkClearEnabled);
+    }
+
     loadWALHotModifiedProps(properties);
   }
 
