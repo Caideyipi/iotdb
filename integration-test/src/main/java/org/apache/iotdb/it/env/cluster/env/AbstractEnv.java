@@ -19,9 +19,7 @@
 
 package org.apache.iotdb.it.env.cluster.env;
 
-import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupType;
-import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.commons.client.ClientPoolFactory;
 import org.apache.iotdb.commons.client.IClientManager;
@@ -104,7 +102,7 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   // For multiple environment ITs, time must be consistent across environments.
-  protected AbstractEnv(long startTime) {
+  protected AbstractEnv(final long startTime) {
     this.startTime = startTime;
     this.clusterConfig = new MppClusterConfig();
   }
@@ -116,10 +114,10 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public List<String> getMetricPrometheusReporterContents() {
-    List<String> result = new ArrayList<>();
+    final List<String> result = new ArrayList<>();
     // get all report content of confignodes
-    for (ConfigNodeWrapper configNode : this.configNodeWrapperList) {
-      String configNodeMetricContent =
+    for (final ConfigNodeWrapper configNode : this.configNodeWrapperList) {
+      final String configNodeMetricContent =
           getUrlContent(
               Config.IOTDB_HTTP_URL_PREFIX
                   + configNode.getIp()
@@ -129,8 +127,8 @@ public abstract class AbstractEnv implements BaseEnv {
       result.add(configNodeMetricContent);
     }
     // get all report content of datanodes
-    for (DataNodeWrapper dataNode : this.dataNodeWrapperList) {
-      String dataNodeMetricContent =
+    for (final DataNodeWrapper dataNode : this.dataNodeWrapperList) {
+      final String dataNodeMetricContent =
           getUrlContent(
               Config.IOTDB_HTTP_URL_PREFIX
                   + dataNode.getIp()
@@ -142,16 +140,20 @@ public abstract class AbstractEnv implements BaseEnv {
     return result;
   }
 
-  protected void initEnvironment(int configNodesNum, int dataNodesNum) {
+  protected void initEnvironment(final int configNodesNum, final int dataNodesNum) {
     initEnvironment(configNodesNum, dataNodesNum, retryCount);
   }
 
-  protected void initEnvironment(int configNodesNum, int dataNodesNum, int testWorkingRetryCount) {
+  protected void initEnvironment(
+      final int configNodesNum, final int dataNodesNum, final int testWorkingRetryCount) {
     initEnvironment(configNodesNum, dataNodesNum, testWorkingRetryCount, false);
   }
 
   protected void initEnvironment(
-      int configNodesNum, int dataNodesNum, int retryCount, boolean addAINode) {
+      final int configNodesNum,
+      final int dataNodesNum,
+      final int retryCount,
+      final boolean addAINode) {
     this.retryCount = retryCount;
     this.configNodeWrapperList = new ArrayList<>();
     this.dataNodeWrapperList = new ArrayList<>();
@@ -162,7 +164,7 @@ public abstract class AbstractEnv implements BaseEnv {
 
     final String testClassName = getTestClassName();
 
-    ConfigNodeWrapper seedConfigNodeWrapper =
+    final ConfigNodeWrapper seedConfigNodeWrapper =
         new ConfigNodeWrapper(
             true,
             "",
@@ -180,22 +182,23 @@ public abstract class AbstractEnv implements BaseEnv {
     seedConfigNodeWrapper.createLogDir();
     seedConfigNodeWrapper.setKillPoints(configNodeKillPoints);
     seedConfigNodeWrapper.start();
-    String seedConfigNode = seedConfigNodeWrapper.getIpAndPortString();
+    final String seedConfigNode = seedConfigNodeWrapper.getIpAndPortString();
     this.configNodeWrapperList.add(seedConfigNodeWrapper);
 
     // Check if the Seed-ConfigNode started successfully
-    try (SyncConfigNodeIServiceClient ignored =
+    try (final SyncConfigNodeIServiceClient ignored =
         (SyncConfigNodeIServiceClient) getLeaderConfigNodeConnection()) {
       // Do nothing
       logger.info("The Seed-ConfigNode started successfully!");
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new AssertionError("Failed to get connection to the Seed-ConfigNode", e);
     }
 
-    List<String> configNodeEndpoints = new ArrayList<>();
-    RequestDelegate<Void> configNodesDelegate = new SerialRequestDelegate<>(configNodeEndpoints);
+    final List<String> configNodeEndpoints = new ArrayList<>();
+    final RequestDelegate<Void> configNodesDelegate =
+        new SerialRequestDelegate<>(configNodeEndpoints);
     for (int i = 1; i < configNodesNum; i++) {
-      ConfigNodeWrapper configNodeWrapper =
+      final ConfigNodeWrapper configNodeWrapper =
           new ConfigNodeWrapper(
               false,
               seedConfigNode,
@@ -222,15 +225,15 @@ public abstract class AbstractEnv implements BaseEnv {
     }
     try {
       configNodesDelegate.requestAll();
-    } catch (SQLException e) {
+    } catch (final SQLException e) {
       throw new AssertionError("Start configNodes failed", e);
     }
 
-    List<String> dataNodeEndpoints = new ArrayList<>();
-    RequestDelegate<Void> dataNodesDelegate =
+    final List<String> dataNodeEndpoints = new ArrayList<>();
+    final RequestDelegate<Void> dataNodesDelegate =
         new ParallelRequestDelegate<>(dataNodeEndpoints, NODE_START_TIMEOUT);
     for (int i = 0; i < dataNodesNum; i++) {
-      DataNodeWrapper dataNodeWrapper =
+      final DataNodeWrapper dataNodeWrapper =
           new DataNodeWrapper(
               seedConfigNode,
               testClassName,
@@ -257,7 +260,7 @@ public abstract class AbstractEnv implements BaseEnv {
 
     try {
       dataNodesDelegate.requestAll();
-    } catch (SQLException e) {
+    } catch (final SQLException e) {
       throw new AssertionError("Start dataNodes failed", e);
     }
 
@@ -269,9 +272,9 @@ public abstract class AbstractEnv implements BaseEnv {
     checkClusterStatusWithoutUnknown();
   }
 
-  private void startAINode(String seedConfigNode, String testClassName) {
-    String aiNodeEndPoint;
-    AINodeWrapper aiNodeWrapper =
+  private void startAINode(final String seedConfigNode, final String testClassName) {
+    final String aiNodeEndPoint;
+    final AINodeWrapper aiNodeWrapper =
         new AINodeWrapper(
             seedConfigNode,
             testClassName,
@@ -283,29 +286,29 @@ public abstract class AbstractEnv implements BaseEnv {
     aiNodeEndPoint = aiNodeWrapper.getIpAndPortString();
     aiNodeWrapper.createNodeDir();
     aiNodeWrapper.createLogDir();
-    RequestDelegate<Void> AINodesDelegate =
+    final RequestDelegate<Void> aiNodesDelegate =
         new ParallelRequestDelegate<>(
             Collections.singletonList(aiNodeEndPoint), NODE_START_TIMEOUT);
 
-    AINodesDelegate.addRequest(
+    aiNodesDelegate.addRequest(
         () -> {
           aiNodeWrapper.start();
           return null;
         });
 
     try {
-      AINodesDelegate.requestAll();
-    } catch (SQLException e) {
+      aiNodesDelegate.requestAll();
+    } catch (final SQLException e) {
       logger.error("Start aiNodes failed", e);
     }
   }
 
   public String getTestClassName() {
-    StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-    for (StackTraceElement stackTraceElement : stack) {
-      String className = stackTraceElement.getClassName();
+    final StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+    for (final StackTraceElement stackTraceElement : stack) {
+      final String className = stackTraceElement.getClassName();
       if (className.endsWith("IT")) {
-        String result = className.substring(className.lastIndexOf(".") + 1);
+        final String result = className.substring(className.lastIndexOf(".") + 1);
         if (!result.startsWith("Abstract")) {
           return result;
         }
@@ -314,8 +317,8 @@ public abstract class AbstractEnv implements BaseEnv {
     return "UNKNOWN-IT";
   }
 
-  private Map<String, Integer> countNodeStatus(Map<Integer, String> nodeStatus) {
-    Map<String, Integer> result = new HashMap<>();
+  private Map<String, Integer> countNodeStatus(final Map<Integer, String> nodeStatus) {
+    final Map<String, Integer> result = new HashMap<>();
     nodeStatus.values().forEach(status -> result.put(status, result.getOrDefault(status, 0) + 1));
     return result;
   }
@@ -342,13 +345,13 @@ public abstract class AbstractEnv implements BaseEnv {
    *
    * @param statusCheck the predicate to test the status of nodes
    */
-  public void checkClusterStatus(Predicate<Map<Integer, String>> statusCheck) {
+  public void checkClusterStatus(final Predicate<Map<Integer, String>> statusCheck) {
     logger.info("Testing cluster environment...");
     TShowClusterResp showClusterResp;
     Exception lastException = null;
     boolean flag;
     for (int i = 0; i < retryCount; i++) {
-      try (SyncConfigNodeIServiceClient client =
+      try (final SyncConfigNodeIServiceClient client =
           (SyncConfigNodeIServiceClient) getLeaderConfigNodeConnection()) {
         flag = true;
         showClusterResp = client.showCluster();
@@ -368,20 +371,19 @@ public abstract class AbstractEnv implements BaseEnv {
 
         // Check the status of nodes
         if (flag) {
-          Map<Integer, String> nodeStatus = showClusterResp.getNodeStatus();
-          flag = statusCheck.test(nodeStatus);
+          flag = statusCheck.test(showClusterResp.getNodeStatus());
         }
 
         if (flag) {
           logger.info("The cluster is now ready for testing!");
           return;
         }
-      } catch (Exception e) {
+      } catch (final Exception e) {
         lastException = e;
       }
       try {
         TimeUnit.SECONDS.sleep(1L);
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         lastException = e;
         Thread.currentThread().interrupt();
       }
@@ -398,7 +400,7 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public void cleanClusterEnvironment() {
-    List<AbstractNodeWrapper> allNodeWrappers =
+    final List<AbstractNodeWrapper> allNodeWrappers =
         Stream.concat(
                 dataNodeWrapperList.stream(),
                 Stream.concat(configNodeWrapperList.stream(), aiNodeWrapperList.stream()))
@@ -407,10 +409,10 @@ public abstract class AbstractEnv implements BaseEnv {
         .findAny()
         .ifPresent(
             nodeWrapper -> logger.info("You can find logs at {}", nodeWrapper.getLogDirPath()));
-    for (AbstractNodeWrapper nodeWrapper : allNodeWrappers) {
+    for (final AbstractNodeWrapper nodeWrapper : allNodeWrappers) {
       nodeWrapper.stopForcibly();
       nodeWrapper.destroyDir();
-      String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());
+      final String lockPath = EnvUtils.getLockFilePath(nodeWrapper.getPort());
       if (!new File(lockPath).delete()) {
         logger.error("Delete lock file {} failed", lockPath);
       }
@@ -423,8 +425,8 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public Connection getConnection(String username, String password, String sqlDialect)
-      throws SQLException {
+  public Connection getConnection(
+      final String username, final String password, final String sqlDialect) throws SQLException {
     return new ClusterTestConnection(
         getWriteConnection(null, username, password, sqlDialect),
         getReadConnections(null, username, password, sqlDialect));
@@ -432,7 +434,8 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public Connection getWriteOnlyConnectionWithSpecifiedDataNode(
-      DataNodeWrapper dataNode, String username, String password) throws SQLException {
+      final DataNodeWrapper dataNode, final String username, final String password)
+      throws SQLException {
     return new ClusterTestConnection(
         getWriteConnectionWithSpecifiedDataNode(
             dataNode, null, username, password, TREE_SQL_DIALECT),
@@ -441,7 +444,8 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public Connection getConnectionWithSpecifiedDataNode(
-      DataNodeWrapper dataNode, String username, String password) throws SQLException {
+      final DataNodeWrapper dataNode, final String username, final String password)
+      throws SQLException {
     return new ClusterTestConnection(
         getWriteConnectionWithSpecifiedDataNode(
             dataNode, null, username, password, TREE_SQL_DIALECT),
@@ -450,22 +454,23 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public Connection getConnection(
-      Constant.Version version, String username, String password, String sqlDialect)
+      final Constant.Version version,
+      final String username,
+      final String password,
+      final String sqlDialect)
       throws SQLException {
-    if (System.getProperty("ReadAndVerifyWithMultiNode", "true").equalsIgnoreCase("true")) {
-      return new ClusterTestConnection(
-          getWriteConnection(version, username, password, sqlDialect),
-          getReadConnections(version, username, password, sqlDialect));
-    } else {
-      return getWriteConnection(version, username, password, sqlDialect).getUnderlyingConnecton();
-    }
+    return System.getProperty("ReadAndVerifyWithMultiNode", "true").equalsIgnoreCase("true")
+        ? new ClusterTestConnection(
+            getWriteConnection(version, username, password, sqlDialect),
+            getReadConnections(version, username, password, sqlDialect))
+        : getWriteConnection(version, username, password, sqlDialect).getUnderlyingConnecton();
   }
 
   @Override
-  public ISession getSessionConnection(String sqlDialect) throws IoTDBConnectionException {
-    DataNodeWrapper dataNode =
+  public ISession getSessionConnection(final String sqlDialect) throws IoTDBConnectionException {
+    final DataNodeWrapper dataNode =
         this.dataNodeWrapperList.get(rand.nextInt(this.dataNodeWrapperList.size()));
-    Session session =
+    final Session session =
         new Session.Builder()
             .host(dataNode.getIp())
             .port(dataNode.getPort())
@@ -476,11 +481,11 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public ISession getSessionConnectionWithDB(String sqlDialect, String database)
+  public ISession getSessionConnectionWithDB(final String sqlDialect, final String database)
       throws IoTDBConnectionException {
-    DataNodeWrapper dataNode =
+    final DataNodeWrapper dataNode =
         this.dataNodeWrapperList.get(rand.nextInt(this.dataNodeWrapperList.size()));
-    Session session =
+    final Session session =
         new Session.Builder()
             .host(dataNode.getIp())
             .port(dataNode.getPort())
@@ -492,11 +497,12 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public ISession getSessionConnection(String userName, String password, String sqlDialect)
+  public ISession getSessionConnection(
+      final String userName, final String password, final String sqlDialect)
       throws IoTDBConnectionException {
-    DataNodeWrapper dataNode =
+    final DataNodeWrapper dataNode =
         this.dataNodeWrapperList.get(rand.nextInt(this.dataNodeWrapperList.size()));
-    Session session =
+    final Session session =
         new Session.Builder()
             .host(dataNode.getIp())
             .port(dataNode.getPort())
@@ -509,9 +515,9 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public ISession getSessionConnection(List<String> nodeUrls, String sqlDialect)
+  public ISession getSessionConnection(final List<String> nodeUrls, final String sqlDialect)
       throws IoTDBConnectionException {
-    Session session =
+    final Session session =
         new Session.Builder()
             .nodeUrls(nodeUrls)
             .username(SessionConfig.DEFAULT_USER)
@@ -529,8 +535,8 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public ISessionPool getSessionPool(int maxSize, String sqlDialect) {
-    DataNodeWrapper dataNode =
+  public ISessionPool getSessionPool(final int maxSize, final String sqlDialect) {
+    final DataNodeWrapper dataNode =
         this.dataNodeWrapperList.get(rand.nextInt(this.dataNodeWrapperList.size()));
     return new SessionPool.Builder()
         .host(dataNode.getIp())
@@ -543,7 +549,8 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public ISessionPool getSessionPool(int maxSize, String sqlDialect, String database) {
+  public ISessionPool getSessionPool(
+      final int maxSize, final String sqlDialect, final String database) {
     DataNodeWrapper dataNode =
         this.dataNodeWrapperList.get(rand.nextInt(this.dataNodeWrapperList.size()));
     return new SessionPool.Builder()
@@ -574,14 +581,14 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   protected NodeConnection getWriteConnectionWithSpecifiedDataNode(
-      DataNodeWrapper dataNode,
-      Constant.Version version,
-      String username,
-      String password,
-      String sqlDialect)
+      final DataNodeWrapper dataNode,
+      final Constant.Version version,
+      final String username,
+      final String password,
+      final String sqlDialect)
       throws SQLException {
-    String endpoint = dataNode.getIp() + ":" + dataNode.getPort();
-    Connection writeConnection =
+    final String endpoint = dataNode.getIp() + ":" + dataNode.getPort();
+    final Connection writeConnection =
         DriverManager.getConnection(
             Config.IOTDB_URL_PREFIX
                 + endpoint
@@ -595,20 +602,20 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   protected NodeConnection getWriteConnectionFromDataNodeList(
-      List<DataNodeWrapper> dataNodeList,
-      Constant.Version version,
-      String username,
-      String password,
-      String sqlDialect)
+      final List<DataNodeWrapper> dataNodeList,
+      final Constant.Version version,
+      final String username,
+      final String password,
+      final String sqlDialect)
       throws SQLException {
-    List<DataNodeWrapper> dataNodeWrapperListCopy = new ArrayList<>(dataNodeList);
+    final List<DataNodeWrapper> dataNodeWrapperListCopy = new ArrayList<>(dataNodeList);
     Collections.shuffle(dataNodeWrapperListCopy);
     SQLException lastException = null;
-    for (DataNodeWrapper dataNode : dataNodeWrapperListCopy) {
+    for (final DataNodeWrapper dataNode : dataNodeWrapperListCopy) {
       try {
         return getWriteConnectionWithSpecifiedDataNode(
             dataNode, version, username, password, sqlDialect);
-      } catch (SQLException e) {
+      } catch (final SQLException e) {
         lastException = e;
       }
     }
@@ -619,29 +626,32 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   protected List<NodeConnection> getReadConnections(
-      Constant.Version version, String username, String password, String sqlDialect)
+      final Constant.Version version,
+      final String username,
+      final String password,
+      final String sqlDialect)
       throws SQLException {
-    List<String> endpoints = new ArrayList<>();
-    ParallelRequestDelegate<NodeConnection> readConnRequestDelegate =
+    final List<String> endpoints = new ArrayList<>();
+    final ParallelRequestDelegate<NodeConnection> readConnRequestDelegate =
         new ParallelRequestDelegate<>(endpoints, NODE_START_TIMEOUT);
-    for (DataNodeWrapper dataNodeWrapper : this.dataNodeWrapperList) {
-      final String endpoint = dataNodeWrapper.getIpAndPortString();
-      endpoints.add(endpoint);
-      readConnRequestDelegate.addRequest(
-          () -> {
-            Connection readConnection =
-                DriverManager.getConnection(
-                    Config.IOTDB_URL_PREFIX
-                        + endpoint
-                        + getParam(version, NODE_NETWORK_TIMEOUT_MS, ZERO_TIME_ZONE),
-                    BaseEnv.constructProperties(username, password, sqlDialect));
-            return new NodeConnection(
-                endpoint,
-                NodeConnection.NodeRole.DATA_NODE,
-                NodeConnection.ConnectionRole.READ,
-                readConnection);
-          });
-    }
+
+    dataNodeWrapperList.stream()
+        .map(AbstractNodeWrapper::getIpAndPortString)
+        .forEach(
+            endpoint -> {
+              endpoints.add(endpoint);
+              readConnRequestDelegate.addRequest(
+                  () ->
+                      new NodeConnection(
+                          endpoint,
+                          NodeConnection.NodeRole.DATA_NODE,
+                          NodeConnection.ConnectionRole.READ,
+                          DriverManager.getConnection(
+                              Config.IOTDB_URL_PREFIX
+                                  + endpoint
+                                  + getParam(version, NODE_NETWORK_TIMEOUT_MS, ZERO_TIME_ZONE),
+                              BaseEnv.constructProperties(username, password, sqlDialect))));
+            });
     return readConnRequestDelegate.requestAll();
   }
 
@@ -653,19 +663,19 @@ public abstract class AbstractEnv implements BaseEnv {
   // AssertionError.
   protected void testJDBCConnection() {
     logger.info("Testing JDBC connection...");
-    List<String> endpoints =
+    final List<String> endpoints =
         dataNodeWrapperList.stream()
             .map(DataNodeWrapper::getIpAndPortString)
             .collect(Collectors.toList());
-    RequestDelegate<Void> testDelegate =
+    final RequestDelegate<Void> testDelegate =
         new ParallelRequestDelegate<>(endpoints, NODE_START_TIMEOUT);
-    for (DataNodeWrapper dataNode : dataNodeWrapperList) {
+    for (final DataNodeWrapper dataNode : dataNodeWrapperList) {
       final String dataNodeEndpoint = dataNode.getIpAndPortString();
       testDelegate.addRequest(
           () -> {
             Exception lastException = null;
             for (int i = 0; i < retryCount; i++) {
-              try (IoTDBConnection ignored =
+              try (final IoTDBConnection ignored =
                   (IoTDBConnection)
                       DriverManager.getConnection(
                           Config.IOTDB_URL_PREFIX
@@ -675,7 +685,7 @@ public abstract class AbstractEnv implements BaseEnv {
                           System.getProperty("Password", "root"))) {
                 logger.info("Successfully connecting to DataNode: {}.", dataNodeEndpoint);
                 return null;
-              } catch (Exception e) {
+              } catch (final Exception e) {
                 lastException = e;
                 TimeUnit.SECONDS.sleep(1L);
               }
@@ -688,15 +698,16 @@ public abstract class AbstractEnv implements BaseEnv {
     }
     try {
       testDelegate.requestAll();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       logger.error("exception in test Cluster with RPC, message: {}", e.getMessage(), e);
       throw new AssertionError(
           String.format("After %d times retry, the cluster can't work!", retryCount));
     }
   }
 
-  private String getParam(Constant.Version version, int timeout, String timeZone) {
-    StringBuilder sb = new StringBuilder("?");
+  private String getParam(
+      final Constant.Version version, final int timeout, final String timeZone) {
+    final StringBuilder sb = new StringBuilder("?");
     sb.append(Config.NETWORK_TIMEOUT).append("=").append(timeout);
     if (version != null) {
       sb.append("&").append(VERSION).append("=").append(version);
@@ -712,23 +723,20 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public void setTestMethodName(String testMethodName) {
+  public void setTestMethodName(final String testMethodName) {
     this.testMethodName = testMethodName;
   }
 
   @Override
   public void dumpTestJVMSnapshot() {
-    for (ConfigNodeWrapper configNodeWrapper : configNodeWrapperList) {
-      configNodeWrapper.executeJstack(testMethodName);
-    }
-    for (DataNodeWrapper dataNodeWrapper : dataNodeWrapperList) {
-      dataNodeWrapper.executeJstack(testMethodName);
-    }
+    configNodeWrapperList.forEach(
+        configNodeWrapper -> configNodeWrapper.executeJstack(testMethodName));
+    dataNodeWrapperList.forEach(dataNodeWrapper -> dataNodeWrapper.executeJstack(testMethodName));
   }
 
   @Override
   public List<AbstractNodeWrapper> getNodeWrapperList() {
-    List<AbstractNodeWrapper> result = new ArrayList<>(configNodeWrapperList);
+    final List<AbstractNodeWrapper> result = new ArrayList<>(configNodeWrapperList);
     result.addAll(dataNodeWrapperList);
     return result;
   }
@@ -757,13 +765,13 @@ public abstract class AbstractEnv implements BaseEnv {
     Exception lastException = null;
     ConfigNodeWrapper lastErrorNode = null;
     for (int i = 0; i < retryCount; i++) {
-      for (ConfigNodeWrapper configNodeWrapper : configNodeWrapperList) {
+      for (final ConfigNodeWrapper configNodeWrapper : configNodeWrapperList) {
         try {
           lastErrorNode = configNodeWrapper;
-          SyncConfigNodeIServiceClient client =
+          final SyncConfigNodeIServiceClient client =
               clientManager.borrowClient(
                   new TEndPoint(configNodeWrapper.getIp(), configNodeWrapper.getPort()));
-          TShowClusterResp resp = client.showCluster();
+          final TShowClusterResp resp = client.showCluster();
 
           if (resp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
             // Only the ConfigNodeClient who connects to the ConfigNode-leader
@@ -778,7 +786,7 @@ public abstract class AbstractEnv implements BaseEnv {
                     + " message: "
                     + resp.getStatus().getMessage());
           }
-        } catch (Exception e) {
+        } catch (final Exception e) {
           lastException = e;
         }
 
@@ -799,12 +807,12 @@ public abstract class AbstractEnv implements BaseEnv {
   @Override
   public IConfigNodeRPCService.Iface getConfigNodeConnection(int index) throws Exception {
     Exception lastException = null;
-    ConfigNodeWrapper configNodeWrapper = configNodeWrapperList.get(index);
+    final ConfigNodeWrapper configNodeWrapper = configNodeWrapperList.get(index);
     for (int i = 0; i < 30; i++) {
       try {
         return clientManager.borrowClient(
             new TEndPoint(configNodeWrapper.getIp(), configNodeWrapper.getPort()));
-      } catch (Exception e) {
+      } catch (final Exception e) {
         lastException = e;
       }
       // Sleep 1s before next retry
@@ -820,9 +828,9 @@ public abstract class AbstractEnv implements BaseEnv {
     ConfigNodeWrapper lastErrorNode = null;
     for (int retry = 0; retry < 30; retry++) {
       for (int configNodeId = 0; configNodeId < configNodeWrapperList.size(); configNodeId++) {
-        ConfigNodeWrapper configNodeWrapper = configNodeWrapperList.get(configNodeId);
+        final ConfigNodeWrapper configNodeWrapper = configNodeWrapperList.get(configNodeId);
         lastErrorNode = configNodeWrapper;
-        try (SyncConfigNodeIServiceClient client =
+        try (final SyncConfigNodeIServiceClient client =
             clientManager.borrowClient(
                 new TEndPoint(configNodeWrapper.getIp(), configNodeWrapper.getPort()))) {
           TShowRegionResp resp =
@@ -835,12 +843,12 @@ public abstract class AbstractEnv implements BaseEnv {
           int port;
 
           if (resp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-            for (TRegionInfo tRegionInfo : resp.getRegionInfoList()) {
+            for (final TRegionInfo tRegionInfo : resp.getRegionInfoList()) {
               if (tRegionInfo.getRoleType().equals("Leader")) {
                 ip = tRegionInfo.getClientRpcIp();
                 port = tRegionInfo.getClientRpcPort();
                 for (int dataNodeId = 0; dataNodeId < dataNodeWrapperList.size(); ++dataNodeId) {
-                  DataNodeWrapper dataNodeWrapper = dataNodeWrapperList.get(dataNodeId);
+                  final DataNodeWrapper dataNodeWrapper = dataNodeWrapperList.get(dataNodeId);
                   if (dataNodeWrapper.getIp().equals(ip) && dataNodeWrapper.getPort() == port) {
                     return dataNodeId;
                   }
@@ -856,7 +864,7 @@ public abstract class AbstractEnv implements BaseEnv {
                     + " message: "
                     + resp.getStatus().getMessage());
           }
-        } catch (Exception e) {
+        } catch (final Exception e) {
           lastException = e;
         }
 
@@ -880,12 +888,12 @@ public abstract class AbstractEnv implements BaseEnv {
     ConfigNodeWrapper lastErrorNode = null;
     for (int retry = 0; retry < retryCount; retry++) {
       for (int configNodeId = 0; configNodeId < configNodeWrapperList.size(); configNodeId++) {
-        ConfigNodeWrapper configNodeWrapper = configNodeWrapperList.get(configNodeId);
+        final ConfigNodeWrapper configNodeWrapper = configNodeWrapperList.get(configNodeId);
         lastErrorNode = configNodeWrapper;
-        try (SyncConfigNodeIServiceClient client =
+        try (final SyncConfigNodeIServiceClient client =
             clientManager.borrowClient(
                 new TEndPoint(configNodeWrapper.getIp(), configNodeWrapper.getPort()))) {
-          TShowClusterResp resp = client.showCluster();
+          final TShowClusterResp resp = client.showCluster();
           // Only the ConfigNodeClient who connects to the ConfigNode-leader
           // will respond the SUCCESS_STATUS
           if (resp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
@@ -897,7 +905,7 @@ public abstract class AbstractEnv implements BaseEnv {
                     + " message: "
                     + resp.getStatus().getMessage());
           }
-        } catch (Exception e) {
+        } catch (final Exception e) {
           lastException = e;
         }
 
@@ -917,15 +925,13 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public void startConfigNode(int index) {
+  public void startConfigNode(final int index) {
     configNodeWrapperList.get(index).start();
   }
 
   @Override
   public void startAllConfigNodes() {
-    for (ConfigNodeWrapper configNodeWrapper : configNodeWrapperList) {
-      configNodeWrapper.start();
-    }
+    configNodeWrapperList.forEach(AbstractNodeWrapper::start);
   }
 
   @Override
@@ -935,24 +941,22 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public void shutdownAllConfigNodes() {
-    for (ConfigNodeWrapper configNodeWrapper : configNodeWrapperList) {
-      configNodeWrapper.stop();
-    }
+    configNodeWrapperList.forEach(AbstractNodeWrapper::stop);
   }
 
   @Override
-  public ConfigNodeWrapper getConfigNodeWrapper(int index) {
+  public ConfigNodeWrapper getConfigNodeWrapper(final int index) {
     return configNodeWrapperList.get(index);
   }
 
   @Override
-  public DataNodeWrapper getDataNodeWrapper(int index) {
+  public DataNodeWrapper getDataNodeWrapper(final int index) {
     return dataNodeWrapperList.get(index);
   }
 
   @Override
   public ConfigNodeWrapper generateRandomConfigNodeWrapper() {
-    ConfigNodeWrapper newConfigNodeWrapper =
+    final ConfigNodeWrapper newConfigNodeWrapper =
         new ConfigNodeWrapper(
             false,
             configNodeWrapperList.get(0).getIpAndPortString(),
@@ -974,7 +978,7 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public DataNodeWrapper generateRandomDataNodeWrapper() {
-    DataNodeWrapper newDataNodeWrapper =
+    final DataNodeWrapper newDataNodeWrapper =
         new DataNodeWrapper(
             configNodeWrapperList.get(0).getIpAndPortString(),
             getTestClassName(),
@@ -994,19 +998,20 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public void registerNewDataNode(boolean isNeedVerify) {
+  public void registerNewDataNode(final boolean isNeedVerify) {
     registerNewDataNode(generateRandomDataNodeWrapper(), isNeedVerify);
   }
 
   @Override
-  public void registerNewConfigNode(boolean isNeedVerify) {
+  public void registerNewConfigNode(final boolean isNeedVerify) {
     registerNewConfigNode(generateRandomConfigNodeWrapper(), isNeedVerify);
   }
 
   @Override
-  public void registerNewConfigNode(ConfigNodeWrapper newConfigNodeWrapper, boolean isNeedVerify) {
+  public void registerNewConfigNode(
+      final ConfigNodeWrapper newConfigNodeWrapper, final boolean isNeedVerify) {
     // Start new ConfigNode
-    RequestDelegate<Void> configNodeDelegate =
+    final RequestDelegate<Void> configNodeDelegate =
         new ParallelRequestDelegate<>(
             Collections.singletonList(newConfigNodeWrapper.getIpAndPortString()),
             NODE_START_TIMEOUT);
@@ -1018,7 +1023,7 @@ public abstract class AbstractEnv implements BaseEnv {
 
     try {
       configNodeDelegate.requestAll();
-    } catch (SQLException e) {
+    } catch (final SQLException e) {
       logger.error("Start configNode failed", e);
       throw new AssertionError();
     }
@@ -1030,11 +1035,12 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public void registerNewDataNode(DataNodeWrapper newDataNodeWrapper, boolean isNeedVerify) {
+  public void registerNewDataNode(
+      final DataNodeWrapper newDataNodeWrapper, final boolean isNeedVerify) {
     // Start new DataNode
-    List<String> dataNodeEndpoints =
+    final List<String> dataNodeEndpoints =
         Collections.singletonList(newDataNodeWrapper.getIpAndPortString());
-    RequestDelegate<Void> dataNodesDelegate =
+    final RequestDelegate<Void> dataNodesDelegate =
         new ParallelRequestDelegate<>(dataNodeEndpoints, NODE_START_TIMEOUT);
     dataNodesDelegate.addRequest(
         () -> {
@@ -1043,7 +1049,7 @@ public abstract class AbstractEnv implements BaseEnv {
         });
     try {
       dataNodesDelegate.requestAll();
-    } catch (SQLException e) {
+    } catch (final SQLException e) {
       logger.error("Start dataNodes failed", e);
       throw new AssertionError();
     }
@@ -1055,58 +1061,63 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public void startDataNode(int index) {
+  public void startDataNode(final int index) {
     dataNodeWrapperList.get(index).start();
   }
 
   @Override
   public void startAllDataNodes() {
-    for (DataNodeWrapper dataNodeWrapper : dataNodeWrapperList) {
-      dataNodeWrapper.start();
-    }
+    dataNodeWrapperList.forEach(AbstractNodeWrapper::start);
   }
 
   @Override
-  public void shutdownDataNode(int index) {
+  public void shutdownDataNode(final int index) {
     dataNodeWrapperList.get(index).stop();
   }
 
   @Override
   public void shutdownAllDataNodes() {
-    for (DataNodeWrapper dataNodeWrapper : dataNodeWrapperList) {
-      dataNodeWrapper.stop();
-    }
+    dataNodeWrapperList.forEach(AbstractNodeWrapper::stop);
   }
 
   @Override
-  public void ensureNodeStatus(List<BaseNodeWrapper> nodes, List<NodeStatus> targetStatus)
+  public void ensureNodeStatus(
+      final List<BaseNodeWrapper> nodes, final List<NodeStatus> targetStatus)
       throws IllegalStateException {
     Throwable lastException = null;
     for (int i = 0; i < retryCount; i++) {
-      try (SyncConfigNodeIServiceClient client =
+      try (final SyncConfigNodeIServiceClient client =
           (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
-        List<String> errorMessages = new ArrayList<>(nodes.size());
-        Map<String, Integer> nodeIds = new HashMap<>(nodes.size());
-        TShowClusterResp showClusterResp = client.showCluster();
-        for (TConfigNodeLocation node : showClusterResp.getConfigNodeList()) {
-          nodeIds.put(
-              node.getInternalEndPoint().getIp() + ":" + node.getInternalEndPoint().getPort(),
-              node.getConfigNodeId());
-        }
-        for (TDataNodeLocation node : showClusterResp.getDataNodeList()) {
-          nodeIds.put(
-              node.getClientRpcEndPoint().getIp() + ":" + node.getClientRpcEndPoint().getPort(),
-              node.getDataNodeId());
-        }
+        final List<String> errorMessages = new ArrayList<>(nodes.size());
+        final Map<String, Integer> nodeIds = new HashMap<>(nodes.size());
+        final TShowClusterResp showClusterResp = client.showCluster();
+        showClusterResp
+            .getConfigNodeList()
+            .forEach(
+                node ->
+                    nodeIds.put(
+                        node.getInternalEndPoint().getIp()
+                            + ":"
+                            + node.getInternalEndPoint().getPort(),
+                        node.getConfigNodeId()));
+        showClusterResp
+            .getDataNodeList()
+            .forEach(
+                node ->
+                    nodeIds.put(
+                        node.getClientRpcEndPoint().getIp()
+                            + ":"
+                            + node.getClientRpcEndPoint().getPort(),
+                        node.getDataNodeId()));
         for (int j = 0; j < nodes.size(); j++) {
-          String endpoint = nodes.get(j).getIpAndPortString();
+          final String endpoint = nodes.get(j).getIpAndPortString();
           if (!nodeIds.containsKey(endpoint)) {
             // Node not exist
             // Notice: Never modify this line, since the NodeLocation might be modified in IT
             errorMessages.add("The node " + nodes.get(j).getIpAndPortString() + " is not found!");
             continue;
           }
-          String status = showClusterResp.getNodeStatus().get(nodeIds.get(endpoint));
+          final String status = showClusterResp.getNodeStatus().get(nodeIds.get(endpoint));
           if (!targetStatus.get(j).getStatus().equals(status)) {
             // Error status
             errorMessages.add(
@@ -1120,12 +1131,12 @@ public abstract class AbstractEnv implements BaseEnv {
         } else {
           lastException = new IllegalStateException(String.join(". ", errorMessages));
         }
-      } catch (TException | ClientManagerException | IOException | InterruptedException e) {
+      } catch (final TException | ClientManagerException | IOException | InterruptedException e) {
         lastException = e;
       }
       try {
         TimeUnit.SECONDS.sleep(1);
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         throw new RuntimeException(e);
       }
     }
@@ -1134,8 +1145,9 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public int getMqttPort() {
-    int randomIndex = new Random(System.currentTimeMillis()).nextInt(dataNodeWrapperList.size());
-    return dataNodeWrapperList.get(randomIndex).getMqttPort();
+    return dataNodeWrapperList
+        .get(new Random(System.currentTimeMillis()).nextInt(dataNodeWrapperList.size()))
+        .getMqttPort();
   }
 
   @Override
@@ -1164,11 +1176,11 @@ public abstract class AbstractEnv implements BaseEnv {
   }
 
   @Override
-  public Optional<DataNodeWrapper> dataNodeIdToWrapper(int nodeId) {
-    try (SyncConfigNodeIServiceClient leaderClient =
+  public Optional<DataNodeWrapper> dataNodeIdToWrapper(final int nodeId) {
+    try (final SyncConfigNodeIServiceClient leaderClient =
         (SyncConfigNodeIServiceClient) getLeaderConfigNodeConnection()) {
-      TShowDataNodesResp resp = leaderClient.showDataNodes();
-      for (TDataNodeInfo dataNodeInfo : resp.getDataNodesInfoList()) {
+      final TShowDataNodesResp resp = leaderClient.showDataNodes();
+      for (final TDataNodeInfo dataNodeInfo : resp.getDataNodesInfoList()) {
         if (dataNodeInfo.getDataNodeId() == nodeId) {
           return dataNodeWrapperList.stream()
               .filter(dataNodeWrapper -> dataNodeWrapper.getPort() == dataNodeInfo.getRpcPort())
@@ -1176,18 +1188,18 @@ public abstract class AbstractEnv implements BaseEnv {
         }
       }
       return Optional.empty();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       return Optional.empty();
     }
   }
 
   @Override
-  public void registerConfigNodeKillPoints(List<String> killPoints) {
+  public void registerConfigNodeKillPoints(final List<String> killPoints) {
     this.configNodeKillPoints = killPoints;
   }
 
   @Override
-  public void registerDataNodeKillPoints(List<String> killPoints) {
+  public void registerDataNodeKillPoints(final List<String> killPoints) {
     this.dataNodeKillPoints = killPoints;
   }
 }
