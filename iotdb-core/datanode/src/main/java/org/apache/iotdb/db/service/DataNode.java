@@ -585,6 +585,9 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         DataRegionConsensusImpl.getInstance().getAllConsensusGroupIdsWithoutStarting().stream()
             .filter(consensusGroupId -> !dataNodeConsensusGroupIds.contains(consensusGroupId))
             .collect(Collectors.toList());
+    if (invalidDataRegionConsensusGroupIds.isEmpty()) {
+      return;
+    }
     logger.info("Remove invalid dataRegion directories... {}", invalidDataRegionConsensusGroupIds);
     for (ConsensusGroupId consensusGroupId : invalidDataRegionConsensusGroupIds) {
       File oldDir =
@@ -624,9 +627,11 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         SchemaRegionConsensusImpl.getInstance().getAllConsensusGroupIdsWithoutStarting().stream()
             .filter(consensusGroupId -> !dataNodeConsensusGroupIds.contains(consensusGroupId))
             .collect(Collectors.toList());
+    if (invalidSchemaRegionConsensusGroupIds.isEmpty()) {
+      return;
+    }
     logger.info(
         "Remove invalid schemaRegion directories... {}", invalidSchemaRegionConsensusGroupIds);
-
     for (ConsensusGroupId consensusGroupId : invalidSchemaRegionConsensusGroupIds) {
       File oldDir =
           new File(
