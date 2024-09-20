@@ -315,6 +315,8 @@ public class DataRegion implements IDataRegionForQuery {
 
   private final AtomicBoolean isCompactionSelecting = new AtomicBoolean(false);
 
+  private boolean isTreeModel;
+
   private static final QueryResourceMetricSet QUERY_RESOURCE_METRIC_SET =
       QueryResourceMetricSet.getInstance();
 
@@ -335,6 +337,7 @@ public class DataRegion implements IDataRegionForQuery {
     this.dataRegionId = dataRegionId;
     this.databaseName = databaseName;
     this.fileFlushPolicy = fileFlushPolicy;
+    this.isTreeModel = this.databaseName.startsWith("root.");
     acquireDirectBufferMemory();
 
     dataRegionSysDir = SystemFileFactory.INSTANCE.getFile(systemDir, dataRegionId);
@@ -386,6 +389,7 @@ public class DataRegion implements IDataRegionForQuery {
     this.tsFileManager = new TsFileManager(databaseName, id, "");
     this.partitionMaxFileVersions = new HashMap<>();
     this.lastFlushTimeMap = new HashLastFlushTimeMap();
+    this.isTreeModel = this.databaseName.startsWith("root.");
     partitionMaxFileVersions.put(0L, 0L);
   }
 
@@ -2838,7 +2842,7 @@ public class DataRegion implements IDataRegionForQuery {
       // Sort the time partition from largest to smallest
       timePartitions.sort(Comparator.reverseOrder());
 
-      CompactionScheduleContext context = new CompactionScheduleContext();
+      CompactionScheduleContext context = new CompactionScheduleContext(this.isTreeModel);
 
       // schedule insert compaction
       trySubmitCount += executeInsertionCompaction(timePartitions, context);
@@ -2881,7 +2885,7 @@ public class DataRegion implements IDataRegionForQuery {
     logger.info("[TTL] {}-{} Start ttl checking.", databaseName, dataRegionId);
     int trySubmitCount = 0;
     try {
-      CompactionScheduleContext context = new CompactionScheduleContext();
+      CompactionScheduleContext context = new CompactionScheduleContext(this.isTreeModel);
       List<Long> timePartitions = new ArrayList<>(tsFileManager.getTimePartitions());
       // Sort the time partition from smallest to largest
       Collections.sort(timePartitions);
