@@ -1214,7 +1214,7 @@ public class TsFileResource {
 
     maxProgressIndex =
         (maxProgressIndex == null
-            ? progressIndex.deepCopy()
+            ? progressIndex
             : maxProgressIndex.updateToMinimumEqualOrIsAfterProgressIndex(progressIndex));
 
     PipeTimePartitionProgressIndexKeeper.getInstance()
@@ -1226,7 +1226,7 @@ public class TsFileResource {
       return;
     }
 
-    maxProgressIndex = progressIndex.deepCopy();
+    maxProgressIndex = progressIndex;
 
     PipeTimePartitionProgressIndexKeeper.getInstance()
         .updateProgressIndex(getDataRegionId(), getTimePartition(), maxProgressIndex);
