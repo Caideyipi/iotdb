@@ -20,8 +20,8 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "iotdb-enterprise-ainode"
-version = "1.4.0.dev"
+name = "timechodb-ainode"
+version = "2.0.0.dev"
 description = "Apache IoTDB AINode"
 readme = "README.md"
 authors = ["Apache Software Foundation <dev@iotdb.apache.org>"]

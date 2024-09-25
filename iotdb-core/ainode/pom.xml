@@ -334,7 +334,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>iotdb-enterprise-ainode-${project.version}</finalName>
+                            <finalName>timechodb-ainode-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
                                 <descriptor>ainode.xml</descriptor>

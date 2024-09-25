@@ -83,7 +83,7 @@
                             <descriptors>
                                 <descriptor>src/assembly/all.xml</descriptor>
                             </descriptors>
-                            <finalName>iotdb-enterprise-${project.version}</finalName>
+                            <finalName>timechodb-${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>
@@ -110,7 +110,7 @@
                                 <fileSet>
                                     <directory>${project.build.directory}</directory>
                                     <includes>
-                                        <include>iotdb-enterprise-${project.version}-bin.zip</include>
+                                        <include>timechodb-${project.version}-bin.zip</include>
                                     </includes>
                                 </fileSet>
                             </fileSets>

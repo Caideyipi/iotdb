@@ -48,7 +48,7 @@ while getopts 'v:u:t:c:d:besph' OPT; do
        e) 
           is_enterprise=true;
           options="standalone latest";
-          image_prefix="nexus.infra.timecho.com:8343/timecho/iotdb-enterprise";
+          image_prefix="nexus.infra.timecho.com:8343/timecho/timechodb";
           ;;
        s) save_image=true;;
        t) build_what="$OPTARG";;
@@ -100,7 +100,7 @@ function build_single(){
     if [[ "$is_enterprise" == "true" ]]; then
       ${docker_build} -f ${dockerfile} \
 	    --build-arg version=${version} \
-            --build-arg target=iotdb-enterprise-${version}-bin \
+            --build-arg target=timechodb-${version}-bin \
         --label build_date="${build_date}" \
         --label maintainer="${maintainer}" \
         --label commit_id="${commit_id}" \
@@ -149,7 +149,7 @@ function build_iotdb(){
     if [[ ! -d ${iotdb_zip_path} ]]; then mkdir ${iotdb_zip_path}; fi
     cd ${iotdb_path}/distribution/target
     if [[ "$is_enterprise" == "true" ]]; then
-      cp iotdb-enterprise-${version}-bin.zip ${iotdb_zip_path}/
+      cp timechodb-${version}-bin.zip ${iotdb_zip_path}/
     else
       cp apache-iotdb-${version}-all-bin.zip apache-iotdb-${version}-confignode-bin.zip apache-iotdb-${version}-datanode-bin.zip ${iotdb_zip_path}/
     fi
@@ -160,7 +160,7 @@ function build_iotdb(){
 function check_build(){
     if [[ "$do_build" == "true" ]]; then return; fi
     if [[ "$is_enterprise" == "true" ]]; then
-      local zip_file=${iotdb_zip_path}/iotdb-enterprise-${version}-bin.zip
+      local zip_file=${iotdb_zip_path}/timechodb-${version}-bin.zip
     else
       local zip_file=${iotdb_zip_path}/apache-iotdb-${version}-$1-bin.zip
     fi

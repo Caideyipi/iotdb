@@ -25,7 +25,7 @@
         <format>dir</format>
         <format>zip</format>
     </formats>
-    <baseDirectory>iotdb-enterprise-${project.version}-bin</baseDirectory>
+    <baseDirectory>timechodb-${project.version}-bin</baseDirectory>
     <dependencySets>
         <dependencySet>
             <includes>
