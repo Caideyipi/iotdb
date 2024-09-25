@@ -443,6 +443,9 @@ public class IoTDBConfig {
   /** Compact the unsequence files into the overlapped sequence files */
   private volatile boolean enableCrossSpaceCompaction = true;
 
+  /** Enable auto repair compaction */
+  private volatile boolean enableAutoRepairCompaction = true;
+
   /** Enable the service for AINode */
   private boolean enableAINodeService = false;
 
@@ -2889,6 +2892,14 @@ public class IoTDBConfig {
 
   public void setEnableCrossSpaceCompaction(boolean enableCrossSpaceCompaction) {
     this.enableCrossSpaceCompaction = enableCrossSpaceCompaction;
+  }
+
+  public boolean isEnableAutoRepairCompaction() {
+    return enableAutoRepairCompaction;
+  }
+
+  public void setEnableAutoRepairCompaction(boolean enableAutoRepairCompaction) {
+    this.enableAutoRepairCompaction = enableAutoRepairCompaction;
   }
 
   public boolean isEnableAINodeService() {
