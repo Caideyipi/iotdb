@@ -20,6 +20,9 @@
 package org.apache.iotdb.confignode.consensus.request;
 
 import org.apache.iotdb.commons.exception.runtime.SerializationRunTimeException;
+import org.apache.iotdb.confignode.consensus.request.read.ainode.GetAINodeConfigurationPlan;
+import org.apache.iotdb.confignode.consensus.request.read.model.GetModelInfoPlan;
+import org.apache.iotdb.confignode.consensus.request.read.model.ShowModelPlan;
 import org.apache.iotdb.confignode.consensus.request.read.subscription.ShowTopicPlan;
 import org.apache.iotdb.confignode.consensus.request.write.ainode.RegisterAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
@@ -179,6 +182,9 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
           break;
         case RemoveAINode:
           plan = new RemoveAINodePlan();
+          break;
+        case GetAINodeConfiguration:
+          plan = new GetAINodeConfigurationPlan();
           break;
         case UpdateAINodeConfiguration:
           plan = new UpdateAINodePlan();
@@ -445,8 +451,14 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
         case DropModel:
           plan = new DropModelPlan();
           break;
+        case ShowModel:
+          plan = new ShowModelPlan();
+          break;
         case DropModelInNode:
           plan = new DropModelInNodePlan();
+          break;
+        case GetModelInfo:
+          plan = new GetModelInfoPlan();
           break;
         case CreatePipePlugin:
           plan = new CreatePipePluginPlan();
