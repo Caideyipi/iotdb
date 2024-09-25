@@ -117,6 +117,50 @@ integration-test-1c3d:
     paths:
       - integration-test/target/cluster-logs
     expire_in: 7 day
+table-integration-test-1c1d:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+  script:
+    - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableSimpleIT -s $MAVEN_SETTINGS_XML'
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+  artifacts:
+    when: on_failure
+    name: 1c1d-log
+    paths:
+      - integration-test/target/cluster-logs
+    expire_in: 7 day
+
+
+table-integration-test-1c3d:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+  script:
+    - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableClusterIT -s $MAVEN_SETTINGS_XML'
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+  artifacts:
+    when: on_failure
+    name: 1c3d-log
+    paths:
+      - integration-test/target/cluster-logs
+    expire_in: 7 day
 
 ainode-test-1c1d1a:
   stage: test
