@@ -41,6 +41,7 @@ import org.apache.iotdb.session.util.SessionUtils;
 
 import org.apache.thrift.TException;
 import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.file.metadata.IDeviceID;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
 import org.apache.tsfile.file.metadata.enums.TSEncoding;
 import org.apache.tsfile.write.record.Tablet;
@@ -123,6 +124,7 @@ public class SessionPool implements ISessionPool {
   protected String trustStorePwd;
 
   protected Map<String, TEndPoint> deviceIdToEndpoint;
+  protected Map<IDeviceID, TEndPoint> tableModelDeviceIdToEndpoint;
 
   protected int thriftDefaultBufferSize;
   protected int thriftMaxFrameSize;
@@ -389,6 +391,7 @@ public class SessionPool implements ISessionPool {
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
       deviceIdToEndpoint = new ConcurrentHashMap<>();
+      tableModelDeviceIdToEndpoint = new ConcurrentHashMap<>();
     }
     this.connectionTimeoutInMs = connectionTimeoutInMs;
     this.version = version;
@@ -430,6 +433,7 @@ public class SessionPool implements ISessionPool {
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
       deviceIdToEndpoint = new ConcurrentHashMap<>();
+      tableModelDeviceIdToEndpoint = new ConcurrentHashMap<>();
     }
     this.connectionTimeoutInMs = connectionTimeoutInMs;
     this.version = version;
@@ -474,6 +478,7 @@ public class SessionPool implements ISessionPool {
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
       deviceIdToEndpoint = new ConcurrentHashMap<>();
+      tableModelDeviceIdToEndpoint = new ConcurrentHashMap<>();
     }
     this.connectionTimeoutInMs = connectionTimeoutInMs;
     this.version = version;
@@ -495,6 +500,7 @@ public class SessionPool implements ISessionPool {
     this.enableRedirection = builder.enableRedirection;
     if (this.enableRedirection) {
       deviceIdToEndpoint = new ConcurrentHashMap<>();
+      tableModelDeviceIdToEndpoint = new ConcurrentHashMap<>();
     }
     this.enableRecordsAutoConvertTablet = builder.enableRecordsAutoConvertTablet;
     this.connectionTimeoutInMs = builder.connectionTimeoutInMs;
@@ -701,7 +707,13 @@ public class SessionPool implements ISessionPool {
       session = constructNewSession();
 
       try {
-        session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint, availableNodes);
+
+        session.open(
+            enableCompression,
+            connectionTimeoutInMs,
+            deviceIdToEndpoint,
+            tableModelDeviceIdToEndpoint,
+            availableNodes);
         // avoid someone has called close() the session pool
         synchronized (this) {
           if (closed) {
@@ -811,7 +823,12 @@ public class SessionPool implements ISessionPool {
   private void tryConstructNewSession() {
     ISession session = constructNewSession();
     try {
-      session.open(enableCompression, connectionTimeoutInMs, deviceIdToEndpoint, availableNodes);
+      session.open(
+          enableCompression,
+          connectionTimeoutInMs,
+          deviceIdToEndpoint,
+          tableModelDeviceIdToEndpoint,
+          availableNodes);
       // avoid someone has called close() the session pool
       synchronized (this) {
         if (closed) {
@@ -3438,6 +3455,7 @@ public class SessionPool implements ISessionPool {
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
       deviceIdToEndpoint = new ConcurrentHashMap<>();
+      tableModelDeviceIdToEndpoint = new ConcurrentHashMap<>();
     }
     for (ISession session : queue) {
       session.setEnableRedirection(enableRedirection);
