@@ -66,12 +66,12 @@ unit-test:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn clean install -Dtest.port.closed=true -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
 
 integration-test-1c1d:
   stage: test
@@ -82,12 +82,13 @@ integration-test-1c1d:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: 1c1d-log
@@ -105,12 +106,13 @@ integration-test-1c3d:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: 1c3d-log
@@ -126,12 +128,13 @@ table-integration-test-1c1d:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableSimpleIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: 1c1d-log
@@ -149,12 +152,13 @@ table-integration-test-1c3d:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: 1c3d-log
@@ -172,13 +176,14 @@ ainode-test-1c1d1a:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn clean package -DskipTests -pl iotdb-core/ainode -am -P with-ainode -s $MAVEN_SETTINGS_XML'
     - 'mvn verify -P with-integration-tests -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DaiNodeMaxHeapSize=1024 -pl integration-test -am -PAIClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: ainode-log
@@ -196,6 +201,7 @@ auto-create-schema:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2AutoCreateSchema -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -205,7 +211,7 @@ auto-create-schema:
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: pipe-log-auto-create-schema
@@ -223,6 +229,7 @@ manual-create-schema:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2ManualCreateSchema -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -232,7 +239,7 @@ manual-create-schema:
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: pipe-log-manual-create-schema
@@ -250,6 +257,7 @@ subscription:
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2Subscription -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -259,7 +267,7 @@ subscription:
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^rel/ || $CI_COMMIT_BRANCH =~ /^rc/
+    
   artifacts:
     when: on_failure
     name: pipe-log-subscription
