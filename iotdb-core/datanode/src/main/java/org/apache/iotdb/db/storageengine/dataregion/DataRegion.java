@@ -1462,6 +1462,8 @@ public class DataRegion implements IDataRegionForQuery {
     PERFORMANCE_OVERVIEW_METRICS.recordScheduleMemoryBlockCost(costsForMetrics[1]);
     PERFORMANCE_OVERVIEW_METRICS.recordScheduleWalCost(costsForMetrics[2]);
     PERFORMANCE_OVERVIEW_METRICS.recordScheduleMemTableCost(costsForMetrics[3]);
+    // register TableSchema (and maybe more) for table insertion
+    registerToTsFile(insertRowNode, tsFileProcessor);
     return tsFileProcessor;
   }
 
@@ -1546,7 +1548,8 @@ public class DataRegion implements IDataRegionForQuery {
                 RpcUtils.getStatus(e.getErrorCode(), e.getMessage()));
       }
       executedInsertRowNodeList.addAll(subInsertRowsNode.getInsertRowNodeList());
-
+      // register TableSchema (and maybe more) for table insertion
+      registerToTsFile(subInsertRowsNode, tsFileProcessor);
       // check memtable size and may asyncTryToFlush the work memtable
       if (entry.getKey().shouldFlush()) {
         fileFlushPolicy.apply(this, tsFileProcessor, tsFileProcessor.isSequence());
