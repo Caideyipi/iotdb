@@ -1799,7 +1799,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       fillComponent.setFillPolicy(FillPolicy.PREVIOUS);
 
     } else if (ctx.constant() != null) {
-      fillComponent.setFillPolicy(FillPolicy.VALUE);
+      fillComponent.setFillPolicy(FillPolicy.CONSTANT);
       Literal fillValue = parseLiteral(ctx.constant());
       fillComponent.setFillValue(fillValue);
     } else {
