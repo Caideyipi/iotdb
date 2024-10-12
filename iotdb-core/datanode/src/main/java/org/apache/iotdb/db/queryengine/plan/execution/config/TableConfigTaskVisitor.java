@@ -383,6 +383,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitDropTable(final DropTable node, final MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
     final Pair<String, String> databaseTablePair = splitQualifiedName(node.getTableName());
+
     return super.visitDropTable(node, context);
   }
 
