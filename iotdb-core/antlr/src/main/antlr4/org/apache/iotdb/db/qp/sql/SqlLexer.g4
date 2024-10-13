@@ -290,6 +290,10 @@ ENDTIME
     : E N D T I M E
     ;
 
+ESCAPE
+    : E S C A P E
+    ;
+
 EVERY
     : E V E R Y
     ;
