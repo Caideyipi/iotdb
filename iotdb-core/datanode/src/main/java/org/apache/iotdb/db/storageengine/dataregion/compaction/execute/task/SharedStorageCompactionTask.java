@@ -55,6 +55,7 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
   private List<TsFileResource> sourceFiles;
   private List<TsFileResource> targetFiles;
   private List<TsFileResource> overlappedSourceFiles = new ArrayList<>();
+  private final long selectedFileSize;
   private File workDir;
   private File logFile;
 
@@ -89,6 +90,8 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
     this.sourceFiles = new ArrayList<>();
     this.sourceFiles.addAll(taskResource.getSeqFiles());
     this.sourceFiles.addAll(taskResource.getUnseqFiles());
+    this.selectedFileSize =
+        this.sourceFiles.stream().mapToLong(TsFileResource::getTsFileSize).sum();
     createSummary();
   }
 
@@ -396,5 +399,10 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
   @TestOnly
   public void setTargetFiles(List<TsFileResource> targetFiles) {
     this.targetFiles = targetFiles;
+  }
+
+  @Override
+  public long getSelectedFileSize() {
+    return this.selectedFileSize;
   }
 }
