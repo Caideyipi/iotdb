@@ -37,7 +37,7 @@ import java.sql.Statement;
 import static org.apache.iotdb.db.it.utils.TestUtils.prepareData;
 import static org.apache.iotdb.db.it.utils.TestUtils.resultSetEqualTest;
 import static org.apache.iotdb.itbase.constant.TestConstant.DATA_TYPE_STR;
-import static org.apache.iotdb.itbase.constant.TestConstant.TIMESEIRES_STR;
+import static org.apache.iotdb.itbase.constant.TestConstant.TIMESERIES_STR;
 import static org.apache.iotdb.itbase.constant.TestConstant.TIMESTAMP_STR;
 import static org.apache.iotdb.itbase.constant.TestConstant.VALUE_STR;
 import static org.junit.Assert.fail;
@@ -68,7 +68,7 @@ public class IoTDBLastViewOneRegionIT {
   @Test
   public void lastViewQueryTest() {
     String[] expectedHeader =
-        new String[] {TIMESTAMP_STR, TIMESEIRES_STR, VALUE_STR, DATA_TYPE_STR};
+        new String[] {TIMESTAMP_STR, TIMESERIES_STR, VALUE_STR, DATA_TYPE_STR};
 
     // order by time
     String[] retArray =
@@ -122,7 +122,7 @@ public class IoTDBLastViewOneRegionIT {
   @Test
   public void lastViewSameMeasurementsTest() {
     String[] expectedHeader =
-        new String[] {TIMESTAMP_STR, TIMESEIRES_STR, VALUE_STR, DATA_TYPE_STR};
+        new String[] {TIMESTAMP_STR, TIMESERIES_STR, VALUE_STR, DATA_TYPE_STR};
 
     String[] retArray =
         new String[] {
