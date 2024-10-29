@@ -1166,6 +1166,7 @@ public class IoTDBConfig {
   private double maxAllocateMemoryRatioForLoad = 0.8;
 
   private int loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber = 4096;
+  private int loadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber = 4096; // For table model
   private long loadTsFileAnalyzeSchemaMemorySizeInBytes =
       0L; // 0 means that the decision will be adaptive based on the number of sequences
 
@@ -4075,6 +4076,16 @@ public class IoTDBConfig {
       int loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber) {
     this.loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber =
         loadTsFileAnalyzeSchemaBatchFlushTimeSeriesNumber;
+  }
+
+  public int getLoadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber() {
+    return loadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber;
+  }
+
+  public void setLoadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber(
+      int loadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber) {
+    this.loadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber =
+        loadTsFileAnalyzeSchemaBatchFlushTableDeviceNumber;
   }
 
   public long getLoadTsFileAnalyzeSchemaMemorySizeInBytes() {
