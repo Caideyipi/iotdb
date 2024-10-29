@@ -30,7 +30,8 @@ public enum ActivateStatus {
   UNACTIVATED("UNACTIVATED"),
   // For ConfigNode and DataNode
   UNKNOWN("UNKNOWN"),
-  ;
+  // For cluster status
+  PARTLY_ACTIVATED("PARTLY_ACTIVATED");
 
   private final String status;
 
@@ -40,6 +41,22 @@ public enum ActivateStatus {
 
   public boolean isActive() {
     return ACTIVE_ACTIVATED.equals(this) || ACTIVE_UNACTIVATED.equals(this);
+  }
+
+  public boolean isFullyActivated() {
+    return ACTIVE_ACTIVATED.equals(this) || ACTIVATED.equals(this);
+  }
+
+  public boolean isActivated() {
+    return ACTIVE_ACTIVATED.equals(this)
+        || PASSIVE_ACTIVATED.equals(this)
+        || ACTIVATED.equals(this);
+  }
+
+  public boolean isUnactivated() {
+    return ACTIVE_UNACTIVATED.equals(this)
+        || PASSIVE_UNACTIVATED.equals(this)
+        || UNACTIVATED.equals(this);
   }
 
   @Override

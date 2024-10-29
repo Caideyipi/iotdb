@@ -99,12 +99,12 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
-import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPipeConfigTransferReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPipeConfigTransferResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
@@ -118,6 +118,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowRegionResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowSystemInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTTLResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowThrottleReq;
@@ -158,7 +159,6 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetRegionI
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetSeriesSlotListTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetTimeSlotListTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowAINodesTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterDetailsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterIdTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterTask;
@@ -171,6 +171,8 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowRegion
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTTLTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTriggersTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariablesTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowSystemInfoTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.DescribeTableTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.ShowDBTask;
@@ -2850,24 +2852,64 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
     } else {
       future.setException(new IoTDBException(tsStatus.message, tsStatus.code));
     }
-    //    ShowActivationTask.build
+    return future;
+  }
+
+  @Override
+  public SettableFuture<ConfigTaskResult> cliActivate(List<String> licenseList) {
+    SettableFuture<ConfigTaskResult> future = SettableFuture.create();
+    TShowActivationResp resp;
+    try (ConfigNodeClient client =
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      resp = client.cliActivate(licenseList);
+      if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        future.setException(
+            new IoTDBException(resp.getStatus().getMessage(), resp.getStatus().getCode()));
+        return future;
+      }
+      ShowActivationTask.buildTsBlock(
+          resp.getLicense(), resp.getUsage(), resp.getClusterActivationStatus(), future);
+    } catch (Throwable e) {
+      LOGGER.error("Something wrong happened during cliActivate: ", e);
+      future.setException(e);
+    }
     return future;
   }
 
   @Override
   public SettableFuture<ConfigTaskResult> showActivation() {
     SettableFuture<ConfigTaskResult> future = SettableFuture.create();
-    TLicenseContentResp resp;
+    TShowActivationResp resp;
     try (ConfigNodeClient client =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      resp = client.getLicenseContent();
+      resp = client.showActivation();
       if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(resp.getStatus().message, resp.getStatus().code));
         return future;
       }
-      ShowActivationTask.buildTsBlock(resp.getLicense(), resp.getUsage(), future);
+      ShowActivationTask.buildTsBlock(
+          resp.getLicense(), resp.getUsage(), resp.getClusterActivationStatus(), future);
     } catch (Throwable e) {
-      e.printStackTrace();
+      LOGGER.error("Something wrong happened during showActivation: ", e);
+      future.setException(e);
+    }
+    return future;
+  }
+
+  @Override
+  public SettableFuture<ConfigTaskResult> showSystemInfo() {
+    SettableFuture<ConfigTaskResult> future = SettableFuture.create();
+    TShowSystemInfoResp resp;
+    try (ConfigNodeClient client =
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      resp = client.showSystemInfo();
+      if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        future.setException(new IoTDBException(resp.getStatus().message, resp.getStatus().code));
+        return future;
+      }
+      ShowSystemInfoTask.buildTsBlock(resp.getSystemInfoList(), future);
+    } catch (Throwable e) {
+      LOGGER.error("Something wrong happened during showSystemInfo: ", e);
       future.setException(e);
     }
     return future;

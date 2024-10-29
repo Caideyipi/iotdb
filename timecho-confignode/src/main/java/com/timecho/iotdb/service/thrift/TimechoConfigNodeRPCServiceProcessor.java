@@ -19,27 +19,37 @@
 
 package com.timecho.iotdb.service.thrift;
 
+import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
+import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.client.ClientPoolFactory;
+import org.apache.iotdb.commons.client.IClientManager;
+import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.rpc.thrift.TActivationControl;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
-import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowSystemInfoResp;
 import org.apache.iotdb.confignode.service.thrift.ConfigNodeRPCServiceProcessor;
 import org.apache.iotdb.rpc.TSStatusCode;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
+import com.timecho.iotdb.manager.activation.ActivationManager;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServiceProcessor {
-  private static Logger LOGGER =
+  private static final Logger LOGGER =
       LoggerFactory.getLogger(TimechoConfigNodeRPCServiceProcessor.class);
   private final TimechoConfigManager configManager;
 
@@ -88,12 +98,57 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
   }
 
   @Override
-  public TLicenseContentResp getLicenseContent() throws TException {
-    TLicenseContentResp resp =
-        new TLicenseContentResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    resp.setLicense(configManager.getActivationManager().getLicense().toTLicense());
-    resp.setUsage(configManager.getActivationManager().getLicenseUsage());
+  public TShowSystemInfoResp showSystemInfo() throws TException {
+    IClientManager<TEndPoint, SyncConfigNodeIServiceClient> clientManager =
+        new IClientManager.Factory<TEndPoint, SyncConfigNodeIServiceClient>()
+            .createClientManager(new ClientPoolFactory.SyncConfigNodeIServiceClientPoolFactory());
+    List<TConfigNodeLocation> locations = configManager.getNodeManager().getRegisteredConfigNodes();
+    locations.sort(Comparator.comparingInt(TConfigNodeLocation::getConfigNodeId));
+    TShowSystemInfoResp resp = new TShowSystemInfoResp();
+    List<String> systemInfoList = new ArrayList<>();
+    try {
+      for (TConfigNodeLocation location : locations) {
+        if (location.getConfigNodeId()
+            == ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId()) {
+          systemInfoList.add(ActivationManager.generateSystemInfoContentWithVersion());
+        } else {
+          try (SyncConfigNodeIServiceClient client =
+              clientManager.borrowClient(location.getInternalEndPoint())) {
+            systemInfoList.add(client.getSystemInfo());
+          }
+        }
+      }
+    } catch (Exception e) {
+      resp.setStatus(new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()));
+      return resp;
+    }
+    resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+    resp.setSystemInfoList(systemInfoList);
     return resp;
+  }
+
+  @Override
+  public String getSystemInfo() throws TException {
+    try {
+      return ActivationManager.generateSystemInfoContentWithVersion();
+    } catch (Exception e) {
+      throw new TException(e);
+    }
+  }
+
+  @Override
+  public TShowActivationResp cliActivate(List<String> licenseList) throws TException {
+    return configManager.cliActivate(licenseList);
+  }
+
+  @Override
+  public TSStatus checkSystemInfo(String license) throws TException {
+    return configManager.checkSystemInfo(license);
+  }
+
+  @Override
+  public TShowActivationResp showActivation() throws TException {
+    return configManager.showActivation();
   }
 
   @Override
@@ -109,9 +164,6 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
     TGetAllActivationStatusResp resp = new TGetAllActivationStatusResp();
     resp.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     Map<Integer, String> activationMap = configManager.getLoadManager().getNodeActivateStatus();
-    activationMap.put(
-        ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId(),
-        configManager.getActivationManager().getActivateStatus().toString());
     resp.setActivationStatusMap(activationMap);
     return resp;
   }

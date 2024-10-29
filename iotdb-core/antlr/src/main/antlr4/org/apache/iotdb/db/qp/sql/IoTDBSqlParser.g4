@@ -68,7 +68,7 @@ ddlStatement
     // AINode
     | showAINodes | createModel | dropModel | showModels | callInference
     // Activation
-    | showActivation
+    | activate | showActivation | showSystemInfo
     // Quota
     | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
     // View
@@ -688,8 +688,16 @@ callInference
     : CALL INFERENCE LR_BRACKET modelId=identifier COMMA inputSql=STRING_LITERAL (COMMA hparamPair)* RR_BRACKET
     ;
 
+activate
+    : ACTIVATE STRING_LITERAL
+    ;
+
 showActivation
     : SHOW ACTIVATION
+    ;
+
+showSystemInfo
+    : SHOW SYSTEM INFO
     ;
 
 hparamPair

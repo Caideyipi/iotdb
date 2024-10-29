@@ -26,7 +26,6 @@ import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
-import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.consensus.ConsensusFactory;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
 import org.apache.iotdb.it.env.EnvFactory;
@@ -41,10 +40,12 @@ import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 
+import com.google.common.collect.ImmutableMap;
 import com.timecho.iotdb.manager.activation.ActivationManager;
 import com.timecho.iotdb.manager.activation.License;
 import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
+import org.apache.tsfile.utils.Pair;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -117,6 +118,8 @@ public class IoTDBActivationIT {
   private static final long sleepLogThreshold = TimeUnit.SECONDS.toMillis(10);
   private static final long HEARTBEAT_TIMEOUT_TIME_IN_MS =
       BaseNodeCache.HEARTBEAT_TIMEOUT_TIME_IN_NS / 1000_000;
+
+  private static final String SKIP = "SKIP";
 
   private static final int baseTest = 0;
   private static final int normalTest = 0;
@@ -812,29 +815,17 @@ public class IoTDBActivationIT {
         dataNodeWrappers.add(wrapper);
       }
 
-      // 1. first datanode start fail
+      // 1. first datanode start success
       dataNodeWrappers.get(0).start();
-      for (int i = 0; i < 10; i++) {
-        TShowClusterResp clusterInfo = leaderClient.showCluster();
-        assert clusterInfo.getDataNodeListSize() == 0;
-        saferSleep(1000);
-      }
+      testStatusWithRetry(leaderClient, Arrays.asList(PASSIVE_UNACTIVATED, UNACTIVATED));
 
-      // 2. set license, then first datanode start success
+      // 2. set license, then second datanode failed to start
       leaderClient.setLicenseFile(LICENSE_FILE_NAME, cpuCoreLimit1);
-      testStatusWithRetry(leaderClient, Collections.singletonList(ACTIVE_ACTIVATED));
-      dataNodeWrappers.get(0).start();
       testStatusWithRetry(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED));
-
-      // 3. second datanode start fail
       dataNodeWrappers.get(1).start();
-      for (int i = 0; i < 10; i++) {
-        TShowClusterResp clusterInfo = leaderClient.showCluster();
-        assert clusterInfo.getDataNodeListSize() == 1;
-        saferSleep(1000);
-      }
+      testStatusFalse(leaderClient, Arrays.asList(ACTIVE_ACTIVATED, ACTIVATED, ACTIVATED));
 
-      // 4. modify license, set nodeNumLimit to 2, then second datanode start success
+      // 3. modify license, set nodeNumLimit to 2, then second datanode start success
       leaderClient.setLicenseFile(LICENSE_FILE_NAME, cpuCoreLimit2);
       waitLicenseReload();
       dataNodeWrappers.get(1).start();
@@ -847,6 +838,132 @@ public class IoTDBActivationIT {
   // endregion
 
   // region AINode Tests
+
+  // endregion
+
+  // region CLI Activation Operation Test
+
+  @Test
+  public void cliOperationTest() throws Exception {
+    EnvFactory.getEnv().initClusterEnvironment(3, 2);
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      showSystemInfoTest(statement);
+      showActivationTest(statement);
+      cliActivateFailBecauseWrongNumber(statement);
+      cliActivateFailBecauseNotBigEnough(statement);
+      cliActivateFailBecauseDifferentContent(statement);
+      cliActivateSuccess(statement);
+    }
+  }
+
+  private void showSystemInfoTest(Statement statement) throws Exception {
+    ResultSet resultSet = statement.executeQuery("show system info");
+    resultSet.next();
+    String systemInfos = resultSet.getString("SystemInfo");
+    Assert.assertEquals(3, systemInfos.split(",").length);
+  }
+
+  private void showActivationTest(Statement statement) throws Exception {
+    ResultSet resultSet = statement.executeQuery("show activation");
+    ImmutableMap<String, Pair<String, String>> expectation =
+        ImmutableMap.of(
+            "ClusterActivationStatus", new Pair<>(UNACTIVATED.toString(), "-"),
+            "ExpiredTime", new Pair<>("-", SKIP),
+            "DataNodeLimit", new Pair<>("2", "0"),
+            "AiNodeLimit", new Pair<>("0", "0"),
+            "CpuLimit", new Pair<>(SKIP, "0"),
+            "DeviceLimit", new Pair<>("0", "0"),
+            "TimeSeriesLimit", new Pair<>("0", "0"));
+    checkShowActivationResult(resultSet, expectation);
+  }
+
+  private void cliActivateFailBecauseWrongNumber(Statement statement) throws Exception {
+    String sql =
+        "activate "
+            + "'"
+            + "DN1=2\nL1=1711900800000\nL2=18145792000000,\n"
+            + "DN1=3\nL1=1711900800000\nL2=18145792000000"
+            + "'";
+    Assert.assertThrows(SQLException.class, () -> statement.executeQuery(sql));
+  }
+
+  private void cliActivateFailBecauseDifferentContent(Statement statement) throws Exception {
+    String sql =
+        "activate "
+            + "'"
+            + "DN1=2\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000,\n"
+            + "DN1=3\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000,\n"
+            + "DN1=3\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000\n"
+            + "'";
+    Assert.assertThrows(SQLException.class, () -> statement.executeQuery(sql));
+  }
+
+  private void cliActivateFailBecauseNotBigEnough(Statement statement) throws Exception {
+    String sql =
+        "activate "
+            + "'"
+            + "DN1=1\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000,\n"
+            + "DN1=1\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000,\n"
+            + "DN1=1\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000\n"
+            + "'";
+    Assert.assertThrows(SQLException.class, () -> statement.executeQuery(sql));
+  }
+
+  private void cliActivateSuccess(Statement statement) throws Exception {
+    String sql =
+        "activate "
+            + "'"
+            + "DN1=2\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000,\n"
+            + "DN1=2\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000,\n"
+            + "DN1=2\n"
+            + "L1=1711900800000\n"
+            + "L2=18145792000000\n"
+            + "'";
+    ResultSet resultSet = statement.executeQuery(sql);
+    ImmutableMap<String, Pair<String, String>> expectation =
+        ImmutableMap.of(
+            "ClusterActivationStatus", new Pair<>(ACTIVATED.toString(), "-"),
+            "ExpiredTime", new Pair<>("-", SKIP),
+            "DataNodeLimit", new Pair<>("2", "2"),
+            "AiNodeLimit", new Pair<>("0", "0"),
+            "CpuLimit", new Pair<>(SKIP, "Unlimited"),
+            "DeviceLimit", new Pair<>("0", "Unlimited"),
+            "TimeSeriesLimit", new Pair<>("0", "Unlimited"));
+    checkShowActivationResult(resultSet, expectation);
+  }
+
+  private void checkShowActivationResult(
+      ResultSet resultSet, ImmutableMap<String, Pair<String, String>> expectation)
+      throws SQLException {
+    while (resultSet.next()) {
+      Pair<String, String> expectedUsageAndLimit = expectation.get(resultSet.getString(1));
+      if (!SKIP.equals(expectedUsageAndLimit.getLeft())) {
+        Assert.assertEquals(
+            expectedUsageAndLimit.getLeft(), resultSet.getString(ColumnHeaderConstant.USAGE));
+      }
+      if (!SKIP.equals(expectedUsageAndLimit.getRight())) {
+        Assert.assertEquals(
+            expectedUsageAndLimit.getRight(), resultSet.getString(ColumnHeaderConstant.LIMIT));
+      }
+    }
+  }
 
   // endregion
 
@@ -900,12 +1017,11 @@ public class IoTDBActivationIT {
       EnvFactory.getEnv().getDataNodeWrapper(0).start();
       testPassiveUnactivated(leaderClient, 2, 1);
 
-      // new DataNode cannot join
+      // new DataNode can join
       EnvFactory.getEnv().registerNewDataNode(false);
-      testStatusFalseWithFailMessage(
+      testStatusWithRetry(
           leaderClient,
-          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNACTIVATED, UNACTIVATED),
-          "New DataNode started success, which should not happen");
+          Arrays.asList(PASSIVE_UNACTIVATED, PASSIVE_UNACTIVATED, UNACTIVATED, UNACTIVATED));
 
       // not allow manually set system status to Running
       Statement statement = connection.createStatement();

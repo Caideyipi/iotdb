@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
@@ -93,6 +94,7 @@ public class License {
   protected LicenseSource licenseSource = LicenseSource.UNKNOWN;
 
   protected final Runnable onLicenseChange;
+  private static final Runnable DO_NOTHING_WHEN_LICENSE_CHANGE = () -> {};
 
   private ActivateStatus oldActivateStatus = ActivateStatus.UNKNOWN;
 
@@ -111,6 +113,10 @@ public class License {
             deviceNumLimit,
             sensorNumLimit,
             aiNodeNumLimit);
+  }
+
+  public License() {
+    this(DO_NOTHING_WHEN_LICENSE_CHANGE);
   }
 
   // region getter and setter
@@ -327,12 +333,16 @@ public class License {
 
   // region show status to outside
 
-  public boolean isActivated() {
+  boolean isActivated() {
     return this.getLicenseExpireTimestamp() >= System.currentTimeMillis();
   }
 
   public boolean isActive() {
     return LicenseSource.FROM_FILE.equals(licenseSource);
+  }
+
+  public boolean noLicense() {
+    return LicenseSource.NO_LICENSE.equals(licenseSource);
   }
 
   /** Only used when detected license file deletion */
@@ -355,5 +365,25 @@ public class License {
       }
     }
   }
+
   // endregion
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof License)) {
+      return false;
+    }
+    License another = (License) obj;
+    Iterator<Limit<?>> iterator = another.allLimit.iterator();
+    try {
+      for (Limit<?> limit : allLimit) {
+        if (!Objects.equals(limit.getValue(), iterator.next().getValue())) {
+          return false;
+        }
+      }
+    } catch (Exception e) {
+      return false;
+    }
+    return true;
+  }
 }

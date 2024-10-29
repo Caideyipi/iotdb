@@ -17,9 +17,10 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.queryengine.plan.execution.config.metadata;
+package org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
+import org.apache.iotdb.confignode.rpc.thrift.TClusterActivationStatus;
 import org.apache.iotdb.db.protocol.session.SessionManager;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeader;
 import org.apache.iotdb.db.queryengine.common.header.ColumnHeaderConstant;
@@ -59,7 +60,10 @@ public class ShowActivationTask implements IConfigTask {
   }
 
   public static void buildTsBlock(
-      TLicense license, TLicense usage, SettableFuture<ConfigTaskResult> future) {
+      TLicense license,
+      TLicense usage,
+      TClusterActivationStatus clusterActivationStatus,
+      SettableFuture<ConfigTaskResult> future) {
     List<TSDataType> outputDataTypes =
         ColumnHeaderConstant.showActivationColumnHeaders.stream()
             .map(ColumnHeader::getColumnType)
@@ -71,6 +75,7 @@ public class ShowActivationTask implements IConfigTask {
     String formattedTime = dateFormat.format(zonedDateTime);
     List<List<String>> table =
         Arrays.asList(
+            Arrays.asList("ClusterActivationStatus", clusterActivationStatus.toString(), "-"),
             Arrays.asList("ExpiredTime", "-", formattedTime),
             Arrays.asList(
                 "DataNodeLimit",

@@ -268,7 +268,11 @@ public interface IConfigTaskExecutor {
 
   SettableFuture<ConfigTaskResult> showModels(String modelName);
 
+  SettableFuture<ConfigTaskResult> cliActivate(List<String> licenseList);
+
   SettableFuture<ConfigTaskResult> showActivation();
+
+  SettableFuture<ConfigTaskResult> showSystemInfo();
 
   TPipeTransferResp handleTransferConfigPlan(String clientId, TPipeTransferReq req);
 

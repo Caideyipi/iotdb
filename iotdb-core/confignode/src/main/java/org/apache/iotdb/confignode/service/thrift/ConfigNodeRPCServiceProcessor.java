@@ -159,7 +159,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
-import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
@@ -176,6 +175,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaReplicationFactorReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetTimePartitionIntervalReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
@@ -189,6 +189,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowRegionResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowSystemInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTTLResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowThrottleReq;
@@ -1271,6 +1272,11 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   }
 
   @Override
+  public String getSystemInfo() throws TException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public TSStatus deleteLicenseFile(String fileName) throws TException {
     throw new UnsupportedOperationException();
   }
@@ -1281,7 +1287,22 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   }
 
   @Override
-  public TLicenseContentResp getLicenseContent() throws TException {
+  public TShowActivationResp cliActivate(List<String> licenseList) throws TException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TSStatus checkSystemInfo(String license) throws TException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TShowActivationResp showActivation() throws TException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TShowSystemInfoResp showSystemInfo() throws TException {
     throw new UnsupportedOperationException();
   }
 

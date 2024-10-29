@@ -217,6 +217,10 @@ public class DatasetHeaderFactory {
     return new DatasetHeader(ColumnHeaderConstant.showActivationColumnHeaders, true);
   }
 
+  public static DatasetHeader getShowSystemInfoHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showSystemInfoColumnHeaders, true);
+  }
+
   public static DatasetHeader getShowCurrentTimestampHeader() {
     return new DatasetHeader(ColumnHeaderConstant.SHOW_CURRENT_TIMESTAMP_COLUMN_HEADERS, true);
   }

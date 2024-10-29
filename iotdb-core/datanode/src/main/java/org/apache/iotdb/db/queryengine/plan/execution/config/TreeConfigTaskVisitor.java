@@ -40,7 +40,6 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.GetTimeSlo
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.MigrateRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.SetTTLTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowAINodesTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterDetailsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterIdTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowClusterTask;
@@ -55,6 +54,9 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTTLTas
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowTriggersTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariablesTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.UnSetTTLTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.CliActivateTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowSystemInfoTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.CreateModelTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.DropModelTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
@@ -114,7 +116,6 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetSeriesSlotList
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.MigrateRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterIdStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowConfigNodesStatement;
@@ -127,6 +128,9 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTriggersStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ActivateStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
@@ -628,9 +632,21 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
   }
 
   // Activation
+
+  @Override
+  public IConfigTask visitActivate(ActivateStatement activateStatement, MPPQueryContext context) {
+    return new CliActivateTask(activateStatement.getLicenseList());
+  }
+
   @Override
   public IConfigTask visitShowActivation(
       ShowActivationStatement showActivationStatement, MPPQueryContext context) {
     return new ShowActivationTask();
+  }
+
+  @Override
+  public IConfigTask visitShowSystemInfo(
+      ShowSystemInfoStatement showSystemInfoStatement, MPPQueryContext context) {
+    return new ShowSystemInfoTask();
   }
 }

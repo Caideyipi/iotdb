@@ -976,10 +976,23 @@ struct TShowThrottleReq {
 // Activation
 // ====================================================
 
-struct TLicenseContentResp {
+enum TClusterActivationStatus {
+  ACTIVATED,
+  PARTLY_ACTIVATED,
+  UNACTIVATED,
+  UNKNOWN
+}
+
+struct TShowActivationResp {
     1: required common.TSStatus status
     2: optional common.TLicense license
     3: optional common.TLicense usage
+    4: optional TClusterActivationStatus clusterActivationStatus
+}
+
+struct TShowSystemInfoResp {
+    1: required common.TSStatus status
+    2: optional list<string> systemInfoList
 }
 
 enum TActivationControl {
@@ -1776,11 +1789,19 @@ service IConfigNodeRPCService {
   // ======================================================
   common.TSStatus setLicenseFile(1:string fileName, 2:string licenseContent)
 
+  string getSystemInfo()
+
   common.TSStatus deleteLicenseFile(1:string fileName)
 
   common.TSStatus getLicenseFile(1:string fileName)
 
-  TLicenseContentResp getLicenseContent()
+  TShowActivationResp cliActivate(list<string> licenseList)
+
+  common.TSStatus checkSystemInfo(string license)
+
+  TShowActivationResp showActivation()
+
+  TShowSystemInfoResp showSystemInfo()
 
   common.TSStatus getActivateStatus()
 

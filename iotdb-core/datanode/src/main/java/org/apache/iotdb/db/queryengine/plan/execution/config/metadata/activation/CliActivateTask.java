@@ -17,20 +17,27 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.client;
+package org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation;
 
-public enum CnToCnNodeRequestType {
-  ADD_CONSENSUS_GROUP,
-  NOTIFY_REGISTER_SUCCESS,
-  REGISTER_CONFIG_NODE,
-  RESTART_CONFIG_NODE,
-  REMOVE_CONFIG_NODE,
-  DELETE_CONFIG_NODE_PEER,
-  REPORT_CONFIG_NODE_SHUTDOWN,
-  STOP_CONFIG_NODE,
-  SET_CONFIGURATION,
-  SHOW_CONFIGURATION,
-  SUBMIT_TEST_CONNECTION_TASK,
-  TEST_CONNECTION,
-  GET_SYSTEM_INFO,
+import org.apache.iotdb.db.queryengine.plan.execution.config.ConfigTaskResult;
+import org.apache.iotdb.db.queryengine.plan.execution.config.IConfigTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.executor.IConfigTaskExecutor;
+
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.List;
+
+public class CliActivateTask implements IConfigTask {
+
+  private final List<String> licenseList;
+
+  public CliActivateTask(List<String> licenseList) {
+    this.licenseList = licenseList;
+  }
+
+  @Override
+  public ListenableFuture<ConfigTaskResult> execute(IConfigTaskExecutor configTaskExecutor)
+      throws InterruptedException {
+    return configTaskExecutor.cliActivate(licenseList);
+  }
 }

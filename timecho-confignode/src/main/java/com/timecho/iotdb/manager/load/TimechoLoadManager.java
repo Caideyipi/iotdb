@@ -37,8 +37,11 @@ import java.util.stream.Collectors;
 
 public class TimechoLoadManager extends LoadManager {
 
-  public TimechoLoadManager(IManager configManager) {
+  private final ITimechoManager timechoConfigManager;
+
+  public TimechoLoadManager(ITimechoManager configManager) {
     super(configManager);
+    timechoConfigManager = configManager;
   }
 
   @Override
@@ -56,7 +59,11 @@ public class TimechoLoadManager extends LoadManager {
   }
 
   public Map<Integer, String> getNodeActivateStatus() {
-    return loadCache.getNodeActivateStatus();
+    Map<Integer, String> result = loadCache.getNodeActivateStatus();
+    result.put(
+        ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId(),
+        timechoConfigManager.getActivationManager().getActivateStatus().toString());
+    return result;
   }
 
   /** Check if there is any active node keep living. */

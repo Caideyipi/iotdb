@@ -122,7 +122,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetTriggerTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetUDFTableResp;
-import org.apache.iotdb.confignode.rpc.thrift.TLicenseContentResp;
 import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TMigrateRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
@@ -139,6 +138,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaReplicationFactorReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSetTimePartitionIntervalReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowConfigNodesResp;
@@ -152,6 +152,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowRegionResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowSubscriptionResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowSystemInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTTLResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowThrottleReq;
@@ -199,6 +200,9 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
       "Failed to connect to ConfigNode %s from DataNode %s when executing %s, Exception:";
   private static final long RETRY_INTERVAL_MS = 1000L;
   private static final long WAIT_CN_LEADER_ELECTION_INTERVAL_MS = 2000L;
+
+  private static final String UNSUPPORTED_INVOCATION =
+      "This method is not supported for invocation by DataNode";
 
   private final ThriftClientProperty property;
 
@@ -1236,6 +1240,11 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   }
 
   @Override
+  public String getSystemInfo() throws TException {
+    throw new UnsupportedOperationException(UNSUPPORTED_INVOCATION);
+  }
+
+  @Override
   public TSStatus deleteLicenseFile(String fileName) throws TException {
     return executeRemoteCallWithRetry(
         () -> client.deleteLicenseFile(fileName), status -> !updateConfigNodeLeader(status));
@@ -1248,9 +1257,26 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   }
 
   @Override
-  public TLicenseContentResp getLicenseContent() throws TException {
+  public TShowActivationResp cliActivate(List<String> licenseList) throws TException {
     return executeRemoteCallWithRetry(
-        () -> client.getLicenseContent(), resp -> !updateConfigNodeLeader(resp.getStatus()));
+        () -> client.cliActivate(licenseList), resp -> !updateConfigNodeLeader(resp.getStatus()));
+  }
+
+  @Override
+  public TSStatus checkSystemInfo(String license) throws TException {
+    throw new UnsupportedOperationException(UNSUPPORTED_INVOCATION);
+  }
+
+  @Override
+  public TShowActivationResp showActivation() throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.showActivation(), resp -> !updateConfigNodeLeader(resp.getStatus()));
+  }
+
+  @Override
+  public TShowSystemInfoResp showSystemInfo() throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.showSystemInfo(), resp -> !updateConfigNodeLeader(resp.getStatus()));
   }
 
   @Override

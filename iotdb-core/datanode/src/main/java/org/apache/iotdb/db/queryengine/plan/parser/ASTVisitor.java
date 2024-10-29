@@ -150,7 +150,6 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetSeriesSlotList
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.MigrateRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildNodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildPathsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterIdStatement;
@@ -168,6 +167,9 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTimeSeriesSta
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTriggersStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ActivateStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
@@ -4498,8 +4500,22 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   }
 
   @Override
+  public Statement visitActivate(IoTDBSqlParser.ActivateContext ctx) {
+    String sql = ctx.getText();
+    sql = sql.replaceFirst("activate", "");
+    sql = sql.replace(" ", "").replace("'", "");
+    List<String> licenseList = Arrays.asList(sql.split("[,，]"));
+    return new ActivateStatement(licenseList);
+  }
+
+  @Override
   public Statement visitShowActivation(IoTDBSqlParser.ShowActivationContext ctx) {
     return new ShowActivationStatement();
+  }
+
+  @Override
+  public Statement visitShowSystemInfo(IoTDBSqlParser.ShowSystemInfoContext ctx) {
+    return new ShowSystemInfoStatement();
   }
 
   @Override

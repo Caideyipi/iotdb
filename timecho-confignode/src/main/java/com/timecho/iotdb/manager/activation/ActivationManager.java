@@ -29,7 +29,7 @@ import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
-import org.apache.iotdb.confignode.manager.ConfigManager;
+import org.apache.iotdb.confignode.rpc.thrift.TClusterActivationStatus;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -37,6 +37,7 @@ import cn.hutool.system.OsInfo;
 import cn.hutool.system.SystemUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.timecho.iotdb.manager.TimechoConfigManager;
 import com.timecho.iotdb.manager.activation.systeminfo.ISystemInfoGetter;
 import com.timecho.iotdb.manager.activation.systeminfo.LinuxSystemInfoGetter;
 import com.timecho.iotdb.manager.activation.systeminfo.MacSystemInfoGetter;
@@ -62,10 +63,14 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
@@ -84,7 +89,7 @@ public class ActivationManager {
   private static String VERSION = "01";
   static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
 
-  private final ConfigManager configManager;
+  private final TimechoConfigManager configManager;
 
   private static final String CONFIGNODE_HOME_PATH =
       System.getProperty("CONFIGNODE_HOME") == null ? "." : System.getProperty("CONFIGNODE_HOME");
@@ -154,7 +159,7 @@ public class ActivationManager {
 
   ReentrantLock loadLock = new ReentrantLock();
 
-  public ActivationManager(ConfigManager configManager) throws LicenseException {
+  public ActivationManager(TimechoConfigManager configManager) throws LicenseException {
     this.configManager = configManager;
 
     initLicense();
@@ -453,6 +458,15 @@ public class ActivationManager {
     }
   }
 
+  public boolean checkLicenseContentAvailable(String encryptedLicenseContent) {
+    try {
+      Properties licenseProperties = loadLicenseFromEveryVersion(encryptedLicenseContent);
+      return verifyAllSystemInfo(licenseProperties);
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   protected Properties loadLicenseFromEveryVersion(String encryptedLicenseContent)
       throws LicenseException, IOException {
     return ActivationManager.loadLicenseFromEveryVersionStatic(encryptedLicenseContent);
@@ -551,12 +565,42 @@ public class ActivationManager {
     return usage;
   }
 
+  public TClusterActivationStatus calculateClusterActivationStatus() {
+    Map<Integer, ActivateStatus> activationMap =
+        configManager.getLoadManager().getNodeActivateStatus().entrySet().stream()
+            .collect(
+                Collectors.toMap(Entry::getKey, entry -> ActivateStatus.valueOf(entry.getValue())));
+    Collection<ActivateStatus> activateStatuses = activationMap.values();
+    if (activateStatuses.stream().allMatch(ActivateStatus::isFullyActivated)) {
+      return TClusterActivationStatus.ACTIVATED;
+    } else if (activateStatuses.stream().allMatch(ActivateStatus::isActivated)) {
+      return TClusterActivationStatus.PARTLY_ACTIVATED;
+    } else if (activateStatuses.stream().anyMatch(ActivateStatus::isUnactivated)) {
+      return TClusterActivationStatus.UNACTIVATED;
+    } else if (activateStatuses.stream().anyMatch(ActivateStatus::isActivated)) {
+      return TClusterActivationStatus.PARTLY_ACTIVATED;
+    } else {
+      return TClusterActivationStatus.UNKNOWN;
+    }
+  }
+
   public ActivateStatus getActivateStatus() {
     return license.getActivateStatus();
   }
 
   public boolean isActivated() {
-    return this.license.isActivated();
+    if (!this.license.isActivated()) {
+      return false;
+    }
+    if (this.license.getDataNodeNumLimit()
+        < configManager.getNodeManager().getRegisteredDataNodeCount()) {
+      return false;
+    }
+    if (this.license.getDataNodeCpuCoreNumLimit()
+        < configManager.getNodeManager().getDataNodeCpuCoreCount()) {
+      return false;
+    }
+    return true;
   }
 
   public boolean isActive() {
@@ -637,7 +681,7 @@ public class ActivationManager {
     }
   }
 
-  private static String generateSystemInfoContentWithVersion() throws LicenseException {
+  public static String generateSystemInfoContentWithVersion() throws LicenseException {
     return VERSION + "-" + generateSystemInfoContent();
   }
 
@@ -801,7 +845,7 @@ public class ActivationManager {
       logger.info("set license file success: {}", filePath);
       return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
     } catch (IOException e) {
-      logger.error("set license file {} fail: {}", filePath, e);
+      logger.error("set license file {} fail", filePath, e);
       TSStatus status = new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode());
       status.setMessage(e.getMessage());
       return status;
@@ -895,6 +939,40 @@ public class ActivationManager {
     properties.setProperty(License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME, "10000");
     properties.setProperty(License.AINODE_NUM_LIMIT_NAME, "9999");
     return properties;
+  }
+
+  public void cliActivateCheckLicenseContentAvailable(List<String> encryptedLicenses)
+      throws LicenseException, IOException {
+    List<License> licenseList = new ArrayList<>();
+    for (String encryptedLicense : encryptedLicenses) {
+      Properties properties = loadLicenseFromEveryVersion(encryptedLicense);
+      License license = new License(() -> {});
+      license.loadFromProperties(properties, false);
+      licenseList.add(license);
+    }
+    License firstLicense = licenseList.get(0);
+    // check all consistent
+    if (!licenseList.stream().allMatch(firstLicense::equals)) {
+      throw new LicenseException(
+          "Licenses' limitations are different, they must be consistent for CLI activation");
+    }
+    // check license enough for DataNodes num and CPU cores num
+    if (firstLicense.getDataNodeNumLimit()
+        < configManager.getNodeManager().getRegisteredDataNodeCount()) {
+      throw new LicenseException(
+          String.format(
+              "License only allows %s DataNodes, but there are %s DataNodes in cluster",
+              firstLicense.getDataNodeNumLimit(),
+              configManager.getNodeManager().getRegisteredDataNodeCount()));
+    }
+    if (firstLicense.getDataNodeCpuCoreNumLimit()
+        < configManager.getNodeManager().getDataNodeCpuCoreCount()) {
+      throw new LicenseException(
+          String.format(
+              "License only allows %s CPU cores, but there are %s CPU cores in cluster",
+              firstLicense.getDataNodeCpuCoreNumLimit(),
+              configManager.getNodeManager().getDataNodeCpuCoreCount()));
+    }
   }
 
   // endregion

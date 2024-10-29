@@ -20,8 +20,8 @@
 package org.apache.iotdb.confignode.manager.activation;
 
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.confignode.manager.ConfigManager;
 
+import com.timecho.iotdb.manager.TimechoConfigManager;
 import com.timecho.iotdb.manager.activation.ActivationManager;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ import java.util.Properties;
 /** License Manager without system info check, only for IoTDBActivationTest */
 public class ActivationManagerWithoutEncryptionAndMachineBinding extends ActivationManager {
 
-  public ActivationManagerWithoutEncryptionAndMachineBinding(ConfigManager configManager)
+  public ActivationManagerWithoutEncryptionAndMachineBinding(TimechoConfigManager configManager)
       throws LicenseException {
     super(configManager);
   }

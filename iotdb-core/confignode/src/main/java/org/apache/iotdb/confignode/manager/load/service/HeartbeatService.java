@@ -162,7 +162,7 @@ public class HeartbeatService {
       heartbeatReq.setSpaceQuotaUsage(configManager.getClusterQuotaManager().getSpaceQuotaUsage());
     }
 
-    setActivation(heartbeatReq);
+    setActivationRelatedInfoForDataNodeReq(heartbeatReq);
 
     /* Update heartbeat counter */
     heartbeatCounter.getAndIncrement();
@@ -170,7 +170,7 @@ public class HeartbeatService {
     return heartbeatReq;
   }
 
-  protected void setActivation(TDataNodeHeartbeatReq req) {
+  protected void setActivationRelatedInfoForDataNodeReq(TDataNodeHeartbeatReq req) {
     throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
@@ -197,11 +197,11 @@ public class HeartbeatService {
   private TConfigNodeHeartbeatReq genConfigNodeHeartbeatReq() {
     TConfigNodeHeartbeatReq req = new TConfigNodeHeartbeatReq();
     req.setTimestamp(System.nanoTime());
-    setActivationRelatedInfo(req);
+    setActivationRelatedInfoForConfigNodeReq(req);
     return req;
   }
 
-  protected void setActivationRelatedInfo(TConfigNodeHeartbeatReq req) {
+  protected void setActivationRelatedInfoForConfigNodeReq(TConfigNodeHeartbeatReq req) {
     throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 

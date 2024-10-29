@@ -50,13 +50,13 @@ public class TimechoHeartbeatService extends HeartbeatService {
   }
 
   @Override
-  protected void setActivation(TDataNodeHeartbeatReq req) {
+  protected void setActivationRelatedInfoForDataNodeReq(TDataNodeHeartbeatReq req) {
     req.setActivation(
         new TDataNodeActivation(timechoConfigManager.getActivationManager().isActivated(), 0, 0));
   }
 
   @Override
-  protected void setActivationRelatedInfo(TConfigNodeHeartbeatReq req) {
+  protected void setActivationRelatedInfoForConfigNodeReq(TConfigNodeHeartbeatReq req) {
     ActivationManager activationManager = timechoConfigManager.getActivationManager();
     License license = activationManager.getLicense();
     TimechoLoadManager loadManager = timechoConfigManager.getLoadManager();

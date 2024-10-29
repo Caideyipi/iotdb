@@ -57,7 +57,6 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetSeriesSlotList
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.MigrateRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildNodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildPathsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterIdStatement;
@@ -75,6 +74,9 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTimeSeriesSta
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTriggersStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ActivateStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
@@ -302,8 +304,17 @@ public abstract class StatementVisitor<R, C> {
   }
 
   // Activation
+
+  public R visitActivate(ActivateStatement activateStatement, C context) {
+    return visitStatement(activateStatement, context);
+  }
+
   public R visitShowActivation(ShowActivationStatement showActivationStatement, C context) {
     return visitStatement(showActivationStatement, context);
+  }
+
+  public R visitShowSystemInfo(ShowSystemInfoStatement showSystemInfoStatement, C context) {
+    return visitStatement(showSystemInfoStatement, context);
   }
 
   /** Data Manipulation Language (DML) */

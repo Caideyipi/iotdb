@@ -20,7 +20,6 @@
 package com.timecho.iotdb.manager.node;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
-import org.apache.iotdb.confignode.consensus.response.datanode.DataNodeRegisterResp;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.persistence.node.NodeInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterReq;
@@ -45,10 +44,15 @@ public class TimechoNodeManager extends NodeManager {
   @Override
   protected TSStatus registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
     License license = configManager.getActivationManager().getLicense();
-    DataNodeRegisterResp resp = new DataNodeRegisterResp();
-    resp.setConfigNodeList(getRegisteredConfigNodes());
+    // check if no license
+    if (license.noLicense()) {
+      LOGGER.info(
+          "There is no license in cluster, allow DataNode start: {}",
+          req.getDataNodeConfiguration().getLocation().getInternalEndPoint());
+      return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+    }
     // check if unactivated
-    if (!license.isActivated()) {
+    if (!configManager.getActivationManager().isActivated()) {
       final String message =
           "Deny DataNode registration: Cluster is unactivated now, DataNode is not allowed to join";
       LOGGER.warn(message);

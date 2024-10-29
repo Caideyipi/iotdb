@@ -213,6 +213,7 @@ public class ColumnHeaderConstant {
   public static final String LICENSE_INFO = "LicenseInfo";
   public static final String USAGE = "Usage";
   public static final String QUOTA = "Quota";
+  public static final String SYSTEM_INFO = "SystemInfo";
 
   // column names for views (e.g. logical view)
   public static final String VIEW_TYPE = "ViewType";
@@ -545,6 +546,9 @@ public class ColumnHeaderConstant {
           new ColumnHeader(LICENSE_INFO, TSDataType.TEXT),
           new ColumnHeader(USAGE, TSDataType.TEXT),
           new ColumnHeader(LIMIT, TSDataType.TEXT));
+
+  public static final List<ColumnHeader> showSystemInfoColumnHeaders =
+      ImmutableList.of(new ColumnHeader(SYSTEM_INFO, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showLogicalViewColumnHeaders =
       ImmutableList.of(

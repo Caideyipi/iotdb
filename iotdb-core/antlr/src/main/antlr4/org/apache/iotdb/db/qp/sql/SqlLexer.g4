@@ -37,6 +37,10 @@ WS
 
 // Common Keywords
 
+ACTIVATE
+    : A C T I V A T E
+    ;
+
 ACTIVATION
     : A C T I V A T I O N
     ;
@@ -1240,7 +1244,6 @@ fragment SQUOTA_STRING
 fragment BQUOTA_STRING
     : '`' ( '``' | ~('`') )* '`'
     ;
-
 
 // Characters and write it this way for case sensitivity
 
