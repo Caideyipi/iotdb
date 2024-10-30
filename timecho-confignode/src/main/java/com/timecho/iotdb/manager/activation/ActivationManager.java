@@ -26,6 +26,7 @@ import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.commons.structure.SortedProperties;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
@@ -64,17 +65,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -86,10 +82,12 @@ import java.util.stream.Collectors;
 import static org.apache.iotdb.commons.conf.IoTDBConstant.NODE_UUID_IN_ENV_FILE;
 
 public class ActivationManager {
-  private static String VERSION = "01";
   static final Logger logger = LoggerFactory.getLogger(ActivationManager.class);
 
   private final TimechoConfigManager configManager;
+
+  private static final String SYSTEM_INFO_VERSION = "02";
+  private static final int VERSION_LENGTH = 2;
 
   private static final String CONFIGNODE_HOME_PATH =
       System.getProperty("CONFIGNODE_HOME") == null ? "." : System.getProperty("CONFIGNODE_HOME");
@@ -682,34 +680,56 @@ public class ActivationManager {
   }
 
   public static String generateSystemInfoContentWithVersion() throws LicenseException {
-    return VERSION + "-" + generateSystemInfoContent();
+    return SYSTEM_INFO_VERSION + "-" + generateSystemInfoContentOfV02();
   }
 
   private static String systemInfoContentRemoveVersion(String contentWithVersion)
       throws LicenseException {
-    if (contentWithVersion.charAt(2) != '-') {
+    if (contentWithVersion.charAt(VERSION_LENGTH) != '-') {
       throw new LicenseException("Cannot remove version from system info " + contentWithVersion);
     }
-    return contentWithVersion.substring(3);
+    return contentWithVersion.substring(VERSION_LENGTH + 1);
   }
 
-  private static String generateSystemInfoContent() throws LicenseException {
-    // create a Properties which has defined order during serializing
-    Properties systemInfoProperties =
-        new Properties() {
-          @Override
-          public synchronized Enumeration<Object> keys() {
-            return Collections.enumeration(new TreeSet<>(super.keySet()));
-          }
+  private static String generateSystemInfoContentOfV02() throws LicenseException {
+    try {
+      Properties hardwareInfoProperties = new SortedProperties();
+      hardwareSystemInfoNameToItsGetter.forEach(
+          (name, getter) -> hardwareInfoProperties.setProperty(name, getter.get()));
+      Properties configurableInfoProperties = new SortedProperties();
+      configurableSystemInfoNameToItsGetter.forEach(
+          (name, getter) -> configurableInfoProperties.setProperty(name, getter.get()));
+      Properties nodeUuidProperties = new SortedProperties();
+      nodeUuidProperties.setProperty(License.NODE_UUID_NAME, getNodeUUID());
+      List<Properties> propertiesList =
+          Arrays.asList(hardwareInfoProperties, configurableInfoProperties, nodeUuidProperties);
+      List<String> encodedList = new ArrayList<>();
+      String combinedOriginal = "";
+      for (Properties properties : propertiesList) {
+        StringWriter stringWriter = new StringWriter();
+        properties.store(stringWriter, null);
+        String originalInfo = stringWriter.toString();
+        combinedOriginal += originalInfo;
+        // remove time
+        if (originalInfo.charAt(0) == '#') {
+          originalInfo = originalInfo.substring(originalInfo.indexOf('\n') + 1);
+        }
+        encodedList.add(encodeTo8(originalInfo));
+      }
+      try (FileOutputStream fos = new FileOutputStream(HISTORY_FILE_PATH, true)) {
+        fos.write(RSA.publicEncrypt(combinedOriginal).getBytes());
+        fos.write("\n".getBytes());
+        fos.getFD().sync();
+      }
+      return encodedList.stream().reduce((a, b) -> a + "-" + b).get();
+    } catch (Exception e) {
+      throw new LicenseException(e);
+    }
+  }
 
-          @Override
-          public Set<Entry<Object, Object>> entrySet() {
-            return Collections.synchronizedSet(
-                super.entrySet().stream()
-                    .sorted(Comparator.comparing(e -> e.getKey().toString()))
-                    .collect(Collectors.toCollection(LinkedHashSet::new)));
-          }
-        };
+  private static String generateSystemInfoContentOfV01() throws LicenseException {
+    // create a Properties which has defined order during serializing
+    Properties systemInfoProperties = new SortedProperties();
     try {
       // generate properties
       for (Entry<String, Supplier<String>> entry : systemInfoNameToItsGetter.entrySet()) {
@@ -737,12 +757,20 @@ public class ActivationManager {
     }
   }
 
-  private static String systemInfoEncode(String originInfo) throws NoSuchAlgorithmException {
+  private static String systemInfoEncode(String originalInfo) throws NoSuchAlgorithmException {
     MessageDigest md5 = MessageDigest.getInstance("MD5");
     Base32 base32 = new Base32();
-    String temp = base32.encodeAsString(md5.digest(originInfo.getBytes())).substring(8, 24);
+    String temp = base32.encodeAsString(md5.digest(originalInfo.getBytes())).substring(8, 24);
     return temp.substring(0, 8) + "-" + temp.substring(8, 16);
   }
+
+  private static String encodeTo8(String originalInfo) throws NoSuchAlgorithmException {
+    MessageDigest md5 = MessageDigest.getInstance("MD5");
+    Base32 base32 = new Base32();
+    return base32.encodeAsString(md5.digest(originalInfo.getBytes())).substring(0, 8);
+  }
+
+  // region verify system info
 
   public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
     return verifyAllSystemInfoOfEveryVersion(
@@ -757,7 +785,16 @@ public class ActivationManager {
       ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter) {
     try {
       if (licenseProperties.containsKey(License.SYSTEM_INFO_HASH)) {
-        return verifyAllSystemInfoOfV01(licenseProperties);
+        String version =
+            licenseProperties.getProperty(License.SYSTEM_INFO_HASH).substring(0, VERSION_LENGTH);
+        if ("01".equals(version)) {
+          return verifyAllSystemInfoOfV01(licenseProperties);
+        } else if ("02".equals(version)) {
+          return verifyAllSystemInfoOfV02(licenseProperties);
+        } else {
+          logger.error("License system info version {} is unsupported", version);
+          return false;
+        }
       } else {
         return verifyAllSystemInfoOfV00(
             licenseProperties,
@@ -770,8 +807,23 @@ public class ActivationManager {
     }
   }
 
+  //  public static boolean
+
+  public static boolean verifyAllSystemInfoOfV02(Properties licenseProperties) throws Exception {
+    String actualSystemInfo = generateSystemInfoContentOfV02();
+    String licenseSystemInfo = licenseProperties.getProperty(License.SYSTEM_INFO_HASH);
+    licenseSystemInfo = systemInfoContentRemoveVersion(licenseSystemInfo);
+    if (Boolean.parseBoolean(
+        licenseProperties.getProperty(License.SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME, null))) {
+      // remove hardware hash code
+      actualSystemInfo = actualSystemInfo.substring(9);
+      licenseSystemInfo = licenseSystemInfo.substring(9);
+    }
+    return actualSystemInfo.equals(licenseSystemInfo);
+  }
+
   public static boolean verifyAllSystemInfoOfV01(Properties licenseProperties) throws Exception {
-    String actualSystemInfo = generateSystemInfoContent();
+    String actualSystemInfo = generateSystemInfoContentOfV01();
     String licenseSystemInfo = licenseProperties.getProperty(License.SYSTEM_INFO_HASH);
     return actualSystemInfo.equals(systemInfoContentRemoveVersion(licenseSystemInfo));
   }
@@ -833,6 +885,8 @@ public class ActivationManager {
     }
     return true;
   }
+
+  // endregion
 
   // region file operation
 
