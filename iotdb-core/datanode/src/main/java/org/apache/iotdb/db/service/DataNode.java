@@ -1209,6 +1209,10 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     }
   }
 
+  public void deleteDataNodeSystemProperties() {
+    DataNodeSystemPropertiesHandler.getInstance().delete();
+  }
+
   public void stop() {
     stopTriggerRelatedServices();
     registerManager.deregisterAll();
