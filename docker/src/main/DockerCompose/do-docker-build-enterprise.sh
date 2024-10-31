@@ -114,7 +114,7 @@ function build_single(){
         --no-cache=${nocache} -t ${image} . ${docker_publish}
     fi
     if [[ "$save_image" == "true" && "$build_what" != "latest" ]]; then
-        docker save ${image} | gzip > ${image/:/-}-docker.tar.gz 
+        docker save ${image} | gzip > timechodb-${version}-standalone-docker.tar.gz
     fi
     echo "##### done #####"
 }
