@@ -81,15 +81,11 @@ public class SharedStorageCompactionUtils {
 
   private static List<TRegionReplicaSet> getDataRegionReplicaSet(
       DataRegion dataRegion, long timePartition) throws Exception {
-    List<TsFileResource> files =
-        dataRegion.getTsFileManager().getTsFileListSnapshot(timePartition, true);
-    if (files.isEmpty()) {
-      files = dataRegion.getTsFileManager().getTsFileListSnapshot(timePartition, false);
-    }
-    if (files.isEmpty()) {
+    TsFileResource selectedResource =
+        dataRegion.getTsFileManager().getAValidTsFileResourceForMigration(timePartition);
+    if (selectedResource == null) {
       throw new Exception("Cannot get data region replica set for empty time partition.");
     }
-    TsFileResource selectedResource = files.get(0);
     IDeviceID deviceID = selectedResource.getDevices().iterator().next();
     TTimePartitionSlot slot =
         TimePartitionUtils.getTimePartitionSlot(

@@ -421,4 +421,23 @@ public class TsFileManager {
     }
     return maxFileTimestamp;
   }
+
+  public TsFileResource getAValidTsFileResourceForMigration(long timePartition) {
+    readLock();
+    try {
+      TsFileResourceList list = sequenceFiles.getOrDefault(timePartition, null);
+      if (list != null && !list.isEmpty()) {
+        return list.get(0);
+      } else {
+        list = unsequenceFiles.getOrDefault(timePartition, null);
+        if (list != null && !list.isEmpty()) {
+          return list.get(0);
+        } else {
+          return null;
+        }
+      }
+    } finally {
+      readUnlock();
+    }
+  }
 }

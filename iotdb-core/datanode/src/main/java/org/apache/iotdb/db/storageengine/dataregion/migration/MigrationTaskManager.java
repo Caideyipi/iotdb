@@ -22,6 +22,7 @@ package org.apache.iotdb.db.storageengine.dataregion.migration;
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
+import org.apache.iotdb.commons.concurrent.threadpool.WrappedThreadPoolExecutor;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.StartupException;
@@ -47,7 +48,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -66,7 +66,7 @@ public class MigrationTaskManager implements IService {
   private ScheduledExecutorService scheduler;
 
   /** workers to migrate files */
-  private ExecutorService workers;
+  private WrappedThreadPoolExecutor workers;
 
   /** migrate rate limiter, KB/s */
   private volatile RateLimiter[] migrateRateLimiters;
@@ -88,8 +88,10 @@ public class MigrationTaskManager implements IService {
         IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
             ThreadName.MIGRATION_SCHEDULER.getName());
     workers =
-        IoTDBThreadPoolFactory.newFixedThreadPool(
-            iotdbConfig.getMigrateThreadCount(), ThreadName.MIGRATION.getName());
+        (WrappedThreadPoolExecutor)
+            IoTDBThreadPoolFactory.newFixedThreadPool(
+                iotdbConfig.getMigrateThreadCount(), ThreadName.MIGRATION.getName());
+    workers.disableErrorLog();
     ScheduledExecutorUtil.safelyScheduleAtFixedRate(
         scheduler,
         () -> new MigrationScheduleTask().run(),
