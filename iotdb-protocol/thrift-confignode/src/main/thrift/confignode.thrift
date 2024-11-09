@@ -1081,6 +1081,12 @@ struct TShowTableResp {
    2: optional list<TTableInfo> tableInfoList
 }
 
+struct TDescTableResp {
+   1: required common.TSStatus status
+   2: optional binary tableInfo
+   3: optional set<string> preDeletedColumns
+}
+
 struct TFetchTableResp {
    1: required common.TSStatus status
    2: optional binary tableInfoMap
@@ -1851,6 +1857,8 @@ service IConfigNodeRPCService {
   common.TSStatus alterOrDropTable(TAlterOrDropTableReq req)
 
   TShowTableResp showTables(string database, bool isDetails)
+
+  TDescTableResp describeTable(string database, string tableName, bool isDetails)
 
   TFetchTableResp fetchTables(map<string, set<string>> fetchTableMap)
 
