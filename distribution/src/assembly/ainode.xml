@@ -25,18 +25,18 @@
         <format>dir</format>
         <format>zip</format>
     </formats>
-    <baseDirectory>apache-iotdb-${project.version}-ainode-bin</baseDirectory>
+    <baseDirectory>timechodb-${project.version}-ainode-bin</baseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/../iotdb-core/ainode/target/apache-iotdb-ainode-${project.version}/apache-iotdb-ainode-${project.version}/conf</directory>
+            <directory>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/conf</directory>
             <outputDirectory>${file.separator}/conf</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../iotdb-core/ainode/target/apache-iotdb-ainode-${project.version}/apache-iotdb-ainode-${project.version}/sbin</directory>
+            <directory>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/sbin</directory>
             <outputDirectory>${file.separator}/sbin</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../iotdb-core/ainode/target/apache-iotdb-ainode-${project.version}/apache-iotdb-ainode-${project.version}/lib</directory>
+            <directory>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/lib</directory>
             <outputDirectory>${file.separator}/lib</outputDirectory>
         </fileSet>
     </fileSets>

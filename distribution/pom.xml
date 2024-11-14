@@ -219,7 +219,7 @@
                                     <fileSets>
                                         <fileSet>
                                             <includes combine.children="append">
-                                                <include>apache-iotdb-${project.version}-ainode-bin.zip</include>
+                                                <include>timechodb-${project.version}-ainode-bin.zip</include>
                                             </includes>
                                         </fileSet>
                                     </fileSets>
