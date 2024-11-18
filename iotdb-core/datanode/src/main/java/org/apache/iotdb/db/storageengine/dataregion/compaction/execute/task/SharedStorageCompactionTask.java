@@ -1,7 +1,6 @@
 package org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task;
 
 import org.apache.iotdb.commons.consensus.DataRegionId;
-import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.commons.utils.TimePartitionUtils;
 import org.apache.iotdb.db.service.metrics.FileMetrics;
@@ -13,7 +12,7 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
-import org.apache.iotdb.db.storageengine.dataregion.modification.Deletion;
+import org.apache.iotdb.db.storageengine.dataregion.modification.ModEntry;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.RemoteStorageBlock;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
@@ -242,11 +241,12 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
 
   private void updateUnloadedFilesMetrics(List<TsFileResource> resources) {
     FileMetrics.getInstance()
-        .decreaseModFileNum((int) resources.stream().filter(f -> f.getModFile().exists()).count());
+        .decreaseModFileNum(
+            (int) resources.stream().filter(TsFileResource::exclusiveModFileExists).count());
     FileMetrics.getInstance()
         .decreaseModFileSize(
             resources.stream()
-                .mapToLong(f -> f.getModFile().exists() ? f.getModFile().getSize() : 0L)
+                .mapToLong(f -> f.exclusiveModFileExists() ? f.getExclusiveModFile().getSize() : 0L)
                 .sum());
     FileMetrics.getInstance()
         .deleteTsFile(
@@ -336,18 +336,10 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
     return CompactionTaskType.SHARED_STORAGE;
   }
 
-  public synchronized void deleteData(String databaseName, Deletion deletion) throws IOException {
-    Set<PartialPath> pathToDelete = new HashSet<>(deletion.getPath().getDevicePathPattern());
-    Set<String> deviceMatchInfo = new HashSet<>();
+  public synchronized void deleteData(ModEntry deletion) throws IOException {
     for (TsFileResource resource : targetFiles) {
       if (resource.getStatus() == TsFileResourceStatus.COMPACTING
-          || DataRegion.canSkipDelete(
-              databaseName,
-              resource,
-              pathToDelete,
-              deletion.getStartTime(),
-              deletion.getEndTime(),
-              deviceMatchInfo)) {
+          || DataRegion.canSkipDelete(resource, deletion)) {
         continue;
       }
       ModificationFile modFile =
@@ -355,7 +347,6 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
               resource.getTsFilePath() + ModificationFile.FILE_SUFFIX + REMOTE_TMP_FILE_SUFFIX);
       long originSize = modFile.getSize();
       try {
-        deletion.setFileOffset(resource.getTsFileSize());
         // write deletion into modification file
         modFile.write(deletion);
         // remember to close mod file
@@ -369,15 +360,13 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
         throw t;
       }
       LOGGER.info(
-          "[Deletion] Deletion with path:{}, time:{}-{} written into mods file:{}.",
-          deletion.getPath(),
-          deletion.getStartTime(),
-          deletion.getEndTime(),
-          modFile.getFilePath());
+          "[Deletion] Deletion with deletion {} written into mods file:{}.",
+          deletion,
+          modFile.getFile());
     }
   }
 
-  public static void deleteDataInRemoteFiles(DataRegion dataRegion, Deletion deletion)
+  public static void deleteDataInRemoteFiles(DataRegion dataRegion, ModEntry deletion)
       throws IOException {
     Map<Long, SharedStorageCompactionTask> timePartitionTasks =
         dataRegion2TimePartitionCompactionTask.getOrDefault(
@@ -392,7 +381,7 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
         });
 
     for (SharedStorageCompactionTask task : selectedTasks) {
-      task.deleteData(dataRegion.getDatabaseName(), deletion);
+      task.deleteData(deletion);
     }
   }
 

@@ -552,7 +552,7 @@ public class SharedStorageCompactionTaskTest {
             0, dataRegion, dataRegion.getTsFileManager(), taskResource, 0);
     task.setTargetFiles(targetFiles);
     Deletion deletion = new Deletion(new MeasurementPath(COMPACTION_TEST_DEVICE_PATH), 0, 100, 102);
-    task.deleteData(COMPACTION_TEST_SG, deletion);
+    task.deleteData(deletion);
     // verify
     assertFalse(
         fsFactory
