@@ -1139,7 +1139,7 @@ public class ClusterSchemaManager {
     }
   }
 
-  public void updateTimeSeriesUsage(Map<Integer, Long> seriesUsage) {
+  public void updateTimeSeriesUsage(final Map<Integer, Long> seriesUsage) {
     schemaQuotaStatistics.updateTimeSeriesUsage(seriesUsage);
   }
 
