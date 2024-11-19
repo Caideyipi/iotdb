@@ -11,8 +11,9 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.Shar
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.utils.TsFileGeneratorUtils;
-import org.apache.iotdb.db.storageengine.dataregion.modification.Deletion;
+import org.apache.iotdb.db.storageengine.dataregion.modification.ModEntry;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
+import org.apache.iotdb.db.storageengine.dataregion.modification.TreeDeletionEntry;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.RemoteStorageBlock;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResourceStatus;
@@ -551,7 +552,8 @@ public class SharedStorageCompactionTaskTest {
         new SharedStorageCompactionTask(
             0, dataRegion, dataRegion.getTsFileManager(), taskResource, 0);
     task.setTargetFiles(targetFiles);
-    Deletion deletion = new Deletion(new MeasurementPath(COMPACTION_TEST_DEVICE_PATH), 0, 100, 102);
+    ModEntry deletion =
+        new TreeDeletionEntry(new MeasurementPath(COMPACTION_TEST_DEVICE_PATH), 100, 102);
     task.deleteData(deletion);
     // verify
     assertFalse(
