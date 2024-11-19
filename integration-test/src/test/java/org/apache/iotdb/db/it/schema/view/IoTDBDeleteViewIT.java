@@ -21,6 +21,7 @@ package org.apache.iotdb.db.it.schema.view;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.db.it.utils.TestUtils;
+import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.itbase.category.ClusterIT;
@@ -106,7 +107,7 @@ public class IoTDBDeleteViewIT extends AbstractSchemaIT {
                         + IoTDBConstant.DATA_FOLDER_NAME))) {
           // Delete view by delete time series shall not generate any mods
           filePaths
-              .filter(path -> path.toString().endsWith(".mods"))
+              .filter(path -> path.toString().endsWith(ModificationFile.FILE_SUFFIX))
               .findFirst()
               .ifPresent(path -> Assert.fail());
         }
@@ -124,7 +125,7 @@ public class IoTDBDeleteViewIT extends AbstractSchemaIT {
                         + File.separator
                         + IoTDBConstant.DATA_FOLDER_NAME))) {
           filePaths
-              .filter(path -> path.toString().endsWith(".mods"))
+              .filter(path -> path.toString().endsWith(ModificationFile.FILE_SUFFIX))
               .findFirst()
               .ifPresent(path -> hasMod.set(true));
           if (hasMod.get()) {

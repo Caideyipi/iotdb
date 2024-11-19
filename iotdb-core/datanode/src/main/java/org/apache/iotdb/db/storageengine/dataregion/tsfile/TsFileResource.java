@@ -549,7 +549,6 @@ public class TsFileResource implements PersistentResource {
     compactionModFile = null;
   }
 
-  @TestOnly
   public void resetModFile() throws IOException {
     if (exclusiveModFile != null) {
       synchronized (this) {
