@@ -1949,7 +1949,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
       pipeMetaFromCoordinator =
           getAllPipeInfoResp.getAllPipeInfo().stream()
-              .map(PipeMeta::deserialize)
+              .map(PipeMeta::deserialize4Coordinator)
               .filter(
                   pipeMeta ->
                       pipeMeta
@@ -1968,7 +1968,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
             new IoTDBException(exceptionMessage, TSStatusCode.PIPE_ERROR.getStatusCode()));
         return future;
       }
-    } catch (Exception e) {
+    } catch (final Exception e) {
       final String exceptionMessage =
           String.format(
               "Failed to alter pipe %s, because %s",
@@ -2028,7 +2028,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
                   pipeMetaFromCoordinator.getStaticMeta().getConnectorParameters().getAttribute());
         }
       }
-    } catch (Exception e) {
+    } catch (final Exception e) {
       LOGGER.info("Failed to validate alter pipe statement, because {}", e.getMessage(), e);
       future.setException(
           new IoTDBException(e.getMessage(), TSStatusCode.PIPE_ERROR.getStatusCode()));
