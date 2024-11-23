@@ -1010,12 +1010,37 @@ public class IoTDBDescriptor {
     loadAutoCreateSchemaProps(properties);
 
     conf.setTsFileStorageFs(
-        properties.getProperty("tsfile_storage_fs", conf.getTsFileStorageFs().toString()));
-    conf.setCoreSitePath(properties.getProperty("core_site_path", conf.getCoreSitePath()));
-    conf.setHdfsSitePath(properties.getProperty("hdfs_site_path", conf.getHdfsSitePath()));
-    conf.setHdfsIp(properties.getProperty("hdfs_ip", conf.getRawHDFSIp()).split(","));
-    conf.setHdfsPort(properties.getProperty("hdfs_port", conf.getHdfsPort()));
-    conf.setDfsNameServices(properties.getProperty("dfs_nameservices", conf.getDfsNameServices()));
+        Optional.ofNullable(
+                properties.getProperty("tsfile_storage_fs", conf.getTsFileStorageFs().toString()))
+            .map(String::trim)
+            .orElse(conf.getTsFileStorageFs().toString()));
+
+    conf.setCoreSitePath(
+        Optional.ofNullable(properties.getProperty("core_site_path", conf.getCoreSitePath()))
+            .map(String::trim)
+            .orElse(conf.getCoreSitePath()));
+
+    conf.setHdfsSitePath(
+        Optional.ofNullable(properties.getProperty("hdfs_site_path", conf.getHdfsSitePath()))
+            .map(String::trim)
+            .orElse(conf.getHdfsSitePath()));
+
+    conf.setHdfsIp(
+        Optional.ofNullable(properties.getProperty("hdfs_ip", conf.getRawHDFSIp()))
+            .map(String::trim)
+            .map(value -> value.split(","))
+            .orElse(new String[0]));
+
+    conf.setHdfsPort(
+        Optional.ofNullable(properties.getProperty("hdfs_port", conf.getHdfsPort()))
+            .map(String::trim)
+            .orElse(conf.getHdfsPort()));
+
+    conf.setDfsNameServices(
+        Optional.ofNullable(properties.getProperty("dfs_nameservices", conf.getDfsNameServices()))
+            .map(String::trim)
+            .orElse(conf.getDfsNameServices()));
+
     conf.setDfsHaNamenodes(
         Optional.ofNullable(properties.getProperty("dfs_ha_namenodes", conf.getRawDfsHaNamenodes()))
             .map(String::trim)
@@ -1450,7 +1475,10 @@ public class IoTDBDescriptor {
         Boolean.parseBoolean(
             properties.getProperty("quota_enable", String.valueOf(conf.isQuotaEnable()))));
 
-    conf.setRateLimiterType(properties.getProperty("rate_limiter_type", conf.getRateLimiterType()));
+    conf.setRateLimiterType(
+        Optional.ofNullable(properties.getProperty("rate_limiter_type", conf.getRateLimiterType()))
+            .map(String::trim)
+            .orElse(conf.getRateLimiterType()));
 
     conf.setDataNodeSchemaCacheEvictionPolicy(
         Optional.ofNullable(
@@ -1630,15 +1658,23 @@ public class IoTDBDescriptor {
                 .orElse(String.valueOf(conf.getAuthorCacheSize()))));
     conf.setAuthorCacheExpireTime(
         Integer.parseInt(
-            properties.getProperty(
-                "author_cache_expire_time", String.valueOf(conf.getAuthorCacheExpireTime()))));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "author_cache_expire_time",
+                        String.valueOf(conf.getAuthorCacheExpireTime())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.getAuthorCacheExpireTime()))));
   }
 
   private void loadMigrationProps(Properties properties) throws IOException {
     int migrationThreadCount =
         Integer.parseInt(
-            properties.getProperty(
-                "migrate_thread_count", String.valueOf(conf.getMigrateThreadCount())));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "migrate_thread_count", String.valueOf(conf.getMigrateThreadCount())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.getMigrateThreadCount())));
+
     if (migrationThreadCount <= 0) {
       migrationThreadCount = conf.getMigrateThreadCount();
       LOGGER.warn(
@@ -1653,9 +1689,16 @@ public class IoTDBDescriptor {
   private void loadMigrationHotProps(Properties properties) throws IOException {
     String usageThresholdsParam =
         properties.getProperty(
-            "dn_default_space_usage_thresholds",
-            ConfigurationFileUtils.getConfigurationDefaultValue(
-                "dn_default_space_usage_thresholds"));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "dn_default_space_usage_thresholds",
+                        ConfigurationFileUtils.getConfigurationDefaultValue(
+                            "dn_default_space_usage_thresholds")))
+                .map(String::trim)
+                .orElse(
+                    ConfigurationFileUtils.getConfigurationDefaultValue(
+                        "dn_default_space_usage_thresholds")));
+
     if (usageThresholdsParam != null) {
       String[] usageThresholdsStr = usageThresholdsParam.split(IoTDBConstant.TIER_SEPARATOR);
       double[] usageThresholds = new double[usageThresholdsStr.length];
@@ -1672,10 +1715,16 @@ public class IoTDBDescriptor {
     }
 
     String migrateSpeedLimitParam =
-        properties.getProperty(
-            "tiered_storage_migrate_speed_limit_bytes_per_sec",
-            ConfigurationFileUtils.getConfigurationDefaultValue(
-                "tiered_storage_migrate_speed_limit_bytes_per_sec"));
+        Optional.ofNullable(
+                properties.getProperty(
+                    "tiered_storage_migrate_speed_limit_bytes_per_sec",
+                    ConfigurationFileUtils.getConfigurationDefaultValue(
+                        "tiered_storage_migrate_speed_limit_bytes_per_sec")))
+            .map(String::trim)
+            .orElse(
+                ConfigurationFileUtils.getConfigurationDefaultValue(
+                    "tiered_storage_migrate_speed_limit_bytes_per_sec"));
+
     if (migrateSpeedLimitParam != null) {
       String[] migrateSpeedLimitStr = migrateSpeedLimitParam.split(IoTDBConstant.TIER_SEPARATOR);
       long[] migrateSpeedLimit = new long[migrateSpeedLimitStr.length];
@@ -1687,24 +1736,49 @@ public class IoTDBDescriptor {
 
     TierFullPolicy tierFullPolicy =
         TierFullPolicy.valueOf(
-            properties.getProperty(
-                "dn_tier_full_policy",
-                ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy")));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "dn_tier_full_policy",
+                        ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy")))
+                .map(String::trim)
+                .orElse(
+                    ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy")));
+
     conf.setTierFullPolicy(tierFullPolicy);
   }
 
   private void loadObjectStorageProps(Properties properties) {
     conf.setObjectStorageType(
-        properties.getProperty("object_storage_type", conf.getObjectStorageType()));
+        Optional.ofNullable(
+                properties.getProperty("object_storage_type", conf.getObjectStorageType()))
+            .map(String::trim)
+            .orElse(conf.getObjectStorageType()));
+
     conf.setObjectStorageBucket(
-        properties.getProperty("object_storage_bucket", conf.getObjectStorageBucket()));
+        Optional.ofNullable(
+                properties.getProperty("object_storage_bucket", conf.getObjectStorageBucket()))
+            .map(String::trim)
+            .orElse(conf.getObjectStorageBucket()));
+
     conf.setObjectStorageEndpoint(
-        properties.getProperty("object_storage_endpoint", conf.getObjectStorageEndpoint()));
+        Optional.ofNullable(
+                properties.getProperty("object_storage_endpoint", conf.getObjectStorageEndpoint()))
+            .map(String::trim)
+            .orElse(conf.getObjectStorageEndpoint()));
+
     conf.setObjectStorageAccessKey(
-        properties.getProperty("object_storage_access_key", conf.getObjectStorageAccessKey()));
+        Optional.ofNullable(
+                properties.getProperty(
+                    "object_storage_access_key", conf.getObjectStorageAccessKey()))
+            .map(String::trim)
+            .orElse(conf.getObjectStorageAccessKey()));
+
     conf.setObjectStorageAccessSecret(
-        properties.getProperty(
-            "object_storage_access_secret", conf.getObjectStorageAccessSecret()));
+        Optional.ofNullable(
+                properties.getProperty(
+                    "object_storage_access_secret", conf.getObjectStorageAccessSecret()))
+            .map(String::trim)
+            .orElse(conf.getObjectStorageAccessSecret()));
 
     String[] cacheDirs =
         properties
@@ -1719,9 +1793,13 @@ public class IoTDBDescriptor {
 
     int cachePageSizeInKb =
         Integer.parseInt(
-            properties.getProperty(
-                "remote_tsfile_cache_page_size_in_kb",
-                String.valueOf(conf.getCachePageSizeInKb())));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "remote_tsfile_cache_page_size_in_kb",
+                        String.valueOf(conf.getCachePageSizeInKb())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.getCachePageSizeInKb())));
+
     if (cachePageSizeInKb <= 0) {
       cachePageSizeInKb = conf.getCachePageSizeInKb();
       LOGGER.warn(
@@ -1732,9 +1810,13 @@ public class IoTDBDescriptor {
 
     long cacheMaxDiskUsageInMb =
         Long.parseLong(
-            properties.getProperty(
-                "remote_tsfile_cache_max_disk_usage_in_mb",
-                String.valueOf(conf.getCacheMaxDiskUsageInMb())));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "remote_tsfile_cache_max_disk_usage_in_mb",
+                        String.valueOf(conf.getCacheMaxDiskUsageInMb())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.getCacheMaxDiskUsageInMb())));
+
     if (cacheMaxDiskUsageInMb <= 0) {
       cacheMaxDiskUsageInMb = conf.getCacheMaxDiskUsageInMb();
       LOGGER.warn(
@@ -3851,11 +3933,19 @@ public class IoTDBDescriptor {
   public void loadEnterpriseProps(Properties properties) {
     conf.setEnableWhiteList(
         Boolean.parseBoolean(
-            properties.getProperty("enable_white_list", String.valueOf(conf.isEnableWhiteList()))));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "enable_white_list", String.valueOf(conf.isEnableWhiteList())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.isEnableWhiteList()))));
 
     conf.setEnableAuditLog(
         Boolean.parseBoolean(
-            properties.getProperty("enable_audit_log", String.valueOf(conf.isEnableAuditLog()))));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "enable_audit_log", String.valueOf(conf.isEnableAuditLog())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.isEnableAuditLog()))));
 
     if (properties.getProperty("audit_log_storage") != null) {
       conf.setAuditLogStorage(
@@ -3873,9 +3963,12 @@ public class IoTDBDescriptor {
 
     conf.setEnableAuditLogForNativeInsertApi(
         Boolean.parseBoolean(
-            properties.getProperty(
-                "enable_audit_log_for_native_insert_api",
-                String.valueOf(conf.isEnableAuditLogForNativeInsertApi()))));
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "enable_audit_log_for_native_insert_api",
+                        String.valueOf(conf.isEnableAuditLogForNativeInsertApi())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.isEnableAuditLogForNativeInsertApi()))));
   }
 
   private static class IoTDBDescriptorHolder {
