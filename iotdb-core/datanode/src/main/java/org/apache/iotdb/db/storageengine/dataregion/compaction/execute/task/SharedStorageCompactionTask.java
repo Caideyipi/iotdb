@@ -246,7 +246,11 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
     FileMetrics.getInstance()
         .decreaseModFileSize(
             resources.stream()
-                .mapToLong(f -> f.exclusiveModFileExists() ? f.getExclusiveModFile().getSize() : 0L)
+                .mapToLong(
+                    f ->
+                        f.exclusiveModFileExists()
+                            ? f.getExclusiveModFile().getFile().length()
+                            : 0L)
                 .sum());
     FileMetrics.getInstance()
         .deleteTsFile(
@@ -345,7 +349,7 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
       ModificationFile modFile =
           new ModificationFile(
               resource.getTsFilePath() + ModificationFile.FILE_SUFFIX + REMOTE_TMP_FILE_SUFFIX);
-      long originSize = modFile.getSize();
+      long originSize = modFile.getFile().length();
       try {
         // write deletion into modification file
         modFile.write(deletion);
