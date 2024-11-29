@@ -102,6 +102,9 @@ statement
     | showSeriesSlotListStatement
     | migrateRegionStatement
 
+    // Activation
+    | showActivation
+
     // Admin Statement
     | showVariablesStatement
     | flushStatement
@@ -428,7 +431,10 @@ migrateRegionStatement
     : MIGRATE REGION regionId=INTEGER_VALUE FROM fromId=INTEGER_VALUE TO toId=INTEGER_VALUE
     ;
 
-
+// ------------------------------------------- Activation ---------------------------------------------------------
+showActivation
+    : SHOW ACTIVATION
+    ;
 
 // ------------------------------------------- Admin Statement ---------------------------------------------------------
 showVariablesStatement
@@ -924,6 +930,7 @@ nonReserved
     ;
 
 ABSENT: 'ABSENT';
+ACTIVATION: 'ACTIVATION';
 ADD: 'ADD';
 ADMIN: 'ADMIN';
 AFTER: 'AFTER';

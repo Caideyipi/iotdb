@@ -122,6 +122,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.SelectItem;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.SetConfiguration;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.SetProperties;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowAINodes;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowActivation;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCluster;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowClusterId;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowConfigNodes;
@@ -837,6 +838,11 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitShowClusterStatement(RelationalSqlParser.ShowClusterStatementContext ctx) {
     boolean details = ctx.DETAILS() != null;
     return new ShowCluster(details);
+  }
+
+  @Override
+  public Node visitShowActivation(RelationalSqlParser.ShowActivationContext ctx) {
+    return new ShowActivation();
   }
 
   @Override

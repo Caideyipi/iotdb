@@ -37,6 +37,7 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowCluste
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowPipePluginsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariablesTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.AlterTableAddColumnTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.AlterTableDropColumnTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.AlterTableRenameColumnTask;
@@ -104,6 +105,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.RenameTable;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.SetConfiguration;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.SetProperties;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowAINodes;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowActivation;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCluster;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowClusterId;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowConfigNodes;
@@ -259,6 +261,15 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
     ShowClusterStatement treeStatement = new ShowClusterStatement();
     treeStatement.setDetails(showCluster.getDetails().orElse(false));
     return new ShowClusterTask(treeStatement);
+  }
+
+  @Override
+  protected IConfigTask visitShowActivation(
+      final ShowActivation node, final MPPQueryContext context) {
+    context.setQueryType(QueryType.READ);
+    // As the implementation is identical, we'll simply translate to the
+    // corresponding tree-model variant and execute that.
+    return new ShowActivationTask();
   }
 
   @Override
