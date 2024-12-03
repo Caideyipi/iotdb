@@ -61,9 +61,9 @@ abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
     receiver2.getConfig().getCommonConfig().setAutoCreateSchemaEnabled(true);
 
     // 10 min, assert that the operations will not time out
-    sender.getConfig().getCommonConfig().setCnConnectionTimeoutMs(600000);
-    receiver1.getConfig().getCommonConfig().setCnConnectionTimeoutMs(600000);
-    receiver2.getConfig().getCommonConfig().setCnConnectionTimeoutMs(600000);
+    sender.getConfig().getCommonConfig().setDnConnectionTimeoutMs(600000);
+    receiver1.getConfig().getCommonConfig().setDnConnectionTimeoutMs(600000);
+    receiver2.getConfig().getCommonConfig().setDnConnectionTimeoutMs(600000);
   }
 
   @Override
