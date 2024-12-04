@@ -82,10 +82,6 @@ public class ShowActivationTask implements IConfigTask {
                 format(usage.getDataNodeNum()),
                 unlimitedOrFormat(license.getDataNodeNum())),
             Arrays.asList(
-                "AiNodeLimit",
-                format(usage.getAiNodeNum()),
-                unlimitedOrFormat(license.getAiNodeNum())),
-            Arrays.asList(
                 "CpuLimit",
                 format(usage.getCpuCoreNum()),
                 unlimitedOrFormat(license.getCpuCoreNum())),

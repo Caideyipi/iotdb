@@ -558,8 +558,7 @@ public class ActivationManager {
         .setDataNodeNum((short) configManager.getNodeManager().getRegisteredDataNodeCount())
         .setCpuCoreNum(configManager.getNodeManager().getDataNodeCpuCoreCount())
         .setDeviceNum(configManager.getClusterSchemaManager().getDeviceUsage())
-        .setSensorNum(configManager.getClusterSchemaManager().getTimeSeriesUsage())
-        .setAiNodeNum((short) configManager.getNodeManager().getRegisteredAINodeInfoList().size());
+        .setSensorNum(configManager.getClusterSchemaManager().getTimeSeriesUsage());
     return usage;
   }
 
@@ -991,7 +990,6 @@ public class ActivationManager {
     properties.setProperty(License.DEVICE_NUM_LIMIT_NAME, String.valueOf(Long.MAX_VALUE));
     properties.setProperty(License.SENSOR_NUM_LIMIT_NAME, String.valueOf(Long.MAX_VALUE));
     properties.setProperty(License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME, "10000");
-    properties.setProperty(License.AINODE_NUM_LIMIT_NAME, "9999");
     return properties;
   }
 

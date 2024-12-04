@@ -203,7 +203,6 @@ struct TLicense {
     6: required i64 deviceNum
     7: required i64 sensorNum
     8: required i64 disconnectionFromActiveNodeTime
-    9: required i16 aiNodeNum
 }
 
 struct TLoadSample {

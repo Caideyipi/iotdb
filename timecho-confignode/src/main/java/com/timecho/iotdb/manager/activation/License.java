@@ -51,7 +51,7 @@ public class License {
   public static final String IP_ADDRESS_NAME = "S4";
   public static final String INTERNAL_PORT_NAME = "S5";
   public static final String IS_SEED_CONFIGNODE_NODE_NAME = "S6";
-  public static final String CLUSTER_NAME_NAME = "S7";
+  @Deprecated public static final String CLUSTER_NAME_NAME = "S7";
   public static final String NODE_UUID_NAME = "S8";
   public static final String SYSTEM_INFO_HASH = "S9";
 
@@ -62,7 +62,7 @@ public class License {
   public static final String SENSOR_NUM_LIMIT_NAME = "DN4";
 
   // AINode fields
-  public static final String AINODE_NUM_LIMIT_NAME = "ML1";
+  @Deprecated public static final String AINODE_NUM_LIMIT_NAME = "ML1";
 
   // activate info
   protected final Limit<Long> licenseIssueTimestamp = new Limit<>(0L, Long::parseLong);
@@ -188,7 +188,6 @@ public class License {
       newLicense.sensorNumLimit.parse(properties.getProperty(SENSOR_NUM_LIMIT_NAME));
       newLicense.disconnectionFromActiveNodeTimeLimit.parse(
           properties.getProperty(DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME));
-      newLicense.aiNodeNumLimit.parse(properties.getProperty(AINODE_NUM_LIMIT_NAME));
     } catch (Exception e) {
       logger.error("License parse error", e);
       return false;
@@ -221,7 +220,6 @@ public class License {
     newLicense.dataNodeNumLimit.setValue(license.dataNodeNum);
     newLicense.deviceNumLimit.setValue(license.deviceNum);
     newLicense.sensorNumLimit.setValue(license.sensorNum);
-    newLicense.aiNodeNumLimit.setValue(license.getAiNodeNum());
 
     // compare and copy
     this.logLicenseDifferences(newLicense);
@@ -325,8 +323,7 @@ public class License {
         this.getDataNodeCpuCoreNumLimit(),
         this.getDeviceNumLimit(),
         this.getSensorNumLimit(),
-        this.getDisconnectionFromActiveNodeTimeLimit(),
-        this.getAINodeNumLimit());
+        this.getDisconnectionFromActiveNodeTimeLimit());
   }
 
   // endregion
