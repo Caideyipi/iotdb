@@ -27,7 +27,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.timecho.iotdb</groupId>
-    <artifactId>timecho-isession</artifactId>
+    <artifactId>isession</artifactId>
+    <name>IoTDB: Client: isession</name>
     <dependencies>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
