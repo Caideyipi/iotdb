@@ -40,6 +40,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.BinaryLiteral;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.BooleanLiteral;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Cast;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ClearCache;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CliActivate;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CoalesceExpression;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ColumnDefinition;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ComparisonExpression;
@@ -140,6 +141,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowPipePlugins;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowPipes;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowRegions;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowSubscriptions;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowSystemInfo;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowTables;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowTopics;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowVariables;
@@ -889,6 +891,20 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitShowClusterStatement(RelationalSqlParser.ShowClusterStatementContext ctx) {
     boolean details = ctx.DETAILS() != null;
     return new ShowCluster(details);
+  }
+
+  @Override
+  public Node visitShowSystemInfo(RelationalSqlParser.ShowSystemInfoContext ctx) {
+    return new ShowSystemInfo();
+  }
+
+  @Override
+  public Node visitActivate(RelationalSqlParser.ActivateContext ctx) {
+    String sql = ctx.getText();
+    sql = sql.replaceFirst("activate", "");
+    sql = sql.replace(" ", "").replace("'", "");
+    List<String> licenseList = Arrays.asList(sql.split("[,，]"));
+    return new CliActivate(licenseList);
   }
 
   @Override

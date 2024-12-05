@@ -86,7 +86,8 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
   @Override
   protected void versionCheck(TSystemConfigurationResp configurationResp) throws StartupException {
     if (!configurationResp.globalConfig.isEnterprise) {
-      final String message = "Timecho DataNode cannot use with open source ConfigNode";
+      final String message =
+          "TimechoDB DataNode can only be used with TimechoDB ConfigNode and cannot be used with IoTDB ConfigNode.";
       logger.error(message);
       throw new StartupException(message);
     }

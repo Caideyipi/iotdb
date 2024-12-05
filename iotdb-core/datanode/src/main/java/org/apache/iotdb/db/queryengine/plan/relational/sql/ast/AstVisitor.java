@@ -345,6 +345,14 @@ public abstract class AstVisitor<R, C> {
     return visitStatement(node, context);
   }
 
+  protected R visitShowSystemInfo(ShowSystemInfo node, C context) {
+    return visitStatement(node, context);
+  }
+
+  protected R visitCliActivate(CliActivate node, C context) {
+    return visitStatement(node, context);
+  }
+
   protected R visitShowActivation(ShowActivation node, C context) {
     return visitStatement(node, context);
   }

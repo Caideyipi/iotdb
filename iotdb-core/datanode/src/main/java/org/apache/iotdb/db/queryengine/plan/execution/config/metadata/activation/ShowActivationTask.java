@@ -75,7 +75,7 @@ public class ShowActivationTask implements IConfigTask {
     String formattedTime = dateFormat.format(zonedDateTime);
     List<List<String>> table =
         Arrays.asList(
-            Arrays.asList("ClusterActivationStatus", clusterActivationStatus.toString(), "-"),
+            Arrays.asList("Status", clusterActivationStatus.toString(), "-"),
             Arrays.asList("ExpiredTime", "-", formattedTime),
             Arrays.asList(
                 "DataNodeLimit",

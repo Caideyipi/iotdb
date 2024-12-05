@@ -109,6 +109,8 @@ statement
     | migrateRegionStatement
 
     // Activation
+    | showSystemInfo
+    | activate
     | showActivation
 
     // Admin Statement
@@ -463,6 +465,14 @@ migrateRegionStatement
     ;
 
 // ------------------------------------------- Activation ---------------------------------------------------------
+showSystemInfo
+    : SHOW SYSTEM INFO
+    ;
+
+activate
+    : ACTIVATE string
+    ;
+
 showActivation
     : SHOW ACTIVATION
     ;
@@ -962,6 +972,7 @@ nonReserved
 
 ABSENT: 'ABSENT';
 ACTIVATION: 'ACTIVATION';
+ACTIVATE: 'ACTIVATE';
 ADD: 'ADD';
 ADMIN: 'ADMIN';
 AFTER: 'AFTER';
@@ -1098,6 +1109,7 @@ IGNORE: 'IGNORE';
 IMMEDIATE: 'IMMEDIATE';
 IN: 'IN';
 INCLUDING: 'INCLUDING';
+INFO: 'INFO';
 INITIAL: 'INITIAL';
 INNER: 'INNER';
 INPUT: 'INPUT';

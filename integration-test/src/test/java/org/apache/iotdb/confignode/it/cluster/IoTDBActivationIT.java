@@ -844,9 +844,23 @@ public class IoTDBActivationIT {
   // region CLI Activation Operation Test
 
   @Test
-  public void cliOperationTest() throws Exception {
+  public void cliOperationForTreeModelTest() throws Exception {
     EnvFactory.getEnv().initClusterEnvironment(3, 2);
     try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      showSystemInfoTest(statement);
+      showActivationTest(statement);
+      cliActivateFailBecauseWrongNumber(statement);
+      cliActivateFailBecauseNotBigEnough(statement);
+      cliActivateFailBecauseDifferentContent(statement);
+      cliActivateSuccess(statement);
+    }
+  }
+
+  @Test
+  public void cliOperationForTableModelTest() throws Exception {
+    EnvFactory.getEnv().initClusterEnvironment(3, 2);
+    try (Connection connection = EnvFactory.getEnv().getTableConnection();
         Statement statement = connection.createStatement()) {
       showSystemInfoTest(statement);
       showActivationTest(statement);
@@ -868,10 +882,9 @@ public class IoTDBActivationIT {
     ResultSet resultSet = statement.executeQuery("show activation");
     ImmutableMap<String, Pair<String, String>> expectation =
         ImmutableMap.of(
-            "ClusterActivationStatus", new Pair<>(UNACTIVATED.toString(), "-"),
+            "Status", new Pair<>(UNACTIVATED.toString(), "-"),
             "ExpiredTime", new Pair<>("-", SKIP),
             "DataNodeLimit", new Pair<>("2", "0"),
-            "AiNodeLimit", new Pair<>("0", "0"),
             "CpuLimit", new Pair<>(SKIP, "0"),
             "DeviceLimit", new Pair<>("0", "0"),
             "TimeSeriesLimit", new Pair<>("0", "0"));
@@ -939,10 +952,9 @@ public class IoTDBActivationIT {
     ResultSet resultSet = statement.executeQuery(sql);
     ImmutableMap<String, Pair<String, String>> expectation =
         ImmutableMap.of(
-            "ClusterActivationStatus", new Pair<>(ACTIVATED.toString(), "-"),
+            "Status", new Pair<>(ACTIVATED.toString(), "-"),
             "ExpiredTime", new Pair<>("-", SKIP),
             "DataNodeLimit", new Pair<>("2", "2"),
-            "AiNodeLimit", new Pair<>("0", "0"),
             "CpuLimit", new Pair<>(SKIP, "Unlimited"),
             "DeviceLimit", new Pair<>("0", "Unlimited"),
             "TimeSeriesLimit", new Pair<>("0", "Unlimited"));
@@ -952,7 +964,10 @@ public class IoTDBActivationIT {
   private void checkShowActivationResult(
       ResultSet resultSet, ImmutableMap<String, Pair<String, String>> expectation)
       throws SQLException {
+    int loopCount = 0;
     while (resultSet.next()) {
+      loopCount++;
+      logger.info("check {}", resultSet.getString(1));
       Pair<String, String> expectedUsageAndLimit = expectation.get(resultSet.getString(1));
       if (!SKIP.equals(expectedUsageAndLimit.getLeft())) {
         Assert.assertEquals(
@@ -963,6 +978,7 @@ public class IoTDBActivationIT {
             expectedUsageAndLimit.getRight(), resultSet.getString(ColumnHeaderConstant.LIMIT));
       }
     }
+    Assert.assertEquals("some expectations not checked", expectation.size(), loopCount);
   }
 
   // endregion
