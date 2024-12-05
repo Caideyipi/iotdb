@@ -3977,7 +3977,7 @@ public class IoTDBDescriptor {
     SystemInfo.getInstance().allocateWriteMemory();
   }
 
-  public void loadEnterpriseProps(Properties properties) {
+  public void loadEnterpriseProps(TrimProperties properties) {
     conf.setEnableWhiteList(
         Boolean.parseBoolean(
             Optional.ofNullable(
