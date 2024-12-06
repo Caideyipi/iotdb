@@ -346,7 +346,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
                 req.getTimeout());
       } else {
         org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Statement s =
-            relationSqlParser.createStatement(statement, clientSession.getZoneId());
+            relationSqlParser.createStatement(statement, clientSession.getZoneId(), clientSession);
 
         if (s instanceof Use) {
           useDatabase = true;
@@ -1674,7 +1674,8 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           } else {
 
             org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Statement s =
-                relationSqlParser.createStatement(statement, clientSession.getZoneId());
+                relationSqlParser.createStatement(
+                    statement, clientSession.getZoneId(), clientSession);
 
             if (s instanceof Use) {
               useDatabase = true;
