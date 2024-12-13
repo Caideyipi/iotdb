@@ -181,6 +181,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.ShowThrottleQuot
 
 import org.apache.tsfile.exception.NotImplementedException;
 
+import static org.apache.iotdb.commons.executable.ExecutableManager.getUnTrustedUriErrorMsg;
 import static org.apache.iotdb.commons.executable.ExecutableManager.isUriTrusted;
 
 public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQueryContext> {
@@ -334,7 +335,8 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
       return new CreateFunctionTask(createFunctionStatement);
     } else {
       // user specified uri and that uri is not trusted
-      throw new SemanticException("Untrusted uri " + createFunctionStatement.getUriString().get());
+      throw new SemanticException(
+          getUnTrustedUriErrorMsg(createFunctionStatement.getUriString().get()));
     }
   }
 
@@ -361,7 +363,7 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
       return new CreateTriggerTask(createTriggerStatement);
     } else {
       // user specified uri and that uri is not trusted
-      throw new SemanticException("Untrusted uri " + createTriggerStatement.getUriString());
+      throw new SemanticException(getUnTrustedUriErrorMsg(createTriggerStatement.getUriString()));
     }
   }
 
@@ -387,7 +389,8 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
       return new CreatePipePluginTask(createPipePluginStatement);
     } else {
       // user specified uri and that uri is not trusted
-      throw new SemanticException("Untrusted uri " + createPipePluginStatement.getUriString());
+      throw new SemanticException(
+          getUnTrustedUriErrorMsg(createPipePluginStatement.getUriString()));
     }
   }
 
@@ -683,7 +686,7 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
       return new CreateModelTask(createModelStatement, context);
     } else {
       // user specified uri and that uri is not trusted
-      throw new SemanticException("Untrusted uri " + createModelStatement.getUri());
+      throw new SemanticException(getUnTrustedUriErrorMsg(createModelStatement.getUri()));
     }
   }
 
