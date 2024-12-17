@@ -2207,9 +2207,6 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
             "It's not permitted to manually transition the DataNode out of the unactivated state");
       }
       commonConfig.setNodeStatus(NodeStatus.parse(status));
-      if (commonConfig.getNodeStatus().equals(NodeStatus.Removing)) {
-        PipeDataNodeAgent.runtime().stop();
-      }
     } catch (Exception e) {
       return RpcUtils.getStatus(TSStatusCode.EXECUTE_STATEMENT_ERROR, e.getMessage());
     }
