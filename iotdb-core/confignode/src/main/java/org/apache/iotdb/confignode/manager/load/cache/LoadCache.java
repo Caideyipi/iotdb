@@ -105,7 +105,7 @@ public class LoadCache {
     this.confirmedConfigNodeMap = new ConcurrentHashMap<>();
   }
 
-  public void initHeartbeatCache(IManager configManager) {
+  public void initHeartbeatCache(final IManager configManager) {
     initNodeHeartbeatCache(
         configManager.getNodeManager().getRegisteredConfigNodes(),
         configManager.getNodeManager().getRegisteredDataNodes(),
