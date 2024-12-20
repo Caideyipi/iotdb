@@ -2272,6 +2272,9 @@ public class DataRegion implements IDataRegionForQuery {
     boolean hasReleasedLock = false;
 
     try {
+      if (deleted) {
+        return;
+      }
       TreeDeviceSchemaCacheManager.getInstance().invalidateLastCache(pattern);
       // write log to impacted working TsFileProcessors
       List<WALFlushListener> walListeners =
@@ -2323,6 +2326,9 @@ public class DataRegion implements IDataRegionForQuery {
     writeLock("delete");
     boolean hasReleasedLock = false;
     try {
+      if (deleted) {
+        return;
+      }
       TableDeviceSchemaCache.getInstance()
           .invalidateLastCache(getDatabaseName(), modEntries.get(0).getTableName());
       List<WALFlushListener> walListeners = logDeletionInWAL(node);
@@ -2385,6 +2391,9 @@ public class DataRegion implements IDataRegionForQuery {
     boolean releasedLock = false;
 
     try {
+      if (deleted) {
+        return;
+      }
       TreeDeviceSchemaCacheManager.getInstance().invalidateDatabaseLastCache(getDatabaseName());
       // write log to impacted working TsFileProcessors
       List<WALFlushListener> walListeners =
@@ -2492,12 +2501,20 @@ public class DataRegion implements IDataRegionForQuery {
    * request</a> for details.
    */
   public void insertSeparatorToWAL() {
-    getWALNode()
-        .ifPresent(
-            walNode ->
-                walNode.log(
-                    TsFileProcessor.MEMTABLE_NOT_EXIST,
-                    new ContinuousSameSearchIndexSeparatorNode()));
+    writeLock("insertSeparatorToWAL");
+    try {
+      if (deleted) {
+        return;
+      }
+      getWALNode()
+          .ifPresent(
+              walNode ->
+                  walNode.log(
+                      TsFileProcessor.MEMTABLE_NOT_EXIST,
+                      new ContinuousSameSearchIndexSeparatorNode()));
+    } finally {
+      writeUnlock();
+    }
   }
 
   public static boolean canSkipDelete(TsFileResource tsFileResource, ModEntry deletion) {
@@ -3756,6 +3773,10 @@ public class DataRegion implements IDataRegionForQuery {
 
   public String getInsertWriteLockHolder() {
     return insertWriteLockHolder;
+  }
+
+  public boolean isDeleted() {
+    return deleted;
   }
 
   /** This method could only be used in iot consensus */
