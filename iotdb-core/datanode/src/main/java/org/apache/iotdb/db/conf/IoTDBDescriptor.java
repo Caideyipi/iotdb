@@ -1749,16 +1749,15 @@ public class IoTDBDescriptor {
 
   private void loadMigrationHotProps(TrimProperties properties) throws IOException {
     String usageThresholdsParam =
-        properties.getProperty(
-            Optional.ofNullable(
-                    properties.getProperty(
-                        "dn_default_space_usage_thresholds",
-                        ConfigurationFileUtils.getConfigurationDefaultValue(
-                            "dn_default_space_usage_thresholds")))
-                .map(String::trim)
-                .orElse(
+        Optional.ofNullable(
+                properties.getProperty(
+                    "dn_default_space_usage_thresholds",
                     ConfigurationFileUtils.getConfigurationDefaultValue(
-                        "dn_default_space_usage_thresholds")));
+                        "dn_default_space_usage_thresholds")))
+            .map(String::trim)
+            .orElse(
+                ConfigurationFileUtils.getConfigurationDefaultValue(
+                    "dn_default_space_usage_thresholds"));
 
     if (usageThresholdsParam != null) {
       String[] usageThresholdsStr = usageThresholdsParam.split(IoTDBConstant.TIER_SEPARATOR);
