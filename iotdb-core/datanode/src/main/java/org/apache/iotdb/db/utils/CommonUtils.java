@@ -391,7 +391,7 @@ public class CommonUtils {
         break;
       case TEXT:
       case STRING:
-        if (columnCategory.equals(TsTableColumnCategory.MEASUREMENT)) {
+        if (columnCategory.equals(TsTableColumnCategory.FIELD)) {
           valueColumn = new Binary[rowNum];
         } else {
           valueColumn = new String[rowNum];
