@@ -42,6 +42,7 @@ import org.apache.iotdb.commons.service.IService;
 import org.apache.iotdb.commons.service.ServiceType;
 import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.commons.utils.PathUtils;
+import org.apache.iotdb.commons.utils.StatusUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.commons.utils.TimePartitionUtils;
 import org.apache.iotdb.consensus.ConsensusFactory;
@@ -704,6 +705,7 @@ public class StorageEngine implements IService {
             } catch (Exception e) {
               throw new IllegalArgumentException(e);
             }
+            return StatusUtils.OK;
           });
     } catch (Exception e) {
       if (e instanceof InterruptedException) {
