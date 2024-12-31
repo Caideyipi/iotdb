@@ -168,7 +168,7 @@ public class IoTDBDeletionTableIT {
         statement.execute("DELETE FROM vehicle1  WHERE s4 != true");
         fail("should not reach here!");
       } catch (SQLException e) {
-        assertEquals("701: The column 's4' does not exist or is not an id column", e.getMessage());
+        assertEquals("701: The column 's4' does not exist or is not a tag column", e.getMessage());
       }
 
       try {
