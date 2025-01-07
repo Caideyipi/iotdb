@@ -81,6 +81,8 @@ jobs:
               -am -PMultiClusterIT2AutoCreateSchema >> ~/run-tests-$attempt.log && return 0
               test_output=$(cat ~/run-tests-$attempt.log) 
           
+              mv ~/run-tests-$attempt.log integration-test/target/cluster-logs/
+          
               echo "==================== BEGIN: ~/run-tests-$attempt.log ===================="          
               echo "$test_output"
               echo "==================== END: ~/run-tests-$attempt.log ======================"
@@ -181,6 +183,8 @@ jobs:
               -am -PMultiClusterIT2ManualCreateSchema >> ~/run-tests-$attempt.log && return 0
               test_output=$(cat ~/run-tests-$attempt.log) 
           
+              mv ~/run-tests-$attempt.log integration-test/target/cluster-logs/
+
               echo "==================== BEGIN: ~/run-tests-$attempt.log ===================="          
               echo "$test_output"
               echo "==================== END: ~/run-tests-$attempt.log ======================"
@@ -260,6 +264,8 @@ jobs:
               -am -PMultiClusterIT2SubscriptionArchVerification >> ~/run-tests-$attempt.log && return 0
               test_output=$(cat ~/run-tests-$attempt.log) 
 
+              mv ~/run-tests-$attempt.log integration-test/target/cluster-logs/
+
               echo "==================== BEGIN: ~/run-tests-$attempt.log ===================="          
               echo "$test_output"
               echo "==================== END: ~/run-tests-$attempt.log ======================"
@@ -337,7 +343,9 @@ jobs:
               -pl integration-test \
               -am -PMultiClusterIT2TableModel >> ~/run-tests-$attempt.log && return 0
               test_output=$(cat ~/run-tests-$attempt.log) 
-          
+
+              mv ~/run-tests-$attempt.log integration-test/target/cluster-logs/
+
               echo "==================== BEGIN: ~/run-tests-$attempt.log ===================="          
               echo "$test_output"
               echo "==================== END: ~/run-tests-$attempt.log ======================"
