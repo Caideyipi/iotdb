@@ -34,6 +34,7 @@ import org.apache.iotdb.commons.service.metric.PerformanceOverviewMetrics;
 import org.apache.iotdb.commons.service.metric.enums.Metric;
 import org.apache.iotdb.commons.service.metric.enums.Tag;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
+import org.apache.iotdb.commons.utils.RetryUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.commons.utils.TimePartitionUtils;
 import org.apache.iotdb.consensus.ConsensusFactory;
@@ -3118,7 +3119,7 @@ public class DataRegion implements IDataRegionForQuery {
                 + tsFileResource.getTsFile().getName());
     tsFileResource.setFile(targetFile);
     if (tsFileManager.contains(tsFileResource, false)) {
-      logger.error("The file {} has already been loaded in unsequence list", tsFileResource);
+      logger.warn("The file {} has already been loaded in unsequence list", tsFileResource);
       return false;
     }
 
@@ -3137,12 +3138,20 @@ public class DataRegion implements IDataRegionForQuery {
       if (tsFileResource.onRemote()) {
         logger.debug("Load remote file {}", tsFileToLoad);
       } else if (deleteOriginFile) {
-        FileUtils.moveFile(tsFileToLoad, targetFile);
+        RetryUtils.retryOnException(
+            () -> {
+              FileUtils.moveFile(tsFileToLoad, targetFile);
+              return null;
+            });
       } else {
-        Files.copy(tsFileToLoad.toPath(), targetFile.toPath());
+        RetryUtils.retryOnException(
+            () -> {
+              Files.copy(tsFileToLoad.toPath(), targetFile.toPath());
+              return null;
+            });
       }
     } catch (final IOException e) {
-      logger.error(
+      logger.warn(
           "File renaming failed when loading tsfile. Origin: {}, Target: {}",
           tsFileToLoad.getAbsolutePath(),
           targetFile.getAbsolutePath(),
@@ -3159,13 +3168,20 @@ public class DataRegion implements IDataRegionForQuery {
         fsFactory.getFile(targetFile.getAbsolutePath() + RESOURCE_SUFFIX);
     try {
       if (deleteOriginFile) {
-        FileUtils.moveFile(resourceFileToLoad, targetResourceFile);
+        RetryUtils.retryOnException(
+            () -> {
+              FileUtils.moveFile(resourceFileToLoad, targetResourceFile);
+              return null;
+            });
       } else {
-        Files.copy(resourceFileToLoad.toPath(), targetResourceFile.toPath());
+        RetryUtils.retryOnException(
+            () -> {
+              Files.copy(resourceFileToLoad.toPath(), targetResourceFile.toPath());
+              return null;
+            });
       }
-
     } catch (final IOException e) {
-      logger.error(
+      logger.warn(
           "File renaming failed when loading .resource file. Origin: {}, Target: {}",
           resourceFileToLoad.getAbsolutePath(),
           targetResourceFile.getAbsolutePath(),
@@ -3215,18 +3231,30 @@ public class DataRegion implements IDataRegionForQuery {
       // when successfully loaded, the filepath of the resource will be changed to the IoTDB data
       // dir, so we can add a suffix to find the old modification file.
       try {
-        Files.deleteIfExists(targetModFile.toPath());
+        RetryUtils.retryOnException(
+            () -> {
+              Files.deleteIfExists(targetModFile.toPath());
+              return null;
+            });
       } catch (final IOException e) {
         logger.warn("Cannot delete localModFile {}", targetModFile, e);
       }
       try {
         if (deleteOriginFile) {
-          FileUtils.moveFile(modFileToLoad, targetModFile);
+          RetryUtils.retryOnException(
+              () -> {
+                FileUtils.moveFile(modFileToLoad, targetModFile);
+                return null;
+              });
         } else {
-          Files.copy(modFileToLoad.toPath(), targetModFile.toPath());
+          RetryUtils.retryOnException(
+              () -> {
+                Files.copy(modFileToLoad.toPath(), targetModFile.toPath());
+                return null;
+              });
         }
       } catch (final IOException e) {
-        logger.error(
+        logger.warn(
             "File renaming failed when loading .mod file. Origin: {}, Target: {}",
             modFileToLoad.getAbsolutePath(),
             targetModFile.getAbsolutePath(),
