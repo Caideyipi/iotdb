@@ -533,6 +533,10 @@ public class Coordinator {
     return INSTANCE;
   }
 
+  public AccessControl getAccessControl() {
+    return accessControl;
+  }
+
   public void recordExecutionTime(long queryId, long executionTime) {
     IQueryExecution queryExecution = getQueryExecution(queryId);
     if (queryExecution != null) {
