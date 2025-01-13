@@ -403,7 +403,7 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
   @Override
   public IConfigTask visitShowPipePlugins(
       ShowPipePluginsStatement showPipePluginStatement, MPPQueryContext context) {
-    return new ShowPipePluginsTask();
+    return new ShowPipePluginsTask(showPipePluginStatement);
   }
 
   @Override
