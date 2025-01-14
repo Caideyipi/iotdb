@@ -192,10 +192,11 @@ public class SchemaRegionSnapshotViewParserTest {
                     + File.separator
                     + snapshotFileName),
             null,
+            null,
             databasePath);
 
     int count = 0;
-    for (Statement stmt : statements) {
+    for (Object stmt : statements) {
       if (stmt instanceof CreateLogicalViewStatement) {
         CreateLogicalViewStatement createLogicalViewStatement = (CreateLogicalViewStatement) stmt;
         Assert.assertEquals(viewPlan.getViewPathList(), createLogicalViewStatement.getPaths());
@@ -277,11 +278,12 @@ public class SchemaRegionSnapshotViewParserTest {
                     + "snapshot"
                     + File.separator
                     + SchemaConstant.TAG_LOG_SNAPSHOT),
+            null,
             databasePath);
 
     int count = 0;
     boolean createdView = false;
-    for (Statement stmt : statements) {
+    for (Object stmt : statements) {
       if (stmt instanceof AlterTimeSeriesStatement) {
         Assert.assertTrue(createdView);
         AlterTimeSeriesStatement alterTimeSeriesStatement = (AlterTimeSeriesStatement) stmt;
