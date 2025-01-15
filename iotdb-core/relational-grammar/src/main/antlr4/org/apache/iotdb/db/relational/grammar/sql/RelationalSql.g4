@@ -118,7 +118,8 @@ statement
     | showVariablesStatement
     | flushStatement
     | clearCacheStatement
-    | repairDataStatement
+    | startRepairDataStatement
+    | stopRepairDataStatement
     | setSystemStatusStatement
     | showVersionStatement
     | showQueriesStatement
@@ -495,9 +496,13 @@ clearCacheStatement
     : CLEAR clearCacheOptions? CACHE localOrClusterMode?
     ;
 
-repairDataStatement
-    : REPAIR DATA localOrClusterMode?
+startRepairDataStatement
+    : START REPAIR DATA localOrClusterMode?
     ;
+
+stopRepairDataStatement
+	: STOP REPAIR DATA localOrClusterMode?
+	;
 
 setSystemStatusStatement
     : SET SYSTEM TO (READONLY | RUNNING) localOrClusterMode?
