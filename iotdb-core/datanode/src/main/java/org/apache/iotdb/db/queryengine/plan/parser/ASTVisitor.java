@@ -4507,10 +4507,9 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
 
   @Override
   public Statement visitActivate(IoTDBSqlParser.ActivateContext ctx) {
-    String sql = ctx.getText();
-    sql = sql.replaceFirst("activate", "");
-    sql = sql.replace(" ", "").replace("'", "");
-    List<String> licenseList = Arrays.asList(sql.split("[,，]"));
+    String licenseStr = ctx.license.getText();
+    licenseStr = licenseStr.replace(" ", "").replace("'", "");
+    List<String> licenseList = Arrays.asList(licenseStr.split("[,，]"));
     return new ActivateStatement(licenseList);
   }
 

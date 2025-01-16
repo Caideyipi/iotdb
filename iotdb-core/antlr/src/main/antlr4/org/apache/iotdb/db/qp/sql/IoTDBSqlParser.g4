@@ -686,7 +686,7 @@ callInference
     ;
 
 activate
-    : ACTIVATE STRING_LITERAL
+    : ACTIVATE license=STRING_LITERAL
     ;
 
 showActivation
