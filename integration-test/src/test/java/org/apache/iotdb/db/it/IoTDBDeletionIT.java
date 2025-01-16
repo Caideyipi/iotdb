@@ -514,7 +514,7 @@ public class IoTDBDeletionIT {
                 nodeDatabaseFile, f -> f.getName().endsWith(ModificationFile.FILE_SUFFIX));
         for (File modFile : modFiles) {
           List<ModEntry> allMods;
-          try (ModificationFile modificationFile = new ModificationFile(modFile)) {
+          try (ModificationFile modificationFile = new ModificationFile(modFile, false)) {
             allMods = modificationFile.getAllMods();
           }
           // the source paths of the views can be matched by the pattern, so they should not appear
