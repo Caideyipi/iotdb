@@ -348,7 +348,8 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
       }
       ModificationFile modFile =
           new ModificationFile(
-              resource.getTsFilePath() + ModificationFile.FILE_SUFFIX + REMOTE_TMP_FILE_SUFFIX);
+              resource.getTsFilePath() + ModificationFile.FILE_SUFFIX + REMOTE_TMP_FILE_SUFFIX,
+              true);
       long originSize = modFile.getFile().length();
       try {
         // write deletion into modification file
