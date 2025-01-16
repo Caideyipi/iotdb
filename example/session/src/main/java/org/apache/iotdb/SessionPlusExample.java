@@ -429,8 +429,8 @@ public class SessionPlusExample {
     }
 
     // Method 2 to add tablet data
-    long[] timestamps = tablet.timestamps;
-    Object[] values = tablet.values;
+    long[] timestamps = tablet.getTimestamps();
+    Object[] values = tablet.getValues();
 
     for (long time = 0; time < 100; time++) {
       int row = tablet.getRowSize();
@@ -481,7 +481,7 @@ public class SessionPlusExample {
         long value = new Random().nextLong();
         // mark null value
         if (row % 3 == s) {
-          tablet.bitMaps[s].mark((int) row);
+          tablet.getBitMaps()[s].mark((int) row);
         }
         tablet.addValue(schemaList.get(s).getMeasurementName(), rowIndex, value);
       }
@@ -498,13 +498,13 @@ public class SessionPlusExample {
     }
 
     // Method 2 to add tablet data
-    long[] timestamps = tablet.timestamps;
-    Object[] values = tablet.values;
+    long[] timestamps = tablet.getTimestamps();
+    Object[] values = tablet.getValues();
     BitMap[] bitMaps = new BitMap[schemaList.size()];
     for (int s = 0; s < 3; s++) {
       bitMaps[s] = new BitMap(tablet.getMaxRowNumber());
     }
-    tablet.bitMaps = bitMaps;
+    tablet.setBitMaps(bitMaps);
 
     for (long time = 0; time < 100; time++) {
       int row = tablet.getRowSize();
@@ -578,12 +578,12 @@ public class SessionPlusExample {
     }
 
     // Method 2 to add tablet data
-    long[] timestamps1 = tablet1.timestamps;
-    Object[] values1 = tablet1.values;
-    long[] timestamps2 = tablet2.timestamps;
-    Object[] values2 = tablet2.values;
-    long[] timestamps3 = tablet3.timestamps;
-    Object[] values3 = tablet3.values;
+    long[] timestamps1 = tablet1.getTimestamps();
+    Object[] values1 = tablet1.getValues();
+    long[] timestamps2 = tablet2.getTimestamps();
+    Object[] values2 = tablet2.getValues();
+    long[] timestamps3 = tablet3.getTimestamps();
+    Object[] values3 = tablet3.getValues();
 
     for (long time = 0; time < 100; time++) {
       int row1 = tablet1.getRowSize();
