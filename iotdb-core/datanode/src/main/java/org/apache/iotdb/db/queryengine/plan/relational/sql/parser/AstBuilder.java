@@ -1075,10 +1075,9 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
 
   @Override
   public Node visitActivate(RelationalSqlParser.ActivateContext ctx) {
-    String sql = ctx.getText();
-    sql = sql.replaceFirst("activate", "");
-    sql = sql.replace(" ", "").replace("'", "");
-    List<String> licenseList = Arrays.asList(sql.split("[,，]"));
+    String licenseStr = ctx.license.getText();
+    licenseStr = licenseStr.replace(" ", "").replace("'", "").replace("\"", "");
+    List<String> licenseList = Arrays.asList(licenseStr.split("[,，]"));
     return new CliActivate(licenseList);
   }
 

@@ -476,7 +476,7 @@ showSystemInfo
     ;
 
 activate
-    : ACTIVATE string
+    : ACTIVATE license=string
     ;
 
 showActivation
