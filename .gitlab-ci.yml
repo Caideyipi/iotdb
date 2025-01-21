@@ -259,7 +259,7 @@ subscription:
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
-    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2Subscription -s $MAVEN_SETTINGS_XML'
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2SubscriptionArchVerification -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]

@@ -21,13 +21,13 @@ package org.apache.iotdb.subscription.it.triple;
 
 import org.apache.iotdb.it.env.MultiEnvFactory;
 import org.apache.iotdb.itbase.env.BaseEnv;
-import org.apache.iotdb.session.subscription.consumer.SubscriptionExecutorServiceManager;
+import org.apache.iotdb.session.subscription.consumer.base.SubscriptionExecutorServiceManager;
 import org.apache.iotdb.subscription.it.AbstractSubscriptionIT;
 
 import org.junit.After;
 import org.junit.Before;
 
-abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
+public abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
 
   protected BaseEnv sender;
   protected BaseEnv receiver1;
@@ -35,7 +35,7 @@ abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
 
   @Override
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     super.setUp();
 
     // increase the number of threads to speed up testing
@@ -68,11 +68,11 @@ abstract class AbstractSubscriptionTripleIT extends AbstractSubscriptionIT {
 
   @Override
   @After
-  public void tearDown() {
-    super.tearDown();
-
+  public void tearDown() throws Exception {
     sender.cleanClusterEnvironment();
     receiver1.cleanClusterEnvironment();
     receiver2.cleanClusterEnvironment();
+
+    super.tearDown();
   }
 }

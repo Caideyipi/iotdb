@@ -17,29 +17,22 @@
  * under the License.
  */
 
-package org.apache.iotdb.subscription.it.local;
+package org.apache.iotdb.subscription.it;
 
-import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.subscription.it.AbstractSubscriptionIT;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
-import org.junit.After;
-import org.junit.Before;
+public class DisplayName extends TestWatcher {
 
-public abstract class AbstractSubscriptionLocalIT extends AbstractSubscriptionIT {
+  private volatile String displayName;
 
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
+  public DisplayName() {}
 
-    EnvFactory.getEnv().initClusterEnvironment();
+  protected void starting(final Description d) {
+    this.displayName = d.getDisplayName();
   }
 
-  @Override
-  @After
-  public void tearDown() throws Exception {
-    EnvFactory.getEnv().cleanClusterEnvironment();
-
-    super.tearDown();
+  public String getDisplayName() {
+    return displayName;
   }
 }

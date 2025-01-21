@@ -26,11 +26,11 @@ import org.apache.iotdb.db.it.utils.TestUtils;
 import org.apache.iotdb.isession.ISession;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.MultiClusterIT2Subscription;
+import org.apache.iotdb.itbase.category.MultiClusterIT2SubscriptionArchVerification;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.rpc.subscription.config.TopicConstant;
-import org.apache.iotdb.session.subscription.SubscriptionSession;
-import org.apache.iotdb.session.subscription.consumer.SubscriptionPullConsumer;
+import org.apache.iotdb.session.subscription.SubscriptionTreeSession;
+import org.apache.iotdb.session.subscription.consumer.tree.SubscriptionTreePullConsumer;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessage;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessageType;
 import org.apache.iotdb.session.subscription.payload.SubscriptionSessionDataSet;
@@ -52,15 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
@@ -69,7 +61,7 @@ import static org.apache.iotdb.subscription.it.IoTDBSubscriptionITConstant.AWAIT
 import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({MultiClusterIT2Subscription.class})
+@Category({MultiClusterIT2SubscriptionArchVerification.class})
 public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT {
 
   // Test dimensions:
@@ -123,7 +115,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
 
   @Override
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     super.setUp();
 
     // Setup connector attributes
@@ -836,7 +828,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
     // Create topics on sender
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       {
         final Properties config = new Properties();
@@ -939,10 +931,10 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
     }
   }
 
-  private SubscriptionPullConsumer createConsumerAndSubscribeTopics(
+  private SubscriptionTreePullConsumer createConsumerAndSubscribeTopics(
       final SubscriptionInfo subscriptionInfo) {
-    final SubscriptionPullConsumer consumer =
-        new SubscriptionPullConsumer.Builder()
+    final SubscriptionTreePullConsumer consumer =
+        new SubscriptionTreePullConsumer.Builder()
             .host(senderEnv.getIP())
             .port(Integer.parseInt(senderEnv.getPort()))
             .consumerId(subscriptionInfo.consumerId)
@@ -956,7 +948,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
   }
 
   private void pollMessagesAndCheck(
-      final List<SubscriptionPullConsumer> consumers,
+      final List<SubscriptionTreePullConsumer> consumers,
       final Map<String, String> expectedHeaderWithResult)
       throws Exception {
     final AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -969,7 +961,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
       final Thread t =
           new Thread(
               () -> {
-                try (final SubscriptionPullConsumer consumer = consumers.get(index)) {
+                try (final SubscriptionTreePullConsumer consumer = consumers.get(index)) {
                   while (!isClosed.get()) {
                     LockSupport.parkNanos(IoTDBSubscriptionITConstant.SLEEP_NS); // wait some time
                     final List<SubscriptionMessage> messages =
@@ -1036,7 +1028,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                   LOGGER.info("consumer {} exiting...", consumers.get(index));
                 }
               },
-              String.format("%s - %s", testName.getMethodName(), consumers.get(index).toString()));
+              String.format("%s - %s", testName.getDisplayName(), consumers.get(index).toString()));
       t.start();
       threads.add(t);
     }
@@ -1058,7 +1050,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                 for (final DataNodeWrapper wrapper : senderEnv.getDataNodeWrapperList()) {
                   // wrapper.executeJstack();
                   wrapper.executeJstack(
-                      String.format("%s_%s", testName.getMethodName(), currentTime[0]));
+                      String.format("%s_%s", testName.getDisplayName(), currentTime[0]));
                 }
                 currentTime[0] = System.currentTimeMillis();
               }

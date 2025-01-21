@@ -27,11 +27,11 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowTopicReq;
 import org.apache.iotdb.db.it.utils.TestUtils;
 import org.apache.iotdb.isession.ISession;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.MultiClusterIT2Subscription;
+import org.apache.iotdb.itbase.category.MultiClusterIT2SubscriptionArchVerification;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.subscription.config.TopicConstant;
-import org.apache.iotdb.session.subscription.SubscriptionSession;
-import org.apache.iotdb.session.subscription.consumer.SubscriptionPullConsumer;
+import org.apache.iotdb.session.subscription.SubscriptionTreeSession;
+import org.apache.iotdb.session.subscription.consumer.tree.SubscriptionTreePullConsumer;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessage;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessageType;
 import org.apache.iotdb.session.subscription.payload.SubscriptionSessionDataSet;
@@ -53,14 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
@@ -69,14 +62,14 @@ import static org.apache.iotdb.subscription.it.IoTDBSubscriptionITConstant.AWAIT
 import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({MultiClusterIT2Subscription.class})
+@Category({MultiClusterIT2SubscriptionArchVerification.class})
 public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(IoTDBSubscriptionTopicIT.class);
 
   @Override
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     super.setUp();
   }
 
@@ -126,7 +119,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final String topicName = "topic1";
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties config = new Properties();
       config.put(TopicConstant.FORMAT_KEY, topicFormat);
@@ -143,8 +136,8 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                      new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                      new SubscriptionTreePullConsumer.Builder()
                           .host(host)
                           .port(port)
                           .consumerId("c1")
@@ -169,7 +162,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     // Check data on receiver
@@ -227,7 +220,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final String topicName = "topic2";
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties config = new Properties();
       config.put(TopicConstant.FORMAT_KEY, topicFormat);
@@ -244,8 +237,8 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                      new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                      new SubscriptionTreePullConsumer.Builder()
                           .host(host)
                           .port(port)
                           .consumerId("c1")
@@ -270,7 +263,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     // Check data on receiver
@@ -322,7 +315,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final String topicName = "topic3";
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties config = new Properties();
       config.put(TopicConstant.FORMAT_KEY, topicFormat);
@@ -341,8 +334,8 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                      new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                      new SubscriptionTreePullConsumer.Builder()
                           .host(host)
                           .port(port)
                           .consumerId("c1")
@@ -367,7 +360,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     // Check data on receiver
@@ -423,7 +416,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final String topic3 = "`\"topic6\"`";
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       {
         final Properties config = new Properties();
@@ -458,8 +451,8 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                      new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                      new SubscriptionTreePullConsumer.Builder()
                           .host(host)
                           .port(port)
                           .consumerId("c1")
@@ -491,7 +484,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     // Check data on receiver
@@ -524,7 +517,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final int port = Integer.parseInt(senderEnv.getPort());
 
     // Scenario 1: invalid time
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties properties = new Properties();
       properties.put(TopicConstant.START_TIME_KEY, "2024-01-32");
@@ -536,7 +529,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     assertTopicCount(0);
 
     // Scenario 2: test when 'start-time' is greater than 'end-time'
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties properties = new Properties();
       properties.put(TopicConstant.START_TIME_KEY, "2001.01.01T08:00:00");
@@ -575,7 +568,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final String topicName = "topic9";
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties config = new Properties();
       config.put(TopicConstant.FORMAT_KEY, topicFormat);
@@ -593,8 +586,8 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                  new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                  new SubscriptionTreePullConsumer.Builder()
                       .host(host)
                       .port(port)
                       .consumerId("c1")
@@ -665,7 +658,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     try {
@@ -723,7 +716,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     final String topicName = "topic10";
     final String host = senderEnv.getIP();
     final int port = Integer.parseInt(senderEnv.getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties config = new Properties();
       config.put(TopicConstant.FORMAT_KEY, topicFormat);
@@ -747,8 +740,8 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
     threads.add(
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                      new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                      new SubscriptionTreePullConsumer.Builder()
                           .host(host)
                           .port(port)
                           .consumerId("c1")
@@ -776,7 +769,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName())));
+            String.format("%s - consumer", testName.getDisplayName())));
 
     // Insert some realtime data on sender
     threads.add(
@@ -799,7 +792,7 @@ public class IoTDBSubscriptionTopicIT extends AbstractSubscriptionDualIT {
               }
               dataPrepared.set(true);
             },
-            String.format("%s - data inserter", testName.getMethodName())));
+            String.format("%s - data inserter", testName.getDisplayName())));
 
     for (final Thread thread : threads) {
       thread.start();

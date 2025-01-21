@@ -17,29 +17,6 @@
  * under the License.
  */
 
-package org.apache.iotdb.subscription.it.local;
+package org.apache.iotdb.itbase.category;
 
-import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.subscription.it.AbstractSubscriptionIT;
-
-import org.junit.After;
-import org.junit.Before;
-
-public abstract class AbstractSubscriptionLocalIT extends AbstractSubscriptionIT {
-
-  @Override
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-
-    EnvFactory.getEnv().initClusterEnvironment();
-  }
-
-  @Override
-  @After
-  public void tearDown() throws Exception {
-    EnvFactory.getEnv().cleanClusterEnvironment();
-
-    super.tearDown();
-  }
-}
+public interface MultiClusterIT2SubscriptionArchVerification {}

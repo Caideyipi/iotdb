@@ -24,8 +24,8 @@ import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
 import org.apache.iotdb.rpc.subscription.config.TopicConstant;
-import org.apache.iotdb.session.subscription.SubscriptionSession;
-import org.apache.iotdb.session.subscription.consumer.SubscriptionPullConsumer;
+import org.apache.iotdb.session.subscription.SubscriptionTreeSession;
+import org.apache.iotdb.session.subscription.consumer.tree.SubscriptionTreePullConsumer;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessage;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessageType;
 import org.apache.iotdb.session.subscription.payload.SubscriptionSessionDataSet;
@@ -67,7 +67,7 @@ public class IoTDBSubscriptionDataTypeIT extends AbstractSubscriptionLocalIT {
 
   @Override
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     super.setUp();
   }
 
@@ -249,7 +249,7 @@ public class IoTDBSubscriptionDataTypeIT extends AbstractSubscriptionLocalIT {
     final String topicName = "topic1";
     final String host = EnvFactory.getEnv().getIP();
     final int port = Integer.parseInt(EnvFactory.getEnv().getPort());
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       final Properties config = new Properties();
       config.put(TopicConstant.FORMAT_KEY, topicFormat);
@@ -265,8 +265,8 @@ public class IoTDBSubscriptionDataTypeIT extends AbstractSubscriptionLocalIT {
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                  new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                  new SubscriptionTreePullConsumer.Builder()
                       .host(host)
                       .port(port)
                       .consumerId("c1")
@@ -333,7 +333,7 @@ public class IoTDBSubscriptionDataTypeIT extends AbstractSubscriptionLocalIT {
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     // Check row count

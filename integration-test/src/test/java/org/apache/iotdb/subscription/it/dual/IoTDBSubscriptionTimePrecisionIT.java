@@ -22,10 +22,10 @@ package org.apache.iotdb.subscription.it.dual;
 import org.apache.iotdb.db.it.utils.TestUtils;
 import org.apache.iotdb.isession.ISession;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.MultiClusterIT2Subscription;
+import org.apache.iotdb.itbase.category.MultiClusterIT2SubscriptionArchVerification;
 import org.apache.iotdb.rpc.subscription.config.TopicConstant;
-import org.apache.iotdb.session.subscription.SubscriptionSession;
-import org.apache.iotdb.session.subscription.consumer.SubscriptionPullConsumer;
+import org.apache.iotdb.session.subscription.SubscriptionTreeSession;
+import org.apache.iotdb.session.subscription.consumer.tree.SubscriptionTreePullConsumer;
 import org.apache.iotdb.session.subscription.payload.SubscriptionMessage;
 import org.apache.iotdb.subscription.it.IoTDBSubscriptionITConstant;
 
@@ -50,7 +50,7 @@ import static org.apache.iotdb.subscription.it.IoTDBSubscriptionITConstant.AWAIT
 import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({MultiClusterIT2Subscription.class})
+@Category({MultiClusterIT2SubscriptionArchVerification.class})
 public class IoTDBSubscriptionTimePrecisionIT extends AbstractSubscriptionDualIT {
 
   private static final Logger LOGGER =
@@ -58,7 +58,7 @@ public class IoTDBSubscriptionTimePrecisionIT extends AbstractSubscriptionDualIT
 
   @Override
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     super.setUp();
   }
 
@@ -94,7 +94,7 @@ public class IoTDBSubscriptionTimePrecisionIT extends AbstractSubscriptionDualIT
     // Create topic on sender
     final String topic1 = "topic1";
     final String topic2 = "topic2";
-    try (final SubscriptionSession session = new SubscriptionSession(host, port)) {
+    try (final SubscriptionTreeSession session = new SubscriptionTreeSession(host, port)) {
       session.open();
       {
         final Properties config = new Properties();
@@ -134,8 +134,8 @@ public class IoTDBSubscriptionTimePrecisionIT extends AbstractSubscriptionDualIT
     final Thread thread =
         new Thread(
             () -> {
-              try (final SubscriptionPullConsumer consumer =
-                      new SubscriptionPullConsumer.Builder()
+              try (final SubscriptionTreePullConsumer consumer =
+                      new SubscriptionTreePullConsumer.Builder()
                           .host(host)
                           .port(port)
                           .consumerId("c1")
@@ -167,7 +167,7 @@ public class IoTDBSubscriptionTimePrecisionIT extends AbstractSubscriptionDualIT
                 LOGGER.info("consumer exiting...");
               }
             },
-            String.format("%s - consumer", testName.getMethodName()));
+            String.format("%s - consumer", testName.getDisplayName()));
     thread.start();
 
     // Check data on receiver
