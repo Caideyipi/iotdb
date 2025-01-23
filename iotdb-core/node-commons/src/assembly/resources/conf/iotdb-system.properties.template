@@ -1034,7 +1034,7 @@ chunk_timeseriesmeta_free_memory_proportion=1:100:200:50:200:200:200:50
 # Whether to enable LAST cache
 # effectiveMode: restart
 # Datatype: boolean
-enable_last_cache=false
+enable_last_cache=true
 
 # Core size of ThreadPool of MPP data exchange
 # effectiveMode: restart
