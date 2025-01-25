@@ -45,7 +45,7 @@ public class ShowActivationStatement extends ShowStatement implements IConfigSta
       return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
     }
     return AuthorityChecker.getTSStatus(
-        AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MAINTAIN.ordinal()),
+        AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MAINTAIN),
         PrivilegeType.MAINTAIN);
   }
 }
