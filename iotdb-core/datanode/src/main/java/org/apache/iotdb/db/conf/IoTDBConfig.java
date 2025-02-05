@@ -1207,10 +1207,11 @@ public class IoTDBConfig {
           + IoTDBConstant.LOAD_TSFILE_FOLDER_NAME
           + File.separator
           + IoTDBConstant.LOAD_TSFILE_ACTIVE_LISTENING_FAILED_FOLDER_NAME;
-
   private long loadActiveListeningCheckIntervalSeconds = 5L;
 
   private int loadActiveListeningMaxThreadNum = Runtime.getRuntime().availableProcessors();
+
+  private boolean loadActiveListeningVerifyEnable = true;
 
   /** Pipe related */
   /** initialized as empty, updated based on the latest `systemDir` during querying */
@@ -4170,6 +4171,14 @@ public class IoTDBConfig {
 
   public void setLoadActiveListeningMaxThreadNum(int loadActiveListeningMaxThreadNum) {
     this.loadActiveListeningMaxThreadNum = loadActiveListeningMaxThreadNum;
+  }
+
+  public boolean isLoadActiveListeningVerifyEnable() {
+    return loadActiveListeningVerifyEnable;
+  }
+
+  public void setLoadActiveListeningVerifyEnable(boolean loadActiveListeningVerifyEnable) {
+    this.loadActiveListeningVerifyEnable = loadActiveListeningVerifyEnable;
   }
 
   public long getLoadActiveListeningCheckIntervalSeconds() {
