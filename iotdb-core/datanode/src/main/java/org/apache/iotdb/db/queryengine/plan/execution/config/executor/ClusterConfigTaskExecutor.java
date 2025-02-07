@@ -191,6 +191,10 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariab
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowSystemInfoTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ExtendRegionTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.MigrateRegionTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ReconstructRegionTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.RemoveRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.DeleteDeviceTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.DescribeTableDetailsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.relational.DescribeTableTask;
@@ -245,10 +249,6 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.ShowPipePlug
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.ShowPipesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.StartPipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.StopPipeStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.region.ExtendRegionStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.region.MigrateRegionStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.region.ReconstructRegionStatement;
-import org.apache.iotdb.db.queryengine.plan.statement.metadata.region.RemoveRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.subscription.CreateTopicStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.subscription.DropTopicStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.subscription.ShowSubscriptionsStatement;
@@ -2784,16 +2784,16 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> migrateRegion(
-      final MigrateRegionStatement migrateRegionStatement) {
+  public SettableFuture<ConfigTaskResult> migrateRegion(final MigrateRegionTask migrateRegionTask) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (ConfigNodeClient configNodeClient =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       final TMigrateRegionReq tMigrateRegionReq =
           new TMigrateRegionReq(
-              migrateRegionStatement.getRegionId(),
-              migrateRegionStatement.getFromId(),
-              migrateRegionStatement.getToId());
+              migrateRegionTask.getStatement().getRegionId(),
+              migrateRegionTask.getStatement().getFromId(),
+              migrateRegionTask.getStatement().getToId(),
+              migrateRegionTask.getModel());
       final TSStatus status = configNodeClient.migrateRegion(tMigrateRegionReq);
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(status.message, status.code));
@@ -2873,14 +2873,15 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
   @Override
   public SettableFuture<ConfigTaskResult> reconstructRegion(
-      ReconstructRegionStatement reconstructRegionStatement) {
+      ReconstructRegionTask reconstructRegionTask) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (ConfigNodeClient configNodeClient =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       final TReconstructRegionReq req =
           new TReconstructRegionReq(
-              reconstructRegionStatement.getRegionIds(),
-              reconstructRegionStatement.getDataNodeId());
+              reconstructRegionTask.getStatement().getRegionIds(),
+              reconstructRegionTask.getStatement().getDataNodeId(),
+              reconstructRegionTask.getModel());
       final TSStatus status = configNodeClient.reconstructRegion(req);
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(status.message, status.code));
@@ -2895,14 +2896,15 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> extendRegion(
-      ExtendRegionStatement extendRegionStatement) {
+  public SettableFuture<ConfigTaskResult> extendRegion(ExtendRegionTask extendRegionTask) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (ConfigNodeClient configNodeClient =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       final TExtendRegionReq req =
           new TExtendRegionReq(
-              extendRegionStatement.getRegionId(), extendRegionStatement.getDataNodeId());
+              extendRegionTask.getStatement().getRegionId(),
+              extendRegionTask.getStatement().getDataNodeId(),
+              extendRegionTask.getModel());
       final TSStatus status = configNodeClient.extendRegion(req);
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(status.message, status.code));
@@ -2917,14 +2919,15 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> removeRegion(
-      RemoveRegionStatement removeRegionStatement) {
+  public SettableFuture<ConfigTaskResult> removeRegion(RemoveRegionTask removeRegionTask) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (ConfigNodeClient configNodeClient =
         CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       final TRemoveRegionReq req =
           new TRemoveRegionReq(
-              removeRegionStatement.getRegionId(), removeRegionStatement.getDataNodeId());
+              removeRegionTask.getStatement().getRegionId(),
+              removeRegionTask.getStatement().getDataNodeId(),
+              removeRegionTask.getModel());
       final TSStatus status = configNodeClient.removeRegion(req);
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(status.message, status.code));
