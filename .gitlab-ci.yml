@@ -192,7 +192,7 @@ ainode-test-1c1d1a:
       - integration-test/target/ainode-logs
     expire_in: 7 day
 
-auto-create-schema:
+single:
   stage: test
   tags:
     - timechodb
@@ -203,7 +203,7 @@ auto-create-schema:
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
-    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2AutoCreateSchema -s $MAVEN_SETTINGS_XML'
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT1 -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]
@@ -211,16 +211,16 @@ auto-create-schema:
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
-    
+
   artifacts:
     when: on_failure
-    name: pipe-log-auto-create-schema
+    name: pipe-log-single
     paths:
       - integration-test/target/cluster-logs
       - integration-test/target/pipeIT-logs
     expire_in: 7 day
 
-manual-create-schema:
+dual-tree-auto-basic:
   stage: test
   tags:
     - timechodb
@@ -231,7 +231,7 @@ manual-create-schema:
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
   script:
-    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2ManualCreateSchema -s $MAVEN_SETTINGS_XML'
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeAutoBasic -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]
@@ -242,7 +242,119 @@ manual-create-schema:
     
   artifacts:
     when: on_failure
-    name: pipe-log-manual-create-schema
+    name: pipe-log-dual-tree-auto-basic
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/pipeIT-logs
+    expire_in: 7 day
+
+dual-tree-auto-enhanced:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+  script:
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeAutoEnhanced -s $MAVEN_SETTINGS_XML'
+  parallel:
+    matrix:
+      - CLUSTER1: [HighPerformanceMode]
+        CLUSTER2: [HighPerformanceMode]
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+    
+  artifacts:
+    when: on_failure
+    name: pipe-log-dual-tree-auto-enhanced
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/pipeIT-logs
+    expire_in: 7 day
+
+dual-tree-manual:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+  script:
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeManual -s $MAVEN_SETTINGS_XML'
+  parallel:
+    matrix:
+      - CLUSTER1: [HighPerformanceMode]
+        CLUSTER2: [HighPerformanceMode]
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+
+  artifacts:
+    when: on_failure
+    name: pipe-log-dual-tree-manual
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/pipeIT-logs
+    expire_in: 7 day
+
+dual-table-manual-basic:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+  script:
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTableManualBasic -s $MAVEN_SETTINGS_XML'
+  parallel:
+    matrix:
+      - CLUSTER1: [HighPerformanceMode]
+        CLUSTER2: [HighPerformanceMode]
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+
+  artifacts:
+    when: on_failure
+    name: pipe-log-dual-table-manual-basic
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/pipeIT-logs
+    expire_in: 7 day
+
+dual-table-manual-enhanced:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+  script:
+    - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTableManualEnhanced -s $MAVEN_SETTINGS_XML'
+  parallel:
+    matrix:
+      - CLUSTER1: [HighPerformanceMode]
+        CLUSTER2: [HighPerformanceMode]
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+
+  artifacts:
+    when: on_failure
+    name: pipe-log-dual-table-manual-enhanced
     paths:
       - integration-test/target/cluster-logs
       - integration-test/target/pipeIT-logs
