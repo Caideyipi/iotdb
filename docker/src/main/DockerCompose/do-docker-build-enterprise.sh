@@ -48,7 +48,7 @@ while getopts 'v:u:t:c:d:besph' OPT; do
        e) 
           is_enterprise=true;
           options="standalone latest";
-          image_prefix="nexus.infra.timecho.com:8343/timecho/timechodb";
+          image_prefix="nexus.infra.timecho.com:8243/timecho/timechodb";
           ;;
        s) save_image=true;;
        t) build_what="$OPTARG";;
