@@ -79,6 +79,7 @@ public class SharedStorageCompactionUtils {
     return true;
   }
 
+  @SuppressWarnings("OptionalGetWithoutIsPresent")
   private static List<TRegionReplicaSet> getDataRegionReplicaSet(
       DataRegion dataRegion, long timePartition) throws Exception {
     TsFileResource selectedResource =
@@ -89,7 +90,7 @@ public class SharedStorageCompactionUtils {
     IDeviceID deviceID = selectedResource.getDevices().iterator().next();
     TTimePartitionSlot slot =
         TimePartitionUtils.getTimePartitionSlot(
-            selectedResource.getTimeIndex().getStartTime(deviceID));
+            selectedResource.getTimeIndex().getStartTime(deviceID).get());
 
     Map<String, List<DataPartitionQueryParam>> map = new HashMap<>();
     DataPartitionQueryParam dataPartitionQueryParam = new DataPartitionQueryParam();
