@@ -502,7 +502,7 @@ removeRegionStatement
     ;
 
 removeDataNodeStatement
-    : REMOVE DATANODE dataNodeId=INTEGER_VALUE (',' dataNodeId=INTEGER_VALUE)*
+    : REMOVE DATANODE dataNodeId=INTEGER_VALUE
     ;
 // ------------------------------------------- Activation ---------------------------------------------------------
 showSystemInfo
