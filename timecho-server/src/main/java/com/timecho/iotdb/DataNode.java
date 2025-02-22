@@ -24,7 +24,7 @@ import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 import org.apache.iotdb.db.service.DataNodeInternalRPCService;
-import org.apache.iotdb.db.service.RPCService;
+import org.apache.iotdb.db.service.ExternalRPCService;
 
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
@@ -77,7 +77,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
         .getConfig()
         .setRpcImplClassName(ClientRPCServiceImplNew.class.getName());
     if (config.isEnableRpcService()) {
-      registerManager.register(RPCService.getInstance());
+      registerManager.register(ExternalRPCService.getInstance());
     }
     // init service protocols
     initProtocols();
