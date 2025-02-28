@@ -25,7 +25,7 @@ import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
-import org.apache.iotdb.confignode.manager.load.cache.node.BaseNodeCache;
+import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
 import org.apache.iotdb.consensus.ConsensusFactory;
 import org.apache.iotdb.it.env.EnvFactory;
@@ -117,7 +117,7 @@ public class IoTDBActivationIT {
 
   private static final long sleepLogThreshold = TimeUnit.SECONDS.toMillis(10);
   private static final long HEARTBEAT_TIMEOUT_TIME_IN_MS =
-      BaseNodeCache.HEARTBEAT_TIMEOUT_TIME_IN_NS / 1000_000;
+      ConfigNodeDescriptor.getInstance().getConf().getFailureDetectorFixedThresholdInMs();
 
   private static final String SKIP = "SKIP";
 
