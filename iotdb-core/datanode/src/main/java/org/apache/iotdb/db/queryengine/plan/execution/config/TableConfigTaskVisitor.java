@@ -365,7 +365,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitShowCluster(
       final ShowCluster showCluster, final MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     ShowClusterStatement treeStatement = new ShowClusterStatement();
@@ -402,7 +402,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitShowRegions(
       final ShowRegions showRegions, final MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     final ShowRegionStatement treeStatement = new ShowRegionStatement();
@@ -416,7 +416,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitRemoveDataNode(
       final RemoveDataNode removeDataNode, final MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     final RemoveDataNodeStatement treeStatement =
@@ -428,7 +428,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitRemoveConfigNode(
       final RemoveConfigNode removeConfigNode, final MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     final RemoveConfigNodeStatement treeStatement =
@@ -440,7 +440,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitShowDataNodes(
       final ShowDataNodes showDataNodesStatement, final MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowDataNodesTask();
   }
 
@@ -448,7 +448,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitShowConfigNodes(
       final ShowConfigNodes showConfigNodesStatement, final MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowConfigNodesTask();
   }
 
@@ -456,7 +456,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitShowAINodes(
       final ShowAINodes showAINodesStatement, final MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowAINodesTask();
   }
 
@@ -464,7 +464,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitClearCache(
       final ClearCache clearCacheStatement, final MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ClearCacheTask(clearCacheStatement);
   }
 
@@ -827,42 +827,42 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitFlush(final Flush node, final MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new FlushTask(((FlushStatement) node.getInnerTreeStatement()));
   }
 
   @Override
   protected IConfigTask visitSetConfiguration(SetConfiguration node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new SetConfigurationTask(((SetConfigurationStatement) node.getInnerTreeStatement()));
   }
 
   @Override
   protected IConfigTask visitStartRepairData(StartRepairData node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new StartRepairDataTask(((StartRepairDataStatement) node.getInnerTreeStatement()));
   }
 
   @Override
   protected IConfigTask visitStopRepairData(StopRepairData node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new StopRepairDataTask(((StopRepairDataStatement) node.getInnerTreeStatement()));
   }
 
   @Override
   protected IConfigTask visitLoadConfiguration(LoadConfiguration node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new LoadConfigurationTask(((LoadConfigurationStatement) node.getInnerTreeStatement()));
   }
 
   @Override
   protected IConfigTask visitSetSystemStatus(SetSystemStatus node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new SetSystemStatusTask(((SetSystemStatusStatement) node.getInnerTreeStatement()));
   }
 
@@ -913,7 +913,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitCreatePipe(final CreatePipe node, final MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
 
     for (String ExtractorAttribute : node.getExtractorAttributes().keySet()) {
       if (ExtractorAttribute.startsWith(SystemConstant.SYSTEM_PREFIX_KEY)) {
@@ -934,7 +934,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitAlterPipe(AlterPipe node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
 
     for (String ExtractorAttribute : node.getExtractorAttributes().keySet()) {
       if (ExtractorAttribute.startsWith(SystemConstant.SYSTEM_PREFIX_KEY)) {
@@ -957,35 +957,35 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitDropPipe(DropPipe node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new DropPipeTask(node);
   }
 
   @Override
   protected IConfigTask visitStartPipe(StartPipe node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new StartPipeTask(node);
   }
 
   @Override
   protected IConfigTask visitStopPipe(StopPipe node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new StopPipeTask(node);
   }
 
   @Override
   protected IConfigTask visitShowPipes(ShowPipes node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowPipeTask(node);
   }
 
   @Override
   protected IConfigTask visitCreatePipePlugin(CreatePipePlugin node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     if (node.getUriString() != null && isUriTrusted(node.getUriString())) {
       // 1. user specified uri and that uri is trusted
       // 2. user doesn't specify uri
@@ -999,21 +999,21 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitDropPipePlugin(DropPipePlugin node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new DropPipePluginTask(node);
   }
 
   @Override
   protected IConfigTask visitShowPipePlugins(ShowPipePlugins node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowPipePluginsTask(node);
   }
 
   @Override
   protected IConfigTask visitCreateTopic(CreateTopic node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
 
     // Inject table model into the topic attributes
     node.getTopicAttributes()
@@ -1025,21 +1025,21 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitDropTopic(DropTopic node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new DropTopicTask(node);
   }
 
   @Override
   protected IConfigTask visitShowTopics(ShowTopics node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowTopicsTask(node);
   }
 
   @Override
   protected IConfigTask visitShowSubscriptions(ShowSubscriptions node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowSubscriptionsTask(node);
   }
 
@@ -1078,14 +1078,14 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitShowVariables(ShowVariables node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowVariablesTask();
   }
 
   @Override
   protected IConfigTask visitShowClusterId(ShowClusterId node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new ShowClusterIdTask();
   }
 
@@ -1108,7 +1108,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitKillQuery(KillQuery node, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     return new KillQueryTask(node);
   }
 
@@ -1142,7 +1142,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitMigrateRegion(MigrateRegion migrateRegion, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new MigrateRegionTask(migrateRegion);
@@ -1152,7 +1152,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitReconstructRegion(
       ReconstructRegion reconstructRegion, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new ReconstructRegionTask(reconstructRegion);
@@ -1161,7 +1161,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitExtendRegion(ExtendRegion extendRegion, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new ExtendRegionTask(extendRegion);
@@ -1170,7 +1170,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitRemoveRegion(RemoveRegion removeRegion, MPPQueryContext context) {
     context.setQueryType(QueryType.WRITE);
-    accessControl.checkUserHasMaintainPrivilege(context.getSession().getUserName());
+    accessControl.checkUserIsAdmin(context.getSession().getUserName());
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new RemoveRegionTask(removeRegion);
