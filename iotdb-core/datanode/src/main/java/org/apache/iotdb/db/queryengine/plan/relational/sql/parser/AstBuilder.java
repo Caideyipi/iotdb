@@ -1456,64 +1456,58 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   }
 
   // ********************** author expressions ********************
-
-  private String stripQuotes(String text) {
-    if (text != null && text.length() >= 2 && text.startsWith("'") && text.endsWith("'")) {
-      return text.substring(1, text.length() - 1).replace("''", "'");
-    }
-    return text;
-  }
-
   @Override
   public Node visitCreateUserStatement(RelationalSqlParser.CreateUserStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.CREATE_USER);
-    stmt.setUserName(ctx.userName.getText());
-    stmt.setPassword(stripQuotes(ctx.password.getText()));
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
+    String password = ((StringLiteral) visit(ctx.password)).getValue();
+    stmt.setPassword(password);
     return stmt;
   }
 
   @Override
   public Node visitCreateRoleStatement(RelationalSqlParser.CreateRoleStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.CREATE_ROLE);
-    stmt.setRoleName(ctx.roleName.getText());
+    stmt.setRoleName(((Identifier) visit(ctx.roleName)).getValue());
     return stmt;
   }
 
   @Override
   public Node visitDropUserStatement(RelationalSqlParser.DropUserStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.DROP_USER);
-    stmt.setUserName(ctx.userName.getText());
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
     return stmt;
   }
 
   @Override
   public Node visitDropRoleStatement(RelationalSqlParser.DropRoleStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.DROP_ROLE);
-    stmt.setRoleName(ctx.roleName.getText());
+    stmt.setRoleName(((Identifier) visit(ctx.roleName)).getValue());
     return stmt;
   }
 
   @Override
   public Node visitAlterUserStatement(RelationalSqlParser.AlterUserStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.UPDATE_USER);
-    stmt.setUserName(ctx.userName.getText());
-    stmt.setPassword(stripQuotes(ctx.password.getText()));
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
+    String password = ((StringLiteral) visit(ctx.password)).getValue();
+    stmt.setPassword(password);
     return stmt;
   }
 
   @Override
   public Node visitGrantUserRoleStatement(RelationalSqlParser.GrantUserRoleStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.GRANT_USER_ROLE);
-    stmt.setUserName(ctx.userName.getText());
-    stmt.setRoleName(ctx.roleName.getText());
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
+    stmt.setRoleName(((Identifier) visit(ctx.roleName)).getValue());
     return stmt;
   }
 
   @Override
   public Node visitRevokeUserRoleStatement(RelationalSqlParser.RevokeUserRoleStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.REVOKE_USER_ROLE);
-    stmt.setUserName(ctx.userName.getText());
-    stmt.setRoleName(ctx.roleName.getText());
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
+    stmt.setRoleName(((Identifier) visit(ctx.roleName)).getValue());
     return stmt;
   }
 
@@ -1521,7 +1515,7 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitListUserPrivilegeStatement(
       RelationalSqlParser.ListUserPrivilegeStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.LIST_USER_PRIV);
-    stmt.setUserName(ctx.userName.getText());
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
     return stmt;
   }
 
@@ -1529,7 +1523,7 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitListRolePrivilegeStatement(
       RelationalSqlParser.ListRolePrivilegeStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.LIST_ROLE_PRIV);
-    stmt.setRoleName(ctx.roleName.getText());
+    stmt.setRoleName(((Identifier) visit(ctx.roleName)).getValue());
     return stmt;
   }
 
@@ -1537,8 +1531,7 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitListUserStatement(RelationalSqlParser.ListUserStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.LIST_USER);
     if (ctx.OF() != null) {
-      String roleName = ctx.roleName.getText();
-      stmt.setRoleName(roleName);
+      stmt.setRoleName(((Identifier) visit(ctx.roleName)).getValue());
     }
     return stmt;
   }
@@ -1547,8 +1540,7 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitListRoleStatement(RelationalSqlParser.ListRoleStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.LIST_ROLE);
     if (ctx.OF() != null) {
-      String userName = ctx.userName.getText();
-      stmt.setUserName(userName);
+      stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
     }
     return stmt;
   }
@@ -1585,7 +1577,7 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
     boolean toUser;
     String name;
     toUser = ctx.holderType().getText().equalsIgnoreCase("user");
-    name = ctx.holderName.getText();
+    name = (((Identifier) visit(ctx.holderName)).getValue());
     boolean grantOption = ctx.grantOpt() != null;
     boolean toTable;
     Set<PrivilegeType> privileges;
@@ -1659,7 +1651,7 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
     boolean fromUser;
     String name;
     fromUser = ctx.holderType().getText().equalsIgnoreCase("user");
-    name = ctx.holderName.getText();
+    name = (((Identifier) visit(ctx.holderName)).getValue());
     boolean grantOption = ctx.revokeGrantOpt() != null;
     boolean fromTable = false;
     Set<PrivilegeType> privileges = new HashSet<>();
