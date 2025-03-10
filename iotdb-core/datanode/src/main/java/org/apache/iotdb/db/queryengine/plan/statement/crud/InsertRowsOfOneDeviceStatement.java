@@ -176,11 +176,11 @@ public class InsertRowsOfOneDeviceStatement extends InsertBaseStatement {
   @Override
   protected long calculateBytes() {
     return INSTANCE_SIZE
-            + (Objects.nonNull(insertRowStatementList)
+        + (Objects.nonNull(insertRowStatementList)
             ? UpdateDetailContainer.LIST_SIZE
-            + insertRowStatementList.stream()
-            .mapToLong(InsertRowStatement::calculateBytes)
-            .reduce(0L, Long::sum)
+                + insertRowStatementList.stream()
+                    .mapToLong(InsertRowStatement::calculateBytes)
+                    .reduce(0L, Long::sum)
             : 0);
   }
 }

@@ -51,7 +51,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class InsertTabletStatement extends InsertBaseStatement implements ISchemaValidation {
   private static final Logger LOGGER = LoggerFactory.getLogger(InsertTabletStatement.class);
@@ -419,8 +418,8 @@ public class InsertTabletStatement extends InsertBaseStatement implements ISchem
   @Override
   protected long calculateBytes() {
     return INSTANCE_SIZE
-            + RamUsageEstimator.sizeOf(times)
-            + InsertNodeMemoryEstimator.sizeOfBitMapArray(bitMaps)
-            + InsertNodeMemoryEstimator.sizeOfColumns(columns, measurementSchemas);
+        + RamUsageEstimator.sizeOf(times)
+        + InsertNodeMemoryEstimator.sizeOfBitMapArray(bitMaps)
+        + InsertNodeMemoryEstimator.sizeOfColumns(columns, measurementSchemas);
   }
 }

@@ -92,7 +92,6 @@ public abstract class InsertBaseStatement extends Statement implements Accountab
   /** it is the end of current range. */
   protected int recordedEndOfLogicalViewSchemaList = 0;
 
-
   protected long ramBytesUsed = Long.MIN_VALUE;
 
   // endregion
@@ -412,6 +411,7 @@ public abstract class InsertBaseStatement extends Statement implements Accountab
       }
     }
   }
+
   // endregion
   @Override
   public long ramBytesUsed() {

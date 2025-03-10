@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 
 public class LogicalViewSchema
-
     implements IMeasurementSchema, Comparable<LogicalViewSchema>, Serializable, Accountable {
   private static final long INSTANCE_SIZE =
       RamUsageEstimator.shallowSizeOfInstance(LogicalViewSchema.class);
