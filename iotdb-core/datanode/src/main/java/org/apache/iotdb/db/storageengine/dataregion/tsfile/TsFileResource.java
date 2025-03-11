@@ -366,9 +366,6 @@ public class TsFileResource implements PersistentResource {
           default:
             break;
         }
-        if (blockType == TsFileResourceBlockType.REMOTE_STORAGE_BLOCK) {
-          setRemoteStorageBlock(RemoteStorageBlock.deserializeFrom(inputStream));
-        }
       }
     }
   }
