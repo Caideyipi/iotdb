@@ -28,6 +28,7 @@ public enum TsFileResourceBlockType {
   EMPTY_BLOCK((byte) 0),
   PROGRESS_INDEX((byte) 1),
   REMOTE_STORAGE_BLOCK((byte) 2),
+  PIPE_MARK((byte) 3),
   ;
 
   private final byte type;
@@ -48,6 +49,8 @@ public enum TsFileResourceBlockType {
         return PROGRESS_INDEX;
       case 2:
         return REMOTE_STORAGE_BLOCK;
+      case 3:
+        return PIPE_MARK;
       default:
         throw new IllegalArgumentException("Invalid input: " + type);
     }
