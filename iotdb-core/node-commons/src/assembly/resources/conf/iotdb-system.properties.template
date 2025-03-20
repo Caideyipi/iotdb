@@ -542,12 +542,18 @@ remote_tsfile_cache_max_disk_usage_in_mb=51200
 
 # Type of the object storage
 # Currently, only one object storage service provider is supported:
-# 1. AWS_S3: Amazon S3.
+# 1. AWS_S3: Amazon S3 or S3-compatible object storage service
 # effectiveMode: restart
 # Datatype: string
 object_storage_type=AWS_S3
 
-# Endpoint of your object storage service
+# Region of your object storage service, please fill in the region like "cn-north-1".
+# Datatype: string
+# effectiveMode: restart
+object_storage_region=
+
+# Endpoint of your object storage service. If you use AWS S3, you can leave it empty.
+# If you use other object storage services, please fill in the endpoint like "http://xxx.com".
 # Datatype: string
 # effectiveMode: restart
 object_storage_endpoint=
@@ -566,6 +572,11 @@ object_storage_access_key=
 # Datatype: string
 # effectiveMode: restart
 object_storage_access_secret=
+
+# Whether to enable path style access for object storage service.
+# Datatype: boolean
+# effectiveMode: restart
+enable_path_style_access=false
 
 ####################
 ### Tier management

@@ -34,6 +34,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -52,6 +53,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.stream.Collectors;
 
 public class S3ObjectStorageConnector implements ObjectStorageConnector {
@@ -61,21 +63,32 @@ public class S3ObjectStorageConnector implements ObjectStorageConnector {
   private static final String S3_CONNECTION_ERROR =
       "cannot connect to S3 bucket. Please check the endpoint or credential";
   private static final String DEFAULT_ENDPOINT = "yourEndpoint";
+  private static final String DEFAULT_REGION = "yourRegion";
 
   private final AWSS3Config s3config =
       (AWSS3Config) ObjectStorageDescriptor.getInstance().getConfig().getProviderConfig();
-  private final S3Client s3Client =
-      S3Client.builder()
-          .region(Region.of(s3config.getEndpoint()))
-          .credentialsProvider(
-              StaticCredentialsProvider.create(
-                  AwsBasicCredentials.create(
-                      s3config.getAccessKeyId(), s3config.getAccessKeySecret())))
-          .build();
+  private final S3Client s3Client;
+
+  public S3ObjectStorageConnector() {
+    S3ClientBuilder builder =
+        S3Client.builder()
+            .region(Region.of(s3config.getRegion()))
+            .credentialsProvider(
+                StaticCredentialsProvider.create(
+                    AwsBasicCredentials.create(
+                        s3config.getAccessKeyId(), s3config.getAccessKeySecret())));
+    if (!DEFAULT_ENDPOINT.equals(s3config.getEndpoint())) {
+      builder.endpointOverride(URI.create(s3config.getEndpoint()));
+    }
+    if (s3config.isEnablePathStyleAccess()) {
+      builder.serviceConfiguration(b -> b.pathStyleAccessEnabled(true));
+    }
+    s3Client = builder.build();
+  }
 
   @Override
   public boolean isConnectorEnabled() {
-    return !DEFAULT_ENDPOINT.equals(s3config.getEndpoint());
+    return !DEFAULT_REGION.equals(s3config.getRegion());
   }
 
   @Override

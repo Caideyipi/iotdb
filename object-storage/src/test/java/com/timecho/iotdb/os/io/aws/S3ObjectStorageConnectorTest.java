@@ -37,7 +37,7 @@ public class S3ObjectStorageConnectorTest {
     prevType = config.getOsType();
     config.setOsType(ObjectStorageType.AWS_S3);
     AWSS3Config s3Config = (AWSS3Config) config.getProviderConfig();
-    s3Config.setEndpoint("cn-north-1");
+    s3Config.setRegion("cn-north-1");
     s3Config.setBucketName("");
     s3Config.setAccessKeyId("");
     s3Config.setAccessKeySecret("");

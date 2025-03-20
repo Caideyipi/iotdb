@@ -20,9 +20,11 @@ package com.timecho.iotdb.os.conf.provider;
 
 public abstract class OSProviderConfig {
   protected String endpoint = "yourEndpoint";
+  protected String region = "yourRegion";
   protected String bucketName = "iotdb_data";
   protected String accessKeyId = "yourAccessKey";
   protected String accessKeySecret = "yourAccessSecret";
+  protected boolean enablePathStyleAccess = false;
 
   public String getEndpoint() {
     return endpoint;
@@ -30,6 +32,14 @@ public abstract class OSProviderConfig {
 
   public void setEndpoint(String endpoint) {
     this.endpoint = endpoint;
+  }
+
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
   }
 
   public String getBucketName() {
@@ -54,5 +64,13 @@ public abstract class OSProviderConfig {
 
   public void setAccessKeySecret(String accessKeySecret) {
     this.accessKeySecret = accessKeySecret;
+  }
+
+  public boolean isEnablePathStyleAccess() {
+    return enablePathStyleAccess;
+  }
+
+  public void setEnablePathStyleAccess(boolean enablePathStyleAccess) {
+    this.enablePathStyleAccess = enablePathStyleAccess;
   }
 }

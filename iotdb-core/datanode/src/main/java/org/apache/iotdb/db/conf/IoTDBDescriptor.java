@@ -1298,6 +1298,11 @@ public class IoTDBDescriptor {
                 properties.getProperty("object_storage_bucket", conf.getObjectStorageBucket()))
             .map(String::trim)
             .orElse(conf.getObjectStorageBucket()));
+    conf.setObjectStorageRegion(
+        Optional.ofNullable(
+                properties.getProperty("object_storage_region", conf.getObjectStorageRegion()))
+            .map(String::trim)
+            .orElse(conf.getObjectStorageRegion()));
 
     conf.setObjectStorageEndpoint(
         Optional.ofNullable(
@@ -1318,6 +1323,11 @@ public class IoTDBDescriptor {
                     "object_storage_access_secret", conf.getObjectStorageAccessSecret()))
             .map(String::trim)
             .orElse(conf.getObjectStorageAccessSecret()));
+
+    conf.setEnablePathStyleAccess(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_path_style_access", Boolean.toString(conf.isEnablePathStyleAccess()))));
 
     String[] cacheDirs =
         properties

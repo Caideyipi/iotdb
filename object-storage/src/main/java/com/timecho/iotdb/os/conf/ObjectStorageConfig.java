@@ -55,6 +55,7 @@ public class ObjectStorageConfig {
         this.providerConfig = new TestConfig();
     }
     setEndpoint(oldConfig.getEndpoint());
+    setRegion(oldConfig.getRegion());
     setBucketName(oldConfig.getBucketName());
     setAccessKeyId(oldConfig.getAccessKeyId());
     setAccessKeySecret(oldConfig.getAccessKeySecret());
@@ -62,6 +63,14 @@ public class ObjectStorageConfig {
 
   public OSProviderConfig getProviderConfig() {
     return providerConfig;
+  }
+
+  public String getRegion() {
+    return providerConfig.getRegion();
+  }
+
+  public void setRegion(String region) {
+    providerConfig.setRegion(region);
   }
 
   public String getEndpoint() {
@@ -94,6 +103,14 @@ public class ObjectStorageConfig {
 
   public void setAccessKeySecret(String accessKeySecret) {
     providerConfig.setAccessKeySecret(accessKeySecret);
+  }
+
+  public boolean isEnablePathStyleAccess() {
+    return providerConfig.isEnablePathStyleAccess();
+  }
+
+  public void setEnablePathStyleAccess(boolean enablePathStyleAccess) {
+    providerConfig.setEnablePathStyleAccess(enablePathStyleAccess);
   }
 
   public String[] getCacheDirs() {

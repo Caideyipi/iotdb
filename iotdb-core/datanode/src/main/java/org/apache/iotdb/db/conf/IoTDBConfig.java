@@ -4048,6 +4048,14 @@ public class IoTDBConfig {
     osConfig.setBucketName(objectStorageBucket);
   }
 
+  public String getObjectStorageRegion() {
+    return osConfig.getRegion();
+  }
+
+  public void setObjectStorageRegion(String objectStorageRegion) {
+    osConfig.setRegion(objectStorageRegion);
+  }
+
   public String getObjectStorageEndpoint() {
     return osConfig.getEndpoint();
   }
@@ -4070,6 +4078,14 @@ public class IoTDBConfig {
 
   public void setObjectStorageAccessSecret(String objectStorageAccessSecret) {
     osConfig.setAccessKeySecret(objectStorageAccessSecret);
+  }
+
+  public boolean isEnablePathStyleAccess() {
+    return osConfig.isEnablePathStyleAccess();
+  }
+
+  public void setEnablePathStyleAccess(boolean enablePathStyleAccess) {
+    osConfig.setEnablePathStyleAccess(enablePathStyleAccess);
   }
 
   public String[] getCacheDirs() {
