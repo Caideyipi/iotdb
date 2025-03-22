@@ -224,7 +224,7 @@ public class UDFManagementService {
       throws Exception {
     try {
       acquireLock();
-      UDFInformation information = udfTable.getUDFInformation(Model.TREE, functionName);
+      UDFInformation information = udfTable.getUDFInformation(model, functionName);
       if (information == null) {
         return;
       }
