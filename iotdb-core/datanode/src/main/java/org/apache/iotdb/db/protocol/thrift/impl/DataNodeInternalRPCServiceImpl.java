@@ -89,6 +89,7 @@ import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
 import org.apache.iotdb.db.protocol.client.cn.DnToCnInternalServiceAsyncRequestManager;
 import org.apache.iotdb.db.protocol.client.cn.DnToCnRequestType;
 import org.apache.iotdb.db.protocol.client.dn.DataNodeExternalServiceAsyncRequestManager;
+import org.apache.iotdb.db.protocol.client.dn.DataNodeIntraHeartbeatManager;
 import org.apache.iotdb.db.protocol.client.dn.DataNodeMPPServiceAsyncRequestManager;
 import org.apache.iotdb.db.protocol.client.dn.DnToDnInternalServiceAsyncRequestManager;
 import org.apache.iotdb.db.protocol.client.dn.DnToDnRequestType;
@@ -106,6 +107,7 @@ import org.apache.iotdb.db.queryengine.execution.fragment.FragmentInstanceManage
 import org.apache.iotdb.db.queryengine.execution.fragment.FragmentInstanceState;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.source.ISchemaSource;
 import org.apache.iotdb.db.queryengine.execution.operator.schema.source.SchemaSourceFactory;
+import org.apache.iotdb.db.queryengine.plan.ClusterTopology;
 import org.apache.iotdb.db.queryengine.plan.Coordinator;
 import org.apache.iotdb.db.queryengine.plan.analyze.ClusterPartitionFetcher;
 import org.apache.iotdb.db.queryengine.plan.analyze.IPartitionFetcher;
@@ -357,6 +359,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   private final DataNodeThrottleQuotaManager throttleQuotaManager =
       DataNodeThrottleQuotaManager.getInstance();
+
+  private final ClusterTopology clusterTopology = ClusterTopology.getInstance();
 
   private final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
 
@@ -1771,6 +1775,14 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
             .collect(Collectors.toList()));
   }
 
+  @Override
+  public TTestConnectionResp submitInternalTestConnectionTask(TNodeLocations nodeLocations)
+      throws TException {
+    return new TTestConnectionResp(
+        new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()),
+        testAllDataNodeConnectionInHeartbeatChannel(nodeLocations.getDataNodeLocations()));
+  }
+
   private static <Location, RequestType> List<TTestConnectionResult> testConnections(
       final List<Location> nodeLocations,
       final Function<Location, Integer> getId,
@@ -1796,6 +1808,18 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
         DnToCnRequestType.TEST_CONNECTION,
         (AsyncRequestContext<Object, TSStatus, DnToCnRequestType, TConfigNodeLocation> handler) ->
             DnToCnInternalServiceAsyncRequestManager.getInstance().sendAsyncRequest(handler));
+  }
+
+  private List<TTestConnectionResult> testAllDataNodeConnectionInHeartbeatChannel(
+      List<TDataNodeLocation> dataNodeLocations) {
+    return testConnections(
+        dataNodeLocations,
+        TDataNodeLocation::getDataNodeId,
+        TDataNodeLocation::getInternalEndPoint,
+        TServiceType.DataNodeInternalService,
+        DnToDnRequestType.TEST_CONNECTION,
+        (AsyncRequestContext<Object, TSStatus, DnToDnRequestType, TDataNodeLocation> handler) ->
+            DataNodeIntraHeartbeatManager.getInstance().sendAsyncRequest(handler, 1, null, true));
   }
 
   private List<TTestConnectionResult> testAllDataNodeInternalServiceConnection(
@@ -1939,6 +1963,10 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
           .updateConfigNodeList(new ArrayList<>(req.getConfigNodeEndPoints()))) {
         resp.setConfirmedConfigNodeEndPoints(req.getConfigNodeEndPoints());
       }
+    }
+
+    if (req.isSetTopology() && req.isSetDataNodes()) {
+      clusterTopology.updateTopology(req.getDataNodes(), req.getTopology());
     }
 
     return resp;

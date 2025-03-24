@@ -52,11 +52,13 @@ import org.apache.iotdb.confignode.manager.load.cache.region.RegionStatistics;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 
+import org.apache.thrift.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -99,6 +101,8 @@ public class LoadCache {
   private final Map<TConsensusGroupId, ConsensusGroupCache> consensusGroupCacheMap;
   // Map<DataNodeId, confirmedConfigNodes>
   private final Map<Integer, Set<TEndPoint>> confirmedConfigNodeMap;
+  private Map<Integer, Set<Integer>> topologyGraph;
+  private final AtomicBoolean topologyUpdated;
 
   public LoadCache() {
     this.nodeCacheMap = new ConcurrentHashMap<>();
@@ -108,6 +112,8 @@ public class LoadCache {
     this.regionSizeMap = new ConcurrentHashMap<>();
     this.consensusGroupCacheMap = new ConcurrentHashMap<>();
     this.confirmedConfigNodeMap = new ConcurrentHashMap<>();
+    this.topologyGraph = new HashMap<>();
+    this.topologyUpdated = new AtomicBoolean(false);
   }
 
   public void initHeartbeatCache(final IManager configManager) {
@@ -181,6 +187,7 @@ public class LoadCache {
                       regionGroupId,
                       new RegionGroupCache(
                           database,
+                          regionGroupId,
                           regionReplicaSet.getDataNodeLocations().stream()
                               .map(TDataNodeLocation::getDataNodeId)
                               .collect(Collectors.toSet()),
@@ -309,7 +316,8 @@ public class LoadCache {
       String database, TConsensusGroupId regionGroupId, Set<Integer> dataNodeIds) {
     boolean isStrongConsistency = CONF.isConsensusGroupStrongConsistency(regionGroupId);
     regionGroupCacheMap.put(
-        regionGroupId, new RegionGroupCache(database, dataNodeIds, isStrongConsistency));
+        regionGroupId,
+        new RegionGroupCache(database, regionGroupId, dataNodeIds, isStrongConsistency));
     consensusGroupCacheMap.put(regionGroupId, new ConsensusGroupCache());
   }
 
@@ -321,7 +329,7 @@ public class LoadCache {
    */
   public void createRegionCache(TConsensusGroupId regionGroupId, int dataNodeId) {
     Optional.ofNullable(regionGroupCacheMap.get(regionGroupId))
-        .ifPresent(cache -> cache.createRegionCache(dataNodeId));
+        .ifPresent(cache -> cache.createRegionCache(dataNodeId, regionGroupId));
   }
 
   /**
@@ -820,6 +828,22 @@ public class LoadCache {
     LOGGER.warn(
         "[RegionElection] The leader of RegionGroups: {} is not determined after 10 heartbeat interval. Some function might fail.",
         regionGroupIds);
+  }
+
+  public void updateTopology(Map<Integer, Set<Integer>> latestTopology) {
+    if (!latestTopology.equals(topologyGraph)) {
+      LOGGER.info("[Topology Service] Cluster topology changed, latest: {}", latestTopology);
+    }
+    topologyGraph = latestTopology;
+    topologyUpdated.set(true);
+  }
+
+  @Nullable
+  public Map<Integer, Set<Integer>> getTopology() {
+    if (topologyUpdated.compareAndSet(true, false)) {
+      return Collections.unmodifiableMap(topologyGraph);
+    }
+    return null;
   }
 
   public void updateConfirmedConfigNodeEndPoints(
