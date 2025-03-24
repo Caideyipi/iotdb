@@ -32,6 +32,7 @@ The entry point for the server is **[IoTDB](https://github.com/apache/iotdb/tree
 * It calls **StartupChecks** and performs the following check
   * Checks JDK Version if it is greater than 8
   * Checks JMX Port
+
 Next, it performs following activities and registers the essential services:
 
 * Adds **IoTDBShutdownHook** to the _**Runtime**_
