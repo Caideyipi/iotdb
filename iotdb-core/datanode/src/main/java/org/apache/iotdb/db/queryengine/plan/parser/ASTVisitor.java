@@ -3535,9 +3535,9 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
           storageGroups.add(parsePrefixPath(prefixPathContext));
         }
       }
-      showRegionStatement.setStorageGroups(storageGroups);
+      showRegionStatement.setDatabases(storageGroups);
     } else {
-      showRegionStatement.setStorageGroups(null);
+      showRegionStatement.setDatabases(null);
     }
 
     if (ctx.ON() != null) {
