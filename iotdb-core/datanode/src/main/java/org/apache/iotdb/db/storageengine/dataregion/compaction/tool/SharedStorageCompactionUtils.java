@@ -88,19 +88,21 @@ public class SharedStorageCompactionUtils {
       throw new Exception("Cannot get data region replica set for empty time partition.");
     }
     IDeviceID deviceID = selectedResource.getDevices().iterator().next();
-    TTimePartitionSlot slot =
-        TimePartitionUtils.getTimePartitionSlot(
-            selectedResource.getTimeIndex().getStartTime(deviceID).get());
+    List<TTimePartitionSlot> slotList =
+        Collections.singletonList(
+            TimePartitionUtils.getTimePartitionSlot(
+                selectedResource.getTimeIndex().getStartTime(deviceID).get()));
+    String databaseName = dataRegion.getDatabaseName();
 
     Map<String, List<DataPartitionQueryParam>> map = new HashMap<>();
     DataPartitionQueryParam dataPartitionQueryParam = new DataPartitionQueryParam();
-    dataPartitionQueryParam.setDatabaseName(dataRegion.getDatabaseName());
+    dataPartitionQueryParam.setDatabaseName(databaseName);
     dataPartitionQueryParam.setDeviceID(deviceID);
-    dataPartitionQueryParam.setTimePartitionSlotList(Collections.singletonList(slot));
-    map.put(dataRegion.getDatabaseName(), Collections.singletonList(dataPartitionQueryParam));
+    dataPartitionQueryParam.setTimePartitionSlotList(slotList);
+    map.put(databaseName, Collections.singletonList(dataPartitionQueryParam));
     return ClusterPartitionFetcher.getInstance()
         .getDataPartition(map)
-        .getDataRegionReplicaSet(deviceID, slot);
+        .getDataRegionReplicaSetForWriting(deviceID, slotList, databaseName);
   }
 
   public static List<TsFileResource> pullRemoteReplica(
