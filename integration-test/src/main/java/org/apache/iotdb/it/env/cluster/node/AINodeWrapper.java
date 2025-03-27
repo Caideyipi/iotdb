@@ -121,7 +121,6 @@ public class AINodeWrapper extends AbstractNodeWrapper {
       startCommand.add("-i");
       startCommand.add("/root/.venv/bin/python3");
       startCommand.add("-r");
-      startCommand.add("-n");
 
       ProcessBuilder processBuilder =
           new ProcessBuilder(startCommand)

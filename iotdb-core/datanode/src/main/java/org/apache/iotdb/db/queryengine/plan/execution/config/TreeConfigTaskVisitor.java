@@ -21,6 +21,7 @@ package org.apache.iotdb.db.queryengine.plan.execution.config;
 
 import org.apache.iotdb.common.rpc.thrift.Model;
 import org.apache.iotdb.commons.executable.ExecutableManager;
+import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.pipe.config.constant.SystemConstant;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
@@ -61,9 +62,10 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.UnSetTTLTa
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.CliActivateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowSystemInfoTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.CreateModelTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.DropModelTask;
-import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.model.ShowModelsTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.CreateModelTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.CreateTrainingTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.DropModelTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ExtendRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.MigrateRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ReconstructRegionTask;
@@ -144,6 +146,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.Activa
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateTrainingStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
@@ -196,6 +199,9 @@ import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.ShowSpaceQuotaSt
 import org.apache.iotdb.db.queryengine.plan.statement.sys.quota.ShowThrottleQuotaStatement;
 
 import org.apache.tsfile.exception.NotImplementedException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.iotdb.commons.executable.ExecutableManager.getUnTrustedUriErrorMsg;
 import static org.apache.iotdb.commons.executable.ExecutableManager.isUriTrusted;
@@ -782,5 +788,23 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
   public IConfigTask visitShowCurrentSqlDialect(
       ShowCurrentSqlDialectStatement node, MPPQueryContext context) {
     return new ShowCurrentSqlDialectTask(context.getSession().getSqlDialect().name());
+  }
+
+  @Override
+  public IConfigTask visitCreateTraining(
+      CreateTrainingStatement createTrainingStatement, MPPQueryContext context) {
+    List<PartialPath> partialPathList = createTrainingStatement.getTargetPathPatterns();
+    List<String> targetPathPatterns = new ArrayList<>();
+    for (PartialPath partialPath : partialPathList) {
+      targetPathPatterns.add(partialPath.getFullPath());
+    }
+    return new CreateTrainingTask(
+        createTrainingStatement.getModelId(),
+        createTrainingStatement.getModelType(),
+        createTrainingStatement.getParameters(),
+        false,
+        createTrainingStatement.getTargetTimeRanges(),
+        createTrainingStatement.getExistingModelId(),
+        targetPathPatterns);
   }
 }

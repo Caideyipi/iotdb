@@ -53,6 +53,8 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariab
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.CliActivateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowSystemInfoTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.CreateTrainingTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ExtendRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.MigrateRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ReconstructRegionTask;
@@ -123,6 +125,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreatePipe;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreatePipePlugin;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateTable;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateTopic;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateTraining;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DataType;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DatabaseStatement;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DeleteDevice;
@@ -170,6 +173,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCurrentUser;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowDB;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowDataNodes;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowFunctions;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowModels;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowPipePlugins;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowPipes;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowRegions;
@@ -204,6 +208,7 @@ import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.utils.Binary;
 import org.apache.tsfile.utils.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1244,5 +1249,36 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new RemoveRegionTask(removeRegion);
+  }
+
+  @Override
+  protected IConfigTask visitCreateTraining(CreateTraining node, MPPQueryContext context) {
+    context.setQueryType(QueryType.WRITE);
+
+    String curDatabase = clientSession.getDatabaseName();
+    List<String> tableList = new ArrayList<>();
+    for (QualifiedName tableName : node.getTargetTables()) {
+      List<String> parts = tableName.getParts();
+      if (parts.size() == 1) {
+        tableList.add(curDatabase + "." + parts.get(0));
+      } else {
+        tableList.add(parts.get(1) + "." + parts.get(0));
+      }
+    }
+
+    return new CreateTrainingTask(
+        node.getModelId(),
+        node.getModelType(),
+        node.getParameters(),
+        node.isUseAllData(),
+        node.getTargetTimeRanges(),
+        node.getExistingModelId(),
+        node.getTargetDbs(),
+        tableList);
+  }
+
+  @Override
+  protected IConfigTask visitShowModels(ShowModels node, MPPQueryContext context) {
+    return new ShowModelsTask(node.getModelId());
   }
 }

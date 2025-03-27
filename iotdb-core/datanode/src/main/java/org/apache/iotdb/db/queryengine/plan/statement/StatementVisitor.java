@@ -79,6 +79,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.Activa
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateTrainingStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
@@ -696,5 +697,9 @@ public abstract class StatementVisitor<R, C> {
 
   public R visitShowCurrentUser(ShowCurrentUserStatement showCurrentUserStatement, C context) {
     return visitStatement(showCurrentUserStatement, context);
+  }
+
+  public R visitCreateTraining(CreateTrainingStatement createTrainingStatement, C context) {
+    return visitStatement(createTrainingStatement, context);
   }
 }
