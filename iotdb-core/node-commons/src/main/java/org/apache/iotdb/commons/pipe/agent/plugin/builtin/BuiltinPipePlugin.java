@@ -167,9 +167,6 @@ public enum BuiltinPipePlugin {
                   IOTDB_THRIFT_ASYNC_SINK.getPipePluginName().toUpperCase(),
                   IOTDB_LEGACY_PIPE_SINK.getPipePluginName().toUpperCase(),
                   WEBSOCKET_SINK.getPipePluginName().toUpperCase(),
-                  OPC_UA_SINK.getPipePluginName().toUpperCase(),
-                  OPC_DA_SINK.getPipePluginName().toUpperCase(),
-                  WRITE_BACK_SINK.getPipePluginName().toUpperCase(),
                   SUBSCRIPTION_SINK.getPipePluginName().toUpperCase(),
                   PIPE_CONSENSUS_ASYNC_SINK.getPipePluginName().toUpperCase())));
 }
