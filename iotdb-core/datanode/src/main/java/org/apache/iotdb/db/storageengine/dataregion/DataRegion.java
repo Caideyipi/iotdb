@@ -698,11 +698,13 @@ public class DataRegion implements IDataRegionForQuery {
     }
 
     if (StorageEngine.getInstance().isReadyForReadAndWrite()) {
-      if (config.getDataRegionConsensusProtocolClass().equals(ConsensusFactory.IOT_CONSENSUS)
-          || config
-              .getDataRegionConsensusProtocolClass()
-              .equals(ConsensusFactory.IOT_CONSENSUS_V2)) {
-        WALManager.getInstance().applyForWALNode(databaseName + FILE_NAME_SEPARATOR + dataRegionId);
+      if (config.getDataRegionConsensusProtocolClass().equals(ConsensusFactory.IOT_CONSENSUS_V2)) {
+        IWALNode walNode =
+            WALManager.getInstance()
+                .applyForWALNode(databaseName + FILE_NAME_SEPARATOR + dataRegionId);
+        if (walNode instanceof WALNode) {
+          walNode.setSafelyDeletedSearchIndex(Long.MAX_VALUE);
+        }
       }
       logger.info("The data region {}[{}] is created successfully", databaseName, dataRegionId);
     } else {
