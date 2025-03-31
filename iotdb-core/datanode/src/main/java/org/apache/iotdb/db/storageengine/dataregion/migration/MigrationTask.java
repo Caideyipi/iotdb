@@ -103,7 +103,7 @@ public abstract class MigrationTask implements Runnable {
 
     long taskTimeCost = System.nanoTime() - taskStartTime;
     MIGRATION_METRICS.recordMigrationTotalTime(destTierLevel, toLocal, taskTimeCost);
-    logger.debug(
+    logger.info(
         "Successfully migrate local TsFile {} to the {} {}, this migration operation is caused by {} and costs {}ns.",
         srcFile,
         toLocal ? "local" : "remote",

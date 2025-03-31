@@ -870,8 +870,14 @@ public class DataRegion implements IDataRegionForQuery {
 
   /** Remove the duplicate TsFile and return the actual TsFile (has .tsfile and .tsfile.resource) */
   private File deleteDuplicateMigrationTsFile(File f1, File f2) {
-    int f1Tier = TierManager.getInstance().getFileTierLevel(f1);
-    int f2Tier = TierManager.getInstance().getFileTierLevel(f2);
+    int f1Tier =
+        !f1.exists() || !FSUtils.isLocal(f1)
+            ? TierManager.getInstance().getTiersNum() - 1
+            : TierManager.getInstance().getFileTierLevel(f1);
+    int f2Tier =
+        !f2.exists() || !FSUtils.isLocal(f2)
+            ? TierManager.getInstance().getTiersNum() - 1
+            : TierManager.getInstance().getFileTierLevel(f2);
     File lowerTierFile = f1Tier < f2Tier ? f1 : f2;
     File higherTierFile = f1Tier < f2Tier ? f2 : f1;
     File lowerTierFileResource = fsFactory.getFile(lowerTierFile + RESOURCE_SUFFIX);
@@ -3173,10 +3179,6 @@ public class DataRegion implements IDataRegionForQuery {
       boolean isGeneratedByPipe)
       throws LoadFileException, DiskSpaceInsufficientException {
     int targetTierLevel = 0;
-    if (tsFileResource.onRemote()) {
-      targetTierLevel = TierManager.getInstance().getTiersNum() - 2;
-      tsFileResource.setTierLevel(TierManager.getInstance().getTiersNum() - 1);
-    }
 
     final File targetFile =
         (tsFileResource.isGeneratedByPipeConsensus() || tsFileResource.isGeneratedByPipe())

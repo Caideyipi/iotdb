@@ -162,6 +162,7 @@ public class SharedStorageCompactionTaskTest {
             CompressionType.SNAPPY,
             localPath);
     resource.setRemoteStorageBlock(new RemoteStorageBlock(FSType.OBJECT_STORAGE, remotePath));
+    resource.setStatusForTest(TsFileResourceStatus.NORMAL_ON_REMOTE);
     resource.serialize();
     fsFactory.copyFile(fsFactory.getFile(localPath), fsFactory.getFile(remotePath));
     fsFactory.deleteIfExists(fsFactory.getFile(localPath));

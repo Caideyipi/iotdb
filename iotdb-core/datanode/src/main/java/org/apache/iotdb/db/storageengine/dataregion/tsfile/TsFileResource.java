@@ -358,6 +358,8 @@ public class TsFileResource implements PersistentResource {
             break;
           case REMOTE_STORAGE_BLOCK:
             setRemoteStorageBlock(RemoteStorageBlock.deserializeFrom(inputStream));
+            setTierLevel(TierManager.getInstance().getTiersNum() - 1);
+            this.setAtomicStatus(TsFileResourceStatus.NORMAL_ON_REMOTE);
             break;
           case PIPE_MARK:
             isGeneratedByPipeConsensus = ReadWriteIOUtils.readBoolean(inputStream);
@@ -620,10 +622,7 @@ public class TsFileResource implements PersistentResource {
             try {
               tsFileSize = onRemote() ? getOSFile(file).length() : file.length();
             } catch (IOException e) {
-              LOGGER.error(
-                  "cannot get remote file of {}. Use 0 as its default length. Exception {}",
-                  file,
-                  e);
+              LOGGER.error("cannot get remote file of {}. Use 0 as its default length.", file, e);
               tsFileSize = 0;
             }
           }
@@ -967,7 +966,8 @@ public class TsFileResource implements PersistentResource {
   public boolean onRemote() {
     return (CONFIG.isEnableObjectStorage() || CONFIG.isEnableHDFS())
         && !isDeleted()
-        && !file.exists();
+        && !file.exists()
+        && remoteStorageBlock != null;
   }
 
   private boolean compareAndSetStatus(

@@ -49,6 +49,6 @@ public class DeleteTask implements Runnable {
       // TODO: this setting may occur side effects
       tsFileResource.setStatus(TsFileResourceStatus.NORMAL);
     }
-    logger.debug("Successfully delete TsFile {} by the SpaceTL.", tsFileResource.getTsFile());
+    logger.info("Successfully delete TsFile {} by the SpaceTL.", tsFileResource.getTsFile());
   }
 }
