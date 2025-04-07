@@ -763,7 +763,6 @@ public class TsFileResource implements PersistentResource {
   public void closeWithoutSettingStatus() throws IOException {
     if (exclusiveModFile != null) {
       exclusiveModFile.close();
-      exclusiveModFile = null;
     }
     if (compactionModFile != null) {
       compactionModFile.close();
