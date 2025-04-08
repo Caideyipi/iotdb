@@ -149,9 +149,6 @@ public class IoTDBConfig {
   /** Rpc Selector thread num */
   private int rpcSelectorThreadCount = 1;
 
-  /** Min concurrent client number */
-  private int rpcMinConcurrentClientNum = Runtime.getRuntime().availableProcessors();
-
   /** Max concurrent client number */
   private int rpcMaxConcurrentClientNum = 1000;
 
@@ -1790,14 +1787,6 @@ public class IoTDBConfig {
 
   public void setRpcSelectorThreadCount(int rpcSelectorThreadCount) {
     this.rpcSelectorThreadCount = rpcSelectorThreadCount;
-  }
-
-  public int getRpcMinConcurrentClientNum() {
-    return rpcMinConcurrentClientNum;
-  }
-
-  public void setRpcMinConcurrentClientNum(int rpcMinConcurrentClientNum) {
-    this.rpcMinConcurrentClientNum = rpcMinConcurrentClientNum;
   }
 
   public int getRpcMaxConcurrentClientNum() {
