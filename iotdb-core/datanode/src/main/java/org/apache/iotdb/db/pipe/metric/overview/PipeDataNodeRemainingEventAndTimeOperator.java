@@ -56,6 +56,9 @@ class PipeDataNodeRemainingEventAndTimeOperator extends PipeRemainingOperator {
   private double lastDataRegionCommitSmoothingValue = Long.MAX_VALUE;
   private double lastSchemaRegionCommitSmoothingValue = Long.MAX_VALUE;
 
+  private long lastTabletEventCount;
+  private long lastTime;
+
   PipeDataNodeRemainingEventAndTimeOperator(final String pipeName, final long creationTime) {
     super(pipeName, creationTime);
   }

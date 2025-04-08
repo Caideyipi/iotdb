@@ -26,7 +26,7 @@ public abstract class PipeRemainingOperator {
   protected static final long REMAINING_MAX_SECONDS = 365 * 24 * 60 * 60L; // 1 year
 
   protected String pipeName;
-  protected long creationTime = 0;
+  protected long creationTime;
 
   private long lastEmptyTimeStamp = System.currentTimeMillis();
   private long lastNonEmptyTimeStamp = System.currentTimeMillis();
