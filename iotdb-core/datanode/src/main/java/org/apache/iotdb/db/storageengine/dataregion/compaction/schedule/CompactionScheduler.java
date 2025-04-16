@@ -165,9 +165,7 @@ public class CompactionScheduler {
     long startTime = System.currentTimeMillis();
     List<InnerSpaceCompactionTask> innerSpaceTaskList =
         innerSpaceCompactionSelector.selectInnerSpaceTask(
-            sequence
-                ? tsFileManager.getOrCreateSequenceListByTimePartition(timePartition)
-                : tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition));
+            tsFileManager.getTsFileListSnapshot(timePartition, sequence));
     CompactionMetrics.getInstance()
         .updateCompactionTaskSelectionTimeCost(
             sequence ? CompactionTaskType.INNER_SEQ : CompactionTaskType.INNER_UNSEQ,
@@ -250,8 +248,8 @@ public class CompactionScheduler {
 
     List<CrossCompactionTaskResource> selectedTasks =
         selector.selectInsertionCrossSpaceTask(
-            tsFileManager.getOrCreateSequenceListByTimePartition(timePartition),
-            tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition));
+            tsFileManager.getTsFileListSnapshot(timePartition, true),
+            tsFileManager.getTsFileListSnapshot(timePartition, false));
     if (selectedTasks.isEmpty()) {
       return 0;
     }
@@ -292,8 +290,8 @@ public class CompactionScheduler {
 
     List<CrossCompactionTaskResource> taskList =
         crossSpaceCompactionSelector.selectCrossSpaceTask(
-            tsFileManager.getOrCreateSequenceListByTimePartition(timePartition),
-            tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition));
+            tsFileManager.getTsFileListSnapshot(timePartition, true),
+            tsFileManager.getTsFileListSnapshot(timePartition, false));
     List<Long> memoryCost =
         taskList.stream()
             .map(CrossCompactionTaskResource::getTotalMemoryCost)
@@ -371,12 +369,12 @@ public class CompactionScheduler {
     if (config.isEnableSeqSpaceCompaction()) {
       taskList.addAll(
           settleSelector.selectSettleTask(
-              tsFileManager.getOrCreateSequenceListByTimePartition(timePartition)));
+              tsFileManager.getTsFileListSnapshot(timePartition, true)));
     }
     if (config.isEnableUnseqSpaceCompaction()) {
       taskList.addAll(
           settleSelector.selectSettleTask(
-              tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition)));
+              tsFileManager.getTsFileListSnapshot(timePartition, false)));
     }
     CompactionMetrics.getInstance()
         .updateCompactionTaskSelectionTimeCost(
