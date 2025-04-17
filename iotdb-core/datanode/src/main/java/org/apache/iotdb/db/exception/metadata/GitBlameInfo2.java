@@ -5098,7 +5098,7 @@ public class GitBlameInfo2 {
         double speed = 1000.0 * done / (System.currentTimeMillis() - startTime);
         System.out.println("Process: " + done + "/" + paths.size());
         System.out.println("Speed: " + speed);
-        System.out.println("Remaining: " + token.get());
+        System.out.println("Remaining: " + token.get() / speed);
         Thread.sleep(50);
       }
       for (int j = 0; j < paths.size(); ++j) {
