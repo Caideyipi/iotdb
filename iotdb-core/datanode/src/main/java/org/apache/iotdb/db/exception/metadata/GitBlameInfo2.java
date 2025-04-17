@@ -4936,22 +4936,6 @@ public class GitBlameInfo2 {
     try (FileWriter writer = new FileWriter(outPutFile)) {
       int i = 0;
       for (final String path : paths) {
-        final AtomicInteger formalCode = new AtomicInteger(0);
-        final AtomicInteger formalComment = new AtomicInteger(0);
-        final AtomicInteger formalBlank = new AtomicInteger(0);
-
-        final AtomicInteger employeeCode = new AtomicInteger(0);
-        final AtomicInteger employeeComment = new AtomicInteger(0);
-        final AtomicInteger employeeBlank = new AtomicInteger(0);
-
-        final AtomicInteger internCode = new AtomicInteger(0);
-        final AtomicInteger internComment = new AtomicInteger(0);
-        final AtomicInteger internBlank = new AtomicInteger(0);
-
-        final AtomicInteger outdatedCode = new AtomicInteger(0);
-        final AtomicInteger outdatedComment = new AtomicInteger(0);
-        final AtomicInteger outdatedBlank = new AtomicInteger(0);
-
         // Filter git hash
         final Pattern matcher = Pattern.compile("^[0-9a-z]{40}");
         final Set<String> keys =
@@ -4988,6 +4972,22 @@ public class GitBlameInfo2 {
               () -> {
                 // 对每个文件调用 git blame
                 try {
+                  final AtomicInteger formalCode = new AtomicInteger(0);
+                  final AtomicInteger formalComment = new AtomicInteger(0);
+                  final AtomicInteger formalBlank = new AtomicInteger(0);
+
+                  final AtomicInteger employeeCode = new AtomicInteger(0);
+                  final AtomicInteger employeeComment = new AtomicInteger(0);
+                  final AtomicInteger employeeBlank = new AtomicInteger(0);
+
+                  final AtomicInteger internCode = new AtomicInteger(0);
+                  final AtomicInteger internComment = new AtomicInteger(0);
+                  final AtomicInteger internBlank = new AtomicInteger(0);
+
+                  final AtomicInteger outdatedCode = new AtomicInteger(0);
+                  final AtomicInteger outdatedComment = new AtomicInteger(0);
+                  final AtomicInteger outdatedBlank = new AtomicInteger(0);
+
                   final File currentDir = new File(timechoDBPath + path);
                   Process blameProcess =
                       Runtime.getRuntime()
@@ -5059,6 +5059,7 @@ public class GitBlameInfo2 {
                         }
                         commentLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
                       } else {
+                        System.out.println("code");
                         if (isFormal) {
                           formalCode.incrementAndGet();
                           if (internship.contains(author)) {
@@ -5078,6 +5079,9 @@ public class GitBlameInfo2 {
                   blameProcess.waitFor();
                   token.decrementAndGet();
                   // 输出结果
+                  System.out.println(finalI);
+                  System.out.println(formalCode.get());
+                  System.out.println(codeLines.values().stream().reduce(0, Integer::sum));
                   results.put(
                       finalI,
                       (double) formalCode.get()
