@@ -4985,135 +4985,120 @@ public class GitBlameInfo2 {
         Map<String, Integer> commentLines = new ConcurrentHashMap<>();
         Map<String, Integer> blankLines = new ConcurrentHashMap<>();
         try {
-          final File file = new File(timechoDBPath + path);
+          final int finalI = i;
+          executorService.submit(
+              () -> {
+                // 对每个文件调用 git blame
+                try {
+                  final File currentDir = new File(timechoDBPath + path);
+                  Process blameProcess =
+                      Runtime.getRuntime()
+                          .exec(
+                              "git blame --line-porcelain " + path,
+                              null,
+                              currentDir.isDirectory() ? currentDir : currentDir.getParentFile());
+                  BufferedReader blameReader =
+                      new BufferedReader(new InputStreamReader(blameProcess.getInputStream()));
 
-          // 获取所有被 Git 追踪的文件
-          Process listFilesProcess =
-              file.isDirectory()
-                  ? Runtime.getRuntime().exec("git ls-files", null, file)
-                  : Runtime.getRuntime()
-                      .exec("git ls-files " + file.getName(), null, file.getParentFile());
-
-          BufferedReader listFilesReader =
-              new BufferedReader(new InputStreamReader(listFilesProcess.getInputStream()));
-
-          String filePath;
-          while ((filePath = listFilesReader.readLine()) != null) {
-            final String currentFilePath = filePath;
-            final int finalI = i;
-            executorService.submit(
-                () -> {
-                  // 对每个文件调用 git blame
-                  try {
-                    final File currentDir = new File(timechoDBPath + path);
-                    Process blameProcess =
-                        Runtime.getRuntime()
-                            .exec(
-                                "git blame --line-porcelain " + currentFilePath,
-                                null,
-                                currentDir.isDirectory() ? currentDir : currentDir.getParentFile());
-                    BufferedReader blameReader =
-                        new BufferedReader(new InputStreamReader(blameProcess.getInputStream()));
-
-                    String line;
-                    String author = null;
-                    boolean commentBlock = false;
-                    boolean isFormal = false;
-                    boolean outdated = false;
-                    while ((line = blameReader.readLine()) != null) {
-                      boolean hitKey = false;
-                      if (line.startsWith("author ")) {
-                        author = line.substring(7);
-                        isFormal = formal.contains(author);
-                      } else if (line.startsWith("author-time ")) {
-                        // Filter author-time earlier than 2021.10.20
-                        if (Long.parseLong(line.split(" ")[1]) <= 1634659200) {
-                          isFormal = false;
-                          outdated = true;
-                        } else {
-                          outdated = false;
-                        }
+                  String line;
+                  String author = null;
+                  boolean commentBlock = false;
+                  boolean isFormal = false;
+                  boolean outdated = false;
+                  while ((line = blameReader.readLine()) != null) {
+                    boolean hitKey = false;
+                    if (line.startsWith("author ")) {
+                      author = line.substring(7);
+                      isFormal = formal.contains(author);
+                    } else if (line.startsWith("author-time ")) {
+                      // Filter author-time earlier than 2021.10.20
+                      if (Long.parseLong(line.split(" ")[1]) <= 1634659200) {
+                        isFormal = false;
+                        outdated = true;
                       } else {
-                        for (final String key : keys) {
-                          if (line.startsWith(key)) {
-                            hitKey = true;
-                            break;
-                          }
-                        }
-                        if (hitKey || matcher.matcher(line).find()) {
-                          continue;
-                        }
-                        if (line.trim().isEmpty()) {
-                          if (isFormal) {
-                            formalBlank.incrementAndGet();
-                            if (internship.contains(author)) {
-                              internBlank.incrementAndGet();
-                            } else {
-                              employeeBlank.incrementAndGet();
-                            }
-                          } else if (outdated) {
-                            outdatedCode.incrementAndGet();
-                          }
-                          blankLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
-                        } else if (isComment(
-                                line.trim(), FilenameUtils.getExtension(currentDir.getName()))
-                            || commentBlock) {
-                          if (line.trim().contains("/*")) {
-                            commentBlock = true;
-                          }
-                          if (line.trim().contains("*/")) {
-                            commentBlock = false;
-                          }
-                          if (isFormal) {
-                            formalComment.incrementAndGet();
-                            if (internship.contains(author)) {
-                              internComment.incrementAndGet();
-                            } else {
-                              employeeComment.incrementAndGet();
-                            }
-                          } else if (outdated) {
-                            outdatedCode.incrementAndGet();
-                          }
-                          commentLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
-                        } else {
-                          if (isFormal) {
-                            formalCode.incrementAndGet();
-                            if (internship.contains(author)) {
-                              internCode.incrementAndGet();
-                            } else {
-                              employeeCode.incrementAndGet();
-                            }
-                          } else if (outdated) {
-                            outdatedCode.incrementAndGet();
-                          }
-                          codeLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
+                        outdated = false;
+                      }
+                    } else {
+                      for (final String key : keys) {
+                        if (line.startsWith(key)) {
+                          hitKey = true;
+                          break;
                         }
                       }
+                      if (hitKey || matcher.matcher(line).find()) {
+                        continue;
+                      }
+                      if (line.trim().isEmpty()) {
+                        if (isFormal) {
+                          formalBlank.incrementAndGet();
+                          if (internship.contains(author)) {
+                            internBlank.incrementAndGet();
+                          } else {
+                            employeeBlank.incrementAndGet();
+                          }
+                        } else if (outdated) {
+                          outdatedCode.incrementAndGet();
+                        }
+                        blankLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
+                      } else if (isComment(
+                              line.trim(), FilenameUtils.getExtension(currentDir.getName()))
+                          || commentBlock) {
+                        if (line.trim().contains("/*")) {
+                          commentBlock = true;
+                        }
+                        if (line.trim().contains("*/")) {
+                          commentBlock = false;
+                        }
+                        if (isFormal) {
+                          formalComment.incrementAndGet();
+                          if (internship.contains(author)) {
+                            internComment.incrementAndGet();
+                          } else {
+                            employeeComment.incrementAndGet();
+                          }
+                        } else if (outdated) {
+                          outdatedCode.incrementAndGet();
+                        }
+                        commentLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
+                      } else {
+                        if (isFormal) {
+                          formalCode.incrementAndGet();
+                          if (internship.contains(author)) {
+                            internCode.incrementAndGet();
+                          } else {
+                            employeeCode.incrementAndGet();
+                          }
+                        } else if (outdated) {
+                          outdatedCode.incrementAndGet();
+                        }
+                        codeLines.compute(author, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
+                      }
                     }
-
-                    // 等待 blame 进程结束
-                    blameProcess.waitFor();
-                    token.decrementAndGet();
-                    // 输出结果
-                    results.put(
-                        finalI,
-                        (double) formalCode.get()
-                            / codeLines.values().stream().reduce(0, Integer::sum));
-                  } catch (final Exception e) {
-                    System.out.println(e);
                   }
-                });
-          }
+
+                  // 等待 blame 进程结束
+                  blameProcess.waitFor();
+                  token.decrementAndGet();
+                  // 输出结果
+                  results.put(
+                      finalI,
+                      (double) formalCode.get()
+                          / codeLines.values().stream().reduce(0, Integer::sum));
+                } catch (final Exception e) {
+                  System.out.println(e);
+                }
+              });
         } catch (Exception e) {
           e.printStackTrace();
         }
         ++i;
-        double speed = 1000.0 * i / (System.currentTimeMillis() - startTime);
-        System.out.println("Process: " + i + "/" + paths.size());
-        System.out.println("Speed: " + speed);
-        System.out.println("Remaining: " + (paths.size() - i) / speed);
       }
       while (token.get() != 0) {
+        final int done = paths.size() - token.get();
+        double speed = 1000.0 * done / (System.currentTimeMillis() - startTime);
+        System.out.println("Process: " + done + "/" + paths.size());
+        System.out.println("Speed: " + speed);
+        System.out.println("Remaining: " + token.get());
         Thread.sleep(50);
       }
       for (int j = 0; j < paths.size(); ++j) {
