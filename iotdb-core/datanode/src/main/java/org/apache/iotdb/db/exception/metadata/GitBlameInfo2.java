@@ -4936,8 +4936,6 @@ public class GitBlameInfo2 {
     try (FileWriter writer = new FileWriter(outPutFile)) {
       int i = 0;
       for (final String path : paths) {
-        System.out.println(path);
-
         final AtomicInteger formalCode = new AtomicInteger(0);
         final AtomicInteger formalComment = new AtomicInteger(0);
         final AtomicInteger formalBlank = new AtomicInteger(0);
