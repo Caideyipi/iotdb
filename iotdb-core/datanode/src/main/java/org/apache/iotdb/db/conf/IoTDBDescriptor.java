@@ -976,15 +976,6 @@ public class IoTDBDescriptor {
         .setKerberosPrincipal(
             properties.getProperty("kerberos_principal", conf.getKerberosPrincipal()));
     TSFileDescriptor.getInstance().getConfig().setBatchSize(conf.getBatchSize());
-    TSFileDescriptor.getInstance()
-        .getConfig()
-        .setEncryptFlag(properties.getProperty("encrypt_flag", "false"));
-    TSFileDescriptor.getInstance()
-        .getConfig()
-        .setEncryptType(properties.getProperty("encrypt_type", "UNENCRYPTED"));
-    TSFileDescriptor.getInstance()
-        .getConfig()
-        .setEncryptKeyFromPath(properties.getProperty("encrypt_key_from_path", ""));
 
     conf.setCoordinatorReadExecutorSize(
         Integer.parseInt(
@@ -2023,6 +2014,15 @@ public class IoTDBDescriptor {
                     "max_tsblock_line_number",
                     ConfigurationFileUtils.getConfigurationDefaultValue(
                         "max_tsblock_line_number"))));
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setEncryptFlag(properties.getProperty("encrypt_flag", "false"));
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setEncryptType(properties.getProperty("encrypt_type", "UNENCRYPTED"));
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setEncryptKeyFromPath(properties.getProperty("encrypt_key_path", ""));
   }
 
   // Mqtt related
