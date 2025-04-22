@@ -52,7 +52,7 @@ IoTDB的主要特点如下:
 6. 学习成本非常低。IoTDB支持类似sql的语言、JDBC标准API和易于使用的导入/导出工具。
 7. 与先进的开放源码生态系统的无缝集成。IoTDB支持分析生态系统，如Hadoop、Spark和可视化工具(如Grafana)。
 
-有关IoTDB的最新信息，请访问[IoTDB官方网站](https://iotdb.apache.org/)。如果您在使用IoTDB时遇到任何问题或发现任何bug，请在[jira]中提交(https://issues.apache.org/jira/projects/IOTDB/issues)。
+有关IoTDB的最新信息，请访问[IoTDB官方网站](https://www.timecho.com/)。
 
 <!-- TOC -->
 
@@ -65,8 +65,6 @@ IoTDB的主要特点如下:
 - [快速开始](#快速开始)
   - [环境准备](#环境准备)
   - [安装](#安装)
-    - [从源码构建](#从源码构建)
-      - [配置](#配置)
   - [开始](#开始)
     - [启动 IoTDB](#启动-iotdb)
     - [使用 IoTDB](#使用-iotdb)
@@ -81,15 +79,15 @@ IoTDB的主要特点如下:
 
 # 快速开始
 
-这篇简短的指南将带您了解使用IoTDB的基本过程。如需更详细的介绍，请访问我们的网站[用户指南](https://iotdb.apache.org/zh/UserGuide/latest/QuickStart/QuickStart.html)。
+这篇简短的指南将带您了解使用IoTDB的基本过程。如需更详细的介绍，请访问我们的网站[用户指南](https://www.timecho.com/docs/zh/UserGuide/latest/QuickStart/QuickStart_timecho.html)。
+
 
 ## 环境准备
 
 要使用IoTDB，您需要:
-1. Java >= 1.8 (目前 1.8、11 到 17 已经被验证可用。请确保环变量境路径已正确设置)。
-2. Maven >= 3.6 (如果希望从源代码编译和安装IoTDB)。
-3. 设置 max open files 为 65535，以避免"too many open files"错误。
-4. （可选） 将 somaxconn 设置为 65535 以避免系统在高负载时出现 "connection reset" 错误。 
+1. Java >= 1.8 (推荐17，目前 1.8、11 到 17 已经被验证可用。请确保环变量境路径已正确设置)。
+2. 设置 max open files 为 65535，以避免"too many open files"错误。
+3. （可选） 将 somaxconn 设置为 65535 以避免系统在高负载时出现 "connection reset" 错误。 
     ```
     # Linux
     > sudo sysctl -w net.core.somaxconn=65535
@@ -100,92 +98,13 @@ IoTDB的主要特点如下:
 
 ## 安装
 
-IoTDB提供了三种安装方法，您可以参考以下建议，选择最适合您的一种:
+IoTDB提供了两种安装方法，您可以参考以下建议，选择最适合您的一种:
 
-* 从源代码安装。如果需要自己修改代码，可以使用此方法。
+* 联系天谋商务获取 IoTDB 安装包，该方式提供了预编译的二进制可执行文件，开箱即用，适合快速部署和直接使用。
 
-* 从二进制文件安装。推荐的方法是从官方网站下载二进制文件，您将获得一个开箱即用的二进制发布包。
+* 联系天谋商务获取 Docker 镜像，该方式支持容器化部署，适合需要灵活环境配置或快速迁移的场景。
 
-* 使用Docker: dockerfile的路径是https://github.com/apache/iotdb/tree/master/docker/src/main
-
-在这篇《快速入门》中，我们简要介绍如何使用源代码安装IoTDB。如需进一步资料，请参阅官网[用户指南](https://iotdb.apache.org/zh/UserGuide/Master/QuickStart/QuickStart.html)。
-
-## 从源码构建
-
-### 关于准备Thrift编译器
-
-如果您使用Windows，请跳过此段。
-
-我们使用Thrift作为RPC模块来提供客户端-服务器间的通信和协议支持，因此在编译阶段我们需要使用Thrift 0.13.0
-（或更高）编译器生成对应的Java代码。 Thrift只提供了Windows下的二进制编译器，Unix下需要通过源码自行编译。
-
-如果你有安装权限，可以通过`apt install`, `yum install`, `brew install`来安装thrift编译器，然后在下面的编译命令中
-都添加如下参数即可：`-Dthrift.download-url=http://apache.org/licenses/LICENSE-2.0.txt -Dthrift.exec.absolute.path=<你的thrift可执行文件路径>`。
-
-
-同时我们预先编译了一个Thrift编译器，并将其上传到了GitHub ，借助一个Maven插件，在编译时可以自动将其下载。
-该预编译的Thrift编译器在gcc8，Ubuntu, CentOS, MacOS下可以工作，但是在更低的gcc
-版本以及其他操作系统上尚未确认。
-如果您发现因为网络问题总是提示下载不到thrift文件，那么您需要手动下载，并将编译器放置到目录`{project_root}\thrift\target\tools\thrift_0.12.0_0.13.0_linux.exe`。
-如果您放到其他地方，就需要在运行maven的命令中添加：`-Dthrift.download-url=http://apache.org/licenses/LICENSE-2.0.txt -Dthrift.exec.absolute.path=<你的thrift可执行文件路径>`。
-
-如果您对Maven足够熟悉，您也可以直接修改我们的根pom文件来避免每次编译都使用上述参数。
-Thrift官方网址为：https://thrift.apache.org/
-
-从 git 克隆源代码:
-
-```
-git clone https://github.com/apache/iotdb.git
-```
-
-默认的主分支是master分支，如果你想使用某个发布版本x.x.x，请切换 tag:
-
-```
-git checkout vx.x.x
-```
-
-或者切换大版本所在分支，如 1.0 版本的分支为 rel/1.0
-
-```
-git checkout rel/x.x
-```
-
-### 源码编译 IoTDB
-
-在 iotdb 根目录下执行:
-
-```
-> mvn clean package -pl distribution -am -DskipTests
-```
-
-编译完成后, IoTDB 二进制包将生成在: "distribution/target".
-
-### 只编译 cli
-
-在 iotdb/iotdb-client 目录下执行:
-
-```
-> mvn clean package -pl cli -am -DskipTests
-```
-
-编译完成后, IoTDB cli 将生成在 "cli/target".
-
-### 编译其他模块
-
-通过添加 `-P with-cpp` 可以进行c++客户端API的编译。
-
-**注意："`thrift/target/generated-sources/thrift`"， "`thrift-sync/target/generated-sources/thrift`"，"`thrift-cluster/target/generated-sources/thrift`"，"`thrift-influxdb/target/generated-sources/thrift`" 和  "`antlr/target/generated-sources/antlr4`" 目录需要添加到源代码根中，以免在 IDE 中产生编译错误。**
-
-**IDEA的操作方法：在上述maven命令编译好后，右键项目名称，选择"`Maven->Reload project`"，即可。**
-
-### 配置
-
-配置文件在"conf"文件夹下
-* 环境配置模块(`datanode-env.bat`, `datanode-env.sh`),
-* 系统配置模块(`iotdb-datanode.properties`)
-* 日志配置模块(`logback.xml`)。
-
-有关详细信息，请参见[配置参数](https://iotdb.apache.org/zh/UserGuide/Master/Reference/DataNode-Config-Manual.html)。
+如需更具体的安装方式，请参阅官网[用户指南](https://www.timecho.com/docs/zh/UserGuide/latest/QuickStart/QuickStart_timecho.html)。
 
 ## 开始
 
@@ -380,22 +299,15 @@ server 可以使用 "ctrl-C" 或者执行下面的脚本:
 
 # 导入导出CSV工具
 
-查看 [导入导出CSV工具](https://iotdb.apache.org/zh/UserGuide/latest/Tools-System/Import-Export-Tool.html)
+查看 [导入导出CSV工具](https://www.timecho.com/docs/zh/UserGuide/latest/Tools-System/Data-Import-Tool.html)
 
-# 常见编译错误
-查看 [常见编译错误](https://iotdb.apache.org/zh/Community/Development-Guide.html)
+# 常见问题
+
+查看 [常见问题](https://www.timecho.com/docs/zh/UserGuide/latest/FAQ/Frequently-asked-questions.html)
+
 
 # 联系我们
-### QQ群
-
-* Apache IoTDB 交流群：659990460
 
 ### Wechat Group
 
-* 添加好友 `apache_iotdb`，我们会邀请您进群
-
-### Slack
-
-* https://join.slack.com/t/apacheiotdb/shared_invite/zt-qvso1nj8-7715TpySZtZqmyG5qXQwpg
-
-获取更多内容，请查看 [加入社区](https://github.com/apache/iotdb/issues/1995) 
+* 请添加好友 `tietouqiao`

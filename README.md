@@ -54,7 +54,8 @@ The main features of IoTDB are as follows:
 6. Easy to get started. IoTDB supports SQL-like language, JDBC standard API and import/export tools which are easy to use.
 7. Seamless integration with state-of-the-practice Open Source Ecosystem. IoTDB supports analysis ecosystems, such as Hadoop and Spark, as well as visualization tools, such as Grafana.
 
-For the latest information about IoTDB, please visit [IoTDB official website](https://iotdb.apache.org/). If you encounter any problems or identify any bugs while using IoTDB, please report an issue in [Jira](https://issues.apache.org/jira/projects/IOTDB/issues).
+
+For the latest information about IoTDB, please visit [IoTDB official website](https://www.timecho.com/).
 
 <!-- TOC -->
 
@@ -67,8 +68,6 @@ For the latest information about IoTDB, please visit [IoTDB official website](ht
 - [Quick Start](#quick-start)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-    - [Build from source](#build-from-source)
-    - [Configurations](#configurations)
   - [Start](#start)
     - [Start IoTDB](#start-iotdb)
     - [Use IoTDB](#use-iotdb)
@@ -83,16 +82,16 @@ For the latest information about IoTDB, please visit [IoTDB official website](ht
 
 # Quick Start
 
-This short guide will walk you through the basic process of using IoTDB. For a more detailed introduction, please visit our website's [User Guide](https://iotdb.apache.org/UserGuide/Master/QuickStart/QuickStart.html).
+This short guide will walk you through the basic process of using IoTDB. For a more detailed introduction, please visit our website's [User Guide](https://www.timecho.com/docs/zh/UserGuide/latest/QuickStart/QuickStart_timecho.html).
 
 ## Prerequisites
 
 To use IoTDB, you need to have:
 
-1. Java >= 1.8 (1.8, 11 to 17 are verified. Please make sure the environment path has been set accordingly).
-2. Maven >= 3.6 (If you want to compile and install IoTDB from source code).
-3. Set the max open files num as 65535 to avoid the "too many open files" error.
-4. (Optional) Set the somaxconn as 65535 to avoid "connection reset" error when the system is under high load.
+
+1. Java >= 1.8 (Recommended Java version is 17, 1.8, 11 to 17 are verified. Please make sure the environment path has been set accordingly).
+2. Set the max open files num as 65535 to avoid the "too many open files" error.
+3. (Optional) Set the somaxconn as 65535 to avoid "connection reset" error when the system is under high load.
     ```
     # Linux
     > sudo sysctl -w net.core.somaxconn=65535
@@ -100,217 +99,17 @@ To use IoTDB, you need to have:
     # FreeBSD or Darwin
     > sudo sysctl -w kern.ipc.somaxconn=65535
     ```
-### Linux
-
-(This guide is based on an installation of Ubuntu 22.04.)
-
-#### Git
-
-Make sure `Git` is installed, if it's missing, simply install it via:
-
-    sudo apt install git
-
-#### Java
-
-Make sure `Java` is installed, if it's missing, simply install it via:
-
-    sudo apt install default-jdk
-
-#### Flex
-
-    sudo apt install flex
-
-#### Bison
-
-    sudo apt install bison
-
-#### Boost
-
-    sudo apt install libboost-all-dev
-
-#### OpenSSL header files
-
-Usually OpenSSL is already installed, however it's missing the header files we need to compile.
-So ensure these are installed:
-
-    sudo apt install libssl-dev
-
-### Mac OS
-
-#### Git
-
-First ensure `git` works.
-
-Usually on a new Mac, as soon as you simply type `git` in a `Terminal` window, a popup will come up and ask if you want to finish installing the Mac developer tools. 
-Just say yes.
-As soon as this is finished, you are free to use `git`.
-
-#### Homebrew
-
-Then install `Homebrew` - If this hasn't been installed yet, as we are going to be installing everything using `Homebrew`.
-
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-#### Java
-
-As soon as that's done install `Java`, if this hasn't been installed yet:
-
-    brew install java
-
-Depending on your version of Homebrew, it will tell you to do one of the following (depending on the type of processor in your device).
-
-Mainly on the Intel-based models:
-
-    sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
-
-Mainly on the ARM-based models:
-
-    sudo ln -sfn /opt/homebrew/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
-
-#### CPP Prerequisites 
-
-Building `Thrift` requires us to add two more dependencies to the picture.
-
-This however is only needed when enabling the `with-cpp` profile:
-
-    brew install boost
-    brew install bison
-    brew install openssl
-
-### Windows
-
-#### Chocolatey
-
-Then install `Chocolatey` - If this hasn't been installed yet, as we are going to be installing everything using `Chocolatey`.
-
-https://chocolatey.org/install
-
-#### Git
-
-    choco install git.install
-
-#### Java
-
-    choco install openjdk
-
-#### Visual Studio 19 2022
-
-    choco install visualstudio2022community
-    choco install visualstudio2022buildtools
-    choco install visualstudio2022-workload-nativedesktop
-
-#### Flex / Bison
-
-    choco install winflexbison
-
-#### Boost
-
-    choco install boost-msvc-14.2
-
-#### OpenSSL
-
-    choco install openssl
 
 ## Installation
 
-IoTDB provides three installation methods, you can refer to the following suggestions, choose the one fits you best:
-
-* Installation from source code. If you need to modify the code yourself, you can use this method.
-* Installation from binary files. Download the binary files from the official website. This is the recommended method, in which you will get a binary released package which is out-of-the-box.
-* Using Docker：The path to the dockerfile is [here](https://github.com/apache/iotdb/tree/master/docker/src/main).
+IoTDB provides two installation methods, you can refer to the following suggestions, choose the one fits you best:
 
 
-Here in the Quick Start, we give a brief introduction of using source code to install IoTDB. For further information, please refer to [User Guide](https://iotdb.apache.org/UserGuide/Master/QuickStart/QuickStart.html).
+* Please contact timechodb staff to obtain the IoTDB installation package. This method provides pre-compiled binary executables, ready to use out of the box, suitable for quick deployment and direct use.
 
-## Build from source
+* Please contact timechodb staff to obtain the Docker image. This method supports containerized deployment and is suitable for scenarios requiring flexible environment configuration or rapid migration.
 
-### Prepare Thrift compiler
-
-Skip this chapter if you are using Windows. 
-
-As we use Thrift for our RPC module (communication and
-protocol definition), we involve Thrift during the compilation, so Thrift compiler 0.13.0 (or
-higher) is required to generate Thrift Java code. Thrift officially provides binary compiler for
-Windows, but unfortunately, they do not provide that for Unix OSs. 
-
-If you have permission to install new software, use `apt install` or `yum install` or `brew install`
-to install the Thrift compiler. (If you already have installed the thrift compiler, skip this step.)
-Then, you may add the following parameter
-when running Maven: `-Dthrift.download-url=http://apache.org/licenses/LICENSE-2.0.txt -Dthrift.exec.absolute.path=<YOUR LOCAL THRIFT BINARY FILE>`.
-
-If not, then you have to compile the thrift compiler, and it requires you install a boost library first.
-Therefore, we compiled a Unix compiler ourselves and put it onto GitHub, and with the help of a
-maven plugin, it will be downloaded automatically during compilation. 
-This compiler works fine with gcc8 or later, Ubuntu MacOS, and CentOS, but previous versions 
-and other OSs are not guaranteed.
-
-If you can not download the thrift compiler automatically because of a network problem, you can download 
-it by yourself, and then either:
-rename your thrift file to `{project_root}\thrift\target\tools\thrift_0.12.0_0.13.0_linux.exe`;
-or, add Maven commands:
-`-Dthrift.download-url=http://apache.org/licenses/LICENSE-2.0.txt -Dthrift.exec.absolute.path=<YOUR LOCAL THRIFT BINARY FILE>`.
-
-### Compile IoTDB
-
-You can download the source code from:
-
-```
-git clone https://github.com/apache/iotdb.git
-```
-
-The default dev branch is the master branch, if you want to use a released version x.x.x:
-
-```
-git checkout vx.x.x
-```
-
-Or checkout to the branch of a big version, e.g., the branch of 1.0 is rel/1.0.
-
-```
-git checkout rel/x.x
-```
-
-### Build IoTDB from source
-
-Under the root path of iotdb:
-
-```
-> mvn clean package -pl distribution -am -DskipTests
-```
-
-After being built, the IoTDB distribution is located at the folder: "distribution/target".
-
-
-### Only build cli
-
-Under the iotdb/iotdb-client path:
-
-```
-> mvn clean package -pl cli -am -DskipTests
-```
-
-After being built, the IoTDB cli is located at the folder "cli/target".
-
-### Build Others
-
-Use `-P with-cpp` for compiling the cpp client. (For more details, read client-cpp's Readme file.)
-
-**NOTE: Directories "`thrift/target/generated-sources/thrift`", "`thrift-sync/target/generated-sources/thrift`",
-"`thrift-cluster/target/generated-sources/thrift`", "`thrift-influxdb/target/generated-sources/thrift`" 
-and "`antlr/target/generated-sources/antlr4`" need to be added to sources roots to avoid compilation errors in the IDE.**
-
-**In IDEA, you just need to right click on the root project name and choose "`Maven->Reload Project`" after 
-you run `mvn package` successfully.**
-
-### Configurations
-
-Configuration files are under the "conf" folder.
-
-  * environment config module (`datanode-env.bat`, `datanode-env.sh`),
-  * system config module (`iotdb-datanode.properties`)
-  * log config module (`logback.xml`).
-
-For more information, please see [Config Manual](https://iotdb.apache.org/UserGuide/Master/Reference/DataNode-Config-Manual.html).
+For more specific installation methods, please visit our website's [User Guide](https://www.timecho.com/docs/zh/UserGuide/latest/QuickStart/QuickStart_timecho.html).
 
 ## Start
 
@@ -498,23 +297,14 @@ The server can be stopped with "ctrl-C" or the following script:
 
 # The use of CSV Import and Export Tool
 
-see [The use of CSV Import and Export Tool](https://iotdb.apache.org/UserGuide/latest/Tools-System/Import-Export-Tool.html)
+see [The use of CSV Import and Export Tool](https://www.timecho.com/docs/zh/UserGuide/latest/Tools-System/Data-Import-Tool.html)
 
-# Frequent Questions for Compiling
-see [Frequent Questions when Compiling the Source Code](https://iotdb.apache.org/Development/ContributeGuide.html#_Frequent-Questions-when-Compiling-the-Source-Code)
+# Frequently Asked Questions
+
+see [Frequent Questions when Compiling the Source Code](https://www.timecho.com/docs/zh/UserGuide/latest/FAQ/Frequently-asked-questions.html)
 
 # Contact Us
 
-### QQ Group
-
-* Apache IoTDB User Group: 659990460
-
 ### Wechat Group
 
-* Add friend: `apache_iotdb`, and then we'll invite you to the group.
-
-### Slack
-
-* [Slack channel](https://join.slack.com/t/apacheiotdb/shared_invite/zt-qvso1nj8-7715TpySZtZqmyG5qXQwpg)
-
-see [Join the community](https://github.com/apache/iotdb/issues/1995) for more!
+* Please add friend: `tietouqiao`.
