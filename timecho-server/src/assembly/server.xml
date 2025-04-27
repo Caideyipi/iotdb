@@ -45,31 +45,33 @@
             <outputDirectory>conf</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin</directory>
+            <directory>${maven.multiModuleProjectDirectory}/scripts/conf</directory>
+            <outputDirectory>conf</outputDirectory>
+            <includes>
+                <include>datanode-env.*</include>
+                <include>**/datanode-env.*</include>
+                <include>iotdb-common.sh</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/scripts/sbin</directory>
             <outputDirectory>sbin</outputDirectory>
+            <includes>
+                <include>*datanode.*</include>
+                <include>**/*datanode.*</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/scripts/tools</directory>
+            <outputDirectory>tools</outputDirectory>
             <excludes>
-                <exclude>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin/start-datanode.sh</exclude>
-                <exclude>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/sbin/start-datanode.bat</exclude>
+                <exclude>**/*confignode.*</exclude>
+                <exclude>**/*all.*</exclude>
+                <exclude>**/*ainode.*</exclude>
             </excludes>
+            <fileMode>0755</fileMode>
         </fileSet>
     </fileSets>
-    <files>
-        <!-- copy iotdb-common.sh to different script folders-->
-        <file>
-            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/sbin/iotdb-common.sh</source>
-            <destName>sbin/iotdb-common.sh</destName>
-        </file>
-        <file>
-            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/sbin/iotdb-common.sh</source>
-            <destName>tools/iotdb-common.sh</destName>
-        </file>
-        <file>
-            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/sbin/iotdb-common.sh</source>
-            <destName>tools/tsfileToolSet/iotdb-common.sh</destName>
-        </file>
-        <file>
-            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/sbin/iotdb-common.sh</source>
-            <destName>tools/schema/iotdb-common.sh</destName>
-        </file>
-    </files>
 </assembly>
