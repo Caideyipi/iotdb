@@ -36,21 +36,21 @@ public class PipeTabletEventSorter {
     switch (dataType) {
       case BOOLEAN:
         final boolean[] boolValues = (boolean[]) valueList;
-        final boolean[] deduplicatedBoolValues = new boolean[boolValues.length];
+        final boolean[] deduplicatedBoolValues = new boolean[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedBoolValues[i] = boolValues[index[i]];
         }
         return deduplicatedBoolValues;
       case INT32:
         final int[] intValues = (int[]) valueList;
-        final int[] deduplicatedIntValues = new int[intValues.length];
+        final int[] deduplicatedIntValues = new int[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedIntValues[i] = intValues[index[i]];
         }
         return deduplicatedIntValues;
       case DATE:
         final LocalDate[] dateValues = (LocalDate[]) valueList;
-        final LocalDate[] deduplicatedDateValues = new LocalDate[dateValues.length];
+        final LocalDate[] deduplicatedDateValues = new LocalDate[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedDateValues[i] = dateValues[index[i]];
         }
@@ -58,21 +58,21 @@ public class PipeTabletEventSorter {
       case INT64:
       case TIMESTAMP:
         final long[] longValues = (long[]) valueList;
-        final long[] deduplicatedLongValues = new long[longValues.length];
+        final long[] deduplicatedLongValues = new long[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedLongValues[i] = longValues[index[i]];
         }
         return deduplicatedLongValues;
       case FLOAT:
         final float[] floatValues = (float[]) valueList;
-        final float[] deduplicatedFloatValues = new float[floatValues.length];
+        final float[] deduplicatedFloatValues = new float[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedFloatValues[i] = floatValues[index[i]];
         }
         return deduplicatedFloatValues;
       case DOUBLE:
         final double[] doubleValues = (double[]) valueList;
-        final double[] deduplicatedDoubleValues = new double[doubleValues.length];
+        final double[] deduplicatedDoubleValues = new double[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedDoubleValues[i] = doubleValues[index[i]];
         }
@@ -81,7 +81,7 @@ public class PipeTabletEventSorter {
       case BLOB:
       case STRING:
         final Binary[] binaryValues = (Binary[]) valueList;
-        final Binary[] deduplicatedBinaryValues = new Binary[binaryValues.length];
+        final Binary[] deduplicatedBinaryValues = new Binary[deduplicatedSize];
         for (int i = 0; i < deduplicatedSize; i++) {
           deduplicatedBinaryValues[i] = binaryValues[index[i]];
         }
@@ -94,7 +94,7 @@ public class PipeTabletEventSorter {
 
   public static BitMap reorderBitMap(
       final int deduplicatedSize, final BitMap bitMap, final Integer[] index) {
-    final BitMap deduplicatedBitMap = new BitMap(bitMap.getSize());
+    final BitMap deduplicatedBitMap = new BitMap(deduplicatedSize);
     for (int i = 0; i < deduplicatedSize; i++) {
       if (bitMap.isMarked(index[i])) {
         deduplicatedBitMap.mark(i);
