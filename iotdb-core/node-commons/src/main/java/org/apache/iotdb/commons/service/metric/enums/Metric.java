@@ -88,6 +88,12 @@ public enum Metric {
   MIGRATION_TASK_COST("migration_task_cost"),
   // object storage related
   OBJECT_STORAGE_CACHE("object_storage_cache"),
+
+  PAM_ALLOCATED_COUNT("primitive_array_manager_allocated_count"),
+  PAM_RELEASED_COUNT("primitive_array_manager_released_count"),
+  PAM_ALLOCATED_FAILURE_COUNT("primitive_array_manager_allocated_failure_count"),
+  PAM_RELEASED_FAILURE_COUNT("primitive_array_manager_released_failure_count"),
+
   // compaction related
   DATA_WRITTEN("data_written"),
   DATA_READ("data_read"),
