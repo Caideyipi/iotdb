@@ -67,6 +67,7 @@ unit-test:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean install -Dtest.port.closed=true -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -83,6 +84,7 @@ integration-test-1c1d:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -107,6 +109,7 @@ integration-test-1c3d:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -129,6 +132,7 @@ table-integration-test-1c1d:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableSimpleIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -153,6 +157,7 @@ table-integration-test-1c3d:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -177,6 +182,7 @@ ainode-test-1c1d1a:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean package -DskipTests -pl iotdb-core/ainode -am -P with-ainode -s $MAVEN_SETTINGS_XML'
     - 'mvn verify -P with-integration-tests -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DaiNodeMaxHeapSize=1024 -pl integration-test -am -PAIClusterIT -s $MAVEN_SETTINGS_XML'
@@ -202,6 +208,7 @@ single:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT1 -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -230,6 +237,7 @@ dual-tree-auto-basic:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeAutoBasic -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -258,6 +266,7 @@ dual-tree-auto-enhanced:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeAutoEnhanced -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -286,6 +295,7 @@ dual-tree-manual:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeManual -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -314,6 +324,7 @@ dual-table-manual-basic:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTableManualBasic -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -342,6 +353,7 @@ dual-table-manual-enhanced:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTableManualEnhanced -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -370,6 +382,7 @@ subscription:
     - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
     - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2SubscriptionArchVerification -s $MAVEN_SETTINGS_XML'
   parallel:
