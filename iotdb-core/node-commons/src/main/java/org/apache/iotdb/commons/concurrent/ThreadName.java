@@ -196,6 +196,7 @@ public enum ThreadName {
   STORAGE_ENGINE_RECOVER_TRIGGER("StorageEngine-RecoverTrigger"),
 
   MIGRATION_SCHEDULER("Migration-Scheduler"),
+  MIGRATION("Migration-Executor-Pool"),
 
   FILE_TIME_INDEX_RECORD("FileTimeIndexRecord"),
   BINARY_ALLOCATOR_SAMPLE_EVICTOR("BinaryAllocator-SampleEvictor"),
