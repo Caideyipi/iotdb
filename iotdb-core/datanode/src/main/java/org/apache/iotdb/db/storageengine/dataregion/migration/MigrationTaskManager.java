@@ -212,11 +212,16 @@ public class MigrationTaskManager implements IService {
             continue;
           }
           // check tier ttl and disk space
-          long tierTTL =
-              DateTimeUtils.convertMilliTimeWithPrecision(
-                  System.currentTimeMillis() - commonConfig.getTierTTLInMs()[currentTier],
-                  commonConfig.getTimestampPrecision());
-          if (!tsfile.stillLives(tierTTL)) {
+          boolean stillLives = true;
+          long currentTierTTLInMs = commonConfig.getTierTTLInMs()[currentTier];
+          if (currentTierTTLInMs != Long.MAX_VALUE) {
+            long lowerBound =
+                DateTimeUtils.convertMilliTimeWithPrecision(
+                    System.currentTimeMillis() - currentTierTTLInMs,
+                    commonConfig.getTimestampPrecision());
+            stillLives = tsfile.stillLives(lowerBound);
+          }
+          if (!stillLives) {
             trySubmitMigrationTask(
                 currentTier,
                 MigrationCause.TTL,
