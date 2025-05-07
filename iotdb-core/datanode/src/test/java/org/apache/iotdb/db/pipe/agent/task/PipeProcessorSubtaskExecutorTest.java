@@ -31,7 +31,6 @@ import org.mockito.Mockito;
 
 import static org.mockito.Mockito.mock;
 
-@Ignore
 public class PipeProcessorSubtaskExecutorTest extends PipeSubtaskExecutorTest {
 
   @Before
