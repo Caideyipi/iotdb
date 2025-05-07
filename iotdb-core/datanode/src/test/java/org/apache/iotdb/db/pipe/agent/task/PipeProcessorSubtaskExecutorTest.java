@@ -26,7 +26,6 @@ import org.apache.iotdb.db.pipe.agent.task.subtask.processor.PipeProcessorSubtas
 import org.apache.iotdb.pipe.api.PipeProcessor;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.mockito.Mockito;
 
 import static org.mockito.Mockito.mock;
