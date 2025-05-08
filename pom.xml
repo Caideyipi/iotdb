@@ -35,6 +35,14 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
+        <repository>
+            <id>apache.snapshots.https</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://maven.aliyun.com/repository/apache-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
@@ -44,7 +52,15 @@
             <releases>
                 <enabled>false</enabled>
             </releases>
-            </pluginRepository>
+        </pluginRepository>
+        <pluginRepository>
+            <id>apache.snapshots.https</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://maven.aliyun.com/repository/apache-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
     </pluginRepositories>
     <parent>
         <groupId>org.apache</groupId>
