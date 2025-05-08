@@ -27,7 +27,25 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+         <repository>
+            <id>apache.snapshots</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://maven.aliyun.com/repository/apache-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>apache.snapshots</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://maven.aliyun.com/repository/apache-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            </pluginRepository>
+    </pluginRepositories>
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
