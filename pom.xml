@@ -27,7 +27,7 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
-         <repository>
+        <repository>
             <id>apache.snapshots</id>
             <name>Apache Snapshot Repository</name>
             <url>https://maven.aliyun.com/repository/apache-snapshots</url>

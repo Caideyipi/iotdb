@@ -18,7 +18,7 @@
 # under the License.
 #
 
-source "$(dirname "$0")/iotdb-common.sh"
+source "$(dirname "$0")/../conf/iotdb-common.sh"
 
 checkAllConfigNodeVariables
 
