@@ -200,6 +200,7 @@ public enum ThreadName {
 
   FILE_TIME_INDEX_RECORD("FileTimeIndexRecord"),
   BINARY_ALLOCATOR_SAMPLE_EVICTOR("BinaryAllocator-SampleEvictor"),
+  BINARY_ALLOCATOR_AUTO_RELEASER("BinaryAllocator-Auto-Releaser"),
 
   // the unknown thread name is used for metrics
   UNKNOWN("UNKNOWN");
