@@ -143,7 +143,6 @@ public class IoTDBEncryptionValueQueryIT {
     EnvFactory.getEnv()
         .getConfig()
         .getCommonConfig()
-        .setEncryptFlag(true)
         .setEncryptType("org.example.encrypt.AES128.AES128")
         .setEncryptKeyPath(keyFilePath.toAbsolutePath().toString());
     EnvFactory.getEnv().initClusterEnvironment();
