@@ -21,10 +21,7 @@ package com.timecho.iotdb;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
 import org.apache.iotdb.db.conf.IoTDBConfig;
-import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
-import org.apache.iotdb.db.service.DataNodeInternalRPCService;
-import org.apache.iotdb.db.service.ExternalRPCService;
 
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
@@ -33,11 +30,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
+import java.util.function.Supplier;
 
 public class DataNode extends org.apache.iotdb.db.service.DataNode {
   private static final Logger logger = LoggerFactory.getLogger(DataNode.class);
 
   public static void main(String[] args) {
+    startUp(args, DataNode::new);
+  }
+
+  protected static void startUp(String[] args, Supplier<DataNode> dataNodeSupplier) {
     // set up environment for schema region
     MNodeFactoryLoader.getInstance()
         .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
@@ -56,7 +58,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
 
     logger.info("IoTDB-DataNode environment variables: {}", IoTDBConfig.getEnvironmentVariables());
     logger.info("IoTDB-DataNode default charset is: {}", Charset.defaultCharset().displayName());
-    DataNode dataNode = new DataNode();
+    DataNode dataNode = dataNodeSupplier.get();
     int returnCode = dataNode.run(args);
     if (returnCode != 0) {
       System.exit(returnCode);
@@ -64,23 +66,8 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
   }
 
   @Override
-  protected void setUpRPCService() throws StartupException {
-    // Start InternalRPCService to indicate that the current DataNode can accept cluster scheduling
-    registerManager.register(DataNodeInternalRPCService.getInstance());
-
-    // Notice: During the period between starting the internal RPC service
-    // and starting the client RPC service , some requests may fail because
-    // DataNode is not marked as RUNNING by ConfigNode-leader yet.
-
-    // Start client RPCService to indicate that the current DataNode provide external services
-    IoTDBDescriptor.getInstance()
-        .getConfig()
-        .setRpcImplClassName(ClientRPCServiceImplNew.class.getName());
-    if (config.isEnableRpcService()) {
-      registerManager.register(ExternalRPCService.getInstance());
-    }
-    // init service protocols
-    initProtocols();
+  protected String getClientRPCServiceImplClassName() {
+    return ClientRPCServiceImplNew.class.getName();
   }
 
   @Override
