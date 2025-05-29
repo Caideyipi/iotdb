@@ -37,7 +37,6 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.CrossCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerSequenceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerUnsequenceCompactionSelector;
-import org.apache.iotdb.db.storageengine.dataregion.migration.TierFullPolicy;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.timeindex.TimeIndexLevel;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.storageengine.load.disk.ILoadDiskSelector.LoadDiskSelectorType;
@@ -1169,7 +1168,7 @@ public class IoTDBConfig {
   public static final double DEFAULT_SPACE_USAGE_THRESHOLD = 0.85;
 
   /** Delete the oldest data when last tier‘s space is full */
-  private TierFullPolicy tierFullPolicy = TierFullPolicy.NULL;
+  private String tierFullPolicy = "NULL";
 
   /** Enable object storage or not */
   private boolean enableObjectStorage = false;
@@ -4051,11 +4050,11 @@ public class IoTDBConfig {
     this.spaceUsageThresholds = spaceUsageThresholds;
   }
 
-  public TierFullPolicy getTierFullPolicy() {
+  public String getTierFullPolicy() {
     return tierFullPolicy;
   }
 
-  public void setTierFullPolicy(TierFullPolicy tierFullPolicy) {
+  public void setTierFullPolicy(String tierFullPolicy) {
     this.tierFullPolicy = tierFullPolicy;
   }
 

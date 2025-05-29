@@ -16,26 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.iotdb.db.storageengine.dataregion.migration;
+package com.timecho.iotdb.dataregion.migration;
 
-import org.apache.iotdb.db.conf.IoTDBConfig;
-import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.generator.TsFileNameGenerator;
 import org.apache.iotdb.db.utils.EnvironmentUtils;
 import org.apache.iotdb.db.utils.constant.TestConstant;
 
-import com.timecho.iotdb.os.conf.ObjectStorageConfig;
-import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
-import com.timecho.iotdb.os.conf.provider.TestConfig;
-import com.timecho.iotdb.os.exception.ObjectStorageException;
-import com.timecho.iotdb.os.io.ObjectStorageConnector;
-import com.timecho.iotdb.os.utils.ObjectStorageType;
-import org.apache.tsfile.common.conf.TSFileConfig;
-import org.apache.tsfile.common.conf.TSFileDescriptor;
-import org.apache.tsfile.fileSystem.FSType;
-import org.apache.tsfile.utils.FSUtils;
+import org.apache.tsfile.fileSystem.FSFactoryProducer;
+import org.apache.tsfile.fileSystem.fsFactory.FSFactory;
+import org.apache.tsfile.fileSystem.fsFactory.HybridFSFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +38,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,43 +46,24 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*", "org.w3c.*"})
-public class RemoteMigrationTaskTest {
-  private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
-  private static final TSFileConfig tsfileConfig = TSFileDescriptor.getInstance().getConfig();
-  private static final ObjectStorageConfig osConfig =
-      ObjectStorageDescriptor.getInstance().getConfig();
+public class LocalMigrationTaskTest {
   private static final String MIGRATION_SOURCE_BASE_DIR =
       TestConstant.BASE_OUTPUT_PATH.concat("migration_src");
   private static final String MIGRATION_SOURCE_TIME_PARTITION_DIR =
       MIGRATION_SOURCE_BASE_DIR + File.separator + "sg" + File.separator + 0 + File.separator + 0;
-  private static final String MIGRATION_DESTINATION_OS_DIR =
-      FSUtils.getOSDefaultPath("migration_destination", config.getDataNodeId());
   private static final String MIGRATION_DESTINATION_BASE_DIR =
       TestConstant.BASE_OUTPUT_PATH.concat("migration_destination");
   private static final String MIGRATION_DESTINATION_TIME_PARTITION_DIR =
       MIGRATION_DESTINATION_BASE_DIR
-          + File.separator
-          + config.getDataNodeId()
           + File.separator
           + "sg"
           + File.separator
           + 0
           + File.separator
           + 0;
-  private FSType[] prevTSFileStorageFs;
-  private ObjectStorageType prevOSType;
 
   @Before
   public void setUp() throws Exception {
-    prevTSFileStorageFs = tsfileConfig.getTSFileStorageFs();
-    tsfileConfig.setObjectStorageFile("com.timecho.iotdb.os.fileSystem.OSFile");
-    tsfileConfig.setObjectStorageTsFileInput("com.timecho.iotdb.os.fileSystem.OSTsFileInput");
-    tsfileConfig.setObjectStorageTsFileOutput("com.timecho.iotdb.os.fileSystem.OSTsFileOutput");
-    tsfileConfig.setTSFileStorageFs(new FSType[] {FSType.LOCAL, FSType.OBJECT_STORAGE});
-    FSUtils.reload();
-    prevOSType = osConfig.getOsType();
-    osConfig.setOsType(ObjectStorageType.TEST);
-    ((TestConfig) osConfig.getProviderConfig()).setTestDir(MIGRATION_DESTINATION_BASE_DIR);
     new File(MIGRATION_SOURCE_TIME_PARTITION_DIR).mkdirs();
     new File(MIGRATION_DESTINATION_TIME_PARTITION_DIR).mkdirs();
     MigrationTaskManager.getInstance().reloadMigrateSpeedLimit();
@@ -98,9 +71,6 @@ public class RemoteMigrationTaskTest {
 
   @After
   public void tearDown() throws Exception {
-    tsfileConfig.setTSFileStorageFs(prevTSFileStorageFs);
-    FSUtils.reload();
-    osConfig.setOsType(prevOSType);
     EnvironmentUtils.cleanDir(MIGRATION_SOURCE_BASE_DIR);
     EnvironmentUtils.cleanDir(MIGRATION_DESTINATION_BASE_DIR);
   }
@@ -126,17 +96,17 @@ public class RemoteMigrationTaskTest {
     // migrate
     TsFileResource tsfile = new TsFileResource(srcFile);
     MigrationTask task =
-        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_OS_DIR);
+        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_BASE_DIR);
     task.migrate();
     // check
     assertFalse(srcFile.exists());
-    assertTrue(srcResourceFile.exists());
-    assertTrue(srcModsFile.exists());
+    assertFalse(srcResourceFile.exists());
+    assertFalse(srcModsFile.exists());
     assertTrue(destFile.exists());
     assertTrue(destResourceFile.exists());
-    assertFalse(destModsFile.exists());
+    assertTrue(destModsFile.exists());
     assertEquals(1, tsfile.getTierLevel());
-    assertEquals(srcFile, tsfile.getTsFile());
+    assertEquals(destFile, tsfile.getTsFile());
   }
 
   @Test
@@ -159,17 +129,17 @@ public class RemoteMigrationTaskTest {
     // migrate
     TsFileResource tsfile = new TsFileResource(srcFile);
     MigrationTask task =
-        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_OS_DIR);
+        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_BASE_DIR);
     task.migrate();
     // check
     assertFalse(srcFile.exists());
-    assertTrue(srcResourceFile.exists());
+    assertFalse(srcResourceFile.exists());
     assertFalse(srcModsFile.exists());
     assertTrue(destFile.exists());
     assertTrue(destResourceFile.exists());
     assertFalse(destModsFile.exists());
     assertEquals(1, tsfile.getTierLevel());
-    assertEquals(srcFile, tsfile.getTsFile());
+    assertEquals(destFile, tsfile.getTsFile());
   }
 
   @Test
@@ -195,21 +165,21 @@ public class RemoteMigrationTaskTest {
     // migrate
     TsFileResource tsfile = new TsFileResource(srcFile);
     MigrationTask task =
-        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_OS_DIR);
+        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_BASE_DIR);
     task.migrate();
     // check
     assertFalse(srcFile.exists());
-    assertTrue(srcResourceFile.exists());
+    assertFalse(srcResourceFile.exists());
     assertFalse(srcModsFile.exists());
     assertTrue(destFile.exists());
     assertTrue(destResourceFile.exists());
     assertFalse(destModsFile.exists());
     assertEquals(1, tsfile.getTierLevel());
-    assertEquals(srcFile, tsfile.getTsFile());
+    assertEquals(destFile, tsfile.getTsFile());
   }
 
   @Test
-  @PrepareForTest(ObjectStorageConnector.class)
+  @PrepareForTest(HybridFSFactory.class)
   public void testMigrateWithCopyErrors() throws Exception {
     String fileName = TsFileNameGenerator.generateNewTsFileName(0, 0, 0, 0);
     // create source files
@@ -220,6 +190,7 @@ public class RemoteMigrationTaskTest {
     srcResourceFile.createNewFile();
     File srcModsFile =
         new File(MIGRATION_SOURCE_TIME_PARTITION_DIR, fileName + ModificationFile.FILE_SUFFIX);
+    srcModsFile.createNewFile();
     File destFile = new File(MIGRATION_DESTINATION_TIME_PARTITION_DIR, fileName);
     File destResourceFile =
         new File(
@@ -227,22 +198,25 @@ public class RemoteMigrationTaskTest {
     File destModsFile =
         new File(MIGRATION_DESTINATION_TIME_PARTITION_DIR, fileName + ModificationFile.FILE_SUFFIX);
     // mock
-    ObjectStorageConnector mockConnector = PowerMockito.mock(ObjectStorageConnector.class);
-    PowerMockito.doThrow(new ObjectStorageException())
-        .when(mockConnector)
-        .putLocalFile(Mockito.any(), Mockito.any());
-    PowerMockito.mockStatic(ObjectStorageConnector.class);
-    PowerMockito.when(ObjectStorageConnector.getConnector(ObjectStorageType.TEST))
-        .thenReturn(mockConnector);
-    // migrate
     TsFileResource tsfile = new TsFileResource(srcFile);
-    MigrationTask task =
-        MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_OS_DIR);
-    task.migrate();
+    FSFactory prevFSFactory = FSFactoryProducer.getFSFactory();
+    try {
+      HybridFSFactory fsFactory = PowerMockito.spy(new HybridFSFactory());
+      PowerMockito.doThrow(new IOException())
+          .when(fsFactory)
+          .copyFile(Mockito.any(), Mockito.any());
+      FSFactoryProducer.setFsFactory(fsFactory);
+      // migrate
+      MigrationTask task =
+          MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_BASE_DIR);
+      task.migrate();
+    } finally {
+      FSFactoryProducer.setFsFactory(prevFSFactory);
+    }
     // check
     assertTrue(srcFile.exists());
     assertTrue(srcResourceFile.exists());
-    assertFalse(srcModsFile.exists());
+    assertTrue(srcModsFile.exists());
     assertFalse(destFile.exists());
     assertFalse(destResourceFile.exists());
     assertFalse(destModsFile.exists());

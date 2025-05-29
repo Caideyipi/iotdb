@@ -36,9 +36,9 @@ import org.apache.iotdb.rpc.DeepCopyRpcTransportFactory;
 public class DataNodeInternalRPCService extends ThriftService
     implements DataNodeInternalRPCServiceMBean {
 
-  private DataNodeInternalRPCServiceImpl impl;
+  protected DataNodeInternalRPCServiceImpl impl;
 
-  private DataNodeInternalRPCService() {}
+  protected DataNodeInternalRPCService() {}
 
   @Override
   public ServiceType getID() {

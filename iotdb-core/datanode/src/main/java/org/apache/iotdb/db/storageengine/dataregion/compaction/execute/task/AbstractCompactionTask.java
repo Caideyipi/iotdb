@@ -117,7 +117,7 @@ public abstract class AbstractCompactionTask {
    */
   public boolean setSourceFilesToCompactionCandidate() {
     List<TsFileResource> files = getAllSourceTsFiles();
-    if (this instanceof SharedStorageCompactionTask) {
+    if (this.getClass().getSimpleName().equals("SharedStorageCompactionTask")) {
       for (int i = 0; i < files.size(); i++) {
         if (!files
             .get(i)

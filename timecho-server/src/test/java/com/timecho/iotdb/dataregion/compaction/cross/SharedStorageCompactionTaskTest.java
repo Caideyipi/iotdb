@@ -1,4 +1,4 @@
-package org.apache.iotdb.db.storageengine.dataregion.compaction.cross;
+package com.timecho.iotdb.dataregion.compaction.cross;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.StartupException;
@@ -7,14 +7,10 @@ import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.exception.StorageEngineException;
 import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.utils.TsFileGeneratorUtils;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModEntry;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
 import org.apache.iotdb.db.storageengine.dataregion.modification.TreeDeletionEntry;
-import org.apache.iotdb.db.storageengine.dataregion.tsfile.RemoteStorageBlock;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResourceStatus;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.generator.TsFileNameGenerator;
@@ -22,9 +18,13 @@ import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 import org.apache.iotdb.db.utils.EnvironmentUtils;
 import org.apache.iotdb.db.utils.constant.TestConstant;
 
+import com.timecho.iotdb.dataregion.compaction.execute.task.SharedStorageCompactionTask;
+import com.timecho.iotdb.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
+import com.timecho.iotdb.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.conf.provider.TestConfig;
 import com.timecho.iotdb.os.utils.ObjectStorageType;
+import com.timecho.iotdb.os.utils.RemoteStorageBlock;
 import org.apache.tsfile.common.conf.TSFileConfig;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
@@ -52,7 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask.REMOTE_TMP_FILE_SUFFIX;
+import static com.timecho.iotdb.dataregion.compaction.execute.task.SharedStorageCompactionTask.REMOTE_TMP_FILE_SUFFIX;
 import static org.apache.tsfile.utils.FSUtils.OS_FILE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

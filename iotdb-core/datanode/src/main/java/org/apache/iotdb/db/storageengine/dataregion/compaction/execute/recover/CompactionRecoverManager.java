@@ -24,10 +24,11 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.Compacti
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InsertionCrossSpaceCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SettleCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.CompactionLogger;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 
+import org.apache.tsfile.fileSystem.FSFactoryProducer;
+import org.apache.tsfile.fileSystem.fsFactory.FSFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,7 @@ import static org.apache.iotdb.commons.conf.IoTDBConstant.SETTLE_SUFFIX;
 public class CompactionRecoverManager {
   private static final Logger logger =
       LoggerFactory.getLogger(IoTDBConstant.COMPACTION_LOGGER_NAME);
+  private static final FSFactory fsFactory = FSFactoryProducer.getFSFactory();
   private final TsFileManager tsFileManager;
   private final String logicalStorageGroupName;
   private final String dataRegionId;
@@ -162,8 +164,18 @@ public class CompactionRecoverManager {
               .recover();
           break;
         case SHARED_STORAGE:
-          new SharedStorageCompactionRecoverTask(dataRegionId, tsFileManager, compactionLog)
-              .recover();
+          try {
+            SettleCompactionTask sharedStorageRecoverTask =
+                (SettleCompactionTask)
+                    Class.forName(
+                            "com.timecho.iotdb.dataregion.compaction.execute.recover.SharedStorageCompactionRecoverTask")
+                        .getConstructor(String.class, TsFileManager.class, File.class)
+                        .newInstance(dataRegionId, tsFileManager, compactionLog);
+            sharedStorageRecoverTask.recover();
+          } catch (Exception e) {
+            logger.error("recover shared storage task error", e);
+            return;
+          }
           break;
         default:
           logger.warn("Unknown compaction task type {}", type);
@@ -174,7 +186,11 @@ public class CompactionRecoverManager {
 
   private void deleteSharedCompactionTmpFiles(File timePartitionDir) {
     try {
-      SharedStorageCompactionUtils.deleteRemoteTmpFiles(timePartitionDir);
+      File[] remoteTmpFiles =
+          fsFactory.listFilesBySuffix(timePartitionDir.getAbsolutePath(), ".remote");
+      for (File tmpFile : remoteTmpFiles) {
+        fsFactory.deleteIfExists(tmpFile);
+      }
     } catch (IOException e) {
       logger.warn("Fail to delete remote tmp files in the dir {}", timePartitionDir, e);
     }

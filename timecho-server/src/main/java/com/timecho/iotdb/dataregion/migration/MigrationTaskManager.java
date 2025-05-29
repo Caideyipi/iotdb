@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.storageengine.dataregion.migration;
+package com.timecho.iotdb.dataregion.migration;
 
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
@@ -31,7 +31,7 @@ import org.apache.iotdb.commons.service.ServiceType;
 import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
-import org.apache.iotdb.db.protocol.metrics.MigrationMetrics;
+import org.apache.iotdb.db.conf.IoTDBDescriptor.IMigrationManager;
 import org.apache.iotdb.db.storageengine.StorageEngine;
 import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
@@ -40,6 +40,7 @@ import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.timecho.iotdb.metrics.MigrationMetrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MigrationTaskManager implements IService {
+public class MigrationTaskManager implements IService, IMigrationManager {
   private static final Logger logger = LoggerFactory.getLogger(MigrationTaskManager.class);
   private static final IoTDBConfig iotdbConfig = IoTDBDescriptor.getInstance().getConfig();
   private static final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
@@ -74,7 +75,7 @@ public class MigrationTaskManager implements IService {
   @Override
   public void start() throws StartupException {
     if (iotdbConfig.getTierDataDirs().length == 1
-        && iotdbConfig.getTierFullPolicy() == TierFullPolicy.NULL) {
+        && TierFullPolicy.valueOf(iotdbConfig.getTierFullPolicy()) == TierFullPolicy.NULL) {
       logger.info("tiered storage status: disable");
       stop();
       return;
@@ -149,7 +150,7 @@ public class MigrationTaskManager implements IService {
         tsfiles.addAll(dataRegion.getSequenceFileList());
         tsfiles.addAll(dataRegion.getUnSequenceFileList());
       }
-      if (iotdbConfig.getTierFullPolicy() == TierFullPolicy.DELETE) {
+      if (TierFullPolicy.valueOf(iotdbConfig.getTierFullPolicy()) == TierFullPolicy.DELETE) {
         scheduleDeletion();
       }
       scheduleMigration();
@@ -287,6 +288,7 @@ public class MigrationTaskManager implements IService {
     }
   }
 
+  @Override
   public void reloadMigrateSpeedLimit() {
     long[] limitRates = iotdbConfig.getTieredStorageMigrateSpeedLimitBytesPerSec();
     if (limitRates == null) {
@@ -312,6 +314,7 @@ public class MigrationTaskManager implements IService {
     enable = false;
   }
 
+  @Override
   public boolean isEnable() {
     return enable;
   }

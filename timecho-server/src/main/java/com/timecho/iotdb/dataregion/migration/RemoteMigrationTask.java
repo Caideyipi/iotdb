@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.storageengine.dataregion.migration;
+package com.timecho.iotdb.dataregion.migration;
 
-import org.apache.iotdb.db.storageengine.dataregion.tsfile.RemoteStorageBlock;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResourceStatus;
 
+import com.timecho.iotdb.os.utils.RemoteStorageBlock;
 import org.apache.tsfile.utils.FSUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

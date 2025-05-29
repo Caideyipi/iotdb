@@ -27,7 +27,6 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.Inne
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InsertionCrossSpaceCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.RepairUnsortedFileCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SettleCompactionTask;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant.CompactionPriority;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 
@@ -56,11 +55,14 @@ public class DefaultCompactionTaskComparatorImpl implements ICompactionTaskCompa
       return 1;
     }
 
-    if (o1 instanceof SharedStorageCompactionTask && o2 instanceof SharedStorageCompactionTask) {
+    String o1SimpleClassName = o1.getClass().getSimpleName();
+    String o2SimpleClassName = o2.getClass().getSimpleName();
+    if (o1SimpleClassName.equals("SharedStorageCompactionTask")
+        && o2SimpleClassName.equals("SharedStorageCompactionTask")) {
       return o1.getSerialId() < o2.getSerialId() ? -1 : 1;
-    } else if (o1 instanceof SharedStorageCompactionTask) {
+    } else if (o1SimpleClassName.equals("SharedStorageCompactionTask")) {
       return -1;
-    } else if (o2 instanceof SharedStorageCompactionTask) {
+    } else if (o2SimpleClassName.equals("SharedStorageCompactionTask")) {
       return 1;
     }
     if (o1 instanceof SettleCompactionTask && o2 instanceof SettleCompactionTask) {

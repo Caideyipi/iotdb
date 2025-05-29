@@ -30,15 +30,12 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.Abst
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.CrossSpaceCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InnerSpaceCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.InsertionCrossSpaceCompactionTask;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.ICompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.ICrossSpaceSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.RewriteCrossSpaceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SettleSelectorImpl;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.CrossCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.InsertionCrossCompactionTaskResource;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
 import org.apache.iotdb.db.storageengine.rescon.memory.SystemInfo;
 
@@ -324,25 +321,42 @@ public class CompactionScheduler {
       return 0;
     }
 
-    ICrossSpaceSelector sharedStorageCompactionSelector =
-        new SharedStorageCompactionSelector(tsFileManager.getDataRegionId(), timePartition);
-    List<CrossCompactionTaskResource> taskResources =
-        sharedStorageCompactionSelector.selectCrossSpaceTask(
-            tsFileManager.getOrCreateSequenceListByTimePartition(timePartition),
-            tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition));
-    if (taskResources.isEmpty()) {
+    try {
+      ICrossSpaceSelector sharedStorageCompactionSelector =
+          (ICrossSpaceSelector)
+              Class.forName(
+                      "com.timecho.iotdb.dataregion.compaction.selector.impl.SharedStorageCompactionSelector")
+                  .getConstructor(String.class, long.class)
+                  .newInstance(tsFileManager.getDataRegionId(), timePartition);
+      List<CrossCompactionTaskResource> taskResources =
+          sharedStorageCompactionSelector.selectCrossSpaceTask(
+              tsFileManager.getOrCreateSequenceListByTimePartition(timePartition),
+              tsFileManager.getOrCreateUnsequenceListByTimePartition(timePartition));
+      if (taskResources.isEmpty()) {
+        return 0;
+      }
+      AbstractCompactionTask sharedStorageCompactionTask =
+          (AbstractCompactionTask)
+              Class.forName(
+                      "com.timecho.iotdb.dataregion.compaction.execute.task.SharedStorageCompactionTask")
+                  .getConstructor(
+                      long.class,
+                      TsFileManager.class,
+                      CrossCompactionTaskResource.class,
+                      long.class)
+                  .newInstance(
+                      timePartition,
+                      tsFileManager,
+                      taskResources.get(0),
+                      tsFileManager.getNextCompactionTaskId());
+      int trySubmitCount =
+          addTaskToWaitingQueue(Collections.singletonList(sharedStorageCompactionTask));
+      context.incrementSubmitTaskNum(CompactionTaskType.SHARED_STORAGE, trySubmitCount);
+      return trySubmitCount;
+    } catch (Exception e) {
+      LOGGER.error("Failed to submit shared storage compaction task", e);
       return 0;
     }
-
-    SharedStorageCompactionTask task =
-        new SharedStorageCompactionTask(
-            timePartition,
-            tsFileManager,
-            (SharedStorageCompactionTaskResource) taskResources.get(0),
-            tsFileManager.getNextCompactionTaskId());
-    int trySubmitCount = addTaskToWaitingQueue(Collections.singletonList(task));
-    context.incrementSubmitTaskNum(CompactionTaskType.SHARED_STORAGE, trySubmitCount);
-    return trySubmitCount;
   }
 
   public static int tryToSubmitSettleCompactionTask(

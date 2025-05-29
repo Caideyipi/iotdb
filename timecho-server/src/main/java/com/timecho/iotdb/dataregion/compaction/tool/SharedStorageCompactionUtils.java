@@ -1,4 +1,4 @@
-package org.apache.iotdb.db.storageengine.dataregion.compaction.tool;
+package com.timecho.iotdb.dataregion.compaction.tool;
 
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask.REMOTE_TMP_FILE_SUFFIX;
+import static com.timecho.iotdb.dataregion.compaction.execute.task.SharedStorageCompactionTask.REMOTE_TMP_FILE_SUFFIX;
 
 public class SharedStorageCompactionUtils {
   private static final Logger LOGGER = LoggerFactory.getLogger(SharedStorageCompactionUtils.class);

@@ -52,6 +52,7 @@ import org.apache.iotdb.db.storageengine.dataregion.tsfile.timeindex.TimeIndexLe
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 
 import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
+import com.timecho.iotdb.os.utils.RemoteStorageBlock;
 import org.apache.tsfile.file.metadata.IChunkMetadata;
 import org.apache.tsfile.file.metadata.IDeviceID;
 import org.apache.tsfile.file.metadata.ITimeSeriesMetadata;

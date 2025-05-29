@@ -25,6 +25,7 @@ import org.apache.iotdb.commons.conf.ConfigurationFileUtils;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.conf.TrimProperties;
 import org.apache.iotdb.commons.exception.BadNodeUrlException;
+import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.commons.memory.MemoryManager;
 import org.apache.iotdb.commons.pipe.config.PipeDescriptor;
 import org.apache.iotdb.commons.schema.SchemaConstant;
@@ -49,8 +50,6 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.constant
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.CrossCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerSequenceCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.constant.InnerUnsequenceCompactionSelector;
-import org.apache.iotdb.db.storageengine.dataregion.migration.MigrationTaskManager;
-import org.apache.iotdb.db.storageengine.dataregion.migration.TierFullPolicy;
 import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 import org.apache.iotdb.db.storageengine.load.disk.ILoadDiskSelector;
@@ -1273,15 +1272,13 @@ public class IoTDBDescriptor {
       conf.setTieredStorageMigrateSpeedLimitBytesPerSec(migrateSpeedLimit);
     }
 
-    TierFullPolicy tierFullPolicy =
-        TierFullPolicy.valueOf(
-            Optional.ofNullable(
-                    properties.getProperty(
-                        "dn_tier_full_policy",
-                        ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy")))
-                .map(String::trim)
-                .orElse(
-                    ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy")));
+    String tierFullPolicy =
+        Optional.ofNullable(
+                properties.getProperty(
+                    "dn_tier_full_policy",
+                    ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy")))
+            .map(String::trim)
+            .orElse(ConfigurationFileUtils.getConfigurationDefaultValue("dn_tier_full_policy"));
 
     conf.setTierFullPolicy(tierFullPolicy);
   }
@@ -2235,10 +2232,18 @@ public class IoTDBDescriptor {
       // update migration config
       loadMigrationHotProps(properties);
       checkTierConfig();
-      if (!MigrationTaskManager.getInstance().isEnable()) {
-        MigrationTaskManager.getInstance().start();
-      } else {
-        MigrationTaskManager.getInstance().reloadMigrateSpeedLimit();
+      try {
+        IMigrationManager migrationTaskManager =
+            (IMigrationManager)
+                Class.forName("com.timecho.iotdb.dataregion.migration.MigrationTaskManager")
+                    .getDeclaredConstructor()
+                    .newInstance();
+        if (!migrationTaskManager.isEnable()) {
+          migrationTaskManager.start();
+        } else {
+          migrationTaskManager.reloadMigrateSpeedLimit();
+        }
+      } catch (ClassNotFoundException ignored) {
       }
 
       // update merge_threshold_of_explain_analyze
@@ -2935,5 +2940,13 @@ public class IoTDBDescriptor {
     private static final IoTDBDescriptor INSTANCE = new IoTDBDescriptor();
 
     private IoTDBDescriptorHolder() {}
+  }
+
+  public interface IMigrationManager {
+    boolean isEnable();
+
+    void start() throws StartupException;
+
+    void reloadMigrateSpeedLimit();
   }
 }

@@ -1,14 +1,15 @@
-package org.apache.iotdb.db.storageengine.dataregion.compaction.execute.recover;
+package com.timecho.iotdb.dataregion.compaction.execute.recover;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SettleCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.CompactionLogAnalyzer;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.TsFileIdentifier;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 
+import com.timecho.iotdb.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
 import org.apache.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.tsfile.fileSystem.FSPath;
@@ -24,25 +25,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class SharedStorageCompactionRecoverTask {
+public class SharedStorageCompactionRecoverTask extends SettleCompactionTask {
   private static final Logger LOGGER =
       LoggerFactory.getLogger(SharedStorageCompactionRecoverTask.class);
   private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
   private static final FSFactory fsFactory = FSFactoryProducer.getFSFactory();
 
   private final String dataRegionId;
-  private final TsFileManager tsFileManager;
   private final File logFile;
   private final List<TsFileResource> sourceFiles = new ArrayList<>();
   private final List<TsFileResource> targetFiles = new ArrayList<>();
 
   public SharedStorageCompactionRecoverTask(
       String dataRegionId, TsFileManager tsFileManager, File logFile) {
+    super(null, dataRegionId, tsFileManager, logFile);
     this.dataRegionId = dataRegionId;
-    this.tsFileManager = tsFileManager;
     this.logFile = logFile;
   }
 
+  @Override
   public void recover() {
     try {
       recoverTaskInfoFromLogFile();
@@ -53,7 +54,7 @@ public class SharedStorageCompactionRecoverTask {
       }
     } catch (Exception e) {
       LOGGER.error(
-          "{} [Compaction][Recover] Failed to recover compaction. TaskInfo: {}, Exception: {}",
+          "{} [Compaction][Recover] Failed to recover compaction. TaskInfo: {}, Exception ",
           dataRegionId,
           this,
           e);
@@ -144,7 +145,7 @@ public class SharedStorageCompactionRecoverTask {
       try {
         SharedStorageCompactionUtils.removeLocalReplica(resource);
       } catch (IOException e) {
-        LOGGER.error("TsFileResource {} cannot be deleted: {}", resource, e);
+        LOGGER.error("TsFileResource {} cannot be deleted:", resource, e);
       }
     }
   }

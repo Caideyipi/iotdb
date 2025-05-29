@@ -1,4 +1,4 @@
-package org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task;
+package com.timecho.iotdb.dataregion.compaction.execute.task;
 
 import org.apache.iotdb.commons.consensus.DataRegionId;
 import org.apache.iotdb.commons.utils.TestOnly;
@@ -7,19 +7,22 @@ import org.apache.iotdb.db.service.metrics.FileMetrics;
 import org.apache.iotdb.db.storageengine.StorageEngine;
 import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.CompactionTaskType;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.AbstractCompactionTask;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.CompactionTaskSummary;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.CompactionLogger;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.utils.log.SimpleCompactionLogger;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.tool.SharedStorageCompactionUtils;
+import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.CrossCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModEntry;
 import org.apache.iotdb.db.storageengine.dataregion.modification.ModificationFile;
-import org.apache.iotdb.db.storageengine.dataregion.tsfile.RemoteStorageBlock;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileManager;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResourceStatus;
 
+import com.timecho.iotdb.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
+import com.timecho.iotdb.dataregion.compaction.selector.utils.SharedStorageCompactionTaskResource;
+import com.timecho.iotdb.dataregion.compaction.tool.SharedStorageCompactionUtils;
 import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
+import com.timecho.iotdb.os.utils.RemoteStorageBlock;
 import org.apache.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.tsfile.fileSystem.fsFactory.FSFactory;
 import org.slf4j.Logger;
@@ -61,14 +64,14 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
   public SharedStorageCompactionTask(
       long timePartition,
       TsFileManager tsFileManager,
-      SharedStorageCompactionTaskResource taskResource,
+      CrossCompactionTaskResource taskResource,
       long serialId) {
     this(
         timePartition,
         StorageEngine.getInstance()
             .getDataRegion(new DataRegionId(Integer.parseInt(tsFileManager.getDataRegionId()))),
         tsFileManager,
-        taskResource,
+        (SharedStorageCompactionTaskResource) taskResource,
         serialId);
   }
 
@@ -287,7 +290,7 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
       try {
         SharedStorageCompactionUtils.removeLocalReplica(resource);
       } catch (IOException e) {
-        LOGGER.error("TsFileResource {} cannot be deleted: {}", resource, e);
+        LOGGER.error("TsFileResource {} cannot be deleted:", resource, e);
       }
     }
   }

@@ -1,5 +1,6 @@
-package org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils;
+package com.timecho.iotdb.dataregion.compaction.selector.utils;
 
+import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.CrossCompactionTaskResource;
 import org.apache.iotdb.db.storageengine.dataregion.tsfile.TsFileResource;
 
 import java.util.ArrayList;

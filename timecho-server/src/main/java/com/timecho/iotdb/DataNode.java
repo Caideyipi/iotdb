@@ -23,8 +23,10 @@ import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 
+import com.timecho.iotdb.dataregion.migration.MigrationTaskManager;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
+import com.timecho.iotdb.service.DataNodeInternalRPCServiceNew;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +65,13 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
     if (returnCode != 0) {
       System.exit(returnCode);
     }
+  }
+
+  @Override
+  protected void registerInternalRPCService() throws StartupException {
+    // Start InternalRPCService to indicate that the current DataNode can accept cluster scheduling
+    registerManager.register(DataNodeInternalRPCServiceNew.getInstance());
+    registerManager.register(MigrationTaskManager.getInstance());
   }
 
   @Override

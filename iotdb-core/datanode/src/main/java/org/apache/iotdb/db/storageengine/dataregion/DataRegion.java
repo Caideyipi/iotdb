@@ -85,7 +85,6 @@ import org.apache.iotdb.db.storageengine.dataregion.compaction.constant.Compacti
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.recover.CompactionRecoverManager;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.AbstractCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.RepairUnsortedFileCompactionTask;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.task.SharedStorageCompactionTask;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleContext;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleTaskManager;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduler;
@@ -2380,7 +2379,7 @@ public class DataRegion implements IDataRegionForQuery {
       hasReleasedLock = true;
 
       deleteDataInSealedFiles(sealedTsFileResource, deletion);
-      SharedStorageCompactionTask.deleteDataInRemoteFiles(this, deletion);
+      deleteDataInRemoteFiles(deletion);
     } catch (Exception e) {
       throw new IOException(e);
     } finally {
@@ -2504,7 +2503,7 @@ public class DataRegion implements IDataRegionForQuery {
       releasedLock = true;
 
       deleteDataDirectlyInFile(sealedTsFileResource, deletion);
-      SharedStorageCompactionTask.deleteDataInRemoteFiles(this, deletion);
+      deleteDataInRemoteFiles(deletion);
     } catch (Exception e) {
       throw new IOException(e);
     } finally {
@@ -2757,6 +2756,16 @@ public class DataRegion implements IDataRegionForQuery {
       } finally {
         tsFileResource.writeUnlock();
       }
+    }
+  }
+
+  private void deleteDataInRemoteFiles(ModEntry deletion) {
+    try {
+      Class.forName(
+              "com.timecho.iotdb.dataregion.compaction.execute.task.SharedStorageCompactionTask")
+          .getMethod("deleteDataInRemoteFiles", DataRegion.class, ModEntry.class)
+          .invoke(null, this, deletion);
+    } catch (Exception ignore) {
     }
   }
 

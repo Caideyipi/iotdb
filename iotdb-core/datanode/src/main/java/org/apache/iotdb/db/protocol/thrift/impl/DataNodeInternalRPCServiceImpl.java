@@ -175,7 +175,6 @@ import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.repair.RepairTaskStatus;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionScheduleTaskManager;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.schedule.CompactionTaskManager;
-import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.settle.SettleRequestHandler;
 import org.apache.iotdb.db.storageengine.dataregion.modification.DeletionPredicate;
 import org.apache.iotdb.db.storageengine.dataregion.modification.IDPredicate;
@@ -2851,15 +2850,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   @Override
   public TFetchLeaderRemoteReplicaResp fetchLeaderRemoteReplica(TFetchLeaderRemoteReplicaReq req) {
-    try {
-      return SharedStorageCompactionSelector.selectLeaderFiles(
-          req.getDataRegionId(), req.getTimePartition());
-    } catch (Exception e) {
-      LOGGER.warn(
-          "Error occurred when select leader files for shared storage compaction, abort this share operation.",
-          e);
-      return new TFetchLeaderRemoteReplicaResp();
-    }
+    return null;
   }
 
   @Override
