@@ -154,6 +154,8 @@ public class IoTDBConfig {
 
   private long allocateMemoryForRead = Runtime.getRuntime().maxMemory() * 3 / 10;
 
+  private long allocateMemoryPerWalCache = 512 * 1024;
+
   /** Flush proportion for system */
   private double flushProportion = 0.4;
 
