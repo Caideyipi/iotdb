@@ -54,6 +54,7 @@ class ClientManager(object):
     def borrow_config_node_client(self):
         return ConfigNodeClient(config_leader=self._config_node_endpoint)
 
+
 class ConfigNodeClient(object):
     def __init__(self, config_leader: TEndPoint):
         self._config_leader = config_leader

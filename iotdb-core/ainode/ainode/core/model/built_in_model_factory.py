@@ -17,7 +17,6 @@
 #
 import os
 from abc import abstractmethod
-
 from typing import Dict, List
 
 import numpy as np

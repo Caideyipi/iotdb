@@ -17,20 +17,23 @@
 #
 
 import os
+import random
 import string
 import time
-import random
 from typing import Dict
 
-import torch.nn as nn
 import torch
-from iotdb.ainode.constant import ModelInputName
-
+import torch.nn as nn
 from iotdb.ainode.config import descriptor
+from iotdb.ainode.constant import (
+    DEFAULT_CONFIG_FILE_NAME,
+    DEFAULT_MODEL_FILE_NAME,
+    ModelInputName,
+)
 from iotdb.ainode.exception import ModelNotExistError
 from iotdb.ainode.storage import model_storage
 from iotdb.thrift.ainode.ttypes import TConfigs
-from iotdb.ainode.constant import DEFAULT_MODEL_FILE_NAME, DEFAULT_CONFIG_FILE_NAME
+
 
 class ExampleModel(nn.Module):
     def __init__(self):
@@ -53,26 +56,27 @@ class ExampleModel2(nn.Module):
 
 model = ExampleModel()
 model2 = ExampleModel2()
-model_config = {
-    'input_length': 1,
-    'input_vars': 1,
-    'id': time.time()
-}
+model_config = {"input_length": 1, "input_vars": 1, "id": time.time()}
 
 
 def test_save_model():
-    trial_id = 'tid_0'
-    model_id = 'mid_test_model_save'
+    trial_id = "tid_0"
+    model_id = "mid_test_model_save"
     model_storage.save_model(model, model_config, model_id=model_id, trial_id=trial_id)
     assert os.path.exists(
-        os.path.join(descriptor.get_config().get_ain_models_dir(), f'{model_id}', f'{trial_id}.pt'))
+        os.path.join(
+            descriptor.get_config().get_ain_models_dir(),
+            f"{model_id}",
+            f"{trial_id}.pt",
+        )
+    )
 
 
 def test_load_model():
-    trial_id = 'tid_0'
-    model_id = 'mid_test_model_load'
+    trial_id = "tid_0"
+    model_id = "mid_test_model_load"
 
-    model_file_path = os.path.join(f'{model_id}', f'{trial_id}.pt')
+    model_file_path = os.path.join(f"{model_id}", f"{trial_id}.pt")
 
     model_storage.save_model(model, model_config, model_id=model_id, trial_id=trial_id)
     _, model_config_loaded = model_storage.load_model(model_file_path)
@@ -80,27 +84,33 @@ def test_load_model():
 
 
 def test_load_not_exist_model():
-    trial_id = 'dummy_trial'
-    model_id = 'dummy_model'
+    trial_id = "dummy_trial"
+    model_id = "dummy_model"
     try:
-        model_storage.load_model(os.path.join(f'{model_id}', f'{trial_id}.pt'))
+        model_storage.load_model(os.path.join(f"{model_id}", f"{trial_id}.pt"))
     except Exception as e:
-        assert e.message == ModelNotExistError(
-            os.path.join(os.getcwd(), descriptor.get_config().get_ain_models_dir(),
-                         model_id, f'{trial_id}.pt')).message
+        assert (
+            e.message
+            == ModelNotExistError(
+                os.path.join(
+                    os.getcwd(),
+                    descriptor.get_config().get_ain_models_dir(),
+                    model_id,
+                    f"{trial_id}.pt",
+                )
+            ).message
+        )
 
 
-storage_path = './data/ainode/models'
+storage_path = "./data/ainode/models"
 
 
 def test_register_and_delete_model_from_local():
-    model_id = 'dlinear'
+    model_id = "dlinear"
     uri = "'./test/resource/dlinear'"
     configs, attributes = model_storage.register_model(model_id, uri)
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'model.pt'))
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'config.yaml'))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "model.pt"))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "config.yaml"))
     assert configs.__class__ == TConfigs
     assert attributes.__class__ == str
     assert configs.input_shape == [96, 2]
@@ -109,17 +119,15 @@ def test_register_and_delete_model_from_local():
     assert configs.output_type == [5, 2]
     assert attributes == "{'model_type': 'dlinear', 'kernel_size': '25'}"
     model_storage.delete_model(model_id=model_id)
-    assert not os.path.exists(os.path.join(storage_path, f'{model_id}'))
+    assert not os.path.exists(os.path.join(storage_path, f"{model_id}"))
 
 
 def test_register_and_delete_model_from_local_without_type():
-    model_id = 'dlinear'
+    model_id = "dlinear"
     uri = "'./test/resource/dlinear_without_type'"
     configs, attributes = model_storage.register_model(model_id, uri)
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'model.pt'))
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'config.yaml'))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "model.pt"))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "config.yaml"))
     assert configs.__class__ == TConfigs
     assert attributes.__class__ == str
     assert configs.input_shape == [96, 2]
@@ -128,35 +136,32 @@ def test_register_and_delete_model_from_local_without_type():
     assert configs.output_type == [4, 4]
     assert attributes == "{'model_type': 'dlinear', 'kernel_size': '25'}"
     model_storage.delete_model(model_id=model_id)
-    assert not os.path.exists(os.path.join(storage_path, f'{model_id}'))
+    assert not os.path.exists(os.path.join(storage_path, f"{model_id}"))
 
 
 def test_register_and_delete_model_from_local_without_attributes():
-    model_id = 'dlinear'
+    model_id = "dlinear"
     uri = "'./test/resource/dlinear_without_attributes'"
     configs, attributes = model_storage.register_model(model_id, uri)
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'model.pt'))
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'config.yaml'))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "model.pt"))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "config.yaml"))
     assert configs.__class__ == TConfigs
     assert attributes.__class__ == str
     assert configs.input_shape == [96, 2]
     assert configs.output_shape == [96, 2]
     assert configs.input_type == [4, 4]
     assert configs.output_type == [4, 4]
-    assert attributes == ''
+    assert attributes == ""
     model_storage.delete_model(model_id=model_id)
-    assert not os.path.exists(os.path.join(storage_path, f'{model_id}'))
+    assert not os.path.exists(os.path.join(storage_path, f"{model_id}"))
+
 
 def test_register_and_delete_model_from_local_with_file_prefix():
-    model_id = 'dlinear'
+    model_id = "dlinear"
     uri = "'file://./test/resource/dlinear'"
     configs, attributes = model_storage.register_model(model_id, uri)
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'model.pt'))
-    assert os.path.exists(
-        os.path.join(storage_path, f'{model_id}', 'config.yaml'))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "model.pt"))
+    assert os.path.exists(os.path.join(storage_path, f"{model_id}", "config.yaml"))
     assert configs.__class__ == TConfigs
     assert attributes.__class__ == str
     assert configs.input_shape == [96, 2]
@@ -165,24 +170,27 @@ def test_register_and_delete_model_from_local_with_file_prefix():
     assert configs.output_type == [5, 2]
     assert attributes == "{'model_type': 'dlinear', 'kernel_size': '25'}"
     model_storage.delete_model(model_id=model_id)
-    assert not os.path.exists(os.path.join(storage_path, f'{model_id}'))
+    assert not os.path.exists(os.path.join(storage_path, f"{model_id}"))
+
 
 def test_register_model_from_wrong_local():
-    model_id = 'dlinear_dummy'
+    model_id = "dlinear_dummy"
     uri = "'./test/resource/dlinear_dummy'"
     try:
         model_storage.register_model(model_id, uri)
     except Exception as e:
-        assert e.message == f"Invalid uri: {uri[1:-1]}, there are no {DEFAULT_MODEL_FILE_NAME} or {DEFAULT_CONFIG_FILE_NAME} under this uri."
+        assert (
+            e.message
+            == f"Invalid uri: {uri[1:-1]}, there are no {DEFAULT_MODEL_FILE_NAME} or {DEFAULT_CONFIG_FILE_NAME} under this uri."
+        )
 
 
 def test_load_model_from_id():
-    model_id = ''.join(random.choice(string.ascii_letters) for x in range(10))
+    model_id = "".join(random.choice(string.ascii_letters) for x in range(10))
     model_dir = os.path.join(
-        os.getcwd(),
-        descriptor.get_config().get_ain_models_dir(),
-        f'{model_id}')
-    model_path = os.path.join(model_dir, f'model.pt')
+        os.getcwd(), descriptor.get_config().get_ain_models_dir(), f"{model_id}"
+    )
+    model_path = os.path.join(model_dir, f"model.pt")
     os.makedirs(model_dir)
     torch.jit.save(torch.jit.script(model2), model_path)
     model_loaded = model_storage.load_model_from_id(model_id)
@@ -192,15 +200,12 @@ def test_load_model_from_id():
 
 
 def test_load_not_exist_model_from_id():
-    model_id = 'dummy_model'
+    model_id = "dummy_model"
     model_dir = os.path.join(
-        os.getcwd(),
-        descriptor.get_config().get_ain_models_dir(),
-        f'{model_id}')
-    model_path = os.path.join(model_dir, f'model.pt')
+        os.getcwd(), descriptor.get_config().get_ain_models_dir(), f"{model_id}"
+    )
+    model_path = os.path.join(model_dir, f"model.pt")
     try:
         model_storage.load_model_from_id(model_id)
     except Exception as e:
-        assert e.message == ModelNotExistError(
-            os.path.join(model_path)).message
-
+        assert e.message == ModelNotExistError(os.path.join(model_path)).message
