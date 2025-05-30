@@ -1088,6 +1088,8 @@ public class IoTDBConfig {
 
   private long loadTsFileTabletConversionBatchMemorySizeInBytes = 4096 * 1024;
 
+  private int loadTsFileTabletConversionThreadCount = 5;
+
   private int loadTsFileMaxDeviceCountToUseDeviceTimeIndex = 10000;
 
   private long loadChunkMetadataMemorySizeInBytes = 33554432; // 32MB
@@ -3815,6 +3817,14 @@ public class IoTDBConfig {
       long loadTsFileTabletConversionBatchMemorySizeInBytes) {
     this.loadTsFileTabletConversionBatchMemorySizeInBytes =
         loadTsFileTabletConversionBatchMemorySizeInBytes;
+  }
+
+  public int getLoadTsFileTabletConversionThreadCount() {
+    return loadTsFileTabletConversionThreadCount;
+  }
+
+  public void setLoadTsFileTabletConversionThreadCount(int loadTsFileTabletConversionThreadCount) {
+    this.loadTsFileTabletConversionThreadCount = loadTsFileTabletConversionThreadCount;
   }
 
   public int getLoadTsFileMaxDeviceCountToUseDeviceTimeIndex() {
