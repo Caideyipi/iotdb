@@ -177,8 +177,7 @@ public class LoadTsFileDispatcherImpl implements IFragInstanceDispatcher {
             .loadNewTsFile(
                 tsFileResource,
                 ((LoadSingleTsFileNode) planNode).isDeleteAfterLoad(),
-                isGeneratedByPipe,
-                false);
+                isGeneratedByPipe);
       } catch (LoadFileException e) {
         LOGGER.warn("Load TsFile Node {} error.", planNode, e);
         TSStatus resultStatus = new TSStatus();
