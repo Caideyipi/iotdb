@@ -200,7 +200,8 @@ public class SharedStorageCompactionTaskTest {
         .thenReturn(null);
     // do compaction
     for (TsFileResource resource : sourceFiles) {
-      dataRegion.loadNewTsFile(resource, false, true);
+      resource.setLastValues(Collections.emptyMap());
+      dataRegion.loadNewTsFile(resource, false, true, true);
     }
     assertEquals(0, dataRegion.getTsFileManager().getTsFileListSnapshot(0, true).size());
     assertEquals(2, dataRegion.getTsFileManager().getTsFileListSnapshot(0, false).size());
@@ -401,7 +402,8 @@ public class SharedStorageCompactionTaskTest {
                 Mockito.any(), Mockito.anyLong(), Mockito.any()))
         .thenReturn(pulledResources);
     // do compaction
-    dataRegion.loadNewTsFile(sourceFiles.get(1), false, true);
+    sourceFiles.get(1).setLastValues(Collections.emptyMap());
+    dataRegion.loadNewTsFile(sourceFiles.get(1), false, true, true);
     assertEquals(0, dataRegion.getTsFileManager().getTsFileListSnapshot(0, true).size());
     assertEquals(1, dataRegion.getTsFileManager().getTsFileListSnapshot(0, false).size());
     SharedStorageCompactionTaskResource taskResource =
@@ -491,7 +493,8 @@ public class SharedStorageCompactionTaskTest {
         .thenReturn(pulledResources);
     // do compaction
     for (TsFileResource resource : sourceFiles) {
-      dataRegion.loadNewTsFile(resource, false, true);
+      resource.setLastValues(Collections.emptyMap());
+      dataRegion.loadNewTsFile(resource, false, true, true);
     }
     assertEquals(0, dataRegion.getTsFileManager().getTsFileListSnapshot(0, true).size());
     assertEquals(2, dataRegion.getTsFileManager().getTsFileListSnapshot(0, false).size());

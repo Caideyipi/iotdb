@@ -39,6 +39,7 @@ import org.apache.iotdb.db.audit.AuditLogOperation;
 import org.apache.iotdb.db.audit.AuditLogStorage;
 import org.apache.iotdb.db.consensus.DataRegionConsensusImpl;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
+import org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.cache.LastCacheLoadStrategy;
 import org.apache.iotdb.db.service.metrics.IoTDBInternalLocalReporter;
 import org.apache.iotdb.db.storageengine.StorageEngine;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.execute.performer.constant.CrossCompactionPerformer;
@@ -2518,6 +2519,22 @@ public class IoTDBDescriptor {
         properties.getProperty(
             "load_disk_select_strategy_for_pipe_and_iotv2",
             ILoadDiskSelector.LoadDiskSelectorType.INHERIT_LOAD.getValue()));
+
+    conf.setLastCacheLoadStrategy(
+        LastCacheLoadStrategy.valueOf(
+            properties.getProperty(
+                "last_cache_operation_on_load", LastCacheLoadStrategy.UPDATE.name())));
+
+    conf.setCacheLastValuesForLoad(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "cache_last_values_for_load", String.valueOf(conf.isCacheLastValuesForLoad()))));
+
+    conf.setCacheLastValuesMemoryBudgetInByte(
+        Long.parseLong(
+            properties.getProperty(
+                "cache_last_values_memory_budget_in_byte",
+                String.valueOf(conf.getCacheLastValuesMemoryBudgetInByte()))));
   }
 
   private void loadLoadTsFileHotModifiedProp(TrimProperties properties) throws IOException {

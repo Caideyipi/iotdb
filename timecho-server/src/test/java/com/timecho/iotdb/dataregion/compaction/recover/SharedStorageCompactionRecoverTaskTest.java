@@ -144,12 +144,13 @@ public class SharedStorageCompactionRecoverTaskTest {
           TsFileNameGenerator.generateNewTsFileName(System.currentTimeMillis(), i, 0, 0);
       TsFileResource tsFileResource =
           createFile(SEQ_DIRS + File.separator + fileName, osPrefix + OS_FILE_SEPARATOR + fileName);
+      tsFileResource.setLastValues(Collections.emptyMap());
       targetFiles.add(tsFileResource);
     }
     try (SimpleCompactionLogger compactionLogger = new SimpleCompactionLogger(logFile)) {
       compactionLogger.logSourceFiles(sourceFiles);
       compactionLogger.logTargetFiles(targetFiles);
-      dataRegion.loadNewTsFile(targetFiles.get(0), false, true);
+      dataRegion.loadNewTsFile(targetFiles.get(0), false, true, true);
       compactionLogger.logTargetFile(targetFiles.get(0));
       compactionLogger.logFiles(Collections.emptyList(), STR_DELETED_TARGET_FILES);
     }
@@ -198,12 +199,13 @@ public class SharedStorageCompactionRecoverTaskTest {
           createFile(
               SEQ_DIRS + File.separator + fileName,
               sourceFiles.get(i).getRemoteStorageBlock().getPath());
+      tsFileResource.setLastValues(Collections.emptyMap());
       targetFiles.add(tsFileResource);
     }
     try (SimpleCompactionLogger compactionLogger = new SimpleCompactionLogger(logFile)) {
       compactionLogger.logSourceFiles(sourceFiles);
       compactionLogger.logTargetFiles(targetFiles);
-      dataRegion.loadNewTsFile(targetFiles.get(0), false, true);
+      dataRegion.loadNewTsFile(targetFiles.get(0), false, true, true);
       compactionLogger.logTargetFile(targetFiles.get(0));
       compactionLogger.logFiles(
           Collections.singletonList(targetFiles.get(0)), STR_DELETED_TARGET_FILES);
@@ -251,13 +253,14 @@ public class SharedStorageCompactionRecoverTaskTest {
           TsFileNameGenerator.generateNewTsFileName(System.currentTimeMillis(), i, 0, 0);
       TsFileResource tsFileResource =
           createFile(SEQ_DIRS + File.separator + fileName, osPrefix + OS_FILE_SEPARATOR + fileName);
+      tsFileResource.setLastValues(Collections.emptyMap());
       targetFiles.add(tsFileResource);
     }
     try (SimpleCompactionLogger compactionLogger = new SimpleCompactionLogger(logFile)) {
       compactionLogger.logSourceFiles(sourceFiles);
       compactionLogger.logTargetFiles(targetFiles);
       for (TsFileResource targetFile : targetFiles) {
-        dataRegion.loadNewTsFile(targetFile, false, true);
+        dataRegion.loadNewTsFile(targetFile, false, true, true);
         compactionLogger.logTargetFile(targetFile);
       }
       compactionLogger.logFiles(Collections.emptyList(), STR_DELETED_TARGET_FILES);
@@ -310,13 +313,14 @@ public class SharedStorageCompactionRecoverTaskTest {
               i < 1
                   ? sourceFiles.get(i).getRemoteStorageBlock().getPath()
                   : osPrefix + OS_FILE_SEPARATOR + fileName);
+      tsFileResource.setLastValues(Collections.emptyMap());
       targetFiles.add(tsFileResource);
     }
     try (SimpleCompactionLogger compactionLogger = new SimpleCompactionLogger(logFile)) {
       compactionLogger.logSourceFiles(sourceFiles);
       compactionLogger.logTargetFiles(targetFiles);
       for (TsFileResource targetFile : targetFiles) {
-        dataRegion.loadNewTsFile(targetFile, false, true);
+        dataRegion.loadNewTsFile(targetFile, false, true, true);
         compactionLogger.logTargetFile(targetFile);
       }
       compactionLogger.logFiles(sourceFiles.subList(0, 1), STR_DELETED_TARGET_FILES);

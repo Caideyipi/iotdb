@@ -155,7 +155,8 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
               TsFileResourceStatus.COMPACTION_CANDIDATE);
           remoteResource.setStatus(TsFileResourceStatus.COMPACTING);
           File oldFile = remoteResource.getTsFile();
-          dataRegion.loadNewTsFile(remoteResource, true, true);
+          remoteResource.setLastValues(Collections.emptyMap());
+          dataRegion.loadNewTsFile(remoteResource, true, true, true);
           HybridFileInputFactoryDecorator.putRemotePathInfo(
               remoteResource.getTsFile(),
               HybridFileInputFactoryDecorator.removeRemotePathInfo(oldFile));
