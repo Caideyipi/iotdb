@@ -23,7 +23,6 @@ import org.apache.iotdb.commons.enums.HandleSystemErrorStrategy;
 import org.apache.iotdb.commons.exception.BadNodeUrlException;
 import org.apache.iotdb.commons.pipe.config.PipeDescriptor;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
-import org.apache.iotdb.commons.utils.NodeUrlUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TGlobalConfig;
 
 import org.slf4j.Logger;
@@ -212,15 +211,8 @@ public class CommonDescriptor {
         Integer.parseInt(
             properties.getProperty("datanode_token_timeout", String.valueOf(3 * 60 * 1000))));
 
-    String endPointUrl =
-        properties.getProperty(
-            "target_ml_node_endpoint",
-            NodeUrlUtils.convertTEndPointUrl(config.getTargetAINodeEndPoint()));
-
     PipeDescriptor.loadPipeProps(config, properties, false);
     loadSubscriptionProps(properties);
-
-    config.setTargetAINodeEndPoint(NodeUrlUtils.parseTEndPointUrl(endPointUrl));
 
     config.setSchemaEngineMode(
         properties.getProperty("schema_engine_mode", String.valueOf(config.getSchemaEngineMode())));
