@@ -16,13 +16,10 @@
 # under the License.
 #
 
-import os
 from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
-from huggingface_hub import hf_hub_download
-from safetensors.torch import load_file as load_safetensors
 from torch import nn
 from transformers import Cache, DynamicCache, PreTrainedModel
 from transformers.activations import ACT2FN
@@ -471,27 +468,7 @@ class SundialForPrediction(SundialPreTrainedModel, TSGenerationMixin):
             self.config.hidden_size,
             self.config.num_sampling_steps,
         )
-        # TODO: Unify data loader
-        if not os.path.exists(config.ckpt_path):
-            os.mkdir(config.ckpt_path)
-        weights_path = os.path.join(config.ckpt_path, "model.safetensors")
-        if not os.path.exists(weights_path):
-            logger.info(
-                f"Weight not found at {weights_path}, downloading from HuggingFace..."
-            )
-            repo_id = "thuml/sundial-base-128m"
-            try:
-                hf_hub_download(
-                    repo_id=repo_id,
-                    filename="model.safetensors",
-                    local_dir=config.ckpt_path,
-                )
-                logger.info(f"Got weight to {weights_path}")
-            except Exception as e:
-                logger.error(f"Failed to download weight to {weights_path} due to {e}")
-                raise e
-        state_dict = load_safetensors(weights_path)
-        self.load_state_dict(state_dict, strict=True)
+        self.post_init()
 
     def set_decoder(self, decoder):
         self.model = decoder
@@ -577,7 +554,10 @@ class SundialForPrediction(SundialPreTrainedModel, TSGenerationMixin):
             loss_masks = loss_masks.reshape(bsz * L).repeat(
                 self.config.diffusion_batch_mul
             )
-            mask_y = mask_y.repeat(L * self.config.diffusion_batch_mul, 1)
+            if mask_y is not None:
+                mask_y = mask_y.repeat(L * self.config.diffusion_batch_mul, 1)
+            else:
+                mask_y = None
 
             loss = self.flow_loss(shift_labels, hidden_states, loss_masks, mask_y)
         else:

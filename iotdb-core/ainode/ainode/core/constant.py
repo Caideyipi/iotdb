@@ -72,6 +72,10 @@ class TSStatusCode(Enum):
     INVALID_INFERENCE_CONFIG = 1512
     INFERENCE_INTERNAL_ERROR = 1520
 
+    # Training status codes
+    INVALID_TRAINING_CONFIG = 1550
+    TRAINING_INTERNAL_ERROR = 1551
+
     def get_status_code(self) -> int:
         return self.value
 

@@ -21,6 +21,9 @@ from ainode.core.log import Logger
 from ainode.core.manager.cluster_manager import ClusterManager
 from ainode.core.manager.inference_manager import InferenceManager
 from ainode.core.manager.model_manager import ModelManager
+from ainode.core.manager.training_manager import TrainingManager
+from ainode.core.training.training_parameters import get_default_training_args
+from ainode.core.util.status import get_status
 from ainode.thrift.ainode import IAINodeRPCService
 from ainode.thrift.ainode.ttypes import (
     TAIHeartbeatReq,
@@ -42,6 +45,7 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
     def __init__(self):
         self._model_manager = ModelManager()
         self._inference_manager = InferenceManager(model_manager=self._model_manager)
+        self._training_manager = TrainingManager()
 
     def registerModel(self, req: TRegisterModelReq) -> TRegisterModelResp:
         return self._model_manager.register_model(req)
@@ -59,4 +63,19 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
         return ClusterManager.get_heart_beat(req)
 
     def createTrainingTask(self, req: TTrainingReq) -> TSStatus:
-        pass
+        args = get_default_training_args()
+        try:
+            # Parse the request to set up the training parameters
+            args.model_type = req.modelType.lower()
+            args.model_id = req.modelId
+            args.ckpt_path = self._model_manager.get_ckpt_path(req.existingModelId)
+            args.dataset_type = req.dbType
+            args.data_schema_list = req.targetDataSchema
+            # Parse hyperparameters
+            args.init_from_map(req.parameters)
+            # Initialize GPU configuration
+            args.init_gpu_config()
+            return self._training_manager.create_training_task(args)
+        except Exception as e:
+            logger.error(f"Failed to parse training configuration: {e}")
+            return get_status(TSStatusCode.INVALID_TRAINING_CONFIG, str(e))

@@ -22,6 +22,7 @@ from collections.abc import Callable
 
 import torch
 import torch._dynamo
+from huggingface_hub import hf_hub_download
 from pylru import lrucache
 
 from ainode.core.config import AINodeDescriptor
@@ -29,11 +30,13 @@ from ainode.core.constant import DEFAULT_CONFIG_FILE_NAME, DEFAULT_MODEL_FILE_NA
 from ainode.core.exception import ModelNotExistError
 from ainode.core.log import Logger
 from ainode.core.model.model_factory import fetch_model_by_uri
+from ainode.core.model.sundial import modeling_sundial
 from ainode.core.util.lock import ModelLockPool
 
 logger = Logger()
 
 
+# TODO: All the path must be check and refactor
 class ModelStorage(object):
     def __init__(self):
         self._model_dir = os.path.join(
@@ -73,7 +76,10 @@ class ModelStorage(object):
         Returns:
             model: a ScriptModule contains model architecture and parameters, which can be deployed cross-platform
         """
-        ain_models_dir = os.path.join(self._model_dir, f"{model_id}")
+        ain_models_dir = os.path.join(self._model_dir, "weights", f"{model_id}")
+        # TODO: This ugly reading code must be refactored
+        if "sundial" in model_id:
+            return modeling_sundial.SundialForPrediction.from_pretrained(ain_models_dir)
         model_path = os.path.join(ain_models_dir, DEFAULT_MODEL_FILE_NAME)
         with self._lock_pool.get_lock(model_id).read_lock():
             if model_path in self._model_cache:
@@ -130,4 +136,31 @@ class ModelStorage(object):
         Returns:
             str: The path to the checkpoint file for the model.
         """
-        return os.path.join(self._model_dir, f"{model_id}")
+        # TODO: unify this ugly shit
+        if model_id == "sundial" or model_id == "_sundial":
+            res = os.path.join(self._model_dir, "weights", "sundial")
+            weights_path = os.path.join(res, "model.safetensors")
+            if not os.path.exists(weights_path):
+                logger.info(
+                    f"Weight not found at {weights_path}, downloading from HuggingFace..."
+                )
+                repo_id = "thuml/sundial-base-128m"
+                try:
+                    hf_hub_download(
+                        repo_id=repo_id,
+                        filename="model.safetensors",
+                        local_dir=res,
+                    )
+                    logger.info(f"Got weight to {weights_path}")
+                    hf_hub_download(
+                        repo_id=repo_id,
+                        filename="config.json",
+                        local_dir=res,
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to download weight to {weights_path} due to {e}"
+                    )
+                    raise e
+            return res
+        return os.path.join(self._model_dir, "weights", f"{model_id}")

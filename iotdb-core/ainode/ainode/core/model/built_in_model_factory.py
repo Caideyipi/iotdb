@@ -20,6 +20,7 @@ from abc import abstractmethod
 from typing import Dict, List
 
 import numpy as np
+from huggingface_hub import hf_hub_download
 from sklearn.preprocessing import MinMaxScaler
 from sktime.annotation.hmm_learn import GMMHMM, GaussianHMM
 from sktime.annotation.stray import STRAY
@@ -115,9 +116,31 @@ def fetch_built_in_model(model_id, inference_attributes):
     elif model_id == BuiltInModelType.TIMER_XL.value:
         model = modeling_timer.TimerForPrediction(TimerConfig.from_dict(attributes))
     elif model_id == BuiltInModelType.SUNDIAL.value:
-        model = modeling_sundial.SundialForPrediction(
-            SundialConfig.from_dict(attributes)
-        )
+        config = SundialConfig.from_dict(attributes)
+        if not os.path.exists(config.ckpt_path):
+            os.makedirs(config.ckpt_path, exist_ok=True)
+        weights_path = os.path.join(config.ckpt_path, "model.safetensors")
+        if not os.path.exists(weights_path):
+            logger.info(
+                f"Weight not found at {weights_path}, downloading from HuggingFace..."
+            )
+            repo_id = "thuml/sundial-base-128m"
+            try:
+                hf_hub_download(
+                    repo_id=repo_id,
+                    filename="model.safetensors",
+                    local_dir=config.ckpt_path,
+                )
+                logger.info(f"Got weight to {weights_path}")
+                hf_hub_download(
+                    repo_id=repo_id,
+                    filename="config.json",
+                    local_dir=config.ckpt_path,
+                )
+            except Exception as e:
+                logger.error(f"Failed to download weight to {weights_path} due to {e}")
+                raise e
+        model = modeling_sundial.SundialForPrediction.from_pretrained(config.ckpt_path)
     else:
         raise BuiltInModelNotSupportError(model_id)
 

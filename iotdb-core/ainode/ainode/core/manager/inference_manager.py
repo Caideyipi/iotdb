@@ -119,7 +119,8 @@ class RegisteredStrategy(InferenceStrategy):
 def _get_strategy(model_id, model):
     if model_id == "_timerxl":
         return TimerXLStrategy(model)
-    if model_id == "_sundial":
+    # TODO: Refactor this ugly logic
+    if model_id == "_sundial" or "sundial" in model_id:
         return SundialStrategy(model)
     if model_id.startswith("_"):
         return BuiltInStrategy(model)
