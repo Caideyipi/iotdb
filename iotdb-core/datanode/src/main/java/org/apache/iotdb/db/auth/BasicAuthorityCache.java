@@ -78,8 +78,9 @@ public class BasicAuthorityCache implements IAuthorCache {
   @Override
   public boolean invalidateCache(String userName, String roleName) {
     if (userName != null) {
-      if (userCache.getIfPresent(userName) != null) {
-        Set<String> roleSet = userCache.getIfPresent(userName).getRoleSet();
+      final User user = userCache.getIfPresent(userName);
+      if (user != null) {
+        final Set<String> roleSet = user.getRoleSet();
         if (!roleSet.isEmpty()) {
           roleCache.invalidateAll(roleSet);
         }
