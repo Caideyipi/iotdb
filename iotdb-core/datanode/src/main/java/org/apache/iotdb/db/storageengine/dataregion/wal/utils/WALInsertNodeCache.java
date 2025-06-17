@@ -19,7 +19,6 @@
 
 package org.apache.iotdb.db.storageengine.dataregion.wal.utils;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.iotdb.commons.pipe.config.PipeConfig;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.db.conf.DataNodeMemoryConfig;
