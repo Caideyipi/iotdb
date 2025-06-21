@@ -20,23 +20,29 @@ import os
 import shutil
 from collections.abc import Callable
 
-import torch
-import torch._dynamo
-from huggingface_hub import hf_hub_download
 from pylru import lrucache
+from torch import nn
 
 from ainode.core.config import AINodeDescriptor
-from ainode.core.constant import DEFAULT_CONFIG_FILE_NAME, DEFAULT_MODEL_FILE_NAME
-from ainode.core.exception import ModelNotExistError
+from ainode.core.constant import (
+    DEFAULT_CONFIG_FILE_NAME,
+    DEFAULT_MODEL_FILE_NAME,
+    BuiltInModelType,
+)
+from ainode.core.exception import (
+    BuiltInModelNotSupportError,
+)
 from ainode.core.log import Logger
+from ainode.core.model.built_in_model_factory import (
+    download_built_in_model_if_necessary,
+    fetch_built_in_model,
+)
 from ainode.core.model.model_factory import fetch_model_by_uri
-from ainode.core.model.sundial import modeling_sundial
 from ainode.core.util.lock import ModelLockPool
 
 logger = Logger()
 
 
-# TODO: All the path must be check and refactor
 class ModelStorage(object):
     def __init__(self):
         self._model_dir = os.path.join(
@@ -45,6 +51,15 @@ class ModelStorage(object):
         if not os.path.exists(self._model_dir):
             try:
                 os.makedirs(self._model_dir)
+            except PermissionError as e:
+                logger.error(e)
+                raise e
+        self._builtin_model_dir = os.path.join(
+            os.getcwd(), AINodeDescriptor().get_config().get_ain_builtin_models_dir()
+        )
+        if not os.path.exists(self._builtin_model_dir):
+            try:
+                os.makedirs(self._builtin_model_dir)
             except PermissionError as e:
                 logger.error(e)
                 raise e
@@ -71,43 +86,6 @@ class ModelStorage(object):
         config_storage_path = os.path.join(storage_path, DEFAULT_CONFIG_FILE_NAME)
         return fetch_model_by_uri(uri, model_storage_path, config_storage_path)
 
-    def load_model(self, model_id: str, acceleration: bool) -> Callable:
-        """
-        Returns:
-            model: a ScriptModule contains model architecture and parameters, which can be deployed cross-platform
-        """
-        ain_models_dir = os.path.join(self._model_dir, "weights", f"{model_id}")
-        # TODO: This ugly reading code must be refactored
-        if "sundial" in model_id:
-            return modeling_sundial.SundialForPrediction.from_pretrained(ain_models_dir)
-        model_path = os.path.join(ain_models_dir, DEFAULT_MODEL_FILE_NAME)
-        with self._lock_pool.get_lock(model_id).read_lock():
-            if model_path in self._model_cache:
-                model = self._model_cache[model_path]
-                if (
-                    isinstance(model, torch._dynamo.eval_frame.OptimizedModule)
-                    or not acceleration
-                ):
-                    return model
-                else:
-                    model = torch.compile(model)
-                    self._model_cache[model_path] = model
-                    return model
-            else:
-                if not os.path.exists(model_path):
-                    raise ModelNotExistError(model_path)
-                else:
-                    model = torch.jit.load(model_path)
-                    if acceleration:
-                        try:
-                            model = torch.compile(model)
-                        except Exception as e:
-                            logger.warning(
-                                f"acceleration failed, fallback to normal mode: {str(e)}"
-                            )
-                    self._model_cache[model_path] = model
-                    return model
-
     def delete_model(self, model_id: str) -> None:
         """
         Args:
@@ -126,6 +104,46 @@ class ModelStorage(object):
         if file_path in self._model_cache:
             del self._model_cache[file_path]
 
+    def load_model(
+        self, model_id: str, is_built_in: bool, acceleration: bool
+    ) -> Callable:
+        """
+        Load a model with automatic detection of .safetensors or .pt format
+
+        Returns:
+            model: The model instance corresponding to specific model_id
+        """
+        with self._lock_pool.get_lock(model_id).read_lock():
+            if is_built_in:
+                if model_id not in BuiltInModelType.values():
+                    raise BuiltInModelNotSupportError(model_id)
+                # For built-in models, we support auto download
+                model_dir = os.path.join(self._builtin_model_dir, f"{model_id}")
+                download_built_in_model_if_necessary(model_id, model_dir)
+                return fetch_built_in_model(model_id, model_dir)
+            else:
+                # TODO: support load the user-defined model
+                # model_dir = os.path.join(self._model_dir, f"{model_id}")
+                raise NotImplementedError
+
+    def save_model(self, model_id: str, is_built_in: bool, model: nn.Module):
+        """
+        Save the model using save_pretrained
+
+        Returns:
+            Whether saving succeeded
+        """
+        with self._lock_pool.get_lock(model_id).write_lock():
+            if is_built_in:
+                if model_id not in BuiltInModelType.values():
+                    raise BuiltInModelNotSupportError(model_id)
+                model_dir = os.path.join(self._builtin_model_dir, f"{model_id}")
+                model.save_pretrained(model_dir)
+            else:
+                # TODO: support save the user-defined model
+                # model_dir = os.path.join(self._model_dir, f"{model_id}")
+                raise NotImplementedError
+
     def get_ckpt_path(self, model_id: str) -> str:
         """
         Get the checkpoint path for a given model ID.
@@ -136,31 +154,5 @@ class ModelStorage(object):
         Returns:
             str: The path to the checkpoint file for the model.
         """
-        # TODO: unify this ugly shit
-        if model_id == "sundial" or model_id == "_sundial":
-            res = os.path.join(self._model_dir, "weights", "sundial")
-            weights_path = os.path.join(res, "model.safetensors")
-            if not os.path.exists(weights_path):
-                logger.info(
-                    f"Weight not found at {weights_path}, downloading from HuggingFace..."
-                )
-                repo_id = "thuml/sundial-base-128m"
-                try:
-                    hf_hub_download(
-                        repo_id=repo_id,
-                        filename="model.safetensors",
-                        local_dir=res,
-                    )
-                    logger.info(f"Got weight to {weights_path}")
-                    hf_hub_download(
-                        repo_id=repo_id,
-                        filename="config.json",
-                        local_dir=res,
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"Failed to download weight to {weights_path} due to {e}"
-                    )
-                    raise e
-            return res
-        return os.path.join(self._model_dir, "weights", f"{model_id}")
+        # Only support built-in models for now
+        return os.path.join(self._builtin_model_dir, f"{model_id}")
