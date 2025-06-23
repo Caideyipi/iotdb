@@ -273,6 +273,8 @@ public class CommonConfig {
   private long pipeReceiverLoginPeriodicVerificationIntervalMs = 300000;
   private double pipeReceiverActualToEstimatedMemoryRatio = 3;
 
+  private int pipeReceiverReqDecompressedMaxLengthInBytes = 1073741824; // 1GB
+
   private int pipeMaxAllowedHistoricalTsFilePerDataRegion = Integer.MAX_VALUE; // Deprecated
   private int pipeMaxAllowedPendingTsFileEpochPerDataRegion = Integer.MAX_VALUE; // Deprecated
   private int pipeMaxAllowedPinnedMemTableCount = Integer.MAX_VALUE; // per data region
@@ -1511,6 +1513,22 @@ public class CommonConfig {
 
   public double getPipeReceiverActualToEstimatedMemoryRatio() {
     return pipeReceiverActualToEstimatedMemoryRatio;
+  }
+
+  public void setPipeReceiverReqDecompressedMaxLengthInBytes(
+      int pipeReceiverReqDecompressedMaxLengthInBytes) {
+    if (this.pipeReceiverReqDecompressedMaxLengthInBytes
+        == pipeReceiverReqDecompressedMaxLengthInBytes) {
+      return;
+    }
+    this.pipeReceiverReqDecompressedMaxLengthInBytes = pipeReceiverReqDecompressedMaxLengthInBytes;
+    logger.info(
+        "pipeReceiverReqDecompressedMaxLengthInBytes is set to {}.",
+        pipeReceiverReqDecompressedMaxLengthInBytes);
+  }
+
+  public int getPipeReceiverReqDecompressedMaxLengthInBytes() {
+    return pipeReceiverReqDecompressedMaxLengthInBytes;
   }
 
   public int getPipeMaxAllowedHistoricalTsFilePerDataRegion() {
