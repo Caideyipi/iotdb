@@ -1724,11 +1724,6 @@ value_encoder=PLAIN
 compressor=LZ4
 
 # Encryption configuration
-# Data encryption function switch.
-# effectiveMode: restart
-encrypt_flag=false
-
-# Encryption configuration
 # Data encryption method, supports org.apache.tsfile.encrypt.UNENCRYPTED.
 # To use other types of encryption, please contact us for the libraries to put under the 'libs' directory and the type names.
 # effectiveMode: restart
