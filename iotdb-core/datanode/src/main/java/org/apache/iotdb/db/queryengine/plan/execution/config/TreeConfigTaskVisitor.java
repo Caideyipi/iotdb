@@ -835,7 +835,6 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
         createTrainingStatement.getModelId(),
         createTrainingStatement.getModelType(),
         createTrainingStatement.getParameters(),
-        false,
         createTrainingStatement.getTargetTimeRanges(),
         createTrainingStatement.getExistingModelId(),
         targetPathPatterns);
