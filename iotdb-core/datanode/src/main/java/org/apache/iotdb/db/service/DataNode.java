@@ -115,6 +115,7 @@ import org.apache.iotdb.udf.api.exception.UDFManagementException;
 
 import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.apache.ratis.util.ExitUtils;
 import org.apache.thrift.TException;
 import org.apache.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
@@ -136,6 +137,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.DEFAULT_CLUSTER_NAME;
+import static org.apache.iotdb.commons.utils.StatusUtils.retrieveExitStatusCode;
 import static org.apache.iotdb.db.conf.IoTDBStartCheck.PROPERTIES_FILE_NAME;
 
 public class DataNode extends ServerCommandLine implements DataNodeMBean {
@@ -195,6 +197,8 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
   public static void main(String[] args) {
     logger.info("IoTDB-DataNode environment variables: {}", IoTDBConfig.getEnvironmentVariables());
     logger.info("IoTDB-DataNode default charset is: {}", Charset.defaultCharset().displayName());
+    // let IoTDB handle the exception instead of ratis
+    ExitUtils.disableSystemExit();
     DataNode dataNode = new DataNode();
     int returnCode = dataNode.run(args);
     if (returnCode != 0) {
@@ -204,6 +208,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
 
   @Override
   public void start() {
+    logger.info("Starting DataNode...");
     boolean isFirstStart;
     try {
       // Check if this DataNode is start for the first time and do other pre-checks
@@ -277,11 +282,13 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         dataRegionConsensusStarted = true;
       }
 
-    } catch (StartupException | IOException e) {
+    } catch (Throwable e) {
+      int exitStatusCode = retrieveExitStatusCode(e);
       logger.error("Fail to start server", e);
       stop();
-      System.exit(-1);
+      System.exit(exitStatusCode);
     }
+    logger.info("DataNode started");
   }
 
   @Override
@@ -696,7 +703,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
       setUp();
     } catch (StartupException e) {
       logger.error("Meet error while starting up.", e);
-      throw new StartupException("Error in activating IoTDB DataNode.");
+      throw e;
     }
     logger.info("IoTDB DataNode has started.");
 
