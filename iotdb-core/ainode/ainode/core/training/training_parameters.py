@@ -1,4 +1,5 @@
 from ainode.core.log import Logger
+from ainode.core.model.model_info import BuiltInModelType
 from ainode.core.util.gpu_mapping import parse_devices
 
 logger = Logger()
@@ -11,9 +12,19 @@ class TrainingParameters:
 
     def __init__(self):
         # Model config
-        self.model_type = "sundial"  # The model name to be finetune, options: [sundial], TODO: finetune TimerXL
+        self.model_type = (
+            BuiltInModelType.SUNDIAL
+        )  # The model name to be finetune, options: [sundial], TODO: finetune TimerXL
         self.model_id = "test"  # The model id of the finetune result
         self.ckpt_path = ""  # Checkpoint path, used for finetune
+
+        self.seq_len = 2880  # The number of time series data points for each input training data window
+        self.input_token_len = (
+            16  # The number of time series data points for each token
+        )
+        self.output_token_len = (
+            720  # The number of time series data points for each output
+        )
 
         # Dataset and Dataloader
         self.dataset_type = (
@@ -38,43 +49,27 @@ class TrainingParameters:
             "linear"  # Currently, using linear probing by default, TODO: LoRA
         )
         self.seed = 2021  # help='seed'
-        self.task_name = "forecast"  # help='task name, options:[forecast]'
-        self.is_training = 1  # help='status'
 
-        # data loader
-        # self.checkpoints = (
-        #     AINodeDescriptor().get_config().get_ain_ckpts_dir()
-        # )  # help='location of model checkpoints'
-        # self.data = "ETTh1"  # help='dataset type'
-        # self.root_path = './dataset/ETT-small/'  # help='root path of the data file'
-        # self.data_path = 'ETTh1.csv'  # help='data file'
-        # self.data_list_path = './dataset_list.json'  # help='data list path'
-        # self.resume_dir = ''  # help='resume dir'
-        # self.scale = True  # help='scale data'
-
-        # forecasting task
-        self.seq_len = 672  # help='input sequence length'
-        self.input_token_len = 576  # help='input token length'
-        self.max_output_token_len = 96  # help='max output token length'
-
-        # test
-        self.test_seq_len = 672  # help='test seq len'
-        self.test_pred_len = 96  # help='test pred len'
-        # self.test_dir = './test'  # help='test dir'
-        self.test_with_revin = False  # help='test with revin'
-        self.test_n_sample = 500  # help='test n sample'
-
-        # optimization
-        self.train_epochs = 10  # help='train epochs'
-        self.batch_size = 32  # help='batch size of train input data'
-        self.val_batch_size = 32  # help='batch size of val input data'
-        self.patience = 3  # help='early stopping patience'
-        self.learning_rate = 0.0001  # help='optimizer learning rate'
-        self.des = "test"  # help='exp description'
-        self.weight_decay = 0  # help='weight decay'
+        # training
+        self.train_epochs = 5  # help='train epochs'
+        self.training_batch_size = 64  # help='batch size of train input data'
         self.num_warmup_steps = 10000  # help='num warmup steps'
         self.num_training_steps = 100000  # help='num training steps'
         self.iter_per_epoch = 5000  # help='iter per epoch'
+        self.revin = True  # help='test with revin'
+        self.learning_rate = 0.00001  # help='optimizer learning rate'
+        self.weight_decay = 0.1  # help='weight decay'
+        self.only_preserve_best = (
+            True  # Only preserve the best ckpt during training, by default is True
+        )
+        self.patience = 3  # The number of epochs to wait for improvement before early stopping, TODO: Enable this function
+
+        # validation
+        self.vali_batch_size = 40
+        self.vali_pred_len = (
+            self.output_token_len
+        )  # we keep the vali pred len same as output len
+        self.vali_n_samples = 10
 
     def init_from_map(self, config_map: dict):
         if config_map is None:

@@ -11,8 +11,11 @@ from ainode.core.client import ClientManager
 from ainode.core.config import AINodeDescriptor
 from ainode.core.constant import TSStatusCode
 from ainode.core.log import Logger
+from ainode.core.manager.model_manager import ModelManager
+from ainode.core.model.model_info import ModelStates
 from ainode.core.training.exp.exp_forecast_finetune import ExpForecastFinetune
 from ainode.core.training.training_parameters import TrainingParameters
+from ainode.core.util.lock import ReadWriteLock
 from ainode.core.util.status import get_status
 from ainode.thrift.common.ttypes import TSStatus
 
@@ -38,12 +41,12 @@ def _start_training(
             rank=rank,
         )
         logger.info(
-            f"[Training][GPU-{gpu_id}] Start training model_id: {args.model_id}, model_type: {args.model_type} based on ckpt: {args.ckpt_path}."
+            f"[Training][GPU-{gpu_id}] Start training model_id: {args.model_id}, model_type: {args.model_type.value} based on ckpt: {args.ckpt_path}."
         )
         exp = ExpForecastFinetune(rank, args)
-        exp.train()
+        exp.finetune()
         logger.info(
-            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type} is finished."
+            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type.value} is finished."
         )
         status_dict[rank] = get_status(
             TSStatusCode.SUCCESS_STATUS,
@@ -51,47 +54,56 @@ def _start_training(
         )
     except Exception as e:
         logger.error(
-            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type} is failed, because {e}."
+            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type.value} is failed, because {e}."
         )
         status_dict[rank] = get_status(TSStatusCode.TRAINING_INTERNAL_ERROR, str(e))
     finally:
         dist.destroy_process_group()
 
 
-def _init_training(args: TrainingParameters):
-    # Setup training environment variables for DDP
-    os.environ["MASTER_ADDR"] = DEFAULT_MASTER_ADDR
-    os.environ["MASTER_PORT"] = DEFAULT_MASTER_PORT
-    status_dict = mp.Manager().dict()
-    mp.spawn(
-        _start_training, args=(args, status_dict), nprocs=args.world_size, join=False
-    )
-    while len(status_dict) < args.world_size:
-        # Wait for all processes to finish
-        time.sleep(5)
-    all_successful = all(
-        result.code == TSStatusCode.SUCCESS_STATUS.get_status_code()
-        for result in status_dict.values()
-    )
-    if all_successful:
-        ClientManager().borrow_config_node_client().update_model_info(
-            args.model_id,
-            3,  # TODO: use enum
-            "finished",
-            [AINodeDescriptor().get_config().get_ainode_id()],
-            args.input_token_len,
-            args.max_output_token_len,
+TRAINING_BIG_LOCK = ReadWriteLock()  # TODO: definitely required optimize
+
+
+def _init_training(args: TrainingParameters, model_manager: ModelManager):
+    with TRAINING_BIG_LOCK.write_lock():
+        # Setup training environment variables for DDP
+        os.environ["MASTER_ADDR"] = DEFAULT_MASTER_ADDR
+        os.environ["MASTER_PORT"] = DEFAULT_MASTER_PORT
+        status_dict = mp.Manager().dict()
+        mp.spawn(
+            _start_training,
+            args=(args, status_dict),
+            nprocs=args.world_size,
+            join=False,
         )
-    else:
-        # TODO: handle and delete this model on IoTDB
-        ClientManager().borrow_config_node_client().update_model_info(
-            args.model_id,
-            0,
-            "Please check the training logs for more details.",
-            [AINodeDescriptor().get_config().get_ainode_id()],
-            args.input_token_len,
-            args.max_output_token_len,
+        while len(status_dict) < args.world_size:
+            # Wait for all processes to finish
+            time.sleep(5)
+        all_successful = all(
+            result.code == TSStatusCode.SUCCESS_STATUS.get_status_code()
+            for result in status_dict.values()
         )
+        if all_successful:
+            ClientManager().borrow_config_node_client().update_model_info(
+                args.model_id,
+                3,  # TODO: use enum
+                "finished",
+                [AINodeDescriptor().get_config().get_ainode_id()],
+                args.seq_len,
+                args.output_token_len,
+            )
+            model_manager.update_model_state(args.model_id, ModelStates.ACTIVE)
+        else:
+            # TODO: handle and delete this model on IoTDB
+            ClientManager().borrow_config_node_client().update_model_info(
+                args.model_id,
+                0,
+                "Please check the training logs for more details.",
+                [AINodeDescriptor().get_config().get_ainode_id()],
+                args.seq_len,
+                args.output_token_len,
+            )
+            model_manager.update_model_state(args.model_id, ModelStates.FAILED)
 
 
 class TrainingManager:
@@ -99,8 +111,8 @@ class TrainingManager:
     A manager class for handling training tasks in a parallel manner using the ParallelTaskExecutor.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, model_manager: ModelManager):
+        self._model_manager = model_manager
         # self.executor = ParallelTaskExecutor()
         # self.executor.start()
 
@@ -112,7 +124,9 @@ class TrainingManager:
         """
         try:
             # TODO: Wrap with ParallelTaskExecutor if necessary
-            training_thread = threading.Thread(target=_init_training, args=(args,))
+            training_thread = threading.Thread(
+                target=_init_training, args=(args, self._model_manager)
+            )
             training_thread.daemon = True
             training_thread.start()
             return get_status(
