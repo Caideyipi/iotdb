@@ -3325,7 +3325,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
         return future;
       }
       // convert model info list and buildTsBlock
-      ShowModelsTask.buildTsBlock(showModelResp.getModelInfoList(), future);
+      ShowModelsTask.buildTsBlock(showModelResp, future);
     } catch (final ClientManagerException | TException e) {
       future.setException(e);
     }
