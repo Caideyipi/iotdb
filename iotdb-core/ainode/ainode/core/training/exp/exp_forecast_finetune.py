@@ -10,6 +10,7 @@ from torch import optim
 from transformers import get_scheduler
 
 from ainode.core.log import Logger
+from ainode.core.model.model_info import BuiltInModelType
 from ainode.core.training.exp.exp_basic import ExpBasic
 from ainode.core.training.training_parameters import TrainingParameters
 
@@ -168,15 +169,21 @@ class ExpForecastFinetune(ExpBasic):
                 batch_y = batch_y.float().to(self.gpu_id)
 
                 B = batch_x.shape[0]
-
-                outputs = self.model.module.generate(
-                    batch_x,
-                    max_new_tokens=self.args.vali_pred_len,
-                    num_samples=self.args.vali_n_samples,
-                    revin=self.args.revin,
-                )
-                outputs = outputs.reshape(self.args.vali_n_samples, B, -1)
-                pred = outputs.mean(dim=0)
+                if BuiltInModelType.TIMER_XL == self.args.model_type:
+                    pred = self.model.module.generate(
+                        batch_x,
+                        max_new_tokens=self.args.vali_pred_len,
+                        revin=self.args.revin
+                    )
+                elif BuiltInModelType.SUNDIAL == self.args.model_type:
+                    outputs = self.model.module.generate(
+                        batch_x,
+                        max_new_tokens=self.args.vali_pred_len,
+                        num_samples=self.args.vali_n_samples,
+                        revin=self.args.revin,
+                    )
+                    outputs = outputs.reshape(self.args.vali_n_samples, B, -1)
+                    pred = outputs.mean(dim=0)
                 if self.args.vali_pred_len < self.args.output_token_len:
                     batch_y = batch_y[
                         :,

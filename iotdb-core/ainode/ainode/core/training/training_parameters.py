@@ -13,17 +13,18 @@ class TrainingParameters:
     def __init__(self):
         # Model config
         self.model_type = (
-            BuiltInModelType.SUNDIAL
-        )  # The model name to be finetune, options: [sundial], TODO: finetune TimerXL
+            BuiltInModelType.TIMER_XL
+        )  # The model name to be finetune, options: [sundial, timer_xl]
         self.model_id = "test"  # The model id of the finetune result
         self.ckpt_path = ""  # Checkpoint path, used for finetune
 
-        self.seq_len = 2880  # The number of time series data points for each input training data window
+        self.seq_len = 2048  # The number of time series data points for each input training data window
         self.input_token_len = (
-            16  # The number of time series data points for each token
+            96  # The number of time series data points for each token, to finetune Timer-XL, this should be set only to 96
+            # 16 # To finetune Timer-Sundial, this should be set only to 16
         )
         self.output_token_len = (
-            720  # The number of time series data points for each output
+            96  # The number of time series data points for each output, to finetune Timer-XL, this should be set only to 96
         )
 
         # Dataset and Dataloader
@@ -46,8 +47,7 @@ class TrainingParameters:
 
         # Hyper parameters
         self.adaptation = (
-            "linear"  # Currently, using linear probing by default
-            # "full"
+            "full"  # Currently, using full finetune by default
             # "linear"
             # "lora" TODO: support LoRA
         )
@@ -60,7 +60,7 @@ class TrainingParameters:
         self.num_training_steps = 100000  # help='num training steps'
         self.iter_per_epoch = 5000  # help='iter per epoch'
         self.revin = True  # help='test with revin'
-        self.learning_rate = 0.00001  # help='optimizer learning rate'
+        self.learning_rate = 0.000001  # help='optimizer learning rate'
         self.weight_decay = 0.1  # help='weight decay'
         self.only_preserve_best = (
             True  # Only preserve the best ckpt during training, by default is True
@@ -72,7 +72,7 @@ class TrainingParameters:
         self.vali_pred_len = (
             self.output_token_len
         )  # we keep the vali pred len same as output len
-        self.vali_n_samples = 10
+        self.vali_n_samples = 10 # num of generated samples for validation, Timer-Sundial only
 
     def init_from_map(self, config_map: dict):
         if config_map is None:

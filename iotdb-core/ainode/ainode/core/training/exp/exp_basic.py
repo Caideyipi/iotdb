@@ -70,11 +70,13 @@ class ExpBasic(object):
         # TODO: The ModelManager should take over this process
         if BuiltInModelType.TIMER_XL == self.args.model_type:
             config = self.config_dict[self.args.model_type].TimerConfig(
-                input_token_len=self.args.input_token_len
+                input_token_len=self.args.input_token_len,
+                output_token_lens=[self.args.output_token_len],
             )
             model = self.model_dict[self.args.model_type].TimerForPrediction(config)
         elif BuiltInModelType.SUNDIAL == self.args.model_type:
             config = self.config_dict[self.args.model_type].SundialConfig(
+                input_token_len=self.args.input_token_len,
                 output_token_lens=[self.args.output_token_len],
             )
             model = self.model_dict[self.args.model_type].SundialForPrediction(config)
@@ -94,7 +96,6 @@ class ExpBasic(object):
         return config, model
 
     def _load_weights_with_adaptation(self):
-        # TODO: Currently, we only support Sundial model for finetuning
         # * HF from_pretrained loading ignoring mismatched sizes
         # * - Only loading matched weights
         # * - Unmatched weights remain pre-defined
@@ -119,14 +120,21 @@ class ExpBasic(object):
             pass
         elif self.args.adaptation == "linear":
             # * Linear Probing: freezing everything except linear head
-            for name, param in self.model.module.named_parameters():
-                if "flow_loss" in name:
-                    # param.data.zero_() # * Zero Initialization for linear probing params
-                    param.requires_grad = True
-                else:
-                    param.requires_grad = False
-                if self.rank == 0:
-                    pass
+            if BuiltInModelType.TIMER_XL == self.args.model_type:
+                for name, param in self.model.module.named_parameters():
+                    if "lm_head" in name:
+                        param.requires_grad = True
+                    else:
+                        param.requires_grad = False
+            elif BuiltInModelType.SUNDIAL == self.args.model_type:
+                for name, param in self.model.module.named_parameters():
+                    if "flow_loss" in name:
+                        # param.data.zero_() # * Zero Initialization for linear probing params
+                        param.requires_grad = True
+                    else:
+                        param.requires_grad = False
+                    if self.rank == 0:
+                        pass
                     # logger.info(f"{name}: {param.requires_grad}")
         else:
             raise NotImplementedError(
