@@ -40,7 +40,8 @@ class ExpBasic(object):
         self.rank = rank
         self.gpu_id = args.gpu_ids[rank]
         self.args = args
-        self.model = self._build_model()
+        self.config, self.model = self._build_empty_model()
+        self._load_weights_with_adaptation()
         (
             self.training_dataset,
             self.training_dataloader,
@@ -54,9 +55,13 @@ class ExpBasic(object):
         torch.manual_seed(fix_seed)
         np.random.seed(fix_seed)
 
-    def _build_model(self):
+    def _build_empty_model(self):
         """
-        Build the model based on the specified model type in the arguments.
+        Build the model based on the specified model type in the arguments, with the model weights remain uninitialized.
+
+        Returns:
+            config: The configuration object for the model.
+            model: The model object initialized with the specified configuration.
 
         Exceptions:
             ValueError: If the specified model type is not supported.
@@ -86,7 +91,49 @@ class ExpBasic(object):
             device_ids=[self.gpu_id],
             find_unused_parameters=False,
         )
-        return model
+        return config, model
+
+    def _load_weights_with_adaptation(self):
+        # TODO: Currently, we only support Sundial model for finetuning
+        # * HF from_pretrained loading ignoring mismatched sizes
+        # * - Only loading matched weights
+        # * - Unmatched weights remain pre-defined
+        # * - DDP is employed by default
+        self.model.module = self.model.module.from_pretrained(
+            self.args.ckpt_path,
+            config=self.config,
+            ignore_mismatched_sizes=True,
+            torch_dtype=torch.float32,
+        ).to(self.gpu_id)
+        logger.info(
+            "[Training][GPU-{}] Finetune model type: {} model id: {} with adaptation: {}".format(
+                self.gpu_id,
+                self.args.model_type.value,
+                self.args.model_id,
+                self.args.adaptation,
+            )
+        )
+        # Freeze model weights through specific adaptation method
+        if self.args.adaptation == "full":
+            # do nothing when full fine-tune
+            pass
+        elif self.args.adaptation == "linear":
+            # * Linear Probing: freezing everything except linear head
+            for name, param in self.model.module.named_parameters():
+                if "flow_loss" in name:
+                    # param.data.zero_() # * Zero Initialization for linear probing params
+                    param.requires_grad = True
+                else:
+                    param.requires_grad = False
+                if self.rank == 0:
+                    pass
+                    # logger.info(f"{name}: {param.requires_grad}")
+        else:
+            raise NotImplementedError(
+                "[Training][GPU-{}]Adaptation method {} is not implemented.".format(
+                    self.gpu_id, self.args.adaptation
+                )
+            )
 
     def _init_data_provider(self):
         """
@@ -99,7 +146,7 @@ class ExpBasic(object):
             input_token_len=self.args.input_token_len,
             output_token_len=self.args.output_token_len,
             data_schema_list=self.args.data_schema_list,
-            use_rate=0.75,
+            use_rate=0.8,
             offset_rate=0.0,
         )
         training_data_sampler = DistributedSampler(training_dataset, shuffle=True)
@@ -115,8 +162,8 @@ class ExpBasic(object):
             input_token_len=self.args.input_token_len,
             output_token_len=self.args.output_token_len,
             data_schema_list=self.args.data_schema_list,
-            use_rate=0.25,
-            offset_rate=0.75,
+            use_rate=0.2,
+            offset_rate=0.8,
         )
         vali_data_sampler = DistributedSampler(vali_dataset, shuffle=False)
         vali_dataloader = DataLoader(

@@ -40,18 +40,21 @@ class TrainingParameters:
 
         # GPU
         self.ddp = True  # Enabling DistributedDataParallel (DDP) by default
-        self.devices = ""  # The device ids of GPU for training, set None or "" to occupy all available devices by default
+        self.devices = ""  # The device ids of GPU for training, set None or "" to occupy all available devices by default TODO: we have problems when parsing this
         self.gpu_ids = []  # The list of GPU ids used for training, parsed from devices
         self.world_size = 0  # The number of GPUs used for training
 
         # Hyper parameters
         self.adaptation = (
-            "linear"  # Currently, using linear probing by default, TODO: LoRA
+            "linear"  # Currently, using linear probing by default
+            # "full"
+            # "linear"
+            # "lora" TODO: support LoRA
         )
         self.seed = 2021  # help='seed'
 
         # training
-        self.train_epochs = 5  # help='train epochs'
+        self.train_epochs = 10  # help='train epochs'
         self.training_batch_size = 64  # help='batch size of train input data'
         self.num_warmup_steps = 10000  # help='num warmup steps'
         self.num_training_steps = 100000  # help='num training steps'

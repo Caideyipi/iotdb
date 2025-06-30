@@ -32,51 +32,13 @@ class ExpForecastFinetune(ExpBasic):
 
     def finetune(self, log_chunk=100):
         time_start = time.time()
-        # Load model weights through specific adaptation method
-        if self.args.adaptation == "linear":
-            # TODO: The ModelManager should take over this process
-            # * linear probing adaptation
-            # if 'sundial' in self.args.model_type:
-            # * new config init
-            config = self.config_dict[self.args.model_type].SundialConfig(
-                output_token_lens=[self.args.output_token_len],
-            )
-
-            # * HF from_pretrained loading ignoring mismatched sizes
-            # * - Only loading matched weights
-            # * - Unmatched weights remain pre-defined
-            self.model.module = self.model.module.from_pretrained(
-                self.args.ckpt_path,
-                config=config,
-                # device_map=self.device,
-                ignore_mismatched_sizes=True,
-                torch_dtype=torch.float32,
-            ).to(self.gpu_id)
-
-            # * Linear Probing: freezing everything except linear head
-            for name, param in self.model.module.named_parameters():
-                if "flow_loss" in name:
-                    # param.data.zero_() # * Zero Initialization for linear probing params
-                    param.requires_grad = True
-                else:
-                    param.requires_grad = False
-                if self.rank == 0:
-                    pass
-                    # logger.info(f"{name}: {param.requires_grad}")
-            model_optim = self._select_optimizer()
-            scheduler = get_scheduler(
-                "cosine",
-                optimizer=model_optim,
-                num_warmup_steps=self.args.num_warmup_steps,
-                num_training_steps=self.args.num_training_steps,
-            )
-        else:
-            raise NotImplementedError(
-                "[Training][GPU-{}]Adaptation method {} is not implemented.".format(
-                    self.gpu_id, self.args.adaptation
-                )
-            )
-
+        model_optim = self._select_optimizer()
+        scheduler = get_scheduler(
+            "cosine",
+            optimizer=model_optim,
+            num_warmup_steps=self.args.num_warmup_steps,
+            num_training_steps=self.args.num_training_steps,
+        )
         for epoch in range(0, self.args.train_epochs):
             if self.args.ddp:
                 self.training_dataloader.sampler.set_epoch(epoch)
