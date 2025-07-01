@@ -2212,12 +2212,32 @@ public class IoTDBDescriptor {
       if (prevDeleteWalFilesPeriodInMs != conf.getDeleteWalFilesPeriodInMs()) {
         WALManager.getInstance().rebootWALDeleteThread();
       }
-      // update client white list
+      // update client white list check switch
       conf.setEnableWhiteList(
           Boolean.parseBoolean(
               properties.getProperty(
                   "enable_white_list",
                   ConfigurationFileUtils.getConfigurationDefaultValue("enable_white_list"))));
+
+      // update client black list check switch
+      conf.setEnableBlackList(
+          Boolean.parseBoolean(
+              properties.getProperty(
+                  "enable_black_list",
+                  ConfigurationFileUtils.getConfigurationDefaultValue("enable_black_list"))));
+
+      // update white ip list
+      conf.setWhiteIPList(
+          Optional.ofNullable(properties.getProperty("white_ip_list", conf.getRawWhiteIPList()))
+              .map(value -> value.split(","))
+              .orElse(new String[0]));
+
+      // update black ip list
+      conf.setBlackIPList(
+          Optional.ofNullable(properties.getProperty("black_ip_list", conf.getRawBlackIPList()))
+              .map(value -> value.split(","))
+              .orElse(new String[0]));
+
       // update compaction config
       loadCompactionHotModifiedProps(properties);
 
@@ -2921,6 +2941,26 @@ public class IoTDBDescriptor {
                         "enable_white_list", String.valueOf(conf.isEnableWhiteList())))
                 .map(String::trim)
                 .orElse(String.valueOf(conf.isEnableWhiteList()))));
+
+    conf.setEnableBlackList(
+        Boolean.parseBoolean(
+            Optional.ofNullable(
+                    properties.getProperty(
+                        "enable_black_list", String.valueOf(conf.isEnableBlackList())))
+                .map(String::trim)
+                .orElse(String.valueOf(conf.isEnableBlackList()))));
+
+    // update white ip list
+    conf.setWhiteIPList(
+        Optional.ofNullable(properties.getProperty("white_ip_list", conf.getRawWhiteIPList()))
+            .map(value -> value.split(","))
+            .orElse(new String[0]));
+
+    // update black ip list
+    conf.setBlackIPList(
+        Optional.ofNullable(properties.getProperty("black_ip_list", conf.getRawBlackIPList()))
+            .map(value -> value.split(","))
+            .orElse(new String[0]));
 
     conf.setEnableAuditLog(
         Boolean.parseBoolean(

@@ -1050,8 +1050,14 @@ public class IoTDBConfig {
   /** whether the local write api records audit logs * */
   private boolean enableAuditLogForNativeInsertApi = true;
 
+  // enable or disable the white list function
   private boolean enableWhiteList = false;
-
+  // enable or disable the black list function
+  private boolean enableBlackList = false;
+  // white ip list
+  private String whiteIPList = "";
+  // black ip list
+  private String blackIPList = "";
   // customizedProperties, this should be empty by default.
   private Properties customizedProperties = new Properties();
 
@@ -3752,6 +3758,38 @@ public class IoTDBConfig {
 
   public void setEnableWhiteList(boolean enableWhiteList) {
     this.enableWhiteList = enableWhiteList;
+  }
+
+  public boolean isEnableBlackList() {
+    return enableBlackList;
+  }
+
+  public void setEnableBlackList(boolean enableBlackList) {
+    this.enableBlackList = enableBlackList;
+  }
+
+  public String[] getWhiteIPList() {
+    return whiteIPList.split(",");
+  }
+
+  public String getRawWhiteIPList() {
+    return whiteIPList;
+  }
+
+  void setWhiteIPList(String[] whiteIPList) {
+    this.whiteIPList = String.join(",", whiteIPList);
+  }
+
+  public String[] getBlackIPList() {
+    return blackIPList.split(",");
+  }
+
+  public String getRawBlackIPList() {
+    return blackIPList;
+  }
+
+  void setBlackIPList(String[] blackIPList) {
+    this.blackIPList = String.join(",", blackIPList);
   }
 
   public void setModeMapSizeThreshold(int modeMapSizeThreshold) {

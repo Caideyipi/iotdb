@@ -17,135 +17,135 @@
  */
 package com.timecho.iotdb.rpc;
 
-import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
+import org.apache.iotdb.db.conf.IoTDBConfig;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 
-import com.giladam.listmatch.ListMatcher;
 import com.giladam.listmatch.PatternList;
-import com.timecho.iotdb.conf.ConfigFileLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class IPFilter {
-  public static final String WHITE_LIST_PATTERN =
+  public static final String IP_LIST_PATTERN =
       "(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(\\*|25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)";
 
   private static Logger logger = LoggerFactory.getLogger(IPFilter.class);
-  static IPFilter INSTANCE = new IPFilter();
+  private static IoTDBConfig conf = IoTDBDescriptor.getInstance().getConfig();
 
-  public static IPFilter getInstance() {
-    return INSTANCE;
-  }
-
-  ScheduledExecutorService service;
-  Path whiteListFile;
-
-  Set<String> allowListPatterns;
+  static Set<String> allowListPatterns;
 
   private IPFilter() {
-    whiteListFile = ConfigFileLoader.getPropsUrl("white.list");
-    init();
-    // 每1分钟，同步一次白名单。
-    service = Executors.newSingleThreadScheduledExecutor();
-    ScheduledExecutorUtil.safelyScheduleAtFixedRate(
-        service, this::checkAndUpdateWhiteList, 1, 60, TimeUnit.SECONDS);
+    throw new UnsupportedOperationException("Cannot instantiate this class");
   }
 
-  PatternList pattern;
-  long lastModification = 0;
+  static PatternList whitePattern;
+  static PatternList blackPattern;
 
-  ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-
-  void init() {
-    if (whiteListFile != null) {
-      try {
-        File file = whiteListFile.toFile();
-        if (file.exists()) {
-          lastModification = Math.max(lastModification, file.lastModified());
-          allowListPatterns =
-              ListMatcher.readPatternsFromFile(file).stream()
-                  .filter(
-                      ip -> {
-                        if (Pattern.matches(WHITE_LIST_PATTERN, ip)) {
-                          return true;
-                        }
-                        logger.error("misconfiguration in white list:{}", ip);
-                        return false;
-                      })
-                  .collect(Collectors.toSet());
-          pattern = new PatternList(allowListPatterns, ".", false);
-        } else {
-          logger.info("Whitelist not found.");
-          pattern = null;
-        }
-      } catch (IOException e) {
-        logger.error("load whitelist failed.", e);
-      }
-    } else {
-      logger.info("Whitelist not found.");
-    }
-  }
+  static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
   public static boolean isInWhiteList(String ip) {
-    if (INSTANCE.pattern == null) {
+    if (whitePattern == null) {
       return false;
     }
-    INSTANCE.lock.readLock().lock();
+    lock.readLock().lock();
     try {
-      return INSTANCE.pattern.matches(ip);
+      return whitePattern.matches(ip);
     } finally {
-      INSTANCE.lock.readLock().unlock();
+      lock.readLock().unlock();
     }
   }
 
-  public void checkAndUpdateWhiteList() {
-    if (whiteListFile == null) {
-      whiteListFile = ConfigFileLoader.getPropsUrl("white.list");
+  public static boolean isInBlackList(String ip) {
+    if (blackPattern == null) {
+      return false;
     }
-    if (whiteListFile != null) {
-      // 检查文件是否被修改。如果存在被修改的，就同步。否则不同步。
-      try {
-        updateWhiteList();
-      } catch (Exception e) {
-        logger.error("error when check whether whitelist is update: ", e);
+    lock.readLock().lock();
+    try {
+      return blackPattern.matches(ip);
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
+  public static boolean isDeniedConnect(String ip) {
+    loadIPCheckList();
+    if (conf.isEnableBlackList() && !conf.isEnableWhiteList()) {
+      return isInBlackList(ip);
+    } else if (conf.isEnableWhiteList() && !conf.isEnableBlackList()) {
+      return !isInWhiteList(ip);
+    } else {
+      if (isInBlackList(ip)) {
+        return true;
       }
+      return !isInWhiteList(ip);
     }
   }
 
-  public void updateWhiteList() {
-    logger.info("whitelist has changed, will reload...");
-    lock.writeLock().lock();
-    try {
-      init();
-    } finally {
-      lock.writeLock().unlock();
-    }
-  }
-
-  public Set<String> getAllowListPatterns() {
+  public static Set<String> getAllowListPatterns() {
     return allowListPatterns;
   }
 
-  public void setAllowListPatterns(Set<String> allowListPatterns) {
-    try (FileWriter fileWriter = new FileWriter(whiteListFile.toFile())) {
-      for (String allowListPattern : allowListPatterns) {
-        fileWriter.write(allowListPattern);
-        fileWriter.write(System.getProperty("line.separator"));
-      }
-    } catch (IOException e) {
-      logger.error("upadte white.list error,", e);
+  private static void loadIPCheckList() {
+    Set<String> whiteIPList =
+        new HashSet<>(
+            Arrays.asList(
+                Arrays.stream(conf.getRawWhiteIPList().split(","))
+                    .map(String::trim)
+                    .toArray(String[]::new)));
+    Set<String> blackIPList =
+        new HashSet<>(
+            Arrays.asList(
+                Arrays.stream(conf.getRawBlackIPList().split(","))
+                    .map(String::trim)
+                    .toArray(String[]::new)));
+    if (conf.isEnableWhiteList()) {
+      checkValidityOfIP(whiteIPList, true);
     }
-    checkAndUpdateWhiteList();
+    if (conf.isEnableBlackList()) {
+      checkValidityOfIP(blackIPList, false);
+    }
+    allowListPatterns = whiteIPList; // for compatibility
+    if (whiteIPList.isEmpty()) {
+      whitePattern = null;
+      if (blackIPList.isEmpty()) {
+        blackPattern = null;
+      } else {
+        blackPattern = new PatternList(blackIPList, ".", false);
+      }
+    } else if (blackIPList.isEmpty()) {
+      blackPattern = null;
+      whitePattern = new PatternList(whiteIPList, ".", false);
+    } else {
+      whitePattern = new PatternList(whiteIPList, ".", false);
+      blackPattern = new PatternList(blackIPList, ".", false);
+    }
+  }
+
+  private static void checkValidityOfIP(Set<String> ipList, Boolean isWhiteList) {
+    Iterator<String> iterator = ipList.iterator();
+    Set<String> invalidIps = new HashSet<>();
+    String whiteOrBlack = "white";
+    while (iterator.hasNext()) {
+      String ip = iterator.next();
+      if (!Pattern.matches(IP_LIST_PATTERN, ip)) {
+        invalidIps.add(ip);
+        iterator.remove();
+      }
+    }
+    if (!invalidIps.isEmpty()) {
+      if (!isWhiteList) {
+        whiteOrBlack = "black";
+      }
+      logger.error(
+          "The IP format configuration for {}list  is incorrect. The detailed information of the incorrect IPs is: {}",
+          whiteOrBlack,
+          invalidIps.toString());
+    }
   }
 }

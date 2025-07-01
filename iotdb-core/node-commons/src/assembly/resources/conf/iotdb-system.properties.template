@@ -2153,12 +2153,29 @@ audit_log_operation=DML,DDL,QUERY
 enable_audit_log_for_native_insert_api=true
 
 ####################
-### White List Configuration
+### White and Black ip list Configuration
 ####################
 
-# whether enable white list
+# whether enable white ip list
 # effectiveMode: hot_reload
+# warning: When the whitelist function is enabled, if 127.0.0.1 is not added to the whitelist, the local machine cannot log in.
 enable_white_list=false
+
+# whether enable white ip list
+# effectiveMode: hot_reload
+enable_black_list=false
+
+#  white ip list  (separated by commas and malformed IPs will be ignored and logged)
+# effectiveMode: hot_reload
+# example: white_ip_list=127.0.0.1,192.168.32.21
+# warning: When the whitelist function is enabled, if 127.0.0.1 is not added to the whitelist, the local machine cannot log in.
+white_ip_list=
+
+#  black ip list  (separated by commas and malformed IPs will be ignored and logged)
+# effectiveMode: hot_reload
+# example: white_ip_list=127.0.0.1,192.168.32.21
+black_ip_list=
+
 
 
 ####################

@@ -26,61 +26,16 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
 import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
-import org.apache.iotdb.db.protocol.session.SessionManager;
 import org.apache.iotdb.db.protocol.thrift.impl.ClientRPCServiceImpl;
 import org.apache.iotdb.db.utils.DateTimeUtils;
-import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
-import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
-import com.timecho.iotdb.rpc.IPFilter;
 import org.apache.thrift.TException;
-
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static com.timecho.iotdb.rpc.IPFilter.WHITE_LIST_PATTERN;
 
 public class ClientRPCServiceImplNew extends ClientRPCServiceImpl {
 
   public static final String ROOT_USER = "root";
-
-  @Override
-  public WhiteListInfoResp getWhiteIpSet() throws TException {
-    WhiteListInfoResp whiteListInfoResp =
-        new WhiteListInfoResp(RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS));
-    whiteListInfoResp.setWhiteList(IPFilter.getInstance().getAllowListPatterns());
-    return whiteListInfoResp;
-  }
-
-  @Override
-  public TSStatus updateWhiteList(Set<String> ipSet) throws TException {
-    if (ipSet == null) {
-      TSStatus status = new TSStatus(TSStatusCode.ILLEGAL_PARAMETER.getStatusCode());
-      status.setMessage("illegal parameter");
-      return status;
-    }
-    List<String> illegalIpList =
-        ipSet.stream()
-            .filter(ip -> !Pattern.matches(WHITE_LIST_PATTERN, ip))
-            .collect(Collectors.toList());
-    if (!illegalIpList.isEmpty()) {
-      TSStatus status = new TSStatus(TSStatusCode.ILLEGAL_PARAMETER.getStatusCode());
-      status.setMessage(String.format("The following ip addresses are invalid:%s", illegalIpList));
-      return status;
-    }
-    if (!ROOT_USER.equals(SessionManager.getInstance().getCurrSession().getUsername())) {
-      TSStatus status = new TSStatus(TSStatusCode.NO_PERMISSION_ERROR.getStatusCode());
-      status.setMessage(
-          "current user have no permission,only the root user can perform this operation");
-      return status;
-    }
-    IPFilter.getInstance().setAllowListPatterns(ipSet);
-    return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
-  }
 
   @Override
   public LicenseInfoResp getLicenseInfo() throws TException {

@@ -596,7 +596,7 @@ public class IoTDBConnection implements Connection {
             e);
       }
       throw new SQLException(
-          "Check whether the server exists or is alive, or whether the server IP address is correct, or whether the server IP address is in the whitelist.");
+          "Check whether the server exists or is alive, or whether the server IP address is correct, or whether the client IP address is in the whitelist or not in the blacklist.");
     } catch (StatementExecutionException e) {
       // failed to connect, disconnect from the server
       transport.close();

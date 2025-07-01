@@ -23,16 +23,16 @@ import org.junit.Test;
 
 import java.util.regex.Pattern;
 
-import static com.timecho.iotdb.rpc.IPFilter.WHITE_LIST_PATTERN;
+import static com.timecho.iotdb.rpc.IPFilter.IP_LIST_PATTERN;
 
 public class IPPatternTest {
 
   @Test
   public void testIpPattern() {
-    Assert.assertTrue(Pattern.matches(WHITE_LIST_PATTERN, "192.168.0.1"));
-    Assert.assertTrue(Pattern.matches(WHITE_LIST_PATTERN, "192.*.0.1"));
-    Assert.assertTrue(Pattern.matches(WHITE_LIST_PATTERN, "*.*.*.*"));
-    Assert.assertTrue(Pattern.matches(WHITE_LIST_PATTERN, "127.0.0.1"));
-    Assert.assertTrue(Pattern.matches(WHITE_LIST_PATTERN, "0.1.10.1"));
+    Assert.assertTrue(Pattern.matches(IP_LIST_PATTERN, "192.168.0.1"));
+    Assert.assertTrue(Pattern.matches(IP_LIST_PATTERN, "192.*.0.1"));
+    Assert.assertTrue(Pattern.matches(IP_LIST_PATTERN, "*.*.*.*"));
+    Assert.assertTrue(Pattern.matches(IP_LIST_PATTERN, "127.0.0.1"));
+    Assert.assertTrue(Pattern.matches(IP_LIST_PATTERN, "0.1.10.1"));
   }
 }
