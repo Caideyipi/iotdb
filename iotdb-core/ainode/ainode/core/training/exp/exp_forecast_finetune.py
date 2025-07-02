@@ -173,7 +173,7 @@ class ExpForecastFinetune(ExpBasic):
                     pred = self.model.module.generate(
                         batch_x,
                         max_new_tokens=self.args.vali_pred_len,
-                        revin=self.args.revin
+                        revin=self.args.revin,
                     )
                 elif BuiltInModelType.SUNDIAL == self.args.model_type:
                     outputs = self.model.module.generate(
