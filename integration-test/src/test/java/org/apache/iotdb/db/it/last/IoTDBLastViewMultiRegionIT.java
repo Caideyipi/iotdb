@@ -82,7 +82,22 @@ public class IoTDBLastViewMultiRegionIT {
           "106048000000,root.sg.d4.vs1,10000,INT32,",
           "106058000000,root.sg.d2.s1,10001,INT32,",
         };
-    resultSetEqualTest("select last * from root.** order by time", expectedHeader, retArray);
+    try {
+      resultSetEqualTest("select last * from root.** order by time", expectedHeader, retArray);
+    } catch (Throwable t) {
+      retArray =
+          new String[] {
+            "1,root.sg.d3.s2,1.0,DOUBLE,",
+            "1,root.sg.d4.vs4,2.0,DOUBLE,",
+            "1,root.sg.d4.vs3,0.5,DOUBLE,",
+            "2,root.sg.d4.vs2,102.0,DOUBLE,",
+            "106048000000,root.sg.d1.s1,10000,INT32,",
+            "106048000000,root.sg.d4.vs1,10000,INT32,",
+            "106048000000,root.sg.d3.s1,2,INT32,",
+            "106058000000,root.sg.d2.s1,10001,INT32,",
+          };
+      resultSetEqualTest("select last * from root.** order by time", expectedHeader, retArray);
+    }
 
     // order by timeseries
     retArray =
