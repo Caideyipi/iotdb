@@ -74,6 +74,25 @@ unit-test:
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
 
+builder-coverage-check:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
+  script:
+    - 'chmod +x ci_builder_check.sh'
+    - './ci_builder_check.sh'
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  needs: []  # 不依赖其他job，可以并行运行
+
 integration-test-1c1d:
   stage: test
   tags:

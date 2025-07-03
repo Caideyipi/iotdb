@@ -20,7 +20,6 @@ package com.timecho.iotdb.session.pool;
 
 import org.apache.iotdb.common.rpc.thrift.TShowConfigurationResp;
 import org.apache.iotdb.common.rpc.thrift.TShowConfigurationTemplateResp;
-import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.isession.util.Version;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
@@ -190,26 +189,7 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
   }
 
   public SessionPool(Builder builder) {
-    super(
-        new org.apache.iotdb.session.pool.SessionPool.Builder()
-            .maxSize(builder.maxSize)
-            .user(builder.user)
-            .password(builder.password)
-            .fetchSize(builder.fetchSize)
-            .waitToGetSessionTimeoutInMs(builder.waitToGetSessionTimeoutInMs)
-            .enableCompression(builder.enableCompression)
-            .zoneId(builder.zoneId)
-            .enableRedirection(builder.enableRedirection)
-            .connectionTimeoutInMs(builder.connectionTimeoutInMs)
-            .version(builder.version)
-            .thriftDefaultBufferSize(builder.thriftDefaultBufferSize)
-            .thriftMaxFrameSize(builder.thriftMaxFrameSize)
-            .nodeUrls(builder.nodeUrls)
-            .host(builder.host)
-            .port(builder.port)
-            .useSSL(builder.useSSL)
-            .trustStore(builder.trustStore)
-            .trustStorePwd(builder.trustStorePwd));
+    super(builder);
   }
 
   @Override
@@ -395,10 +375,16 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
               .thriftDefaultBufferSize(thriftDefaultBufferSize)
               .thriftMaxFrameSize(thriftMaxFrameSize)
               .enableRedirection(enableRedirection)
+              .enableRecordsAutoConvertTablet(enableRecordsAutoConvertTablet)
               .version(version)
               .useSSL(useSSL)
               .trustStore(trustStore)
               .trustStorePwd(trustStorePwd)
+              .maxRetryCount(maxRetryCount)
+              .retryIntervalInMs(retryIntervalInMs)
+              .sqlDialect(sqlDialect)
+              .database(database)
+              .timeOut(queryTimeoutInMs)
               .build();
     } else {
       // Construct redirect-able Session
@@ -412,134 +398,173 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
               .thriftDefaultBufferSize(thriftDefaultBufferSize)
               .thriftMaxFrameSize(thriftMaxFrameSize)
               .enableRedirection(enableRedirection)
+              .enableRecordsAutoConvertTablet(enableRecordsAutoConvertTablet)
               .version(version)
               .useSSL(useSSL)
               .trustStore(trustStore)
               .trustStorePwd(trustStorePwd)
+              .maxRetryCount(maxRetryCount)
+              .retryIntervalInMs(retryIntervalInMs)
+              .sqlDialect(sqlDialect)
+              .database(database)
+              .timeOut(queryTimeoutInMs)
               .build();
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
     return session;
   }
 
-  public static class Builder {
+  public static class Builder extends org.apache.iotdb.session.pool.SessionPool.Builder {
 
-    private String host = SessionConfig.DEFAULT_HOST;
-    private int port = SessionConfig.DEFAULT_PORT;
-    private List<String> nodeUrls = null;
-    private int maxSize = SessionConfig.DEFAULT_SESSION_POOL_MAX_SIZE;
-    private String user = SessionConfig.DEFAULT_USER;
-    private String password = SessionConfig.DEFAULT_PASSWORD;
-    private int fetchSize = SessionConfig.DEFAULT_FETCH_SIZE;
-    private long waitToGetSessionTimeoutInMs = 60_000;
-    private int thriftDefaultBufferSize = SessionConfig.DEFAULT_INITIAL_BUFFER_CAPACITY;
-    private int thriftMaxFrameSize = SessionConfig.DEFAULT_MAX_FRAME_SIZE;
-    private boolean enableCompression = false;
-    private ZoneId zoneId = null;
-    private boolean enableRedirection = SessionConfig.DEFAULT_REDIRECTION_MODE;
-    private int connectionTimeoutInMs = SessionConfig.DEFAULT_CONNECTION_TIMEOUT_MS;
-    private Version version = SessionConfig.DEFAULT_VERSION;
-    private long timeOut = SessionConfig.DEFAULT_QUERY_TIME_OUT;
-
-    private boolean useSSL = false;
-    private String trustStore;
-    private String trustStorePwd;
-
+    @Override
     public Builder useSSL(boolean useSSL) {
-      this.useSSL = useSSL;
+      super.useSSL(useSSL);
       return this;
     }
 
+    @Override
     public Builder trustStore(String keyStore) {
-      this.trustStore = keyStore;
+      super.trustStore(keyStore);
       return this;
     }
 
+    @Override
     public Builder trustStorePwd(String keyStorePwd) {
-      this.trustStorePwd = keyStorePwd;
+      super.trustStorePwd(keyStorePwd);
       return this;
     }
 
+    @Override
     public Builder host(String host) {
-      this.host = host;
+      super.host(host);
       return this;
     }
 
+    @Override
     public Builder port(int port) {
-      this.port = port;
+      super.port(port);
       return this;
     }
 
+    @Override
     public Builder nodeUrls(List<String> nodeUrls) {
-      this.nodeUrls = nodeUrls;
+      super.nodeUrls(nodeUrls);
       return this;
     }
 
+    @Override
     public Builder maxSize(int maxSize) {
-      this.maxSize = maxSize;
+      super.maxSize(maxSize);
       return this;
     }
 
+    @Override
     public Builder user(String user) {
-      this.user = user;
+      super.user(user);
       return this;
     }
 
+    @Override
     public Builder password(String password) {
-      this.password = password;
+      super.password(password);
       return this;
     }
 
+    @Override
     public Builder fetchSize(int fetchSize) {
-      this.fetchSize = fetchSize;
+      super.fetchSize(fetchSize);
       return this;
     }
 
+    @Override
     public Builder zoneId(ZoneId zoneId) {
-      this.zoneId = zoneId;
+      super.zoneId(zoneId);
       return this;
     }
 
+    @Override
     public Builder waitToGetSessionTimeoutInMs(long waitToGetSessionTimeoutInMs) {
-      this.waitToGetSessionTimeoutInMs = waitToGetSessionTimeoutInMs;
+      super.waitToGetSessionTimeoutInMs(waitToGetSessionTimeoutInMs);
       return this;
     }
 
+    @Override
     public Builder thriftDefaultBufferSize(int thriftDefaultBufferSize) {
-      this.thriftDefaultBufferSize = thriftDefaultBufferSize;
+      super.thriftDefaultBufferSize(thriftDefaultBufferSize);
       return this;
     }
 
+    @Override
     public Builder thriftMaxFrameSize(int thriftMaxFrameSize) {
-      this.thriftMaxFrameSize = thriftMaxFrameSize;
+      super.thriftMaxFrameSize(thriftMaxFrameSize);
       return this;
     }
 
+    @Override
     public Builder enableCompression(boolean enableCompression) {
-      this.enableCompression = enableCompression;
+      super.enableCompression(enableCompression);
       return this;
     }
 
+    @Override
     public Builder enableRedirection(boolean enableRedirection) {
-      this.enableRedirection = enableRedirection;
+      super.enableRedirection(enableRedirection);
       return this;
     }
 
+    @Override
+    public Builder enableRecordsAutoConvertTablet(boolean enableRecordsAutoConvertTablet) {
+      super.enableRecordsAutoConvertTablet(enableRecordsAutoConvertTablet);
+      return this;
+    }
+
+    @Override
     public Builder connectionTimeoutInMs(int connectionTimeoutInMs) {
-      this.connectionTimeoutInMs = connectionTimeoutInMs;
+      super.connectionTimeoutInMs(connectionTimeoutInMs);
       return this;
     }
 
+    @Override
     public Builder version(Version version) {
-      this.version = version;
+      super.version(version);
       return this;
     }
 
-    public Builder timeOut(long timeOut) {
-      this.timeOut = timeOut;
+    @Override
+    public Builder enableAutoFetch(boolean enableAutoFetch) {
+      super.enableAutoFetch(enableAutoFetch);
       return this;
     }
 
+    @Override
+    public Builder maxRetryCount(int maxRetryCount) {
+      super.maxRetryCount(maxRetryCount);
+      return this;
+    }
+
+    @Override
+    public Builder retryIntervalInMs(long retryIntervalInMs) {
+      super.retryIntervalInMs(retryIntervalInMs);
+      return this;
+    }
+
+    @Override
+    public Builder queryTimeoutInMs(long queryTimeoutInMs) {
+      super.queryTimeoutInMs(queryTimeoutInMs);
+      return this;
+    }
+
+    protected Builder sqlDialect(String sqlDialect) {
+      super.sqlDialect = sqlDialect;
+      return this;
+    }
+
+    protected Builder database(String database) {
+      super.database = database;
+      return this;
+    }
+
+    @Override
     public SessionPool build() {
       return new SessionPool(this);
     }

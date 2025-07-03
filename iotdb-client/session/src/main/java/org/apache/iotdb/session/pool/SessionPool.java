@@ -162,7 +162,7 @@ public class SessionPool implements ISessionPool {
 
   // set to true, means that we will start a background thread to fetch all available (Status is
   // not Removing) datanodes in cluster, and these available nodes will be used in retrying stage
-  private boolean enableAutoFetch = true;
+  protected boolean enableAutoFetch = true;
 
   // max retry count, if set to 0, means that we won't do any retry
   // we can use any available DataNodes(fetched in background thread if enableAutoFetch is true,

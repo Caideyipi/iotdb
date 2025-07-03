@@ -153,23 +153,7 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
   }
 
   public Session(Builder builder) {
-    super(
-        new org.apache.iotdb.session.Session.Builder()
-            .nodeUrls(builder.nodeUrls)
-            .enableRedirection(builder.enableRedirection)
-            .version(builder.version)
-            .password(builder.password)
-            .username(builder.username)
-            .fetchSize(builder.fetchSize)
-            .zoneId(builder.zoneId)
-            .thriftDefaultBufferSize(builder.thriftDefaultBufferSize)
-            .thriftMaxFrameSize(builder.thriftMaxFrameSize)
-            .timeOut(builder.timeOut)
-            .useSSL(builder.useSSL)
-            .trustStore(builder.trustStore)
-            .trustStorePwd(builder.trustStorePwd)
-            .host(builder.host)
-            .port(builder.rpcPort));
+    super(builder);
   }
 
   @Override
@@ -339,107 +323,142 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
     return baseSql;
   }
 
-  public static class Builder {
-    private String host = SessionConfig.DEFAULT_HOST;
-    private int rpcPort = SessionConfig.DEFAULT_PORT;
-    private String username = SessionConfig.DEFAULT_USER;
-    private String password = SessionConfig.DEFAULT_PASSWORD;
-    private int fetchSize = SessionConfig.DEFAULT_FETCH_SIZE;
-    private ZoneId zoneId = null;
-    private int thriftDefaultBufferSize = SessionConfig.DEFAULT_INITIAL_BUFFER_CAPACITY;
-    private int thriftMaxFrameSize = SessionConfig.DEFAULT_MAX_FRAME_SIZE;
-    private boolean enableRedirection = SessionConfig.DEFAULT_REDIRECTION_MODE;
-    private Version version = SessionConfig.DEFAULT_VERSION;
-    private long timeOut = SessionConfig.DEFAULT_QUERY_TIME_OUT;
+  public static class Builder extends org.apache.iotdb.session.Session.Builder {
 
-    private boolean useSSL = false;
-    private String trustStore;
-    private String trustStorePwd;
-
-    public Session.Builder useSSL(boolean useSSL) {
-      this.useSSL = useSSL;
+    @Override
+    public Builder host(String host) {
+      super.host(host);
       return this;
     }
 
-    public Session.Builder trustStore(String keyStore) {
-      this.trustStore = keyStore;
+    @Override
+    public Builder port(int port) {
+      super.port(port);
       return this;
     }
 
-    public Session.Builder trustStorePwd(String keyStorePwd) {
-      this.trustStorePwd = keyStorePwd;
+    @Override
+    public Builder username(String username) {
+      super.username(username);
       return this;
     }
 
-    private List<String> nodeUrls = null;
-
-    public Session.Builder host(String host) {
-      this.host = host;
+    @Override
+    public Builder password(String password) {
+      super.password(password);
       return this;
     }
 
-    public Session.Builder port(int port) {
-      this.rpcPort = port;
+    @Override
+    public Builder fetchSize(int fetchSize) {
+      super.fetchSize(fetchSize);
       return this;
     }
 
-    public Session.Builder username(String username) {
-      this.username = username;
+    @Override
+    public Builder zoneId(ZoneId zoneId) {
+      super.zoneId(zoneId);
       return this;
     }
 
-    public Session.Builder password(String password) {
-      this.password = password;
+    @Override
+    public Builder thriftDefaultBufferSize(int thriftDefaultBufferSize) {
+      super.thriftDefaultBufferSize(thriftDefaultBufferSize);
       return this;
     }
 
-    public Session.Builder fetchSize(int fetchSize) {
-      this.fetchSize = fetchSize;
+    @Override
+    public Builder thriftMaxFrameSize(int thriftMaxFrameSize) {
+      super.thriftMaxFrameSize(thriftMaxFrameSize);
       return this;
     }
 
-    public Session.Builder zoneId(ZoneId zoneId) {
-      this.zoneId = zoneId;
+    @Override
+    public Builder enableRedirection(boolean enableRedirection) {
+      super.enableRedirection(enableRedirection);
       return this;
     }
 
-    public Session.Builder thriftDefaultBufferSize(int thriftDefaultBufferSize) {
-      this.thriftDefaultBufferSize = thriftDefaultBufferSize;
+    @Override
+    public Builder enableRecordsAutoConvertTablet(boolean enableRecordsAutoConvertTablet) {
+      super.enableRecordsAutoConvertTablet(enableRecordsAutoConvertTablet);
       return this;
     }
 
-    public Session.Builder thriftMaxFrameSize(int thriftMaxFrameSize) {
-      this.thriftMaxFrameSize = thriftMaxFrameSize;
+    @Override
+    public Builder nodeUrls(List<String> nodeUrls) {
+      super.nodeUrls(nodeUrls);
       return this;
     }
 
-    public Session.Builder enableRedirection(boolean enableRedirection) {
-      this.enableRedirection = enableRedirection;
+    @Override
+    public Builder version(Version version) {
+      super.version(version);
       return this;
     }
 
-    public Session.Builder nodeUrls(List<String> nodeUrls) {
-      this.nodeUrls = nodeUrls;
+    @Override
+    public Builder timeOut(long timeOut) {
+      super.timeOut(timeOut);
       return this;
     }
 
-    public Session.Builder version(Version version) {
-      this.version = version;
+    @Override
+    public Builder enableAutoFetch(boolean enableAutoFetch) {
+      super.enableAutoFetch(enableAutoFetch);
       return this;
     }
 
-    public Session.Builder timeOut(long timeOut) {
-      this.timeOut = timeOut;
+    @Override
+    public Builder maxRetryCount(int maxRetryCount) {
+      super.maxRetryCount(maxRetryCount);
       return this;
     }
 
-    public Session build() {
+    @Override
+    public Builder retryIntervalInMs(long retryIntervalInMs) {
+      super.retryIntervalInMs(retryIntervalInMs);
+      return this;
+    }
+
+    @Override
+    public Builder sqlDialect(String sqlDialect) {
+      super.sqlDialect(sqlDialect);
+      return this;
+    }
+
+    @Override
+    public Builder database(String database) {
+      super.database(database);
+      return this;
+    }
+
+    @Override
+    public Builder useSSL(boolean useSSL) {
+      super.useSSL(useSSL);
+      return this;
+    }
+
+    @Override
+    public Builder trustStore(String keyStore) {
+      super.trustStore(keyStore);
+      return this;
+    }
+
+    @Override
+    public Builder trustStorePwd(String keyStorePwd) {
+      super.trustStorePwd(keyStorePwd);
+      return this;
+    }
+
+    @Override
+    public com.timecho.iotdb.session.Session build() {
       if (nodeUrls != null
           && (!SessionConfig.DEFAULT_HOST.equals(host) || rpcPort != SessionConfig.DEFAULT_PORT)) {
         throw new IllegalArgumentException(
             "You should specify either nodeUrls or (host + rpcPort), but not both");
       }
-      return new Session(this);
+      return new com.timecho.iotdb.session.Session(this);
     }
   }
 }
