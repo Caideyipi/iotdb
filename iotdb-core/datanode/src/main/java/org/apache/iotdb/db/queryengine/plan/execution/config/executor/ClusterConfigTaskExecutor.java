@@ -3714,8 +3714,10 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   public static void unsetDatabaseIfNotExist(final String database, final IClientSession session) {
-    if (database.equals(session.getDatabaseName())) {
-      session.setDatabaseName(null);
+    if (session != null) {
+      if (database.equals(session.getDatabaseName())) {
+        session.setDatabaseName(null);
+      }
     }
   }
 
