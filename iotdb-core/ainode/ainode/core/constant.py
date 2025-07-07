@@ -22,6 +22,8 @@ import os
 from enum import Enum
 from typing import List
 
+from ainode.thrift.common.ttypes import TEndPoint
+
 AINODE_CONF_DIRECTORY_NAME = "conf"
 AINODE_ROOT_CONF_DIRECTORY_NAME = "conf"
 AINODE_CONF_FILE_NAME = "iotdb-ainode.properties"
@@ -50,6 +52,7 @@ AINODE_CLUSTER_INGRESS_PORT = 6667
 AINODE_CLUSTER_INGRESS_USERNAME = "root"
 AINODE_CLUSTER_INGRESS_PASSWORD = "root"
 AINODE_CLUSTER_INGRESS_TIME_ZONE = "UTC+8"
+AINODE_TARGET_CONFIG_NODE_LIST = TEndPoint("127.0.0.1", 10710)
 
 # AINode log
 AINODE_LOG_FILE_NAMES = [

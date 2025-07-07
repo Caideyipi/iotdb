@@ -153,9 +153,17 @@ class InferenceManager:
             full_data = deserializer(raw)
             inference_attrs = extract_attrs(req)
 
+            random.seed(FIX_SEED)
+            torch.manual_seed(FIX_SEED)
+            np.random.seed(FIX_SEED)
+
             # load model
             accel = str(inference_attrs.get("acceleration", "")).lower() == "true"
             model = self.model_manager.load_model(model_id, inference_attrs, accel)
+
+            random.seed(FIX_SEED)
+            torch.manual_seed(FIX_SEED)
+            np.random.seed(FIX_SEED)
 
             # inference by strategy
             strategy = self._get_strategy(model_id, model)

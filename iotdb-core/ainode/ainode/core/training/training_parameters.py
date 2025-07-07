@@ -13,7 +13,7 @@ class TrainingParameters:
     def __init__(self):
         # Model config
         self.model_type = (
-            BuiltInModelType.TIMER_XL
+            BuiltInModelType.SUNDIAL
         )  # The model name to be finetune, options: [sundial, timer_xl]
         self.model_id = "test"  # The model id of the finetune result
         self.ckpt_path = ""  # Checkpoint path, used for finetune
@@ -46,14 +46,6 @@ class TrainingParameters:
         self.gpu_ids = []  # The list of GPU ids used for training, parsed from devices
         self.world_size = 0  # The number of GPUs used for training
 
-        # Hyper parameters
-        self.adaptation = (
-            "full"  # Currently, using full finetune by default
-            # "linear"
-            # "lora" TODO: support LoRA
-        )
-        self.seed = 2021  # help='seed'
-
         # training
         self.train_epochs = 10  # help='train epochs'
         self.training_batch_size = 64  # help='batch size of train input data'
@@ -65,6 +57,15 @@ class TrainingParameters:
             0.00001  # The optimizer learning rate, [1e-5, 1e-6] are recommended
         )
         self.weight_decay = 0.1  # help='weight decay'
+        self.window_step = (
+            1  # the number of time series data points shifting between the data window
+        )
+        self.adaptation = (
+            "full"  # Currently, using full finetune by default
+            # "linear"
+            # "lora" TODO: support LoRA
+        )
+        self.seed = 2021  # help='seed'
         self.only_preserve_best = (
             True  # Only preserve the best ckpt during training, by default is True
         )
