@@ -74,30 +74,16 @@ public class IoTDBLastViewOneRegionIT {
     String[] retArray =
         new String[] {
           "1,root.sg.d3.s2,1.0,DOUBLE,",
-          "1,root.sg.d4.vs4,2.0,DOUBLE,",
           "1,root.sg.d4.vs3,0.5,DOUBLE,",
+          "1,root.sg.d4.vs4,2.0,DOUBLE,",
           "2,root.sg.d4.vs2,102.0,DOUBLE,",
           "1060480,root.sg.d1.s1,10000,INT32,",
           "1060480,root.sg.d3.s1,2,INT32,",
           "1060480,root.sg.d4.vs1,10000,INT32,",
           "1060580,root.sg.d2.s1,10001,INT32,",
         };
-    try {
-      resultSetEqualTest("select last * from root.** order by time", expectedHeader, retArray);
-    } catch (Throwable t) {
-      retArray =
-          new String[] {
-            "1,root.sg.d3.s2,1.0,DOUBLE,",
-            "1,root.sg.d4.vs4,2.0,DOUBLE,",
-            "1,root.sg.d4.vs3,0.5,DOUBLE,",
-            "2,root.sg.d4.vs2,102.0,DOUBLE,",
-            "1060480,root.sg.d1.s1,10000,INT32,",
-            "1060480,root.sg.d4.vs1,10000,INT32,",
-            "1060480,root.sg.d3.s1,2,INT32,",
-            "1060580,root.sg.d2.s1,10001,INT32,",
-          };
-      resultSetEqualTest("select last * from root.** order by time", expectedHeader, retArray);
-    }
+    resultSetEqualTest(
+        "select last * from root.sg.** order by time, timeseries", expectedHeader, retArray);
 
     // order by timeseries
     retArray =
@@ -112,7 +98,7 @@ public class IoTDBLastViewOneRegionIT {
           "1060480,root.sg.d1.s1,10000,INT32,",
         };
     resultSetEqualTest(
-        "select last * from root.** order by timeseries desc", expectedHeader, retArray);
+        "select last * from root.sg.** order by timeseries desc", expectedHeader, retArray);
 
     // time filter
     retArray =
@@ -124,14 +110,16 @@ public class IoTDBLastViewOneRegionIT {
           "2,root.sg.d4.vs2,102.0,DOUBLE,",
         };
     resultSetEqualTest(
-        "select last * from root.** where time > 1 order by timeseries", expectedHeader, retArray);
+        "select last * from root.sg.** where time > 1 order by timeseries",
+        expectedHeader,
+        retArray);
 
     retArray =
         new String[] {
           "2,root.sg.d4.vs2,102.0,DOUBLE,", "1,root.sg.d4.vs3,0.5,DOUBLE,",
         };
     resultSetEqualTest(
-        "select last vs2,vs3 from root.** order by timeseries", expectedHeader, retArray);
+        "select last vs2,vs3 from root.sg.** order by timeseries", expectedHeader, retArray);
   }
 
   @Test
@@ -146,7 +134,7 @@ public class IoTDBLastViewOneRegionIT {
           "1060480,root.sg.d4.vs1,10000,INT32,",
         };
     resultSetEqualTest(
-        "select last s2, s2, vs1, vs1, vs2, vs2 from root.** order by time",
+        "select last s2, s2, vs1, vs1, vs2, vs2 from root.sg.** order by time",
         expectedHeader,
         retArray);
   }
@@ -175,6 +163,8 @@ public class IoTDBLastViewOneRegionIT {
           "root.sg.d1.s1,null,root.sg,INT32,TS_2DIFF,LZ4,null,null,null,null,BASE,",
           "root.sg.d3.s1,null,root.sg,INT32,TS_2DIFF,LZ4,null,null,null,null,BASE,",
           "root.sg.d4.vs1,null,root.sg,INT32,null,null,null,null,null,null,VIEW,",
+          "root.sg1.d1.s1,null,root.sg1,INT32,TS_2DIFF,LZ4,null,null,null,null,BASE,",
+          "root.sg1.d1_alias.s1,null,root.sg1,INT32,null,null,null,null,null,null,VIEW,",
           "root.sg.d4.vs2,null,root.sg,DOUBLE,null,null,null,null,null,null,VIEW,",
           "root.sg.d3.s2,null,root.sg,DOUBLE,GORILLA,LZ4,null,null,null,null,BASE,",
           "root.sg.d4.vs4,null,root.sg,DOUBLE,null,null,null,null,null,null,VIEW,",
@@ -194,6 +184,20 @@ public class IoTDBLastViewOneRegionIT {
         "show latest timeseries where timeseries contains 'd4'", expectedHeader, retArray);
   }
 
+  @Test
+  public void sameMeasurementNameAliasTest() {
+
+    String[] expectedHeader =
+        new String[] {TIMESTAMP_STR, TIMESERIES_STR, VALUE_STR, DATA_TYPE_STR};
+
+    String[] retArray =
+        new String[] {
+          "1060480,root.sg1.d1.s1,1,INT32,", "1060480,root.sg1.d1_alias.s1,1,INT32,",
+        };
+    resultSetEqualTest(
+        "select last s1 from root.sg1.** order by time, timeseries", expectedHeader, retArray);
+  }
+
   private static final String[] SQL_LIST =
       new String[] {
         "create timeseries root.sg.d1.s1 INT32;",
@@ -203,7 +207,10 @@ public class IoTDBLastViewOneRegionIT {
         "create view root.sg.d4.vs2 as select d1.s1 + d2.s1 from root.sg;",
         "create view root.sg.d4.vs3 as select d3.s2 / 2 from root.sg;",
         "create view root.sg.d4.vs4 as select d3.s1 + d3.s2 from root.sg;",
+        "create timeseries root.sg1.d1.s1 INT32;",
+        "create view root.sg1.d1_alias.s1 as root.sg1.d1.s1;",
         "insert into root.sg.d1(time, s1) values (1, 1);",
+        "insert into root.sg1.d1(time, s1) values (1060480, 1);",
         "insert into root.sg.d1(time, s1) values (2, 2);",
         "insert into root.sg.d1(time, s1) values (1060480, 10000);",
         "insert into root.sg.d2(time, s1) values (2, 100);",
