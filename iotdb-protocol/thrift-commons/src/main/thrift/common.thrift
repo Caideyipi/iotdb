@@ -204,6 +204,8 @@ struct TPipeHeartbeatResp {
 }
 
 struct TLicense {
+    # Any license field should be set required, so that every node can serialize the latest license.
+    # Don't worry about the error during license transmission via thrift, this process shall eventually success after all nodes are updated.
     1: required i64 licenseIssueTimestamp
     2: required i64 expireTimestamp
     4: required i16 dataNodeNum
@@ -211,6 +213,7 @@ struct TLicense {
     6: required i64 deviceNum
     7: required i64 sensorNum
     8: required i64 disconnectionFromActiveNodeTime
+    9: required i16 aiNodeNum
 }
 
 struct TLoadSample {

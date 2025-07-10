@@ -38,6 +38,7 @@ from ainode.thrift.confignode.ttypes import (
     TAINodeRemoveReq,
     TAINodeRestartReq,
     TNodeVersionInfo,
+    TSystemConfigurationResp,
     TUpdateModelInfoReq,
 )
 
@@ -144,6 +145,24 @@ class ConfigNodeClient(object):
                 self._config_leader = None
             return True
         return False
+
+    def getSystemConfiguration(self) -> TSystemConfigurationResp:
+        for _ in range(0, self._RETRY_NUM):
+            try:
+                resp = self._client.getSystemConfiguration()
+                if not self._update_config_node_leader(resp.status):
+                    verify_success(
+                        resp.status,
+                        "An error occurs when calling getSystemConfiguration()",
+                    )
+                    return resp
+            except TTransport.TException:
+                logger.warning(
+                    "Failed to connect to ConfigNode {} from AINode when executing getSystemConfiguration()",
+                    self._config_leader,
+                )
+                self._config_leader = None
+            self._wait_and_reconnect()
 
     def node_register(
         self,

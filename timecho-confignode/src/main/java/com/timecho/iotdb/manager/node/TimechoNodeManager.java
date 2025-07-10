@@ -22,6 +22,7 @@ package com.timecho.iotdb.manager.node;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.persistence.node.NodeInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartResp;
@@ -99,6 +100,18 @@ public class TimechoNodeManager extends NodeManager {
               newNodeCpuCores,
               cpuCoreLimit - clusterCpuCores - newNodeCpuCores);
       LOGGER.info(message);
+    }
+    return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+  }
+
+  @Override
+  protected TSStatus registerAINodeActivationCheck(TAINodeRegisterReq req) {
+    final License license = configManager.getActivationManager().getLicense();
+    license.getAINodeNumLimit();
+    if (nodeInfo.getRegisteredAINodes().size() + 1 > license.getAINodeNumLimit()) {
+      final String message = "Deny AINode registration: AINodes not allowed to join this cluster";
+      LOGGER.warn(message);
+      return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     }
     return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
   }

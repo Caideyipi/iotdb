@@ -346,6 +346,10 @@ public class NodeManager {
     throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
+  protected TSStatus registerAINodeActivationCheck(TAINodeRegisterReq req) {
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
+  }
+
   public TDataNodeRestartResp updateDataNodeIfNecessary(TDataNodeRestartReq req) {
     final String clusterId =
         configManager

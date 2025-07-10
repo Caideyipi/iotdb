@@ -882,12 +882,20 @@ public class IoTDBActivationIT {
     ResultSet resultSet = statement.executeQuery("show activation");
     ImmutableMap<String, Pair<String, String>> expectation =
         ImmutableMap.of(
-            "Status", new Pair<>(UNACTIVATED.toString(), "-"),
-            "ExpiredTime", new Pair<>("-", SKIP),
-            "DataNodeLimit", new Pair<>("2", "0"),
-            "CpuLimit", new Pair<>(SKIP, "0"),
-            "DeviceLimit", new Pair<>("0", "0"),
-            "TimeSeriesLimit", new Pair<>("0", "0"));
+            "Status",
+            new Pair<>(UNACTIVATED.toString(), "-"),
+            "ExpiredTime",
+            new Pair<>("-", SKIP),
+            "DataNodeLimit",
+            new Pair<>("2", "0"),
+            "AiNodeLimit",
+            new Pair<>("0", "0"),
+            "CpuLimit",
+            new Pair<>(SKIP, "0"),
+            "DeviceLimit",
+            new Pair<>("0", "0"),
+            "TimeSeriesLimit",
+            new Pair<>("0", "0"));
     checkShowActivationResult(resultSet, expectation);
   }
 
@@ -940,24 +948,35 @@ public class IoTDBActivationIT {
         "activate "
             + "'"
             + "DN1=2\n"
+            + "ML1=1\n"
             + "L1=1711900800000\n"
             + "L2=18145792000000,\n"
             + "DN1=2\n"
+            + "ML1=1\n"
             + "L1=1711900800000\n"
             + "L2=18145792000000,\n"
             + "DN1=2\n"
+            + "ML1=1\n"
             + "L1=1711900800000\n"
             + "L2=18145792000000\n"
             + "'";
     ResultSet resultSet = statement.executeQuery(sql);
     ImmutableMap<String, Pair<String, String>> expectation =
         ImmutableMap.of(
-            "Status", new Pair<>(ACTIVATED.toString(), "-"),
-            "ExpiredTime", new Pair<>("-", SKIP),
-            "DataNodeLimit", new Pair<>("2", "2"),
-            "CpuLimit", new Pair<>(SKIP, "Unlimited"),
-            "DeviceLimit", new Pair<>("0", "Unlimited"),
-            "TimeSeriesLimit", new Pair<>("0", "Unlimited"));
+            "Status",
+            new Pair<>(ACTIVATED.toString(), "-"),
+            "ExpiredTime",
+            new Pair<>("-", SKIP),
+            "DataNodeLimit",
+            new Pair<>("2", "2"),
+            "AiNodeLimit",
+            new Pair<>("0", "1"),
+            "CpuLimit",
+            new Pair<>(SKIP, "Unlimited"),
+            "DeviceLimit",
+            new Pair<>("0", "Unlimited"),
+            "TimeSeriesLimit",
+            new Pair<>("0", "Unlimited"));
     checkShowActivationResult(resultSet, expectation);
   }
 

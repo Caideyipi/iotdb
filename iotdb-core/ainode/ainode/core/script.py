@@ -34,7 +34,7 @@ from ainode.thrift.common.ttypes import (
     TEndPoint,
     TNodeResource,
 )
-from ainode.thrift.confignode.ttypes import TNodeVersionInfo
+from ainode.thrift.confignode.ttypes import TNodeVersionInfo, TSystemConfigurationResp
 
 logger = Logger()
 
@@ -78,7 +78,23 @@ def start_ainode():
     if not os.path.exists(system_properties_file):
         # If the system.properties file does not exist, the AINode will register to ConfigNode.
         try:
-            logger.info("IoTDB-AINode is registering to ConfigNode...")
+            logger.info("TimechoDB AINode is registering to ConfigNode...")
+            # Check whether the target ConfigNode is enterprise version
+            system_info = (
+                ClientManager().borrow_config_node_client().getSystemConfiguration()
+            )
+            if (
+                not system_info.globalConfig
+                or not system_info.globalConfig.isEnterprise
+            ):
+                logger.error(
+                    "TimechoDB AINode registration failed because TimechoDB AINode can only be used with TimechoDB ConfigNode and cannot be used with IoTDB ConfigNode."
+                )
+                raise MissingConfigError(
+                    "The target ConfigNode is not an enterprise version, "
+                    "please check the configuration of the ConfigNode."
+                )
+
             ainode_id = (
                 ClientManager()
                 .borrow_config_node_client()
@@ -110,12 +126,14 @@ def start_ainode():
                     f.write(key + "=" + str(value) + "\n")
 
         except Exception as e:
-            logger.error("IoTDB-AINode failed to register to ConfigNode: {}".format(e))
+            logger.error(
+                "TimechoDB AINode failed to register to ConfigNode: {}".format(e)
+            )
             raise e
     else:
         # If the system.properties file does exist, the AINode will just restart.
         try:
-            logger.info("IoTDB-AINode is restarting...")
+            logger.info("TimechoDB AINode is restarting...")
             ClientManager().borrow_config_node_client().node_restart(
                 AINodeDescriptor().get_config().get_cluster_name(),
                 _generate_configuration(),
@@ -123,7 +141,7 @@ def start_ainode():
             )
 
         except Exception as e:
-            logger.error("IoTDB-AINode failed to restart: {}".format(e))
+            logger.error("TimechoDB AINode failed to restart: {}".format(e))
             raise e
 
     rpc_service = RPCService()
@@ -132,7 +150,7 @@ def start_ainode():
     if rpc_service.exit_code != 0:
         return
 
-    logger.info("IoTDB-AINode has successfully started.")
+    logger.info("TimechoDB AINode has successfully started.")
 
 
 def remove_ainode(arguments):
@@ -173,7 +191,7 @@ def remove_ainode(arguments):
     status = ClientManager().borrow_config_node_client().node_remove(location)
 
     if status.code == TSStatusCode.SUCCESS_STATUS.get_status_code():
-        logger.info("IoTDB-AINode has successfully removed.")
+        logger.info("TimechoDB AINode has successfully removed.")
         if os.path.exists(AINodeDescriptor().get_config().get_ain_models_dir()):
             shutil.rmtree(AINodeDescriptor().get_config().get_ain_models_dir())
 
@@ -188,17 +206,17 @@ def main():
     command = arguments[1]
     if command == "start":
         try:
-            logger.info("IoTDB-AINode is starting...")
+            logger.info("TimechoDB AINode is starting...")
             start_ainode()
         except Exception as e:
-            logger.error("Start AINode failed, because of: {}".format(e))
+            logger.error("Start TimechoDB AINode failed, because of: {}".format(e))
             sys.exit(1)
     elif command == "remove":
         try:
-            logger.info("Removing AINode...")
+            logger.info("Removing TimechoDB AINode...")
             remove_ainode(arguments)
         except Exception as e:
-            logger.error("Remove AINode failed, because of: {}".format(e))
+            logger.error("Remove TimechoDB AINode failed, because of: {}".format(e))
             sys.exit(1)
     else:
         logger.warning("Unknown argument: {}.".format(command))
