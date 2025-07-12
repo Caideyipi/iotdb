@@ -107,9 +107,22 @@ public class TimechoNodeManager extends NodeManager {
   @Override
   protected TSStatus registerAINodeActivationCheck(TAINodeRegisterReq req) {
     final License license = configManager.getActivationManager().getLicense();
+    // check if unactivated
+    if (!configManager.getActivationManager().isActivated()) {
+      final String message =
+          "Deny AINode registration: Cluster is unactivated now, AINode is not allowed to join";
+      LOGGER.warn(message);
+      return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
+    }
+    // check AINode num limit
     license.getAINodeNumLimit();
     if (nodeInfo.getRegisteredAINodes().size() + 1 > license.getAINodeNumLimit()) {
-      final String message = "Deny AINode registration: AINodes not allowed to join this cluster";
+      final String message =
+          String.format(
+              "Deny AINode registration: AINodes number limit exceeded, %d + 1 = %d, greater than %d",
+              nodeInfo.getRegisteredAINodeCount(),
+              nodeInfo.getRegisteredAINodeCount() + 1,
+              license.getAINodeNumLimit());
       LOGGER.warn(message);
       return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     }

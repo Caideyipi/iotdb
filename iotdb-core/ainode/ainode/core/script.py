@@ -88,7 +88,7 @@ def start_ainode():
                 or not system_info.globalConfig.isEnterprise
             ):
                 logger.error(
-                    "TimechoDB AINode registration failed because TimechoDB AINode can only be used with TimechoDB ConfigNode and cannot be used with IoTDB ConfigNode."
+                    "TimechoDB AINode registration failed because TimechoDB AINode can only join TimechoDB cluster rather than IoTDB cluster."
                 )
                 raise MissingConfigError(
                     "The target ConfigNode is not an enterprise version, "
