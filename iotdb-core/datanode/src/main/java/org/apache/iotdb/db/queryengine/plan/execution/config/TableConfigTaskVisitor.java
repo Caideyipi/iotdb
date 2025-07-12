@@ -55,7 +55,9 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowVariab
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.CliActivateTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowActivationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.activation.ShowSystemInfoTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.CreateModelTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.CreateTrainingTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.DropModelTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ai.ShowModelsTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ExtendRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.MigrateRegionTask;
@@ -127,6 +129,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CliActivate;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ColumnDefinition;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateDB;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateFunction;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateModel;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreatePipe;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreatePipePlugin;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CreateTable;
@@ -140,6 +143,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DescribeTable;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropColumn;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropDB;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropFunction;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropModel;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropPipe;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropPipePlugin;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.DropSubscription;
@@ -1394,7 +1398,26 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   }
 
   @Override
+  protected IConfigTask visitCreateModel(CreateModel node, MPPQueryContext context) {
+    context.setQueryType(QueryType.WRITE);
+    String uri = node.getUri();
+    if (uri != null && ExecutableManager.isUriTrusted(uri)) {
+      // user specified uri and that uri is trusted
+      return new CreateModelTask(node.getModelId(), uri);
+    }
+    // user specified uri and that uri is not trusted
+    throw new SemanticException(getUnTrustedUriErrorMsg(uri));
+  }
+
+  @Override
   protected IConfigTask visitShowModels(ShowModels node, MPPQueryContext context) {
+    context.setQueryType(QueryType.READ);
     return new ShowModelsTask(node.getModelId());
+  }
+
+  @Override
+  protected IConfigTask visitDropModel(DropModel node, MPPQueryContext context) {
+    context.setQueryType(QueryType.WRITE);
+    return new DropModelTask(node.getModelId());
   }
 }

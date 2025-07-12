@@ -167,6 +167,7 @@ statement
 
     // AI
     | createModelStatement
+    | dropModelStatement
     | showModelsStatement
 
     // View, Trigger, CQ, Quota are not supported yet
@@ -799,11 +800,16 @@ revokeGrantOpt
 // ------------------------------------------- AI ---------------------------------------------------------
 
 createModelStatement
-    : CREATE MODEL modelId=identifier (WITH HYPERPARAMETERS '(' hparamPair (',' hparamPair)* ')')? FROM MODEL existingModelId=identifier ON DATASET '(' targetData=string ')'
+    : CREATE MODEL modelId=identifier uriClause
+    | CREATE MODEL modelId=identifier (WITH HYPERPARAMETERS '(' hparamPair (',' hparamPair)* ')')? FROM MODEL existingModelId=identifier ON DATASET '(' targetData=string ')'
     ;
 
 hparamPair
     : hparamKey=identifier '=' hyparamValue=primaryExpression
+    ;
+
+dropModelStatement
+    : DROP MODEL modelId=identifier
     ;
 
 showModelsStatement
