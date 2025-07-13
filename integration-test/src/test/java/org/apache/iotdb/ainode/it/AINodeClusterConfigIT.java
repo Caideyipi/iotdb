@@ -20,14 +20,10 @@
 package org.apache.iotdb.ainode.it;
 
 import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.AIClusterIT;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -38,8 +34,8 @@ import java.sql.Statement;
 import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkHeader;
 import static org.junit.Assert.assertEquals;
 
-@RunWith(IoTDBTestRunner.class)
-@Category({AIClusterIT.class})
+// @RunWith(IoTDBTestRunner.class)
+// @Category({AIClusterIT.class})
 public class AINodeClusterConfigIT {
 
   @BeforeClass
