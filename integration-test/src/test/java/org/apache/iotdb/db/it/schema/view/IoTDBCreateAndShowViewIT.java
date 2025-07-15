@@ -203,7 +203,7 @@ public class IoTDBCreateAndShowViewIT extends AbstractSchemaIT {
             Arrays.asList(
                 "root.view.cal_view.avg,null,root.view,DOUBLE,null,null,null,null,VIEW;",
                 "root.view.cal_view.multiple,null,root.view,DOUBLE,null,null,null,null,VIEW;",
-                "root.view.cal_view.divide,null,root.view,DOUBLE,null,null,null,null,VIEW;",
+                "root.view.cal_view.divide,null,root.view,INT64,null,null,null,null,VIEW;",
                 "root.view.cal_view.cast_view,null,root.view,TEXT,null,null,null,null,VIEW;"));
 
     try (Connection connection = EnvFactory.getEnv().getConnection();
@@ -357,7 +357,7 @@ public class IoTDBCreateAndShowViewIT extends AbstractSchemaIT {
                 "root.view.myview.d02.s02,root.view,INT32,null,null,VIEW,root.db.d02.s02;",
                 "root.view.cal_view.avg,root.view,DOUBLE,null,null,VIEW,(root.db.d01.s01 + root.db.d01.s02) / 2;",
                 "root.view.cal_view.multiple,root.view,DOUBLE,null,null,VIEW,root.db.d02.s01 * root.db.d02.s02;",
-                "root.view.cal_view.divide,root.view,DOUBLE,null,null,VIEW,root.db.d02.s01 / root.db.d02.s02;",
+                "root.view.cal_view.divide,root.view,INT64,null,null,VIEW,root.db.d02.s01 / root.db.d02.s02;",
                 "root.view.cal_view.cast_view,root.view,TEXT,null,null,VIEW,cast(root.db.d01.s01, type=TEXT);",
                 "root.view.multi_view.all_in_one.d01_s01,root.view,INT32,null,null,VIEW,root.db.d01.s01;",
                 "root.view.multi_view.all_in_one.d01_s02,root.view,INT32,null,null,VIEW,root.db.d01.s02;",
