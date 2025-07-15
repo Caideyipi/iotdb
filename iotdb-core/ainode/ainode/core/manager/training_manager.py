@@ -7,16 +7,16 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from ainode.core.client import ClientManager
 from ainode.core.config import AINodeDescriptor
 from ainode.core.constant import TSStatusCode
 from ainode.core.log import Logger
 from ainode.core.manager.model_manager import ModelManager
 from ainode.core.model.model_info import ModelStates
+from ainode.core.rpc.client import ClientManager
+from ainode.core.rpc.status import get_status
 from ainode.core.training.exp.exp_forecast_finetune import ExpForecastFinetune
 from ainode.core.training.training_parameters import TrainingParameters
 from ainode.core.util.lock import ReadWriteLock
-from ainode.core.util.status import get_status
 from ainode.thrift.common.ttypes import TSStatus
 
 logger = Logger()

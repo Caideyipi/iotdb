@@ -63,7 +63,7 @@ ddlStatement
     // Cluster
     | showVariables | showCluster | showRegions | showDataNodes | showConfigNodes | showClusterId
     | getRegionId | getTimeSlotList | countTimeSlotList | getSeriesSlotList
-    | migrateRegion | reconstructRegion | extendRegion | removeRegion  | removeDataNode | removeConfigNode
+    | migrateRegion | reconstructRegion | extendRegion | removeRegion  | removeDataNode | removeConfigNode | removeAINode
     | verifyConnection
     // AINode
     | showAINodes | createModel | dropModel | showModels | callInference
@@ -563,6 +563,11 @@ removeDataNode
 // ---- Remove ConfigNode
 removeConfigNode
     : REMOVE CONFIGNODE configNodeId=INTEGER_LITERAL
+    ;
+
+// ---- Remove AINode
+removeAINode
+    : REMOVE AINODE (aiNodeId=INTEGER_LITERAL)?
     ;
 
 // Pipe Task =========================================================================================

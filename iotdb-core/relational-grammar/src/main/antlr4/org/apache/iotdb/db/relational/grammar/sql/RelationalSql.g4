@@ -126,6 +126,7 @@ statement
     | removeRegionStatement
     | removeDataNodeStatement
     | removeConfigNodeStatement
+    | removeAINodeStatement
 
     // Activation
     | showSystemInfo
@@ -606,6 +607,10 @@ showActivation
 
 removeConfigNodeStatement
     : REMOVE CONFIGNODE configNodeId=INTEGER_VALUE
+    ;
+
+removeAINodeStatement
+    : REMOVE AINODE (aiNodeId=INTEGER_VALUE)?
     ;
 
 // ------------------------------------------- Admin Statement ---------------------------------------------------------
@@ -1391,6 +1396,7 @@ ACTIVATE: 'ACTIVATE';
 ADD: 'ADD';
 ADMIN: 'ADMIN';
 AFTER: 'AFTER';
+AINODE: 'AINODE';
 AINODES: 'AINODES';
 ALL: 'ALL';
 ALTER: 'ALTER';

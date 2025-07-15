@@ -22,8 +22,8 @@ from ainode.core.manager.inference_manager import InferenceManager
 from ainode.core.manager.model_manager import ModelManager
 from ainode.core.manager.training_manager import TrainingManager
 from ainode.core.model.model_info import ModelCategory, ModelInfo, ModelStates
+from ainode.core.rpc.status import get_status
 from ainode.core.training.training_parameters import get_default_training_args
-from ainode.core.util.status import get_status
 from ainode.thrift.ainode import IAINodeRPCService
 from ainode.thrift.ainode.ttypes import (
     TAIHeartbeatReq,
@@ -44,10 +44,15 @@ logger = Logger()
 
 
 class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
-    def __init__(self):
+    def __init__(self, aiNode):
+        self._aiNode = aiNode
         self._model_manager = ModelManager()
         self._inference_manager = InferenceManager(model_manager=self._model_manager)
         self._training_manager = TrainingManager(model_manager=self._model_manager)
+
+    def stopAINode(self) -> TSStatus:
+        self._aiNode.stop()
+        return get_status(TSStatusCode.SUCCESS_STATUS, "AINode stopped successfully.")
 
     def registerModel(self, req: TRegisterModelReq) -> TRegisterModelResp:
         return self._model_manager.register_model(req)
