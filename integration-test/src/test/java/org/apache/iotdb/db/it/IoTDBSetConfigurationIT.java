@@ -131,7 +131,7 @@ public class IoTDBSetConfigurationIT {
     EnvFactory.getEnv().initClusterEnvironment();
   }
 
-  private static boolean checkConfigFileContains(
+  public static boolean checkConfigFileContains(
       AbstractNodeWrapper nodeWrapper, String... contents) {
     try {
       String systemPropertiesPath =
