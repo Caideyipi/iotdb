@@ -897,7 +897,11 @@ public class IoTDBDescriptor {
       conf.setIntoOperationExecutionThreadCount(2);
     }
 
-    conf.setExtPipeDir(properties.getProperty("ext_pipe_dir", conf.getExtPipeDir()));
+    conf.setExtPipeDir(properties.getProperty("ext_pipe_dir", conf.getExtPipeDir()).trim());
+    conf.setPipeTaskThreadCount(
+        Integer.parseInt(
+            properties.getProperty(
+                "pipe_task_thread_count", Integer.toString(conf.getPipeTaskThreadCount()).trim())));
 
     // At the same time, set TSFileConfig
     List<FSType> fsTypes = new ArrayList<>();
@@ -1105,6 +1109,10 @@ public class IoTDBDescriptor {
             properties.getProperty(
                 "detail_container_min_degrade_memory_in_bytes",
                 String.valueOf(conf.getDetailContainerMinDegradeMemoryInBytes()))));
+    conf.setSchemaThreadCount(
+        Integer.parseInt(
+            properties.getProperty(
+                "schema_thread_count", Integer.toString(conf.getSchemaThreadCount()))));
 
     loadIoTConsensusProps(properties);
     loadIoTConsensusV2Props(properties);

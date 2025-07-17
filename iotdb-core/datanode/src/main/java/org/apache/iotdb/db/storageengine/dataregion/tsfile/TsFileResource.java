@@ -30,7 +30,6 @@ import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.exception.load.PartitionViolationException;
-import org.apache.iotdb.db.pipe.extractor.dataregion.realtime.assigner.PipeTsFileEpochProgressIndexKeeper;
 import org.apache.iotdb.db.schemaengine.schemaregion.utils.ResourceByPathUtils;
 import org.apache.iotdb.db.storageengine.dataregion.DataRegion;
 import org.apache.iotdb.db.storageengine.dataregion.compaction.selector.utils.InsertionCompactionCandidateStatus;
@@ -199,15 +198,15 @@ public class TsFileResource implements PersistentResource {
    */
   private TsFileResource originTsFileResource;
 
-  private ProgressIndex maxProgressIndex;
+  private final AtomicReference<ProgressIndex> maxProgressIndex = new AtomicReference<>();
 
   private RemoteStorageBlock remoteStorageBlock;
 
   /** used to prevent circular replication in PipeConsensus */
-  private boolean isGeneratedByPipeConsensus = false;
+  private volatile boolean isGeneratedByPipeConsensus = false;
 
   /** used to prevent circular replication in Pipe */
-  private boolean isGeneratedByPipe = false;
+  private volatile boolean isGeneratedByPipe = false;
 
   private InsertionCompactionCandidateStatus insertionCompactionCandidateStatus =
       InsertionCompactionCandidateStatus.NOT_CHECKED;
@@ -312,10 +311,10 @@ public class TsFileResource implements PersistentResource {
     }
 
     boolean hasTsFileResourceBlock = false;
-    if (maxProgressIndex != null) {
+    if (maxProgressIndex.get() != null) {
       hasTsFileResourceBlock = true;
       TsFileResourceBlockType.PROGRESS_INDEX.serialize(outputStream);
-      maxProgressIndex.serialize(outputStream);
+      maxProgressIndex.get().serialize(outputStream);
     }
     if (remoteStorageBlock != null) {
       hasTsFileResourceBlock = true;
@@ -358,7 +357,7 @@ public class TsFileResource implements PersistentResource {
             TsFileResourceBlockType.deserialize(ReadWriteIOUtils.readByte(inputStream));
         switch (blockType) {
           case PROGRESS_INDEX:
-            maxProgressIndex = ProgressIndexType.deserializeFrom(inputStream);
+            maxProgressIndex.set(ProgressIndexType.deserializeFrom(inputStream));
             break;
           case REMOTE_STORAGE_BLOCK:
             setRemoteStorageBlock(RemoteStorageBlock.deserializeFrom(inputStream));
@@ -1463,13 +1462,9 @@ public class TsFileResource implements PersistentResource {
       return;
     }
 
-    maxProgressIndex =
-        (maxProgressIndex == null
-            ? progressIndex
-            : maxProgressIndex.updateToMinimumEqualOrIsAfterProgressIndex(progressIndex));
-
-    PipeTsFileEpochProgressIndexKeeper.getInstance()
-        .updateProgressIndex(getDataRegionId(), getTsFilePath(), maxProgressIndex);
+    if (!maxProgressIndex.compareAndSet(null, progressIndex)) {
+      maxProgressIndex.get().updateToMinimumEqualOrIsAfterProgressIndex(progressIndex);
+    }
   }
 
   public void setProgressIndex(ProgressIndex progressIndex) {
@@ -1477,10 +1472,7 @@ public class TsFileResource implements PersistentResource {
       return;
     }
 
-    maxProgressIndex = progressIndex;
-
-    PipeTsFileEpochProgressIndexKeeper.getInstance()
-        .updateProgressIndex(getDataRegionId(), getTsFilePath(), maxProgressIndex);
+    maxProgressIndex.set(progressIndex);
   }
 
   @Override
@@ -1497,7 +1489,8 @@ public class TsFileResource implements PersistentResource {
   }
 
   public ProgressIndex getMaxProgressIndex() {
-    return maxProgressIndex == null ? MinimumProgressIndex.INSTANCE : maxProgressIndex;
+    final ProgressIndex index = maxProgressIndex.get();
+    return index == null ? MinimumProgressIndex.INSTANCE : index;
   }
 
   public void setRemoteStorageBlock(RemoteStorageBlock remoteStorageBlock) {
