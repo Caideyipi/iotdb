@@ -73,7 +73,11 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
     super(heartbeatResp.getHeartbeatTimestamp());
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
-    this.activateStatus = ActivateStatus.ACTIVATED;
+    if (heartbeatResp.getActivateStatus() == null) {
+      this.activateStatus = ActivateStatus.UNKNOWN;
+    } else {
+      this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
+    }
     if (heartbeatResp.isSetLoadSample()) {
       this.loadSample = heartbeatResp.getLoadSample();
     } else {

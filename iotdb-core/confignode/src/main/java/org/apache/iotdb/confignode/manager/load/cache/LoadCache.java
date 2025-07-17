@@ -284,7 +284,7 @@ public class LoadCache {
    */
   public void cacheAINodeHeartbeatSample(int nodeId, NodeHeartbeatSample sample) {
     activationStatusCacheMap.put(
-        nodeId, new ActivationStatusCache(System.nanoTime(), ActivateStatus.ACTIVATED));
+        nodeId, new ActivationStatusCache(System.nanoTime(), sample.getActivateStatus()));
     nodeCacheMap
         .computeIfAbsent(nodeId, empty -> new AINodeHeartbeatCache(nodeId))
         .cacheHeartbeatSample(sample);

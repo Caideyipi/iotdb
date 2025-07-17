@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+from ainode.core.config import AINodeDescriptor
 from ainode.core.constant import TSStatusCode
 from ainode.core.log import Logger
 from ainode.core.manager.cluster_manager import ClusterManager
@@ -41,6 +42,7 @@ from ainode.thrift.ainode.ttypes import (
 from ainode.thrift.common.ttypes import TSStatus
 
 logger = Logger()
+AIN_CONFIG = AINodeDescriptor().get_config()
 
 
 class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
@@ -55,15 +57,39 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
         return get_status(TSStatusCode.SUCCESS_STATUS, "AINode stopped successfully.")
 
     def registerModel(self, req: TRegisterModelReq) -> TRegisterModelResp:
+        if not AIN_CONFIG.is_activated():
+            return TRegisterModelResp(
+                status=get_status(
+                    TSStatusCode.AINODE_INTERNAL_ERROR,
+                    "Reject model registration because AINode is unactivated.",
+                )
+            )
         return self._model_manager.register_model(req)
 
     def deleteModel(self, req: TDeleteModelReq) -> TSStatus:
+        if not AIN_CONFIG.is_activated():
+            return get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject model deletion because AINode is unactivated.",
+            )
         return self._model_manager.delete_model(req)
 
     def inference(self, req: TInferenceReq) -> TInferenceResp:
+        if not AIN_CONFIG.is_activated():
+            return TInferenceResp(
+                status=get_status(
+                    TSStatusCode.AINODE_INTERNAL_ERROR,
+                    "Reject inference because AINode is unactivated.",
+                )
+            )
         return self._inference_manager.inference(req)
 
     def forecast(self, req: TForecastReq) -> TSStatus:
+        if not AIN_CONFIG.is_activated():
+            return get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject forecast because AINode is unactivated.",
+            )
         return self._inference_manager.forecast(req)
 
     def getAIHeartbeat(self, req: TAIHeartbeatReq) -> TAIHeartbeatResp:
@@ -73,6 +99,11 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
         return self._model_manager.show_models(req)
 
     def createTrainingTask(self, req: TTrainingReq) -> TSStatus:
+        if not AIN_CONFIG.is_activated():
+            return get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject training task creation because AINode is unactivated.",
+            )
         args = get_default_training_args()
         try:
             # Parse the request to set up the training parameters

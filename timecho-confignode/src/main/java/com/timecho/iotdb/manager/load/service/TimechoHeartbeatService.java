@@ -19,6 +19,7 @@
 
 package com.timecho.iotdb.manager.load.service;
 
+import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatReq;
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.ConfigNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
@@ -53,6 +54,11 @@ public class TimechoHeartbeatService extends HeartbeatService {
   protected void setActivationRelatedInfoForDataNodeReq(TDataNodeHeartbeatReq req) {
     req.setActivation(
         new TDataNodeActivation(timechoConfigManager.getActivationManager().isActivated(), 0, 0));
+  }
+
+  @Override
+  protected void setActivationRelatedInfoForAINodeReq(TAIHeartbeatReq req) {
+    req.setActivated(timechoConfigManager.getActivationManager().isActivated());
   }
 
   @Override

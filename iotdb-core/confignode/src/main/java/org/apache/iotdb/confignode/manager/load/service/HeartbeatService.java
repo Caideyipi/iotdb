@@ -233,7 +233,13 @@ public class HeartbeatService {
     // We sample AINode's load in every 10 heartbeat loop
     heartbeatReq.setNeedSamplingLoad(heartbeatCounter.get() % 10 == 0);
 
+    setActivationRelatedInfoForAINodeReq(heartbeatReq);
+
     return heartbeatReq;
+  }
+
+  protected void setActivationRelatedInfoForAINodeReq(TAIHeartbeatReq req) {
+    throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
   /**

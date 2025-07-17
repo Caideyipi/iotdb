@@ -17,8 +17,11 @@
 #
 import psutil
 
+from ainode.core.config import AINodeDescriptor
 from ainode.thrift.ainode.ttypes import TAIHeartbeatReq, TAIHeartbeatResp
 from ainode.thrift.common.ttypes import TLoadSample
+
+AIN_CONFIG = AINodeDescriptor().get_config()
 
 
 class ClusterManager:
@@ -35,12 +38,16 @@ class ClusterManager:
                 diskUsageRate=disk_usage.percent,
                 freeDiskSpace=disk_free / 1024 / 1024 / 1024,
             )
+            AIN_CONFIG.set_activated(req.activated)
             return TAIHeartbeatResp(
                 heartbeatTimestamp=req.heartbeatTimestamp,
                 status="Running",
                 loadSample=load_sample,
+                activateStatus=("ACTIVATED" if req.activated else "UNACTIVATED"),
             )
         else:
             return TAIHeartbeatResp(
-                heartbeatTimestamp=req.heartbeatTimestamp, status="Running"
+                heartbeatTimestamp=req.heartbeatTimestamp,
+                status="Running",
+                activateStatus=("ACTIVATED" if req.activated else "UNACTIVATED"),
             )

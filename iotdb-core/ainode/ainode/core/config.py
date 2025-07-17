@@ -16,6 +16,7 @@
 # under the License.
 #
 import os
+import threading
 
 from ainode.core.constant import (
     AINODE_BUILD_INFO,
@@ -91,6 +92,9 @@ class AINodeConfig(object):
         self._ain_cluster_ingress_password = AINODE_CLUSTER_INGRESS_PASSWORD
         self._ain_cluster_ingress_time_zone = AINODE_CLUSTER_INGRESS_TIME_ZONE
 
+        # activation
+        self._ain_activated = threading.Event()
+
         self._version_info = AINODE_VERSION_INFO
         self._build_info = AINODE_BUILD_INFO
 
@@ -99,6 +103,15 @@ class AINodeConfig(object):
 
     def set_cluster_name(self, cluster_name: str) -> None:
         self._cluster_name = cluster_name
+
+    def is_activated(self) -> bool:
+        return self._ain_activated.is_set()
+
+    def set_activated(self, is_activated: bool) -> None:
+        if is_activated:
+            self._ain_activated.set()
+        else:
+            self._ain_activated.clear()
 
     def get_version_info(self) -> str:
         return self._version_info
