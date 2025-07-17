@@ -134,7 +134,7 @@ public class HeartbeatService {
                 pingRegisteredDataNodes(
                     genHeartbeatReq(), getNodeManager().getRegisteredDataNodes());
                 // Send heartbeat requests to all the registered AINodes
-                pingRegisteredAINodes(genMLHeartbeatReq(), getNodeManager().getRegisteredAINodes());
+                pingRegisteredAINodes(genAIHeartbeatReq(), getNodeManager().getRegisteredAINodes());
               }
             });
   }
@@ -225,7 +225,7 @@ public class HeartbeatService {
     throw new UnsupportedOperationException(ConfigNode.WRONG_MAIN_CLASS_MESSAGE);
   }
 
-  private TAIHeartbeatReq genMLHeartbeatReq() {
+  private TAIHeartbeatReq genAIHeartbeatReq() {
     /* Generate heartbeat request */
     TAIHeartbeatReq heartbeatReq = new TAIHeartbeatReq();
     heartbeatReq.setHeartbeatTimestamp(System.nanoTime());
