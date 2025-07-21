@@ -111,8 +111,8 @@ class TrainingManager:
     A manager class for handling training tasks in a parallel manner using the ParallelTaskExecutor.
     """
 
-    def __init__(self, model_manager: ModelManager):
-        self._model_manager = model_manager
+    def __init__(self):
+        self._model_manager = ModelManager()
         # self.executor = ParallelTaskExecutor()
         # self.executor.start()
 
