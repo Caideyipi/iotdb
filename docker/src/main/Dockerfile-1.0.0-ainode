@@ -17,7 +17,7 @@
 # under the License.
 #
 FROM python:3.12-slim-bullseye
-ARG version=2.0.5-SNAPSHOT
+ARG version=2.0.6-SNAPSHOT
 ARG target=apache-iotdb-${version}-ainode-bin
 
 # replace deb source when necessary

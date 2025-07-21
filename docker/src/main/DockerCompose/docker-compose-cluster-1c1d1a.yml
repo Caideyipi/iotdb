@@ -19,7 +19,7 @@
 
 services:
   iotdb-service:
-    image: apache/iotdb:2.0.5-SNAPSHOT-standalone
+    image: apache/iotdb:2.0.6-SNAPSHOT-standalone
     hostname: iotdb-service
     container_name: iotdb-service
     ports:
@@ -50,7 +50,7 @@ services:
       iotdb:
         # ipv4_address: 127.0.0.1
   iotdb-ainode:
-    image: apache/iotdb:2.0.5-SNAPSHOT-ainode
+    image: apache/iotdb:2.0.6-SNAPSHOT-ainode
     hostname: iotdb-ainode
     container_name: iotdb-ainode
     environment:

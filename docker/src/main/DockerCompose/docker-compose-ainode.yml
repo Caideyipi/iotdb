@@ -19,7 +19,7 @@
 
 services:
   iotdb-ainode:
-    image: apache/iotdb:2.0.5-SNAPSHOT-ainode
+    image: apache/iotdb:2.0.6-SNAPSHOT-ainode
     hostname: iotdb-ainode
     container_name: iotdb-ainode
     ports:
