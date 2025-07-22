@@ -1,0 +1,57 @@
+services:
+  timechodb-service:
+    image: nexus.infra.timecho.com:8243/timecho/timechodb:version-standalone
+    hostname: timechodb-service
+    container_name: timechodb-service
+    ports:
+      - "6667:6667"
+    environment:
+      - cn_internal_address=timechodb-service
+      - cn_internal_port=10710
+      - cn_consensus_port=10720
+      - cn_seed_config_node=timechodb-service:10710
+      - dn_rpc_address=timechodb-service
+      - dn_internal_address=timechodb-service
+      - dn_rpc_port=6667
+      - dn_mpp_data_exchange_port=10740
+      - dn_schema_region_consensus_port=10750
+      - dn_data_region_consensus_port=10760
+      - dn_seed_config_node=timechodb-service:10710
+      - IOTDB_JMX_OPTS=-Xms4G -Xmx4G -XX:MaxDirectMemorySize=1G
+      - CONFIGNODE_JMX_OPTS=-Xms1G -Xmx1G -XX:MaxDirectMemorySize=256M
+    volumes:
+      - ./data/iotdb:/iotdb/data
+      - ./logs/iotdb:/iotdb/logs
+    # Enable this configuration for kylinOS
+    # ulimits:
+    #   nofile:
+    #     soft: 20000
+    #     hard: 20000
+    networks:
+      timechodb:
+      # ipv4_address: 127.0.0.1
+  timechodb-ainode:
+    image: nexus.infra.timecho.com:8243/timecho/timechodb:2.0.5-SNAPSHOT-ainode
+    hostname: timechodb-ainode
+    container_name: timechodb-ainode
+    environment:
+      - ain_seed_config_node=timechodb-service:10710
+      - ain_inference_rpc_address=timechodb-ainode
+      - ain_inference_rpc_port=10810
+    volumes:
+      - ./logs/ainode:/ainode/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+    networks:
+      timechodb:
+    #     ipv4_address: 127.0.0.1
+
+networks:
+  timechodb:
+    external: false

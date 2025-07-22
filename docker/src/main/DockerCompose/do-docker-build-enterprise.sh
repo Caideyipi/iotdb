@@ -23,7 +23,7 @@
 current_path=$(cd $(dirname $0); pwd)
 iotdb_path=$(cd ${current_path}/../../../../; pwd)
 iotdb_zip_path=${current_path}/../target/
-options="confignode datanode standalone latest"
+options="confignode datanode ainode standalone latest"
 nocache="true"
 do_build="false"
 docker_build="docker build "
@@ -92,19 +92,32 @@ function build_single(){
     if [[ "$1" == "latest" ]]; then
         local dockerfile="Dockerfile-1.0.0-standalone"
         local image="${image_prefix}:latest"
+    elif [[ "$is_enterprise" == "true" && "$1" == "ainode" ]]; then
+        local dockerfile="Dockerfile-1.0.0-enterprise-$1"
+        local image="${image_prefix}:${version}-$1"
     else
         local dockerfile="Dockerfile-1.0.0-$1"
         local image="${image_prefix}:${version}-$1"
     fi
     cd ${current_path}/../
     if [[ "$is_enterprise" == "true" ]]; then
-      ${docker_build} -f ${dockerfile} \
-	    --build-arg version=${version} \
-            --build-arg target=timechodb-${version}-bin \
-        --label build_date="${build_date}" \
-        --label maintainer="${maintainer}" \
-        --label commit_id="${commit_id}" \
-        --no-cache=${nocache} -t ${image} . ${docker_publish}
+      if [[ "$1" == "ainode" ]]; then
+        ${docker_build} -f ${dockerfile} \
+        --build-arg version=${version} \
+              --build-arg target=timechodb-${version}-ainode-bin \
+          --label build_date="${build_date}" \
+          --label maintainer="${maintainer}" \
+          --label commit_id="${commit_id}" \
+          --no-cache=${nocache} -t ${image} . ${docker_publish}
+      else
+        ${docker_build} -f ${dockerfile} \
+        --build-arg version=${version} \
+              --build-arg target=timechodb-${version}-bin \
+          --label build_date="${build_date}" \
+          --label maintainer="${maintainer}" \
+          --label commit_id="${commit_id}" \
+          --no-cache=${nocache} -t ${image} . ${docker_publish}
+      fi
     else
       ${docker_build} -f ${dockerfile} \
 	    --build-arg version=${version} \
@@ -127,7 +140,7 @@ function prepare_buildx(){
             docker_publish="" ;
             return ;
         fi
-        docker_build="docker buildx build --platform linux/amd64,linux/arm64/v8,linux/arm/v7" ;
+        docker_build="docker buildx build --platform linux/amd64,linux/arm64/v8" ;
         docker buildx inspect mybuilder || if [[ $? -ne 0 ]]; then
             docker buildx create --name mybuilder --driver docker-container --bootstrap --use
             docker run --rm --privileged tonistiigi/binfmt:latest --install all
@@ -145,11 +158,11 @@ function build_iotdb(){
     fi
     echo "##### build IoTDB #####"
     cd $iotdb_path
-    mvn clean package -pl distribution -am -DskipTests
+    mvn clean package -pl distribution -P with-ainode -am -DskipTests
     if [[ ! -d ${iotdb_zip_path} ]]; then mkdir ${iotdb_zip_path}; fi
     cd ${iotdb_path}/distribution/target
     if [[ "$is_enterprise" == "true" ]]; then
-      cp timechodb-${version}-bin.zip ${iotdb_zip_path}/
+      cp timechodb-${version}-bin.zip timechodb-${version}-ainode-bin.zip ${iotdb_zip_path}/
     else
       cp apache-iotdb-${version}-all-bin.zip apache-iotdb-${version}-confignode-bin.zip apache-iotdb-${version}-datanode-bin.zip ${iotdb_zip_path}/
     fi
@@ -184,6 +197,9 @@ function main() {
             ;;
         datanode)
             process_single
+            ;;
+        ainode)
+            process_single all
             ;;
         standalone)
             process_single all
