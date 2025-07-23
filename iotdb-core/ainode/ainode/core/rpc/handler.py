@@ -46,14 +46,14 @@ AIN_CONFIG = AINodeDescriptor().get_config()
 
 
 class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
-    def __init__(self, aiNode):
-        self._aiNode = aiNode
+    def __init__(self, ainode):
+        self._ainode = ainode
         self._model_manager = ModelManager()
         self._inference_manager = InferenceManager()
         self._training_manager = TrainingManager()
 
     def stopAINode(self) -> TSStatus:
-        self._aiNode.stop()
+        self._ainode.stop()
         return get_status(TSStatusCode.SUCCESS_STATUS, "AINode stopped successfully.")
 
     def registerModel(self, req: TRegisterModelReq) -> TRegisterModelResp:
