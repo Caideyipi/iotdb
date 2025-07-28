@@ -20,11 +20,16 @@
 package org.apache.iotdb.ainode.it;
 
 import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.framework.IoTDBTestRunner;
+import org.apache.iotdb.itbase.category.AIClusterIT;
 import org.apache.iotdb.itbase.env.BaseEnv;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -35,8 +40,8 @@ import java.sql.Statement;
 import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkHeader;
 import static org.junit.Assert.assertEquals;
 
-// @RunWith(IoTDBTestRunner.class)
-// @Category({AIClusterIT.class})
+@RunWith(IoTDBTestRunner.class)
+@Category({AIClusterIT.class})
 public class AINodeClusterConfigIT {
 
   @Before
@@ -50,7 +55,7 @@ public class AINodeClusterConfigIT {
     EnvFactory.getEnv().cleanClusterEnvironment();
   }
 
-  //  @Test
+  @Test
   public void aiNodeRegisterAndRemoveTestInTree() throws SQLException {
     try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TREE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {
@@ -58,7 +63,7 @@ public class AINodeClusterConfigIT {
     }
   }
 
-  //  @Test
+  @Test
   public void aiNodeRegisterAndRemoveTestInTable() throws SQLException {
     try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {

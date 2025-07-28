@@ -58,6 +58,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def registerModel(self, req: TRegisterModelReq) -> TRegisterModelResp:
         if not AIN_CONFIG.is_activated():
+            logger.warning(
+                "TimechoDB-AINode rejects model registration because it is unactivated."
+            )
             return TRegisterModelResp(
                 status=get_status(
                     TSStatusCode.AINODE_INTERNAL_ERROR,
@@ -68,6 +71,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def deleteModel(self, req: TDeleteModelReq) -> TSStatus:
         if not AIN_CONFIG.is_activated():
+            logger.warning(
+                "TimechoDB-AINode rejects model deletion because it is unactivated."
+            )
             return get_status(
                 TSStatusCode.AINODE_INTERNAL_ERROR,
                 "Reject model deletion because AINode is unactivated.",
@@ -76,6 +82,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def inference(self, req: TInferenceReq) -> TInferenceResp:
         if not AIN_CONFIG.is_activated():
+            logger.warning(
+                "TimechoDB-AINode rejects inference because it is unactivated."
+            )
             return TInferenceResp(
                 status=get_status(
                     TSStatusCode.AINODE_INTERNAL_ERROR,
@@ -86,6 +95,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def forecast(self, req: TForecastReq) -> TSStatus:
         if not AIN_CONFIG.is_activated():
+            logger.warning(
+                "TimechoDB-AINode rejects forecast because it is unactivated."
+            )
             return get_status(
                 TSStatusCode.AINODE_INTERNAL_ERROR,
                 "Reject forecast because AINode is unactivated.",
@@ -100,6 +112,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def createTrainingTask(self, req: TTrainingReq) -> TSStatus:
         if not AIN_CONFIG.is_activated():
+            logger.warning(
+                "TimechoDB-AINode rejects training task creation because it is unactivated."
+            )
             return get_status(
                 TSStatusCode.AINODE_INTERNAL_ERROR,
                 "Reject training task creation because AINode is unactivated.",

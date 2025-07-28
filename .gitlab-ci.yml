@@ -192,9 +192,9 @@ table-integration-test-1c3d:
 
 ainode-test-1c1d1a:
   stage: test
-  image: maven:3.8.6-openjdk-8-slim-lsof-python3
+  image: timechodb:AICluster
   tags:
-    - ainode
+    - gpu
   before_script:
     - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
     - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
@@ -203,8 +203,7 @@ ainode-test-1c1d1a:
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
     - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
-    - 'mvn clean package -DskipTests -pl iotdb-core/ainode -am -P with-ainode -s $MAVEN_SETTINGS_XML'
-    - 'mvn verify -P with-integration-tests -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DaiNodeMaxHeapSize=1024 -pl integration-test -am -PAIClusterIT -s $MAVEN_SETTINGS_XML'
+    - 'mvn verify -P with-integration-tests,with-ainode -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DaiNodeMaxHeapSize=1024 -pl integration-test,iotdb-core/ainode -am -PAIClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/

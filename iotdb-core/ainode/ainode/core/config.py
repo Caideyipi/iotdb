@@ -109,8 +109,12 @@ class AINodeConfig(object):
 
     def set_activated(self, is_activated: bool) -> None:
         if is_activated:
+            if not self._ain_activated.is_set():
+                logger.info("TimechoDB-AINode is activated.")
             self._ain_activated.set()
         else:
+            if self._ain_activated.is_set():
+                logger.info("TimechoDB-AINode is deactivated.")
             self._ain_activated.clear()
 
     def get_version_info(self) -> str:

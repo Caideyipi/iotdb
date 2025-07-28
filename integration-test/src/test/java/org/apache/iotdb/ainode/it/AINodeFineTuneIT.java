@@ -1,0 +1,139 @@
+package org.apache.iotdb.ainode.it;
+
+import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.framework.IoTDBTestRunner;
+import org.apache.iotdb.itbase.category.AIClusterIT;
+import org.apache.iotdb.itbase.env.BaseEnv;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+import java.util.concurrent.TimeUnit;
+
+import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkHeader;
+import static org.apache.iotdb.db.it.utils.TestUtils.prepareData;
+import static org.apache.iotdb.db.it.utils.TestUtils.prepareTableData;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+@RunWith(IoTDBTestRunner.class)
+@Category({AIClusterIT.class})
+public class AINodeFineTuneIT {
+
+  private static final int LINE_COUNT = 6666;
+  private static final int WAITING_COUNT_SECOND = 600;
+  private static final String[] SCHEMA_SQL_IN_TREE =
+      new String[] {
+        "CREATE DATABASE root.AI", "CREATE TIMESERIES root.AI.s0 WITH DATATYPE=FLOAT, ENCODING=RLE",
+      };
+  private static final String[] SCHEMA_SQL_IN_TABLE =
+      new String[] {
+        "CREATE DATABASE root", "CREATE TABLE root.AI (s0 FLOAT FIELD)",
+      };
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    // Init 1C1D1A cluster environment
+    EnvFactory.getEnv().initClusterEnvironment(1, 1);
+    prepareFineTuneData();
+  }
+
+  @AfterClass
+  public static void tearDown() throws Exception {
+    EnvFactory.getEnv().cleanClusterEnvironment();
+  }
+
+  private static void prepareFineTuneData() {
+    String[] write_sql_in_tree = new String[LINE_COUNT + SCHEMA_SQL_IN_TREE.length];
+    System.arraycopy(SCHEMA_SQL_IN_TREE, 0, write_sql_in_tree, 0, SCHEMA_SQL_IN_TREE.length);
+    for (int i = 0; i < LINE_COUNT; i++) {
+      write_sql_in_tree[i + SCHEMA_SQL_IN_TREE.length] =
+          String.format("INSERT INTO root.AI(timestamp, s0) VALUES(%d, %f)", i, Math.random());
+    }
+    prepareData(write_sql_in_tree);
+    String[] write_sql_in_table = new String[LINE_COUNT + SCHEMA_SQL_IN_TABLE.length];
+    System.arraycopy(SCHEMA_SQL_IN_TABLE, 0, write_sql_in_table, 0, SCHEMA_SQL_IN_TABLE.length);
+    for (int i = 0; i < LINE_COUNT; i++) {
+      write_sql_in_table[i + SCHEMA_SQL_IN_TABLE.length] =
+          String.format("INSERT INTO root.AI(time, s0) VALUES(%d, %f)", i, Math.random());
+    }
+    prepareTableData(write_sql_in_table);
+  }
+
+  @Test
+  public void testFineTuneInTree() throws Exception {
+    try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TREE_SQL_DIALECT);
+        Statement statement = connection.createStatement()) {
+      statement.execute(
+          "CREATE MODEL sundial_tree FROM MODEL sundial ON DATASET (PATH root.AI.s0)");
+      for (int retry = 0; retry < WAITING_COUNT_SECOND; retry++) {
+        try (ResultSet resultSet = statement.executeQuery("SHOW MODELS sundial_tree")) {
+          int modelCnt = 0;
+          ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+          checkHeader(resultSetMetaData, "ModelId,ModelType,Category,State");
+          while (resultSet.next()) {
+            String modelId = resultSet.getString(1);
+            String modelType = resultSet.getString(2);
+            String category = resultSet.getString(3);
+            String state = resultSet.getString(4);
+
+            assertEquals("sundial_tree", modelId);
+            assertEquals("Timer-Sundial", modelType);
+            assertEquals("FINE-TUNED", category);
+            if (state.equals("ACTIVE")) {
+              return;
+            }
+            ++modelCnt;
+          }
+          assertEquals(1, modelCnt);
+        }
+        TimeUnit.SECONDS.sleep(1); // Wait for 1 second before retrying
+      }
+      fail(
+          String.format(
+              "Fine-tuning model did not finish after waiting for %ds.", WAITING_COUNT_SECOND));
+    }
+  }
+
+  @Test
+  public void testFineTuneInTable() throws Exception {
+    try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
+        Statement statement = connection.createStatement()) {
+      statement.execute(
+          "CREATE MODEL sundial_table FROM MODEL sundial ON DATASET (\'SELECT time, s0 FROM root.AI\')");
+      for (int retry = 0; retry < WAITING_COUNT_SECOND; retry++) {
+        try (ResultSet resultSet = statement.executeQuery("SHOW MODELS sundial_table")) {
+          int modelCnt = 0;
+          ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+          checkHeader(resultSetMetaData, "ModelId,ModelType,Category,State");
+          while (resultSet.next()) {
+            String modelId = resultSet.getString(1);
+            String modelType = resultSet.getString(2);
+            String category = resultSet.getString(3);
+            String state = resultSet.getString(4);
+
+            assertEquals("sundial_table", modelId);
+            assertEquals("Timer-Sundial", modelType);
+            assertEquals("FINE-TUNED", category);
+            if (state.equals("ACTIVE")) {
+              return;
+            }
+            ++modelCnt;
+          }
+          assertEquals(1, modelCnt);
+        }
+        TimeUnit.SECONDS.sleep(1); // Wait for 1 second before retrying
+      }
+      fail(
+          String.format(
+              "Fine-tuning model did not finish after waiting for %ds.", WAITING_COUNT_SECOND));
+    }
+  }
+}

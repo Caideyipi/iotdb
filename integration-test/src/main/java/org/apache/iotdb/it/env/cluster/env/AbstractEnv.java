@@ -30,6 +30,7 @@ import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.exception.PortOccupiedException;
 import org.apache.iotdb.confignode.rpc.thrift.IConfigNodeRPCService;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDataNodesResp;
@@ -581,6 +582,94 @@ public abstract class AbstractEnv implements BaseEnv {
         nodeWrapper.start();
       }
     }
+  }
+
+  /**
+   * check whether all nodes' activate status match the provided predicate with RPC. after
+   * retryCount times, if the status of all nodes still not match the predicate, throw
+   * AssertionError.
+   *
+   * @param activateStatusCheck the predicate to test the status of nodes
+   */
+  public void checkActivationStatus(final Predicate<Map<Integer, String>> activateStatusCheck) {
+    logger.info("Testing cluster activation status...");
+    TShowClusterResp showClusterResp;
+    Exception lastException = null;
+    boolean passed;
+    boolean showClusterPassed;
+    boolean nodeSizePassed;
+    boolean activateStatusPassed = true;
+    Map<Integer, TNodeActivateInfo> lastActivateStatus = null;
+
+    for (int i = 0; i < retryCount; i++) {
+      try (final SyncConfigNodeIServiceClient client =
+          (SyncConfigNodeIServiceClient) getLeaderConfigNodeConnection()) {
+        passed = true;
+        showClusterPassed = true;
+        nodeSizePassed = true;
+        activateStatusPassed = true;
+
+        showClusterResp = client.showCluster();
+
+        // Check resp status
+        if (showClusterResp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+          passed = false;
+          showClusterPassed = false;
+        }
+
+        // Check the number of nodes
+        if (showClusterResp.getNodeStatus().size()
+            != configNodeWrapperList.size()
+                + dataNodeWrapperList.size()
+                + aiNodeWrapperList.size()) {
+          passed = false;
+          nodeSizePassed = false;
+        }
+
+        // Check the status of nodes
+        if (passed) {
+          passed =
+              activateStatusCheck.test(
+                  showClusterResp.getNodeActivateInfo().entrySet().stream()
+                      .collect(
+                          Collectors.toMap(
+                              Map.Entry::getKey, entry -> entry.getValue().getStatus())));
+          if (!passed) {
+            activateStatusPassed = false;
+            lastActivateStatus = showClusterResp.getNodeActivateInfo();
+          }
+        }
+
+        if (passed) {
+          logger.info(
+              "All cluster nodes are activated! ActivationStatusMap: {}", lastActivateStatus);
+          return;
+        }
+        logger.info(
+            "Retry {}: showClusterPassed={}, nodeSizePassed={}, activateStatusPassed={}",
+            i,
+            showClusterPassed,
+            nodeSizePassed,
+            activateStatusPassed);
+      } catch (final Exception e) {
+        lastException = e;
+      }
+      try {
+        TimeUnit.SECONDS.sleep(1L);
+      } catch (final InterruptedException e) {
+        lastException = e;
+        Thread.currentThread().interrupt();
+      }
+    }
+    logger.error("Node activation status incorrect: {}", lastActivateStatus);
+    if (lastException != null) {
+      logger.error(
+          "exception in test Cluster with RPC, message: {}",
+          lastException.getMessage(),
+          lastException);
+    }
+    throw new AssertionError(
+        String.format("After %d times retry, the cluster can't work!", retryCount));
   }
 
   @Override

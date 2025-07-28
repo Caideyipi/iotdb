@@ -19,20 +19,34 @@
 
 package org.apache.iotdb.it.env.cluster.env;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AIEnv extends AbstractEnv {
   @Override
   public void initClusterEnvironment() {
     initClusterEnvironment(1, 1);
+    checkActivationStatus(3);
   }
 
   @Override
   public void initClusterEnvironment(int configNodesNum, int dataNodesNum) {
-    super.initEnvironment(configNodesNum, dataNodesNum, 3600, true);
+    super.initEnvironment(configNodesNum, dataNodesNum, 1000, true);
+    checkActivationStatus(configNodesNum + dataNodesNum + 1);
   }
 
   @Override
   public void initClusterEnvironment(
       int configNodesNum, int dataNodesNum, int testWorkingRetryCount) {
     super.initEnvironment(configNodesNum, dataNodesNum, testWorkingRetryCount, true);
+    checkActivationStatus(configNodesNum + dataNodesNum + 1);
+  }
+
+  private void checkActivationStatus(int nodeCnt) {
+    Map<Integer, String> activateMap = new HashMap<>();
+    for (int i = 0; i < nodeCnt + 1; i++) {
+      activateMap.put(i, "ACTIVATED");
+    }
+    checkActivationStatus(activate -> activateMap.values().stream().allMatch("ACTIVATED"::equals));
   }
 }

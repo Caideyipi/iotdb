@@ -45,7 +45,7 @@ fi
 # 清理临时文件
 rm -f "$PARENT_METHOD_CONTENT" "$CHILD_METHOD_CONTENT"
 
-mvn clean install -DskipTests -am
+mvn clean install -DskipTests -DskipUTs -am
 
 # 进入timecho-session目录
 cd "$PROJECT_ROOT/timecho-session"

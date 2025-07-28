@@ -27,6 +27,7 @@ AIN_CONFIG = AINodeDescriptor().get_config()
 class ClusterManager:
     @staticmethod
     def get_heart_beat(req: TAIHeartbeatReq) -> TAIHeartbeatResp:
+        AIN_CONFIG.set_activated(req.activated)
         if req.needSamplingLoad:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory_percent = psutil.virtual_memory().percent
@@ -38,16 +39,19 @@ class ClusterManager:
                 diskUsageRate=disk_usage.percent,
                 freeDiskSpace=disk_free / 1024 / 1024 / 1024,
             )
-            AIN_CONFIG.set_activated(req.activated)
             return TAIHeartbeatResp(
                 heartbeatTimestamp=req.heartbeatTimestamp,
                 status="Running",
                 loadSample=load_sample,
-                activateStatus=("ACTIVATED" if req.activated else "UNACTIVATED"),
+                activateStatus=(
+                    "ACTIVATED" if AIN_CONFIG.is_activated() else "UNACTIVATED"
+                ),
             )
         else:
             return TAIHeartbeatResp(
                 heartbeatTimestamp=req.heartbeatTimestamp,
                 status="Running",
-                activateStatus=("ACTIVATED" if req.activated else "UNACTIVATED"),
+                activateStatus=(
+                    "ACTIVATED" if AIN_CONFIG.is_activated() else "UNACTIVATED"
+                ),
             )
