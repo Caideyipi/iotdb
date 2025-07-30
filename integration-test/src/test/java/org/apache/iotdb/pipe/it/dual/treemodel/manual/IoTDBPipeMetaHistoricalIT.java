@@ -365,7 +365,8 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
               "create timeseries root.ln.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN",
               "CREATE VIEW root.ln.device.status AS root.ln.wf02.wt01.status",
               // Insert large timestamp to avoid deletion by ttl
-              "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"))) {
+              "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"),
+          null)) {
         return;
       }
 
@@ -411,7 +412,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
           Collections.emptySet());
 
       if (!TestUtils.tryExecuteNonQueryWithRetry(
-          senderEnv, "create timeseries using schema template on root.ln.wf01.wt02")) {
+          senderEnv, "create timeseries using schema template on root.ln.wf01.wt02", null)) {
         return;
       }
 

@@ -45,7 +45,7 @@ public class TableModelSessionExample {
         new TableSessionBuilder()
             .nodeUrls(Collections.singletonList(LOCAL_URL))
             .username("root")
-            .password("IoTDB@2011")
+            .password("TimechoDB@2021")
             .build()) {
 
       session.executeNonQueryStatement("CREATE DATABASE test1");
@@ -140,7 +140,7 @@ public class TableModelSessionExample {
         new TableSessionBuilder()
             .nodeUrls(Collections.singletonList(LOCAL_URL))
             .username("root")
-            .password("IoTDB@2011")
+            .password("TimechoDB@2021")
             .database("test1")
             .build()) {
 
