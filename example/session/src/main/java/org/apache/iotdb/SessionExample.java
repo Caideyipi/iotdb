@@ -820,7 +820,8 @@ public class SessionExample {
   }
 
   private static void setTimeout() throws IoTDBConnectionException {
-    try (Session tempSession = new Session(LOCAL_HOST, 6667, "root", "TimechoDB@2021", 10000, 20000)) {
+    try (Session tempSession =
+        new Session(LOCAL_HOST, 6667, "root", "TimechoDB@2021", 10000, 20000)) {
       tempSession.setQueryTimeout(60000);
     }
   }

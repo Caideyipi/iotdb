@@ -27,6 +27,7 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.pipe.config.constant.SystemConstant;
 import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
+import org.apache.iotdb.commons.utils.StatusUtils;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.protocol.session.SessionManager;
@@ -175,6 +176,11 @@ public class DataNodeAuthUtils {
                   ClusterSchemaFetcher.getInstance());
       return result.status;
     } catch (Exception e) {
+      if (CommonDescriptor.getInstance().getConfig().getPasswordExpirationDays() < 0
+          && CommonDescriptor.getInstance().getConfig().getPasswordReuseIntervalDays() < 0) {
+        // password history is not used in the current configuration, tolerate the failure
+        return StatusUtils.OK;
+      }
       LOGGER.error("Cannot create password history for {} because {}", username, e.getMessage());
       return new TSStatus(TSStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
           .setMessage(

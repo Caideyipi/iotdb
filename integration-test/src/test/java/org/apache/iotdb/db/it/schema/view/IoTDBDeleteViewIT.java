@@ -80,7 +80,7 @@ public class IoTDBDeleteViewIT extends AbstractSchemaIT {
       statement.execute("delete view root.turbine1.d1.s2");
       TestUtils.assertDataEventuallyOnEnv(
           EnvFactory.getEnv(),
-          "count timeSeries",
+          "count timeSeries root.turbine1.**",
           "count(timeseries),",
           Collections.singleton("1,"));
     }

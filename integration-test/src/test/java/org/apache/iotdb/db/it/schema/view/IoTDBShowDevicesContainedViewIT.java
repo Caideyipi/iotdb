@@ -43,7 +43,7 @@ import java.util.Set;
 @Category({LocalStandaloneIT.class, ClusterIT.class})
 public class IoTDBShowDevicesContainedViewIT extends AbstractSchemaIT {
 
-  private static final String showDevicesSQL = "show devices;";
+  private static final String showDevicesSQL = "show devices root.db.**;";
 
   public IoTDBShowDevicesContainedViewIT(SchemaTestMode schemaTestMode) {
     super(schemaTestMode);

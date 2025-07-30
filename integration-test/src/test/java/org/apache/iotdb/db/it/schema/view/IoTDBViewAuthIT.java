@@ -47,7 +47,7 @@ public class IoTDBViewAuthIT {
   @BeforeClass
   public static void setUp() throws Exception {
     EnvFactory.getEnv().initClusterEnvironment();
-    createUser("test", "test123");
+    createUser("test", "tesT@123456789");
     executeNonQuery("insert into root.sg.d1(time,s1,s2) values(1,1,1),(2,10,10)");
   }
 
@@ -71,30 +71,32 @@ public class IoTDBViewAuthIT {
         "create view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1",
         "803: No permissions for this operation, please add privilege READ_SCHEMA on [root.sg.d1.s2]",
         "test",
-        "test123");
+        "tesT@123456789");
     assertNonQueryTestFail(
         "create view root.sg.view_d1.s2 as root.sg.d1.s2",
         "803: No permissions for this operation, please add privilege READ_SCHEMA on [root.sg.d1.s2]",
         "test",
-        "test123");
+        "tesT@123456789");
 
     grantUserSeriesPrivilege("test", PrivilegeType.READ_SCHEMA, "root.sg.d1.s2");
     assertNonQueryTestFail(
         "create view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1",
         "803: No permissions for this operation, please add privilege WRITE_SCHEMA on [root.sg.view_d1.s1]",
         "test",
-        "test123");
+        "tesT@123456789");
     assertNonQueryTestFail(
         "create view root.sg.view_d1.s2 as root.sg.d1.s2",
         "803: No permissions for this operation, please add privilege WRITE_SCHEMA on [root.sg.view_d1.s2]",
         "test",
-        "test123");
+        "tesT@123456789");
 
     grantUserSeriesPrivilege("test", PrivilegeType.WRITE_SCHEMA, "root.sg.view_d1.s1");
     executeNonQuery(
-        "create view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1", "test", "test123");
+        "create view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1",
+        "test",
+        "tesT@123456789");
     grantUserSeriesPrivilege("test", PrivilegeType.WRITE_SCHEMA, "root.sg.view_d1.s2");
-    executeNonQuery("create view root.sg.view_d1.s2 as root.sg.d1.s2", "test", "test123");
+    executeNonQuery("create view root.sg.view_d1.s2 as root.sg.d1.s2", "test", "tesT@123456789");
   }
 
   private void testShow() {
@@ -109,7 +111,7 @@ public class IoTDBViewAuthIT {
           "root.sg.view_d1.s2,root.sg,DOUBLE,null,null,VIEW,root.sg.d1.s2,"
         },
         "test",
-        "test123");
+        "tesT@123456789");
   }
 
   private void testAlter() {
@@ -120,30 +122,32 @@ public class IoTDBViewAuthIT {
         "alter view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1",
         "803: No permissions for this operation, please add privilege READ_SCHEMA on [root.sg.d1.s2]",
         "test",
-        "test123");
+        "tesT@123456789");
     assertNonQueryTestFail(
         "alter view root.sg.view_d1.s2 as root.sg.d1.s2",
         "803: No permissions for this operation, please add privilege READ_SCHEMA on [root.sg.d1.s2]",
         "test",
-        "test123");
+        "tesT@123456789");
 
     grantUserSeriesPrivilege("test", PrivilegeType.READ_SCHEMA, "root.sg.d1.s2");
     assertNonQueryTestFail(
         "alter view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1",
         "803: No permissions for this operation, please add privilege WRITE_SCHEMA on [root.sg.view_d1.s1]",
         "test",
-        "test123");
+        "tesT@123456789");
     assertNonQueryTestFail(
         "alter view root.sg.view_d1.s2 as root.sg.d1.s2",
         "803: No permissions for this operation, please add privilege WRITE_SCHEMA on [root.sg.view_d1.s2]",
         "test",
-        "test123");
+        "tesT@123456789");
 
     grantUserSeriesPrivilege("test", PrivilegeType.WRITE_SCHEMA, "root.sg.view_d1.s1");
     executeNonQuery(
-        "alter view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1", "test", "test123");
+        "alter view root.sg.view_d1.s1 as select (s1+s2)/2 from root.sg.d1",
+        "test",
+        "tesT@123456789");
     grantUserSeriesPrivilege("test", PrivilegeType.WRITE_SCHEMA, "root.sg.view_d1.s2");
-    executeNonQuery("alter view root.sg.view_d1.s2 as root.sg.d1.s2", "test", "test123");
+    executeNonQuery("alter view root.sg.view_d1.s2 as root.sg.d1.s2", "test", "tesT@123456789");
   }
 
   private void testRename() {
@@ -156,7 +160,7 @@ public class IoTDBViewAuthIT {
         "drop view root.sg.view_d1.s1",
         "803: No permissions for this operation, please add privilege WRITE_SCHEMA on [root.sg.view_d1.s1]",
         "test",
-        "test123");
+        "tesT@123456789");
     grantUserSeriesPrivilege("test", PrivilegeType.WRITE_SCHEMA, "root.sg.view_d1.s1");
     executeNonQuery("drop view root.sg.view_d1.s1");
   }

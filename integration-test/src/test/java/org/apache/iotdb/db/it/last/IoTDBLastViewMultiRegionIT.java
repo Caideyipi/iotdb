@@ -194,7 +194,7 @@ public class IoTDBLastViewMultiRegionIT {
           "root.sg.d4.vs4,null,root.sg,DOUBLE,null,null,null,null,null,null,VIEW,",
           "root.sg.d4.vs3,null,root.sg,DOUBLE,null,null,null,null,null,null,VIEW,",
         };
-    resultSetEqualTest("show latest timeseries", expectedHeader, retArray);
+    resultSetEqualTest("show latest timeseries root.sg*.**", expectedHeader, retArray);
 
     // show latest timeseries and filter
     retArray =

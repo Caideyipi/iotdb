@@ -53,9 +53,9 @@ public class IoTDBTimechoAuthIT {
   public void showActivationPrivilegeTest() throws SQLException {
     try (Connection adminCon = EnvFactory.getEnv().getConnection();
         Statement adminStmt = adminCon.createStatement()) {
-      adminStmt.execute("CREATE USER tempuser 'temppw'");
+      adminStmt.execute("CREATE USER tempuser 'tempPW@123456789'");
 
-      try (Connection userCon = EnvFactory.getEnv().getConnection("tempuser", "temppw");
+      try (Connection userCon = EnvFactory.getEnv().getConnection("tempuser", "tempPW@123456789");
           Statement userStmt = userCon.createStatement()) {
         Assert.assertThrows(SQLException.class, () -> userStmt.execute("SHOW ACTIVATION"));
         adminStmt.execute("GRANT MAINTAIN ON root.** TO USER tempuser");

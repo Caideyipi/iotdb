@@ -104,7 +104,7 @@ public class IoTDBGroupByLevelWithViewIT {
   @Test
   public void testCountStarLevel0() {
     String expectedHeader = "count(root.*.*.*.*),count(root.*.*.*),";
-    String[] retArray = new String[] {"8,10,"};
+    String[] retArray = new String[] {"9,10,"};
 
     resultSetEqualTest(
         "select count(*) from root.** group by level = 0;", expectedHeader, retArray);
@@ -112,8 +112,8 @@ public class IoTDBGroupByLevelWithViewIT {
 
   @Test
   public void testCountStarLevel1() {
-    String expectedHeader = "count(root.db.*.*.*),count(root.view.*.*),";
-    String[] retArray = new String[] {"8,10,"};
+    String expectedHeader = "count(root.__system.*.*.*),count(root.db.*.*.*),count(root.view.*.*),";
+    String[] retArray = new String[] {"1,8,10,"};
 
     resultSetEqualTest(
         "select count(*) from root.** group by level = 1;", expectedHeader, retArray);
@@ -122,8 +122,8 @@ public class IoTDBGroupByLevelWithViewIT {
   @Test
   public void testCountStarLevel2() {
     String expectedHeader =
-        "count(root.*.shanghai.*.*),count(root.*.beijing.*.*),count(root.*.d1.*),count(root.*.d2.*),count(root.*.d3.*),";
-    String[] retArray = new String[] {"4,4,4,4,2,"};
+        "count(root.*.password_history.*.*),count(root.*.shanghai.*.*),count(root.*.beijing.*.*),count(root.*.d1.*),count(root.*.d2.*),count(root.*.d3.*),";
+    String[] retArray = new String[] {"1,4,4,4,4,2,"};
 
     resultSetEqualTest(
         "select count(*) from root.** group by level = 2;", expectedHeader, retArray);
@@ -292,8 +292,8 @@ public class IoTDBGroupByLevelWithViewIT {
   @Test
   public void testSameColumn2() {
     String expectedHeader =
-        "count(root.db.*.*.*),count(root.view.*.*),count(root.db.*.*.*),count(root.view.*.*),";
-    String[] retArray = new String[] {"8,10,8,10,"};
+        "count(root.__system.*.*.*),count(root.db.*.*.*),count(root.view.*.*),count(root.__system.*.*.*),count(root.db.*.*.*),count(root.view.*.*),";
+    String[] retArray = new String[] {"1,8,10,1,8,10,"};
 
     resultSetEqualTest(
         "select count(*), count(*) from root.** group by level = 1;", expectedHeader, retArray);
