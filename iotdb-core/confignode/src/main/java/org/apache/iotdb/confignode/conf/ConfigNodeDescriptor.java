@@ -367,6 +367,14 @@ public class ConfigNodeDescriptor {
     commonDescriptor.loadCommonProps(properties);
     commonDescriptor.initCommonConfigDir(conf.getSystemDir());
 
+    commonDescriptor
+        .getConfig()
+        .setEnforceStrongPassword(
+            Boolean.parseBoolean(
+                properties.getProperty(
+                    "enforce_strong_password",
+                    String.valueOf(commonDescriptor.getConfig().isEnforceStrongPassword()))));
+
     conf.setProcedureCompletedEvictTTL(
         Integer.parseInt(
             properties.getProperty(

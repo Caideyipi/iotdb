@@ -1424,7 +1424,6 @@ public class IoTDBAuthIT {
     resultSetEqualTest("show current_user", expectedHeader, retArray, "tempuser", "temppw123456");
   }
 
-  @Ignore
   @Test
   public void testStrongPassword() throws SQLException {
     try (Connection connection = EnvFactory.getEnv().getConnection();

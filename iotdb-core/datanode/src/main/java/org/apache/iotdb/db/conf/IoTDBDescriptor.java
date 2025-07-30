@@ -997,6 +997,22 @@ public class IoTDBDescriptor {
     commonDescriptor.loadCommonProps(properties);
     commonDescriptor.initCommonConfigDir(conf.getSystemDir());
 
+    commonDescriptor
+        .getConfig()
+        .setPasswordExpirationDays(
+            Long.parseLong(
+                properties.getProperty(
+                    "password_expiration_days",
+                    String.valueOf(commonDescriptor.getConfig().getPasswordExpirationDays()))));
+
+    commonDescriptor
+        .getConfig()
+        .setPasswordReuseIntervalDays(
+            Long.parseLong(
+                properties.getProperty(
+                    "password_reuse_interval_days",
+                    String.valueOf(commonDescriptor.getConfig().getPasswordReuseIntervalDays()))));
+
     loadWALProps(properties);
 
     // Timed flush memtable
