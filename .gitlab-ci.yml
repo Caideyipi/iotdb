@@ -74,7 +74,7 @@ unit-test:
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
 
-builder-coverage-check:
+session-builder-coverage-check:
   stage: test
   tags:
     - timechodb
@@ -86,8 +86,11 @@ builder-coverage-check:
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
     - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
-    - 'chmod +x ci_builder_check.sh'
-    - './ci_builder_check.sh'
+    - 'chmod +x check_session_builder.sh'
+    - './check_session_builder.sh'
+    - 'mvn clean install -DskipTests -am -s $MAVEN_SETTINGS_XML'
+    - 'mvn test -pl timecho-session -Dtest=BuilderCoverageTest -q -s $MAVEN_SETTINGS_XML'
+    - 'mvn test -pl timecho-session -Dtest=BuilderTest,SessionPoolBuilderTest -q -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/

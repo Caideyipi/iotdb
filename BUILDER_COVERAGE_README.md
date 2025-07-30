@@ -62,7 +62,7 @@ public ChildBuilder methodName(ParameterType param) {
 ### 本地开发
 ```bash
 # 完整的 CI 检查（包括编译和功能测试）
-./ci_builder_check.sh
+./check_session_builder.sh
 
 # 或者直接运行 Maven 测试
 cd timecho-session
@@ -81,7 +81,7 @@ mvn test -Dtest=BuilderCoverageTest
    ```
 3. 运行覆盖检查验证：
    ```bash
-   ./ci_builder_check.sh
+   ./check_session_builder.sh
    # 或
    cd timecho-session && mvn test -Dtest=BuilderCoverageTest
    ```
@@ -166,7 +166,7 @@ for (Method parentMethod : parentMethods) {
 builder-coverage-check:
   stage: test
   script:
-    - './ci_builder_check.sh'
+    - './check_session_builder.sh'
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
 ```
