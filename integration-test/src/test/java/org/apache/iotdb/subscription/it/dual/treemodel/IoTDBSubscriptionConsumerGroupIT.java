@@ -965,7 +965,8 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
       final Thread t =
           new Thread(
               () -> {
-                try (final SubscriptionTreePullConsumer consumer = consumers.get(index)) {
+                try (final SubscriptionTreePullConsumer consumer = consumers.get(index);
+                    Connection defaultConnection = receiverEnv.getConnection()) {
                   while (!isClosed.get()) {
                     LockSupport.parkNanos(IoTDBSubscriptionITConstant.SLEEP_NS); // wait some time
                     final List<SubscriptionMessage> messages =
@@ -985,7 +986,10 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                               while (dataSet.hasNext()) {
                                 final RowRecord record = dataSet.next();
                                 if (!insertRowRecordEnrichedByConsumerGroupId(
-                                    columnNameList, record.getTimestamp(), consumerGroupId)) {
+                                    columnNameList,
+                                    record.getTimestamp(),
+                                    consumerGroupId,
+                                    defaultConnection)) {
                                   receiverCrashed.set(true);
                                   throw new RuntimeException("detect receiver crashed");
                                 }
@@ -1008,7 +1012,10 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                                 final RowRecord record = dataSet.next();
                                 for (final Path path : dataSet.getPaths()) {
                                   if (!insertRowRecordEnrichedByConsumerGroupId(
-                                      path.toString(), record.getTimestamp(), consumerGroupId)) {
+                                      path.toString(),
+                                      record.getTimestamp(),
+                                      consumerGroupId,
+                                      defaultConnection)) {
                                     receiverCrashed.set(true);
                                     throw new RuntimeException("detect receiver crashed");
                                   }
@@ -1079,7 +1086,10 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
    * @return false -> receiver crashed
    */
   private boolean insertRowRecordEnrichedByConsumerGroupId(
-      final List<String> columnNameList, final long timestamp, final String consumerGroupId)
+      final List<String> columnNameList,
+      final long timestamp,
+      final String consumerGroupId,
+      Connection defaultConnection)
       throws Exception {
     final int columnSize = columnNameList.size();
     if (columnSize <= 1) { // only with time column
@@ -1089,7 +1099,8 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
 
     for (int columnIndex = 1; columnIndex < columnSize; ++columnIndex) {
       final String columnName = columnNameList.get(columnIndex);
-      if (!insertRowRecordEnrichedByConsumerGroupId(columnName, timestamp, consumerGroupId)) {
+      if (!insertRowRecordEnrichedByConsumerGroupId(
+          columnName, timestamp, consumerGroupId, defaultConnection)) {
         return false;
       }
     }
@@ -1101,14 +1112,17 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
    * @return false -> receiver crashed
    */
   private boolean insertRowRecordEnrichedByConsumerGroupId(
-      final String columnName, final long timestamp, final String consumerGroupId)
+      final String columnName,
+      final long timestamp,
+      final String consumerGroupId,
+      Connection defaultConnection)
       throws Exception {
     if ("root.topic1.s".equals(columnName)) {
       final String sql =
           String.format(
               "insert into root.%s.topic1(time, s) values (%s, 1)", consumerGroupId, timestamp);
       LOGGER.info(sql);
-      return TestUtils.tryExecuteNonQueryWithRetry(receiverEnv, sql, null);
+      return TestUtils.tryExecuteNonQueryWithRetry(receiverEnv, sql, defaultConnection);
     }
 
     if ("root.topic2.s".equals(columnName)) {
@@ -1116,7 +1130,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
           String.format(
               "insert into root.%s.topic2(time, s) values (%s, 3)", consumerGroupId, timestamp);
       LOGGER.info(sql);
-      return TestUtils.tryExecuteNonQueryWithRetry(receiverEnv, sql, null);
+      return TestUtils.tryExecuteNonQueryWithRetry(receiverEnv, sql, defaultConnection);
     }
 
     LOGGER.warn("unexpected column name: {}", columnName);

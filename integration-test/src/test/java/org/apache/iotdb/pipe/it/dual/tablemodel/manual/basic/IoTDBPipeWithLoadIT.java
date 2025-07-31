@@ -86,6 +86,7 @@ public class IoTDBPipeWithLoadIT extends AbstractPipeTableModelDualManualIT {
     receiverEnv.getConfig().getCommonConfig().setDnConnectionTimeoutMs(600000);
 
     senderEnv.getConfig().getConfigNodeConfig().setLeaderDistributionPolicy("HASH");
+    receiverEnv.getConfig().getConfigNodeConfig().setLeaderDistributionPolicy("HASH");
 
     senderEnv.initClusterEnvironment();
     receiverEnv.initClusterEnvironment();
