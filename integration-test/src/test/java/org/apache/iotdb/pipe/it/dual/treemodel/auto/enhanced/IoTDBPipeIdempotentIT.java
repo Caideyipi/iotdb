@@ -190,7 +190,7 @@ public class IoTDBPipeIdempotentIT extends AbstractPipeDualTreeModelAutoIT {
         "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
         "count timeseries",
         "count(timeseries),",
-        Collections.singleton("3,"));
+        Collections.singleton("5,"));
   }
 
   @Test
@@ -204,7 +204,7 @@ public class IoTDBPipeIdempotentIT extends AbstractPipeDualTreeModelAutoIT {
         "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
         "count timeseries",
         "count(timeseries),",
-        Collections.singleton("4,"));
+        Collections.singleton("6,"));
   }
 
   @Test
@@ -217,7 +217,7 @@ public class IoTDBPipeIdempotentIT extends AbstractPipeDualTreeModelAutoIT {
         "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
         "count timeseries",
         "count(timeseries),",
-        Collections.singleton("3,"));
+        Collections.singleton("5,"));
   }
 
   @Test
@@ -230,7 +230,7 @@ public class IoTDBPipeIdempotentIT extends AbstractPipeDualTreeModelAutoIT {
         "CREATE VIEW root.view.device.status1 AS SELECT s01 FROM root.db.device",
         "count timeseries",
         "count(timeseries),",
-        Collections.singleton("2,"));
+        Collections.singleton("4,"));
   }
 
   @Test

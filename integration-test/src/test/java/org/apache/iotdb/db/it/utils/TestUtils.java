@@ -54,6 +54,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import static org.apache.iotdb.itbase.constant.TestConstant.DELTA;
@@ -192,11 +193,25 @@ public class TestUtils {
       String userName,
       String password,
       TimeUnit currPrecision) {
+    resultSetEqualTest(
+        sql, expectedHeader, expectedRetArray, df, userName, password, currPrecision, null);
+  }
+
+  public static void resultSetEqualTest(
+      String sql,
+      String expectedHeader,
+      String[] expectedRetArray,
+      DateFormat df,
+      String userName,
+      String password,
+      TimeUnit currPrecision,
+      BiFunction<String, String, Boolean> assertionMethod) {
     try (Connection connection = EnvFactory.getEnv().getConnection(userName, password);
         Statement statement = connection.createStatement()) {
       connection.setClientInfo("time_zone", "+00:00");
       try (ResultSet resultSet = statement.executeQuery(sql)) {
-        assertResultSetEqual(resultSet, expectedHeader, expectedRetArray, df, currPrecision);
+        assertResultSetEqual(
+            resultSet, expectedHeader, expectedRetArray, df, currPrecision, assertionMethod);
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -206,6 +221,14 @@ public class TestUtils {
 
   public static void resultSetEqualTest(
       String sql, String expectedHeader, String[] expectedRetArray) {
+    resultSetEqualTest(sql, expectedHeader, expectedRetArray, null);
+  }
+
+  public static void resultSetEqualTest(
+      String sql,
+      String expectedHeader,
+      String[] expectedRetArray,
+      BiFunction<String, String, Boolean> assertionMethod) {
     resultSetEqualTest(
         sql,
         expectedHeader,
@@ -213,7 +236,8 @@ public class TestUtils {
         null,
         SessionConfig.DEFAULT_USER,
         SessionConfig.DEFAULT_PASSWORD,
-        TimeUnit.MILLISECONDS);
+        TimeUnit.MILLISECONDS,
+        assertionMethod);
   }
 
   public static void resultSetEqualTest(
@@ -762,13 +786,28 @@ public class TestUtils {
       String[] expectedRetArray,
       DateFormat df,
       TimeUnit currPrecision) {
+    assertResultSetEqual(
+        actualResultSet, expectedHeader, expectedRetArray, df, currPrecision, null);
+  }
+
+  public static void assertResultSetEqual(
+      ResultSet actualResultSet,
+      String expectedHeader,
+      String[] expectedRetArray,
+      DateFormat df,
+      TimeUnit currPrecision,
+      BiFunction<String, String, Boolean> assertionMethod) {
     try {
       ResultSetMetaData resultSetMetaData = actualResultSet.getMetaData();
       StringBuilder header = new StringBuilder();
       for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
         header.append(resultSetMetaData.getColumnName(i)).append(",");
       }
-      assertEquals(expectedHeader, header.toString());
+      if (assertionMethod == null) {
+        assertEquals(expectedHeader, header.toString());
+      } else if (!assertionMethod.apply(expectedHeader, header.toString())) {
+        fail(String.format("%s != %s", expectedHeader, header));
+      }
 
       int cnt = 0;
       while (actualResultSet.next()) {
@@ -786,7 +825,12 @@ public class TestUtils {
         for (int i = 2; i <= resultSetMetaData.getColumnCount(); i++) {
           builder.append(actualResultSet.getString(i)).append(",");
         }
-        assertEquals(expectedRetArray[cnt], builder.toString());
+        if (assertionMethod == null) {
+          assertEquals(expectedRetArray[cnt], builder.toString());
+        } else if (!assertionMethod.apply(expectedRetArray[cnt], builder.toString())) {
+          fail(String.format("%s != %s", expectedRetArray[cnt], builder));
+        }
+
         cnt++;
       }
       assertEquals(expectedRetArray.length, cnt);
@@ -1008,6 +1052,7 @@ public class TestUtils {
           }
         }
         connectionToUse = null;
+        statement = null;
 
         if (retryCountLeft > 0) {
           try {
