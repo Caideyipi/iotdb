@@ -385,6 +385,8 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
               .sqlDialect(sqlDialect)
               .database(database)
               .timeOut(queryTimeoutInMs)
+              .enableIoTDBRpcCompression(enableIoTDBRpcCompression)
+              .enableThriftRpcCompression(enableThriftCompression)
               .build();
     } else {
       // Construct redirect-able Session
@@ -408,6 +410,8 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
               .sqlDialect(sqlDialect)
               .database(database)
               .timeOut(queryTimeoutInMs)
+              .enableIoTDBRpcCompression(enableIoTDBRpcCompression)
+              .enableThriftRpcCompression(enableThriftCompression)
               .build();
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
