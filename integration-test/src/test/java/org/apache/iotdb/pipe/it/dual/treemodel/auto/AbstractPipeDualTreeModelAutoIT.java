@@ -57,10 +57,13 @@ public abstract class AbstractPipeDualTreeModelAutoIT {
         .setAutoCreateSchemaEnabled(true)
         .setConfigNodeConsensusProtocolClass(ConsensusFactory.RATIS_CONSENSUS)
         .setSchemaRegionConsensusProtocolClass(ConsensusFactory.RATIS_CONSENSUS)
-        .setIsPipeEnableMemoryCheck(false)
-        .setEnforceStrongPassword(false);
+        .setEnforceStrongPassword(false)
+        .setPipeMemoryManagementEnabled(false)
+        .setIsPipeEnableMemoryCheck(false);
+
     senderEnv.getConfig().getDataNodeConfig().setDataNodeMemoryProportion("3:3:1:1:9:1");
     senderEnv.getConfig().getConfigNodeConfig().setLeaderDistributionPolicy("HASH");
+
     receiverEnv
         .getConfig()
         .getCommonConfig()
@@ -68,7 +71,9 @@ public abstract class AbstractPipeDualTreeModelAutoIT {
         .setConfigNodeConsensusProtocolClass(ConsensusFactory.RATIS_CONSENSUS)
         .setSchemaRegionConsensusProtocolClass(ConsensusFactory.RATIS_CONSENSUS)
         .setIsPipeEnableMemoryCheck(false)
+        .setPipeMemoryManagementEnabled(false)
         .setEnforceStrongPassword(false);
+
     receiverEnv.getConfig().getDataNodeConfig().setDataNodeMemoryProportion("3:3:1:1:9:1");
     receiverEnv.getConfig().getConfigNodeConfig().setLeaderDistributionPolicy("HASH");
 
