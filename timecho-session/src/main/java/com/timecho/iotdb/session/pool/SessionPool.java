@@ -501,8 +501,14 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
     }
 
     @Override
-    public Builder enableCompression(boolean enableCompression) {
-      super.enableCompression(enableCompression);
+    public Builder enableThriftRpcCompaction(boolean enableCompression) {
+      super.enableThriftRpcCompaction(enableCompression);
+      return this;
+    }
+
+    @Override
+    public Builder enableIoTDBRpcCompression(boolean enableCompression) {
+      super.enableIoTDBRpcCompression(enableCompression);
       return this;
     }
 

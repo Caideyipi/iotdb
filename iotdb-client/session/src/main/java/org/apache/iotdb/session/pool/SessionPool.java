@@ -143,7 +143,8 @@ public class SessionPool implements ISessionPool {
 
   // parameters for Session#open()
   protected final int connectionTimeoutInMs;
-  protected final boolean enableCompression;
+  protected final boolean enableIoTDBRpcCompression;
+  protected final boolean enableThriftCompression;
 
   // whether the queue is closed.
   protected boolean closed;
@@ -242,7 +243,12 @@ public class SessionPool implements ISessionPool {
   }
 
   public SessionPool(
-      String host, int port, String user, String password, int maxSize, boolean enableCompression) {
+      String host,
+      int port,
+      String user,
+      String password,
+      int maxSize,
+      boolean enableThriftCompression) {
     this(
         host,
         port,
@@ -251,7 +257,7 @@ public class SessionPool implements ISessionPool {
         maxSize,
         SessionConfig.DEFAULT_FETCH_SIZE,
         60_000,
-        enableCompression,
+        enableThriftCompression,
         null,
         SessionConfig.DEFAULT_REDIRECTION_MODE,
         SessionConfig.DEFAULT_CONNECTION_TIMEOUT_MS,
@@ -261,7 +267,11 @@ public class SessionPool implements ISessionPool {
   }
 
   public SessionPool(
-      List<String> nodeUrls, String user, String password, int maxSize, boolean enableCompression) {
+      List<String> nodeUrls,
+      String user,
+      String password,
+      int maxSize,
+      boolean enableThriftCompression) {
     this(
         nodeUrls,
         user,
@@ -269,7 +279,7 @@ public class SessionPool implements ISessionPool {
         maxSize,
         SessionConfig.DEFAULT_FETCH_SIZE,
         60_000,
-        enableCompression,
+        enableThriftCompression,
         null,
         SessionConfig.DEFAULT_REDIRECTION_MODE,
         SessionConfig.DEFAULT_CONNECTION_TIMEOUT_MS,
@@ -284,7 +294,7 @@ public class SessionPool implements ISessionPool {
       String user,
       String password,
       int maxSize,
-      boolean enableCompression,
+      boolean enableThriftCompression,
       boolean enableRedirection) {
     this(
         host,
@@ -294,7 +304,7 @@ public class SessionPool implements ISessionPool {
         maxSize,
         SessionConfig.DEFAULT_FETCH_SIZE,
         60_000,
-        enableCompression,
+        enableThriftCompression,
         null,
         enableRedirection,
         SessionConfig.DEFAULT_CONNECTION_TIMEOUT_MS,
@@ -308,7 +318,7 @@ public class SessionPool implements ISessionPool {
       String user,
       String password,
       int maxSize,
-      boolean enableCompression,
+      boolean enableThriftCompression,
       boolean enableRedirection) {
     this(
         nodeUrls,
@@ -317,7 +327,7 @@ public class SessionPool implements ISessionPool {
         maxSize,
         SessionConfig.DEFAULT_FETCH_SIZE,
         60_000,
-        enableCompression,
+        enableThriftCompression,
         null,
         enableRedirection,
         SessionConfig.DEFAULT_CONNECTION_TIMEOUT_MS,
@@ -372,7 +382,7 @@ public class SessionPool implements ISessionPool {
       int maxSize,
       int fetchSize,
       long waitToGetSessionTimeoutInMs,
-      boolean enableCompression,
+      boolean enableThriftCompression,
       ZoneId zoneId,
       boolean enableRedirection,
       int connectionTimeoutInMs,
@@ -387,7 +397,8 @@ public class SessionPool implements ISessionPool {
     this.password = password;
     this.fetchSize = fetchSize;
     this.waitToGetSessionTimeoutInMs = waitToGetSessionTimeoutInMs;
-    this.enableCompression = enableCompression;
+    this.enableThriftCompression = enableThriftCompression;
+    this.enableIoTDBRpcCompression = false;
     this.zoneId = zoneId;
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
@@ -411,7 +422,7 @@ public class SessionPool implements ISessionPool {
       int maxSize,
       int fetchSize,
       long waitToGetSessionTimeoutInMs,
-      boolean enableCompression,
+      boolean enableThriftCompression,
       ZoneId zoneId,
       boolean enableRedirection,
       int connectionTimeoutInMs,
@@ -429,7 +440,8 @@ public class SessionPool implements ISessionPool {
     this.password = password;
     this.fetchSize = fetchSize;
     this.waitToGetSessionTimeoutInMs = waitToGetSessionTimeoutInMs;
-    this.enableCompression = enableCompression;
+    this.enableThriftCompression = enableThriftCompression;
+    this.enableIoTDBRpcCompression = false;
     this.zoneId = zoneId;
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
@@ -456,7 +468,7 @@ public class SessionPool implements ISessionPool {
       int maxSize,
       int fetchSize,
       long waitToGetSessionTimeoutInMs,
-      boolean enableCompression,
+      boolean enableThriftCompression,
       ZoneId zoneId,
       boolean enableRedirection,
       int connectionTimeoutInMs,
@@ -474,7 +486,8 @@ public class SessionPool implements ISessionPool {
     this.password = password;
     this.fetchSize = fetchSize;
     this.waitToGetSessionTimeoutInMs = waitToGetSessionTimeoutInMs;
-    this.enableCompression = enableCompression;
+    this.enableThriftCompression = enableThriftCompression;
+    this.enableIoTDBRpcCompression = false;
     this.zoneId = zoneId;
     this.enableRedirection = enableRedirection;
     if (this.enableRedirection) {
@@ -496,7 +509,8 @@ public class SessionPool implements ISessionPool {
     this.password = builder.pw;
     this.fetchSize = builder.fetchSize;
     this.waitToGetSessionTimeoutInMs = builder.waitToGetSessionTimeoutInMs;
-    this.enableCompression = builder.enableCompression;
+    this.enableThriftCompression = builder.isThriftRpcCompactionEnabled;
+    this.enableIoTDBRpcCompression = builder.isIoTDBRpcCompressionEnabled;
     this.zoneId = builder.zoneId;
     this.enableRedirection = builder.enableRedirection;
     if (this.enableRedirection) {
@@ -574,6 +588,8 @@ public class SessionPool implements ISessionPool {
               .sqlDialect(sqlDialect)
               .database(database)
               .timeOut(queryTimeoutInMs)
+              .enableIoTDBRpcCompression(enableIoTDBRpcCompression)
+              .enableThriftRpcCompression(enableThriftCompression)
               .build();
     } else {
       // Construct redirect-able Session
@@ -597,6 +613,8 @@ public class SessionPool implements ISessionPool {
               .sqlDialect(sqlDialect)
               .database(database)
               .timeOut(queryTimeoutInMs)
+              .enableIoTDBRpcCompression(enableIoTDBRpcCompression)
+              .enableThriftRpcCompression(enableThriftCompression)
               .build();
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
@@ -634,7 +652,7 @@ public class SessionPool implements ISessionPool {
             useSSL,
             trustStore,
             trustStorePwd,
-            enableCompression,
+            enableThriftCompression,
             version.toString());
   }
 
@@ -708,7 +726,7 @@ public class SessionPool implements ISessionPool {
 
       try {
         session.open(
-            enableCompression,
+            enableThriftCompression,
             connectionTimeoutInMs,
             deviceIdToEndpoint,
             tableModelDeviceIdToEndpoint,
@@ -822,7 +840,7 @@ public class SessionPool implements ISessionPool {
     ISession session = constructNewSession();
     try {
       session.open(
-          enableCompression,
+          enableThriftCompression,
           connectionTimeoutInMs,
           deviceIdToEndpoint,
           tableModelDeviceIdToEndpoint,
@@ -3471,8 +3489,8 @@ public class SessionPool implements ISessionPool {
   }
 
   @Override
-  public boolean isEnableCompression() {
-    return enableCompression;
+  public boolean isEnableThriftCompression() {
+    return enableThriftCompression;
   }
 
   @Override
@@ -3661,8 +3679,13 @@ public class SessionPool implements ISessionPool {
       return this;
     }
 
-    public Builder enableCompression(boolean enableCompression) {
-      this.enableCompression = enableCompression;
+    public Builder enableThriftRpcCompaction(boolean enableCompaction) {
+      this.isThriftRpcCompactionEnabled = enableCompaction;
+      return this;
+    }
+
+    public Builder enableIoTDBRpcCompression(boolean enableCompression) {
+      this.isIoTDBRpcCompressionEnabled = enableCompression;
       return this;
     }
 
