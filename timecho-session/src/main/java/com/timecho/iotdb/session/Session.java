@@ -452,6 +452,18 @@ public class Session extends org.apache.iotdb.session.Session implements ISessio
     }
 
     @Override
+    public Builder enableIoTDBRpcCompression(boolean enabled) {
+      super.enableIoTDBRpcCompression(enabled);
+      return this;
+    }
+
+    @Override
+    public Builder enableThriftRpcCompression(boolean enabled) {
+      super.enableThriftRpcCompression(enabled);
+      return this;
+    }
+
+    @Override
     public com.timecho.iotdb.session.Session build() {
       if (nodeUrls != null
           && (!SessionConfig.DEFAULT_HOST.equals(host) || rpcPort != SessionConfig.DEFAULT_PORT)) {
