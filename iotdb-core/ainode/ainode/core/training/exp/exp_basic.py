@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 from ainode.core.config import AINodeDescriptor
+from ainode.core.constant import TRAINING_LOG_FILE_NAME_PREFIX_TEMPLATE
 from ainode.core.ingress.iotdb import DatasetFactory
 from ainode.core.log import Logger
 from ainode.core.model.model_info import BuiltInModelType
@@ -15,8 +16,6 @@ from ainode.core.model.sundial import modeling_sundial as sundial
 from ainode.core.model.timerxl import configuration_timer as config_xl
 from ainode.core.model.timerxl import modeling_timer as timerxl
 from ainode.core.training.training_parameters import TrainingParameters
-
-logger = Logger()
 
 
 class ExpBasic(object):
@@ -38,6 +37,8 @@ class ExpBasic(object):
 
         self.rank = rank
         self.gpu_id = args.gpu_ids[rank]
+        self.logger = Logger(TRAINING_LOG_FILE_NAME_PREFIX_TEMPLATE.format(self.gpu_id))
+
         self.args = args
         self.config, self.model = self._build_empty_model()
         self._load_weights_with_adaptation()
@@ -83,7 +84,7 @@ class ExpBasic(object):
             raise ValueError(f"Model {self.args.model_type} is not supported.")
 
         num_params = model.num_parameters()
-        logger.info(
+        self.logger.info(
             f"[Training][GPU-{self.gpu_id}] Model has {num_params:,} parameters."
         )
         # Convert to DDP model
@@ -105,7 +106,7 @@ class ExpBasic(object):
             ignore_mismatched_sizes=True,
             torch_dtype=torch.float32,
         ).to(self.gpu_id)
-        logger.info(
+        self.logger.info(
             "[Training][GPU-{}] Finetune model type: {} model id: {} with adaptation: {}".format(
                 self.gpu_id,
                 self.args.model_type.value,
@@ -181,7 +182,7 @@ class ExpBasic(object):
             sampler=vali_data_sampler,
             num_workers=self.args.num_workers,
         )
-        logger.info(
+        self.logger.info(
             "[Training][GPU-{}] Init training dataset (len: {}), vali dataset (len: {})".format(
                 self.gpu_id, len(training_dataloader), len(vali_dataloader)
             )

@@ -9,12 +9,9 @@ import torch.nn.functional as F
 from torch import optim
 from transformers import get_scheduler
 
-from ainode.core.log import Logger
 from ainode.core.model.model_info import BuiltInModelType
 from ainode.core.training.exp.exp_basic import ExpBasic
 from ainode.core.training.training_parameters import TrainingParameters
-
-logger = Logger()
 
 
 class ExpForecastFinetune(ExpBasic):
@@ -28,7 +25,7 @@ class ExpForecastFinetune(ExpBasic):
             weight_decay=self.args.weight_decay,
         )
         if self.rank == 0:
-            logger.info("next learning rate is {}".format(self.args.learning_rate))
+            self.logger.info("next learning rate is {}".format(self.args.learning_rate))
         return model_optim
 
     def finetune(self, log_chunk=100):
@@ -74,7 +71,7 @@ class ExpForecastFinetune(ExpBasic):
                 if (i + 1) % log_chunk == 0 or (i + 1) == len(self.training_dataloader):
                     speed = (time.time() - iter_log_start_time) / iter_count
                     left_time = speed * (len(self.training_dataloader) - i)
-                    logger.info(
+                    self.logger.info(
                         "[Training][GPU-{}] Iters: {}, speed: {:.4f}s/iter, left time: {:.4f}s".format(
                             self.gpu_id, i + 1, speed, left_time
                         )
@@ -86,7 +83,7 @@ class ExpForecastFinetune(ExpBasic):
             if self.rank == 0:
                 self.mse_loss_list.append(epoch_mse)
                 self.mae_loss_list.append(epoch_mae)
-                logger.info(
+                self.logger.info(
                     "[Training][GPU-{}] Epoch: {} cost time: {}, speed: {:.4f}s/epoch, lr = {:.10f}".format(
                         self.gpu_id,
                         epoch,
@@ -95,7 +92,7 @@ class ExpForecastFinetune(ExpBasic):
                         model_optim.param_groups[0]["lr"],
                     )
                 )
-                logger.info(
+                self.logger.info(
                     "[Training][GPU-{}] Epoch: {}, current loss: {:.7f}, mse_list: {}, mae_list: {}".format(
                         self.gpu_id,
                         epoch,
@@ -112,7 +109,7 @@ class ExpForecastFinetune(ExpBasic):
                 )
                 os.makedirs(save_dir, exist_ok=True)
                 self.model.module.save_pretrained(save_dir)
-                logger.info(
+                self.logger.info(
                     "[Training] Model: {} saved!".format(
                         self.args.model_id + "_" + str(epoch)
                     )
@@ -144,7 +141,7 @@ class ExpForecastFinetune(ExpBasic):
                                 os.remove(dst_file)
                             shutil.move(src_file, dst_file)
                         shutil.rmtree(save_dir)
-            logger.info(
+            self.logger.info(
                 "[Training] Model: {} preserves epoch {}".format(
                     self.args.model_id, best_index
                 )
@@ -220,7 +217,7 @@ class ExpForecastFinetune(ExpBasic):
 
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * (test_steps - i)
-                    logger.info(
+                    self.logger.info(
                         "[Validation][GPU-{}] Iters: {}, speed: {:.4f}s/iter, left time: {:.4f}s".format(
                             self.gpu_id, i + 1, speed, left_time
                         )
