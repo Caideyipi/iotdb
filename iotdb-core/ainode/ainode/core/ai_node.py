@@ -182,4 +182,6 @@ class AINode:
             if self._rpc_service:
                 self._rpc_service.stop()
                 self._rpc_service.join(1)
+                if self._rpc_service.is_alive():
+                    logger.warning("RPC service thread failed to stop in time.")
             logger.info("TimechoDB-AINode has successfully stopped.")
