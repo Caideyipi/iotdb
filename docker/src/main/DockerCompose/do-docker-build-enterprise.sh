@@ -173,7 +173,11 @@ function build_iotdb(){
 function check_build(){
     if [[ "$do_build" == "true" ]]; then return; fi
     if [[ "$is_enterprise" == "true" ]]; then
-      local zip_file=${iotdb_zip_path}/timechodb-${version}-bin.zip
+      if [[ "$1" == "ainode" ]]; then
+        local zip_file=${iotdb_zip_path}/timechodb-${version}-ainode-bin.zip
+      else
+        local zip_file=${iotdb_zip_path}/timechodb-${version}-bin.zip
+      fi
     else
       local zip_file=${iotdb_zip_path}/apache-iotdb-${version}-$1-bin.zip
     fi
@@ -199,7 +203,7 @@ function main() {
             process_single
             ;;
         ainode)
-            process_single all
+            process_single
             ;;
         standalone)
             process_single all
