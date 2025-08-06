@@ -183,8 +183,7 @@ public class DataNodeAuthUtils {
       }
       LOGGER.error("Cannot create password history for {} because {}", username, e.getMessage());
       return new TSStatus(TSStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
-          .setMessage(
-              "Cannot create password history for " + username + " because " + e.getMessage());
+          .setMessage("The server is not ready for login, please check the server log for details");
     }
   }
 }
