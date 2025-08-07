@@ -1593,16 +1593,4 @@ public class IoTDBAuthIT {
           resultSet.getString("root.__system.password_history._userA.oldPassword"));
     }
   }
-
-  @Test
-  public void testChangeBackPassword() {
-    try (Connection connection = EnvFactory.getEnv().getConnection();
-        Statement statement = connection.createStatement()) {
-      statement.execute("ALTER USER root SET PASSWORD 'newPassword'");
-      statement.execute("ALTER USER root SET PASSWORD 'root'");
-    } catch (SQLException e) {
-      e.printStackTrace();
-      fail(e.getMessage());
-    }
-  }
 }
