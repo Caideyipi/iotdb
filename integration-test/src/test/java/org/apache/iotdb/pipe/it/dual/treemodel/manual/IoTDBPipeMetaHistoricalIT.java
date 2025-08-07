@@ -357,7 +357,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
           Arrays.asList(
               "create database root.ln",
               "set ttl to root.ln 3600000",
-              "create user `thulab` 'passwd'",
+              "create user `thulab` 'passwd123456'",
               "create role `admin`",
               "grant role `admin` to `thulab`",
               "grant read on root.** to role `admin`",
@@ -402,14 +402,14 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
 
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv,
-          "show databases",
+          "show databases root.ln",
           "Database,SchemaReplicationFactor,DataReplicationFactor,TimePartitionOrigin,TimePartitionInterval,",
           // Receiver's SchemaReplicationFactor/DataReplicationFactor shall be 3/2 regardless of the
           // sender
           Collections.singleton("root.ln,3,2,0,604800000,"));
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv,
-          "select * from root.**",
+          "select * from root.ln.**",
           "Time,root.ln.wf02.wt01.status,root.ln.device.status,",
           Collections.emptySet());
 
@@ -419,7 +419,10 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
       }
 
       TestUtils.assertDataEventuallyOnEnv(
-          receiverEnv, "count timeseries", "count(timeseries),", Collections.singleton("2,"));
+          receiverEnv,
+          "count timeseries root.ln.**",
+          "count(timeseries),",
+          Collections.singleton("2,"));
     }
   }
 }
