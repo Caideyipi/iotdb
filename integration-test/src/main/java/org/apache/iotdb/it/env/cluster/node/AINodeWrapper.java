@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.AI_NODE_NAME;
-import static org.apache.iotdb.it.env.cluster.ClusterConstant.PYTHON_PATH;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TARGET;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.USER_DIR;
 import static org.apache.iotdb.it.env.cluster.EnvUtils.getTimeForLogDirectory;
@@ -162,8 +161,6 @@ public class AINodeWrapper extends AbstractNodeWrapper {
       List<String> startCommand = new ArrayList<>();
       startCommand.add(SHELL_COMMAND);
       startCommand.add(filePrefix + File.separator + SCRIPT_PATH + File.separator + SCRIPT_FILE);
-      startCommand.add("-i");
-      startCommand.add(filePrefix + File.separator + PYTHON_PATH);
       startCommand.add("-r");
 
       ProcessBuilder processBuilder =
