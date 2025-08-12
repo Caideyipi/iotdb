@@ -107,7 +107,7 @@ public class DataNodeAuthUtils {
         return CommonDateTimeUtils.convertIoTDBTimeToMillis(timeByIndex);
       }
     } catch (IoTDBException e) {
-      LOGGER.warn("Cannot generate query for checking password expiration", e);
+      LOGGER.warn("Cannot generate query for checking password reuse interval", e);
     }
     return -1;
   }
@@ -179,6 +179,9 @@ public class DataNodeAuthUtils {
       if (CommonDescriptor.getInstance().getConfig().getPasswordExpirationDays() < 0
           && CommonDescriptor.getInstance().getConfig().getPasswordReuseIntervalDays() < 0) {
         // password history is not used in the current configuration, tolerate the failure
+        return StatusUtils.OK;
+      }
+      if (CommonDescriptor.getInstance().getConfig().isMayBypassPasswordCheckInException()) {
         return StatusUtils.OK;
       }
       LOGGER.error("Cannot create password history for {} because {}", username, e.getMessage());

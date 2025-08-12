@@ -418,6 +418,7 @@ public class CommonConfig {
   private long passwordExpirationDays = -1;
   // an old password cannot be reused within the given interval if >= 0.
   private long passwordReuseIntervalDays = -1;
+  private boolean mayBypassPasswordCheckInException = true;
 
   CommonConfig() {
     // Empty constructor
@@ -2473,5 +2474,13 @@ public class CommonConfig {
 
   public void setPasswordReuseIntervalDays(long passwordReuseIntervalDays) {
     this.passwordReuseIntervalDays = passwordReuseIntervalDays;
+  }
+
+  public boolean isMayBypassPasswordCheckInException() {
+    return mayBypassPasswordCheckInException;
+  }
+
+  public void setMayBypassPasswordCheckInException(boolean mayBypassPasswordCheckInException) {
+    this.mayBypassPasswordCheckInException = mayBypassPasswordCheckInException;
   }
 }
