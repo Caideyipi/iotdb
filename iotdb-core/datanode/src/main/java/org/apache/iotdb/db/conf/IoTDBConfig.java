@@ -1200,6 +1200,8 @@ public class IoTDBConfig {
 
   private long cacheLastValuesMemoryBudgetInByte = 4 * 1024 * 1024;
 
+  private boolean includeNullValueInWriteThroughputMetric = false;
+
   IoTDBConfig() {}
 
   public int getMaxLogEntriesNumPerBatch() {
@@ -4316,5 +4318,14 @@ public class IoTDBConfig {
 
   public void setCacheLastValuesMemoryBudgetInByte(long cacheLastValuesMemoryBudgetInByte) {
     this.cacheLastValuesMemoryBudgetInByte = cacheLastValuesMemoryBudgetInByte;
+  }
+
+  public boolean isIncludeNullValueInWriteThroughputMetric() {
+    return includeNullValueInWriteThroughputMetric;
+  }
+
+  public void setIncludeNullValueInWriteThroughputMetric(
+      boolean includeNullValueInWriteThroughputMetric) {
+    this.includeNullValueInWriteThroughputMetric = includeNullValueInWriteThroughputMetric;
   }
 }
