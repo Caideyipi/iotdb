@@ -31,7 +31,7 @@ public class AIEnv extends AbstractEnv {
 
   @Override
   public void initClusterEnvironment(int configNodesNum, int dataNodesNum) {
-    super.initEnvironment(configNodesNum, dataNodesNum, 1000, true);
+    super.initEnvironment(configNodesNum, dataNodesNum, 300, true);
     checkActivationStatus(configNodesNum + dataNodesNum + 1);
   }
 
