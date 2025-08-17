@@ -54,7 +54,7 @@ import static org.junit.Assert.fail;
 @Category({AIClusterIT.class})
 public class AINodeModelManageIT {
 
-  private static final Map<String, FakeModelInfo> BUILT_IN_MACHINE_LEARNING_MODEL_MAP =
+  private static final Map<String, FakeModelInfo> BUILT_IN_MODEL_MAP =
       Stream.of(
               new AbstractMap.SimpleEntry<>(
                   "arima", new FakeModelInfo("arima", "Arima", "BUILT-IN", "ACTIVE")),
@@ -208,10 +208,10 @@ public class AINodeModelManageIT {
                 resultSet.getString(2),
                 resultSet.getString(3),
                 resultSet.getString(4));
-        assertTrue(BUILT_IN_MACHINE_LEARNING_MODEL_MAP.containsKey(modelInfo.getModelId()));
-        assertEquals(BUILT_IN_MACHINE_LEARNING_MODEL_MAP.get(modelInfo.getModelId()), modelInfo);
+        assertTrue(BUILT_IN_MODEL_MAP.containsKey(modelInfo.getModelId()));
+        assertEquals(BUILT_IN_MODEL_MAP.get(modelInfo.getModelId()), modelInfo);
       }
     }
-    assertEquals(BUILT_IN_MACHINE_LEARNING_MODEL_MAP.size(), built_in_model_count);
+    assertEquals(BUILT_IN_MODEL_MAP.size(), built_in_model_count);
   }
 }
