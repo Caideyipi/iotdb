@@ -2991,6 +2991,8 @@ public class IoTDBDescriptor {
     conf.setSchemaRatisPeriodicSnapshotInterval(
         ratisConfig.getSchemaRegionPeriodicSnapshotInterval());
     conf.setDataRatisPeriodicSnapshotInterval(ratisConfig.getDataRegionPeriodicSnapshotInterval());
+
+    conf.setRatisTransferLeaderTimeoutMs(ratisConfig.getRatisTransferLeaderTimeoutMs());
   }
 
   public void loadCQConfig(TCQConfig cqConfig) {
