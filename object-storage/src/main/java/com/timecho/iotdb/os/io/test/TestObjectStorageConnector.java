@@ -18,6 +18,7 @@
  */
 package com.timecho.iotdb.os.io.test;
 
+import com.timecho.iotdb.os.conf.ObjectStorageConfig;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.conf.provider.TestConfig;
 import com.timecho.iotdb.os.exception.ObjectStorageException;
@@ -37,8 +38,8 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
 public class TestObjectStorageConnector implements ObjectStorageConnector {
-  private final TestConfig testConfig =
-      (TestConfig) ObjectStorageDescriptor.getInstance().getConfig().getProviderConfig();
+  private static final ObjectStorageConfig testConfig =
+      ObjectStorageDescriptor.getInstance().getConfig();
 
   @Override
   public boolean isConnectorEnabled() {
@@ -136,7 +137,7 @@ public class TestObjectStorageConnector implements ObjectStorageConnector {
   }
 
   private String getDstFilePath(OSURI osuri) {
-    return testConfig.getTestDir()
+    return ((TestConfig) testConfig.getProviderConfig()).getTestDir()
         + File.separator
         + osuri.getKey().replace(ObjectStorageConstant.FILE_SEPARATOR, File.separator);
   }
