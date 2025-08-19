@@ -42,6 +42,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.metadata.Metadata;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.TableMetadataImpl;
 import org.apache.iotdb.db.schemaengine.schemaregion.ISchemaRegion;
 import org.apache.iotdb.db.storageengine.dataregion.read.QueryDataSourceType;
+import org.apache.iotdb.db.storageengine.load.memory.LoadTsFileMemoryManager;
 import org.apache.iotdb.db.utils.SetThreadName;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -89,6 +90,10 @@ public class LocalExecutionPlanner {
 
   public long getFreeMemoryForLoadTsFile() {
     return OPERATORS_MEMORY_BLOCK.getFreeMemoryInBytes() - MIN_REST_MEMORY_FOR_QUERY_AFTER_LOAD;
+  }
+
+  public long getTsFileUsedMemory() {
+    return LoadTsFileMemoryManager.getInstance().getUsedMemorySizeInBytes();
   }
 
   public static LocalExecutionPlanner getInstance() {

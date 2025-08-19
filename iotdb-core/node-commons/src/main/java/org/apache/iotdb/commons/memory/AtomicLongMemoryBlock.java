@@ -118,6 +118,7 @@ public class AtomicLongMemoryBlock extends IMemoryBlock {
     this.usedMemoryInBytes.set(usedMemoryInBytes);
   }
 
+  @Override
   public long getUsedMemoryInBytes() {
     return usedMemoryInBytes.get();
   }
