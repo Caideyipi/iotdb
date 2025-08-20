@@ -220,7 +220,9 @@ public abstract class IoTDBFileReceiver implements IoTDBReceiver {
               TSStatusCode.PIPE_HANDSHAKE_ERROR,
               "Receiver can not get clusterId from config node.");
       LOGGER.warn(
-          "Receiver id = {}: Handshake failed, response status = {}.", receiverId.get(), status);
+          "Receiver id = {}: Handshake failed, response status = {}.",
+          RECEIVER_ID_GENERATOR.get() + 1,
+          status);
       return new TPipeTransferResp(status);
     }
 
@@ -232,7 +234,9 @@ public abstract class IoTDBFileReceiver implements IoTDBReceiver {
           RpcUtils.getStatus(
               TSStatusCode.PIPE_HANDSHAKE_ERROR, "Handshake request does not contain clusterId.");
       LOGGER.warn(
-          "Receiver id = {}: Handshake failed, response status = {}.", receiverId.get(), status);
+          "Receiver id = {}: Handshake failed, response status = {}.",
+          RECEIVER_ID_GENERATOR.get() + 1,
+          status);
       return new TPipeTransferResp(status);
     }
 
@@ -245,7 +249,9 @@ public abstract class IoTDBFileReceiver implements IoTDBReceiver {
                   "Receiver and sender are from the same cluster %s.",
                   clusterIdFromHandshakeRequest));
       LOGGER.warn(
-          "Receiver id = {}: Handshake failed, response status = {}.", receiverId.get(), status);
+          "Receiver id = {}: Handshake failed, response status = {}.",
+          RECEIVER_ID_GENERATOR.get() + 1,
+          status);
       return new TPipeTransferResp(status);
     }
 
@@ -258,7 +264,9 @@ public abstract class IoTDBFileReceiver implements IoTDBReceiver {
               TSStatusCode.PIPE_HANDSHAKE_ERROR,
               "Handshake request does not contain timestampPrecision.");
       LOGGER.warn(
-          "Receiver id = {}: Handshake failed, response status = {}.", receiverId.get(), status);
+          "Receiver id = {}: Handshake failed, response status = {}.",
+          RECEIVER_ID_GENERATOR.get() + 1,
+          status);
       return new TPipeTransferResp(status);
     }
 
@@ -276,11 +284,14 @@ public abstract class IoTDBFileReceiver implements IoTDBReceiver {
     if (status.code != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       LOGGER.warn(
           "Receiver id = {}: Handshake failed because login failed, response status = {}.",
-          receiverId.get(),
+          RECEIVER_ID_GENERATOR.get() + 1,
           status);
       return new TPipeTransferResp(status);
     } else {
-      LOGGER.info("Receiver id = {}: User {} login successfully.", receiverId.get(), username);
+      LOGGER.info(
+          "Receiver id = {}: User {} login successfully.",
+          RECEIVER_ID_GENERATOR.get() + 1,
+          username);
     }
 
     final String shouldConvertDataTypeOnTypeMismatchString =
