@@ -466,7 +466,9 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
     }
 
     createTimeSeriesStatement.setCompressor(
-        TSFileDescriptor.getInstance().getConfig().getCompressor());
+        TSFileDescriptor.getInstance()
+            .getConfig()
+            .getCompressor(createTimeSeriesStatement.getDataType()));
     if (props != null
         && props.containsKey(IoTDBConstant.COLUMN_TIMESERIES_COMPRESSION.toLowerCase())) {
       String compressionString =
@@ -528,7 +530,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       createAlignedTimeSeriesStatement.addEncoding(encoding);
     }
 
-    CompressionType compressor = TSFileDescriptor.getInstance().getConfig().getCompressor();
+    CompressionType compressor = TSFileDescriptor.getInstance().getConfig().getCompressor(dataType);
     if (props.containsKey(IoTDBConstant.COLUMN_TIMESERIES_COMPRESSOR.toLowerCase())) {
       String compressorString =
           props.get(IoTDBConstant.COLUMN_TIMESERIES_COMPRESSOR.toLowerCase()).toUpperCase();
@@ -3750,7 +3752,7 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       encodings.add(encoding);
     }
 
-    CompressionType compressor = TSFileDescriptor.getInstance().getConfig().getCompressor();
+    CompressionType compressor = TSFileDescriptor.getInstance().getConfig().getCompressor(dataType);
     if (props.containsKey(IoTDBConstant.COLUMN_TIMESERIES_COMPRESSOR.toLowerCase())) {
       String compressorString =
           props.get(IoTDBConstant.COLUMN_TIMESERIES_COMPRESSOR.toLowerCase()).toUpperCase();
