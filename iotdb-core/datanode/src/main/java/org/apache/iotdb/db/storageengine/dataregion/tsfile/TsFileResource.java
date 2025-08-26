@@ -1463,7 +1463,8 @@ public class TsFileResource implements PersistentResource {
     }
 
     if (!maxProgressIndex.compareAndSet(null, progressIndex)) {
-      maxProgressIndex.get().updateToMinimumEqualOrIsAfterProgressIndex(progressIndex);
+      maxProgressIndex.updateAndGet(
+          index -> index.updateToMinimumEqualOrIsAfterProgressIndex(progressIndex));
     }
   }
 
