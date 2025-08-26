@@ -421,3 +421,24 @@ subscription:
       - integration-test/target/cluster-logs
       - integration-test/target/pipeIT-logs
     expire_in: 7 day
+
+dependencies:
+  stage: test
+  tags:
+    - timechodb
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
+  script:
+    - 'mvn verify -Dmaven.test.skip=true -Dmdep.analyze.skip=true -P enable-sbom-check'
+  parallel:
+    matrix:
+      - CLUSTER1: [HighPerformanceMode]
+        CLUSTER2: [HighPerformanceMode]
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
