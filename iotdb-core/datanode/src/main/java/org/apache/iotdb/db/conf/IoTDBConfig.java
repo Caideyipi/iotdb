@@ -1123,7 +1123,7 @@ public class IoTDBConfig {
 
   private long loadTableSchemaCacheSizeInBytes = 2 * 1024 * 1024L; // 2MB
 
-  private long loadMeasurementCacheSizeInBytes = 2 * 1024 * 1024L; // 2MB
+  private long loadMeasurementIdCacheSizeInBytes = 2 * 1024 * 1024L; // 2MB
 
   private String[] loadActiveListeningDirs =
       new String[] {
@@ -4071,11 +4071,11 @@ public class IoTDBConfig {
   }
 
   public long getLoadMeasurementIdCacheSizeInBytes() {
-    return loadMeasurementCacheSizeInBytes;
+    return loadMeasurementIdCacheSizeInBytes;
   }
 
-  public void setLoadMeasurementCacheSizeInBytes(long loadMeasurementCacheSizeInBytes) {
-    this.loadMeasurementCacheSizeInBytes = loadMeasurementCacheSizeInBytes;
+  public void setLoadMeasurementIdCacheSizeInBytes(long loadMeasurementIdCacheSizeInBytes) {
+    this.loadMeasurementIdCacheSizeInBytes = loadMeasurementIdCacheSizeInBytes;
   }
 
   public void setPipeReceiverFileDirs(String[] pipeReceiverFileDirs) {
