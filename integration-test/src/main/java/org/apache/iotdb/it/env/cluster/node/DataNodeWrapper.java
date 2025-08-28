@@ -72,6 +72,9 @@ import static org.apache.iotdb.it.env.cluster.ClusterConstant.USER_DIR;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.WAL_BUFFER_SIZE_IN_BYTE;
 
 public class DataNodeWrapper extends AbstractNodeWrapper {
+
+  private static String encryptionToken = null;
+
   private int mppDataExchangePort;
   private int internalPort;
   private final String internalAddress;
@@ -294,5 +297,13 @@ public class DataNodeWrapper extends AbstractNodeWrapper {
 
   public int getRestServicePort() {
     return restServicePort;
+  }
+
+  public static String getEncryptionToken() {
+    return encryptionToken;
+  }
+
+  public static void setEncryptionToken(String encryptionToken) {
+    DataNodeWrapper.encryptionToken = encryptionToken;
   }
 }

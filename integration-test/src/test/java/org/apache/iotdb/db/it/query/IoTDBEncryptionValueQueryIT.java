@@ -19,6 +19,7 @@
 package org.apache.iotdb.db.it.query;
 
 import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
@@ -31,10 +32,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -128,23 +125,11 @@ public class IoTDBEncryptionValueQueryIT {
 
   @BeforeClass
   public static void setUp() throws Exception {
-    Path tempDir = Files.createTempDirectory("").toAbsolutePath();
-    tempDir.toFile().deleteOnExit();
-    String fileName = "key.txt";
-
-    Path keyFilePath = tempDir.resolve(fileName);
-    File file = keyFilePath.toFile();
-    try {
-      Files.createFile(keyFilePath);
-      Files.write(keyFilePath, "thisisourtestkey".getBytes());
-    } catch (IOException e) {
-      Assert.fail(e.getMessage());
-    }
     EnvFactory.getEnv()
         .getConfig()
         .getCommonConfig()
-        .setEncryptType("org.example.encrypt.AES128.AES128")
-        .setEncryptKeyPath(keyFilePath.toAbsolutePath().toString());
+        .setEncryptType("org.example.encrypt.AES128.AES128");
+    DataNodeWrapper.setEncryptionToken("thisisourtestkey");
     EnvFactory.getEnv().initClusterEnvironment();
     importData();
   }

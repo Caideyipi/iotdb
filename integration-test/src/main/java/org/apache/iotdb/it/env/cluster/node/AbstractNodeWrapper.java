@@ -533,6 +533,11 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
           new ProcessBuilder(startCmd)
               .redirectOutput(ProcessBuilder.Redirect.appendTo(stdoutFile))
               .redirectError(ProcessBuilder.Redirect.appendTo(stdoutFile));
+      if (DataNodeWrapper.getEncryptionToken() != null) {
+        processBuilder
+            .environment()
+            .put("user_encrypt_token", DataNodeWrapper.getEncryptionToken());
+      }
       processBuilder.environment().put("CLASSPATH", TEMPLATE_NODE_LIB_PATH);
       this.instance = processBuilder.start();
       logger.info("In test {} {} started.", getTestLogDirName(), getId());
