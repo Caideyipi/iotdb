@@ -139,6 +139,7 @@ import java.util.stream.Collectors;
 import static org.apache.iotdb.commons.conf.IoTDBConstant.DEFAULT_CLUSTER_NAME;
 import static org.apache.iotdb.commons.utils.StatusUtils.retrieveExitStatusCode;
 import static org.apache.iotdb.db.conf.IoTDBStartCheck.PROPERTIES_FILE_NAME;
+import static org.apache.iotdb.db.utils.DateTimeUtils.initTimestampPrecision;
 
 public class DataNode extends ServerCommandLine implements DataNodeMBean {
 
@@ -397,6 +398,9 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     } catch (Exception e) {
       throw new StartupException(e.getMessage());
     }
+
+    // init
+    initTimestampPrecision();
     long endTime = System.currentTimeMillis();
     logger.info(
         "Successfully pull system configurations from ConfigNode-leader, which takes {} ms",
