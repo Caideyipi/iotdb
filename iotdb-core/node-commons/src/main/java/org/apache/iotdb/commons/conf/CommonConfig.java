@@ -338,6 +338,8 @@ public class CommonConfig {
   private boolean pipeEventReferenceTrackingEnabled = true;
   private long pipeEventReferenceEliminateIntervalSeconds = 10;
 
+  private boolean pipeAutoSplitFullEnabled = true;
+
   private boolean subscriptionEnabled = false;
 
   private float subscriptionCacheMemoryUsagePercentage = 0.2F;
@@ -2129,6 +2131,14 @@ public class CommonConfig {
     logger.info(
         "pipeEventReferenceEliminateIntervalSeconds is set to {}",
         pipeEventReferenceEliminateIntervalSeconds);
+  }
+
+  public boolean getPipeAutoSplitFullEnabled() {
+    return pipeAutoSplitFullEnabled;
+  }
+
+  public void setPipeAutoSplitFullEnabled(boolean pipeAutoSplitFullEnabled) {
+    this.pipeAutoSplitFullEnabled = pipeAutoSplitFullEnabled;
   }
 
   public boolean getSubscriptionEnabled() {
