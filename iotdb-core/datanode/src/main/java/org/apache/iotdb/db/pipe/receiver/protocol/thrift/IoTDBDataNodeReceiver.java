@@ -29,6 +29,7 @@ import org.apache.iotdb.commons.pipe.datastructure.pattern.IoTDBTreePattern;
 import org.apache.iotdb.commons.pipe.datastructure.pattern.TablePattern;
 import org.apache.iotdb.commons.pipe.receiver.IoTDBFileReceiver;
 import org.apache.iotdb.commons.pipe.receiver.PipeReceiverStatusHandler;
+import org.apache.iotdb.commons.pipe.resource.log.PipeLogger;
 import org.apache.iotdb.commons.pipe.sink.payload.airgap.AirGapPseudoTPipeTransferRequest;
 import org.apache.iotdb.commons.pipe.sink.payload.thrift.common.PipeTransferSliceReqHandler;
 import org.apache.iotdb.commons.pipe.sink.payload.thrift.request.PipeRequestType;
@@ -661,8 +662,9 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
       final TSStatus status =
           ((AlterLogicalViewNode) req.getPlanNode()).checkPermissionBeforeProcess(username);
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        LOGGER.warn(
-            "Receiver id = {}: Failed to check authority for statement {}, username = {}, response = {}.",
+        PipeLogger.log(
+            LOGGER::warn,
+            "Receiver id = %s: Failed to check authority for statement %s, username = %s, response = %s.",
             receiverId.get(),
             StatementType.ALTER_LOGICAL_VIEW.name(),
             username,
@@ -812,19 +814,21 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
           || result.getCode() == TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode()) {
         return result;
       } else {
-        LOGGER.warn(
-            "Receiver id = {}: Failure status encountered while executing statement {}: {}",
+        PipeLogger.log(
+            LOGGER::warn,
+            "Receiver id = %s: Failure status encountered while executing statement %s: %s",
             receiverId.get(),
             statement,
             result);
         return statement.accept(STATEMENT_STATUS_VISITOR, result);
       }
     } catch (final Exception e) {
-      LOGGER.warn(
-          "Receiver id = {}: Exception encountered while executing statement {}: ",
+      PipeLogger.log(
+          LOGGER::warn,
+          e,
+          "Receiver id = %s: Exception encountered while executing statement %s: ",
           receiverId.get(),
-          statement,
-          e);
+          statement);
       return statement.accept(STATEMENT_EXCEPTION_VISITOR, e);
     } finally {
       if (Objects.nonNull(allocatedMemoryBlock)) {
@@ -873,8 +877,9 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
       final TSStatus permissionCheckStatus =
           AuthorityChecker.checkAuthority(statement, clientSession);
       if (permissionCheckStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        LOGGER.warn(
-            "Receiver id = {}: Failed to check authority for statement {}, username = {}, response = {}.",
+        PipeLogger.log(
+            LOGGER::warn,
+            "Receiver id = %s: Failed to check authority for statement %s, username = %s, response = %s.",
             receiverId.get(),
             statement.getType().name(),
             username,
@@ -1054,19 +1059,21 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
       // No strong need to handle the failure result
       if (!(result.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
           || result.getCode() == TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode())) {
-        LOGGER.warn(
-            "Receiver id = {}: Failure status encountered while executing statement {}: {}",
+        PipeLogger.log(
+            LOGGER::warn,
+            "Receiver id = %s: Failure status encountered while executing statement %s: %s",
             receiverId.get(),
             statement,
             result);
       }
       return result;
     } catch (final Exception e) {
-      LOGGER.warn(
-          "Receiver id = {}: Exception encountered while executing statement {}: ",
+      PipeLogger.log(
+          LOGGER::warn,
+          e,
+          "Receiver id = %s: Exception encountered while executing statement %s: ",
           receiverId.get(),
-          statement,
-          e);
+          statement);
       return new TSStatus(TSStatusCode.PIPE_TRANSFER_EXECUTE_STATEMENT_ERROR.getStatusCode())
           .setMessage(e.getMessage());
     }
