@@ -96,6 +96,7 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.sys.LoadConfigurati
 import org.apache.iotdb.db.queryengine.plan.execution.config.sys.MergeTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.sys.SetConfigurationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.sys.SetSystemStatusTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.sys.ShowConfigurationTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.sys.StartRepairDataTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.sys.StopRepairDataTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.sys.TestConnectionTask;
@@ -195,6 +196,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.sys.MergeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetConfigurationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetSqlDialectStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetSystemStatusStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.sys.ShowConfigurationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.ShowCurrentSqlDialectStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.ShowCurrentUserStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.StartRepairDataStatement;
@@ -339,6 +341,12 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
   public IConfigTask visitSetConfiguration(
       SetConfigurationStatement setConfigurationStatement, MPPQueryContext context) {
     return new SetConfigurationTask(setConfigurationStatement);
+  }
+
+  @Override
+  public IConfigTask visitShowConfiguration(
+      ShowConfigurationStatement showConfigurationStatement, MPPQueryContext context) {
+    return new ShowConfigurationTask(showConfigurationStatement);
   }
 
   @Override

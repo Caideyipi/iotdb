@@ -1013,6 +1013,8 @@ service IDataNodeRPCService {
 
   common.TShowConfigurationResp showConfiguration()
 
+  common.TShowAppliedConfigurationsResp showAppliedConfigurations()
+
   common.TSStatus setConfiguration(common.TSetConfigurationReq req)
 
   common.TSStatus loadConfiguration()
