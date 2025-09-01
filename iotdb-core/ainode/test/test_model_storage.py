@@ -24,6 +24,7 @@ from typing import Dict
 
 import torch
 import torch.nn as nn
+
 from iotdb.ainode.config import descriptor
 from iotdb.ainode.constant import (
     DEFAULT_CONFIG_FILE_NAME,

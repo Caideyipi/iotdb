@@ -16,6 +16,7 @@
 # under the License.
 #
 import torch
+
 from iotdb.ainode.algorithm.factory import ForecastModelType, create_forecast_model
 from iotdb.ainode.algorithm.hyperparameter import (
     HyperparameterName,

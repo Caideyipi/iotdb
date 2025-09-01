@@ -22,6 +22,10 @@ import string
 import numpy as np
 import pandas as pd
 import torch
+from sktime.annotation.hmm_learn import GaussianHMM
+from sktime.forecasting.arima import ARIMA
+from torch import nn
+
 from iotdb.ainode.config import descriptor
 from iotdb.ainode.exception import InferenceModelInternalError
 from iotdb.ainode.inference import (
@@ -30,9 +34,6 @@ from iotdb.ainode.inference import (
     inference_with_registered_model,
     process_data,
 )
-from sktime.annotation.hmm_learn import GaussianHMM
-from sktime.forecasting.arima import ARIMA
-from torch import nn
 
 
 class ExampleModel(nn.Module):
