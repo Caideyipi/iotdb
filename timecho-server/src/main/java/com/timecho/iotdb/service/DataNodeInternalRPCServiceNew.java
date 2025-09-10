@@ -6,11 +6,10 @@ import org.apache.iotdb.mpp.rpc.thrift.IDataNodeRPCService.Processor;
 public class DataNodeInternalRPCServiceNew extends DataNodeInternalRPCService {
 
   @Override
-  public void initTProcessor()
-      throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    impl = new DataNodeInternalRPCServiceImplNew();
+  public void initTProcessor() {
+    impl.compareAndSet(null, new DataNodeInternalRPCServiceImplNew());
     initSyncedServiceImpl(null);
-    processor = new Processor<>(impl);
+    processor = new Processor<>(impl.get());
   }
 
   private static class DataNodeInternalRPCServiceHolder {
