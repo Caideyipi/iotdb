@@ -1466,7 +1466,7 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   @Override
   public TPipeHeartbeatResp pipeHeartbeat(TPipeHeartbeatReq req) throws TException {
-    final TPipeHeartbeatResp resp = new TPipeHeartbeatResp();
+    final TPipeHeartbeatResp resp = new TPipeHeartbeatResp(new ArrayList<>());
     PipeDataNodeAgent.task().collectPipeMetaList(req, resp);
     return resp;
   }
