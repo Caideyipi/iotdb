@@ -43,7 +43,7 @@ public class EnvFactory {
     if (env == null) {
       try {
         Class.forName(Config.JDBC_DRIVER_NAME);
-        logger.debug(">>>>>>>{}", System.getProperty("TestEnv"));
+        logger.info(">>>>>>>{}", System.getProperty("TestEnv"));
         EnvType envType = EnvType.getSystemEnvType();
         switch (envType) {
           case Simple:
