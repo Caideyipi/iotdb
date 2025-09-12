@@ -66,7 +66,8 @@ ddlStatement
     | migrateRegion | reconstructRegion | extendRegion | removeRegion  | removeDataNode | removeConfigNode | removeAINode
     | verifyConnection
     // AINode
-    | showAINodes | createModel | dropModel | showModels | callInference
+    | showAINodes | createModel | dropModel | showModels | showLoadedModels | showAIDevices
+    | callInference | loadModel | unloadModel
     // Activation
     | activate | showActivation | showSystemInfo
     // Quota
@@ -761,6 +762,14 @@ hparamCandidates
     : LS_BRACKET attributeValue (COMMA attributeValue)* RS_BRACKET
     ;
 
+loadModel
+    : LOAD MODEL existingModelId=identifier TO DEVICES deviceIdList=STRING_LITERAL
+    ;
+
+unloadModel
+    : UNLOAD MODEL existingModelId=identifier FROM DEVICES deviceIdList=STRING_LITERAL
+    ;
+
 // ---- Drop Model
 dropModel
     : DROP MODEL modelId=identifier
@@ -770,6 +779,15 @@ dropModel
 showModels
     : SHOW MODELS
     | SHOW MODELS modelId=identifier
+    ;
+
+showLoadedModels
+    : SHOW LOADED MODELS
+    | SHOW LOADED MODELS deviceIdList=STRING_LITERAL
+    ;
+
+showAIDevices
+    : SHOW AI_DEVICES
     ;
 
 // Create Logical View

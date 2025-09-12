@@ -82,8 +82,12 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSy
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateTrainingStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.LoadModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAIDevicesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowLoadedModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.UnloadModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.AlterPipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
@@ -316,7 +320,6 @@ public abstract class StatementVisitor<R, C> {
   }
 
   // Activation
-
   public R visitActivate(ActivateStatement activateStatement, C context) {
     return visitStatement(activateStatement, context);
   }
@@ -326,7 +329,23 @@ public abstract class StatementVisitor<R, C> {
   }
 
   public R visitShowSystemInfo(ShowSystemInfoStatement showSystemInfoStatement, C context) {
-    return visitStatement(showSystemInfoStatement, context);
+      return visitStatement(showSystemInfoStatement, context);
+  }
+
+  public R visitShowLoadedModels(ShowLoadedModelsStatement showLoadedModelsStatement, C context) {
+    return visitStatement(showLoadedModelsStatement, context);
+  }
+
+  public R visitShowAIDevices(ShowAIDevicesStatement showAIDevicesStatement, C context) {
+    return visitStatement(showAIDevicesStatement, context);
+  }
+
+  public R visitLoadModel(LoadModelStatement loadModelStatement, C context) {
+    return visitStatement(loadModelStatement, context);
+  }
+
+  public R visitUnloadModel(UnloadModelStatement unloadModelStatement, C context) {
+    return visitStatement(unloadModelStatement, context);
   }
 
   /** Data Manipulation Language (DML) */
