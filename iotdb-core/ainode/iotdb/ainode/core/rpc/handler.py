@@ -17,7 +17,6 @@
 #
 
 from iotdb.ainode.core.config import AINodeDescriptor
-
 from iotdb.ainode.core.constant import TSStatusCode
 from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.manager.cluster_manager import ClusterManager

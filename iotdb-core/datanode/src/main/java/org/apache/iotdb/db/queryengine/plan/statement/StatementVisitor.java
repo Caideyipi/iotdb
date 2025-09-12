@@ -329,7 +329,7 @@ public abstract class StatementVisitor<R, C> {
   }
 
   public R visitShowSystemInfo(ShowSystemInfoStatement showSystemInfoStatement, C context) {
-      return visitStatement(showSystemInfoStatement, context);
+    return visitStatement(showSystemInfoStatement, context);
   }
 
   public R visitShowLoadedModels(ShowLoadedModelsStatement showLoadedModelsStatement, C context) {
