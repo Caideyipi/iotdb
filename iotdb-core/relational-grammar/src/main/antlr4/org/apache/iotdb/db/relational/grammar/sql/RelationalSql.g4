@@ -1817,6 +1817,7 @@ WRAPPER: 'WRAPPER';
 WRITE: 'WRITE';
 YEAR: 'YEAR' | 'Y';
 ZONE: 'ZONE';
+AUDIT: 'AUDIT';
 
 EQ: '=';
 NEQ: '<>' | '!=';
