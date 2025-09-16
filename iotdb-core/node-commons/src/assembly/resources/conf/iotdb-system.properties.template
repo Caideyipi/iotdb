@@ -384,6 +384,33 @@ metric_prometheus_reporter_username=
 # Datatype: String
 metric_prometheus_reporter_password=
 
+# Whether enable SSL for metric
+# effectiveMode: restart
+# Datatype: Boolean
+metric_enable_ssl=false
+
+# SSL key store path for metric
+# linux e.g. /home/iotdb/server.keystore (absolute path) or server.keystore (relative path)
+# windows e.g. C:\\iotdb\\server.keystore (absolute path) or server.keystore (relative path)
+# effectiveMode: restart
+metric_key_store_path=
+
+# SSL key store password for metric
+# effectiveMode: restart
+# Datatype: String
+metric_key_store_pwd=
+
+# SSL trust store path for metric
+# linux e.g. /home/iotdb/server.truststore (absolute path) or server.truststore (relative path)
+# windows e.g. C:\\iotdb\\server.truststore (absolute path) or server.truststore (relative path)
+# effectiveMode: restart
+metric_trust_store_path=
+
+# SSL trust store password for metric
+# effectiveMode: restart
+# Datatype: String
+metric_trust_store_pwd=
+
 # The reporters of metric module to report metrics
 # If there are more than one reporter, please separate them by commas ",".
 # Options: [JMX, PROMETHEUS]
