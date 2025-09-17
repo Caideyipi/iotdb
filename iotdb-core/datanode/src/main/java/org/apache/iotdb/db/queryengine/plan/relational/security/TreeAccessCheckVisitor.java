@@ -1043,7 +1043,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
     return AuthorityChecker.getTSStatus(
         AuthorityChecker.checkSystemPermission(userName, PrivilegeType.SYSTEM)
             || AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MAINTAIN),
-        PrivilegeType.SYSTEM);
+        PrivilegeType.MAINTAIN);
   }
 
   // ======================== TTL related ===========================
