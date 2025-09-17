@@ -81,6 +81,9 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTimeSeriesSta
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTriggersStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowVariablesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.UnSetTTLStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ActivateStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
@@ -1016,6 +1019,31 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   public TSStatus visitShowCurrentTimestamp(
       ShowCurrentTimestampStatement showCurrentTimestampStatement, TreeAccessCheckContext context) {
     return visitAuthorityInformation(showCurrentTimestampStatement, context);
+  }
+
+  @Override
+  public TSStatus visitActivate(
+      ActivateStatement activateStatement, TreeAccessCheckContext context) {
+    return checkActiveManagement(context.userName);
+  }
+
+  @Override
+  public TSStatus visitShowActivation(
+      ShowActivationStatement showActivationStatement, TreeAccessCheckContext context) {
+    return checkActiveManagement(context.userName);
+  }
+
+  @Override
+  public TSStatus visitShowSystemInfo(
+      ShowSystemInfoStatement showSystemInfoStatement, TreeAccessCheckContext context) {
+    return checkActiveManagement(context.userName);
+  }
+
+  private TSStatus checkActiveManagement(String userName) {
+    return AuthorityChecker.getTSStatus(
+        AuthorityChecker.checkSystemPermission(userName, PrivilegeType.SYSTEM)
+            || AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MAINTAIN),
+        PrivilegeType.SYSTEM);
   }
 
   // ======================== TTL related ===========================

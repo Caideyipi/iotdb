@@ -351,7 +351,7 @@ public class AuthorityChecker {
     }
     return AuthorityChecker.getTSStatus(
         AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MAINTAIN),
-        PrivilegeType.MAINTAIN);
+        PrivilegeType.SYSTEM);
   }
 
   public static void buildTSBlock(
