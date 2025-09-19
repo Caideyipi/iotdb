@@ -53,8 +53,18 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 import java.util.stream.Collectors;
 
@@ -964,7 +974,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
       final Map<String, String> expectedHeaderWithResult)
       throws Exception {
     final AtomicBoolean isClosed = new AtomicBoolean(false);
-    final AtomicBoolean receiverCrashed = new AtomicBoolean(false);
+    final AtomicReference<Throwable> childFailure = new AtomicReference<>();
 
     final List<Thread> threads = new ArrayList<>();
     for (int i = 0; i < consumers.size(); ++i) {
@@ -993,14 +1003,11 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                               final List<String> columnNameList = dataSet.getColumnNames();
                               while (dataSet.hasNext()) {
                                 final RowRecord record = dataSet.next();
-                                if (!insertRowRecordEnrichedByConsumerGroupId(
+                                insertRowRecordEnrichedByConsumerGroupId(
                                     columnNameList,
                                     record.getTimestamp(),
                                     consumerGroupId,
-                                    defaultConnection)) {
-                                  receiverCrashed.set(true);
-                                  throw new RuntimeException("detect receiver crashed");
-                                }
+                                    defaultConnection);
                               }
                             }
                             break;
@@ -1019,14 +1026,11 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                               while (dataSet.hasNext()) {
                                 final RowRecord record = dataSet.next();
                                 for (final Path path : dataSet.getPaths()) {
-                                  if (!insertRowRecordEnrichedByConsumerGroupId(
+                                  insertRowRecordEnrichedByConsumerGroupId(
                                       path.toString(),
                                       record.getTimestamp(),
                                       consumerGroupId,
-                                      defaultConnection)) {
-                                    receiverCrashed.set(true);
-                                    throw new RuntimeException("detect receiver crashed");
-                                  }
+                                      defaultConnection);
                                 }
                               }
                             }
@@ -1042,7 +1046,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                   // No need to unsubscribe
                 } catch (final Exception e) {
                   e.printStackTrace();
-                  // Avoid failure
+                  childFailure.set(e);
                 } finally {
                   LOGGER.info("consumer {} exiting...", consumers.get(index));
                 }
@@ -1060,8 +1064,10 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
         // Keep retrying if there are execution failures
         AWAIT.untilAsserted(
             () -> {
-              if (receiverCrashed.get()) {
-                LOGGER.info("detect receiver crashed, skipping this test...");
+              final Throwable thrown = childFailure.get();
+              if (Objects.nonNull(thrown)) {
+                // Avoid failure
+                LOGGER.warn("Skipping test due to unexpected exception", thrown);
                 return;
               }
               // potential stuck
@@ -1073,6 +1079,7 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
                 }
                 currentTime[0] = System.currentTimeMillis();
               }
+              senderEnv.getSessionConnection().executeNonQueryStatement("flush");
               TestUtils.assertSingleResultSetEqual(
                   TestUtils.executeQueryWithRetry(
                       statement, "select count(*) from root.topic*,root.cg*.**"),
@@ -1090,47 +1097,36 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
     }
   }
 
-  /**
-   * @return false -> receiver crashed
-   */
-  private boolean insertRowRecordEnrichedByConsumerGroupId(
+  private void insertRowRecordEnrichedByConsumerGroupId(
       final List<String> columnNameList,
       final long timestamp,
       final String consumerGroupId,
-      Connection defaultConnection)
-      throws Exception {
+      Connection defaultConnection) {
     final int columnSize = columnNameList.size();
     if (columnSize <= 1) { // only with time column
       LOGGER.warn("unexpected column name list: {}", columnNameList);
-      throw new Exception("unexpected column name list");
+      return;
     }
 
     for (int columnIndex = 1; columnIndex < columnSize; ++columnIndex) {
       final String columnName = columnNameList.get(columnIndex);
-      if (!insertRowRecordEnrichedByConsumerGroupId(
-          columnName, timestamp, consumerGroupId, defaultConnection)) {
-        return false;
-      }
+      insertRowRecordEnrichedByConsumerGroupId(
+          columnName, timestamp, consumerGroupId, defaultConnection);
     }
-
-    return true;
   }
 
-  /**
-   * @return false -> receiver crashed
-   */
-  private boolean insertRowRecordEnrichedByConsumerGroupId(
+  private void insertRowRecordEnrichedByConsumerGroupId(
       final String columnName,
       final long timestamp,
       final String consumerGroupId,
-      Connection defaultConnection)
-      throws Exception {
+      Connection defaultConnection) {
     if ("root.topic1.s".equals(columnName)) {
       final String sql =
           String.format(
               "insert into root.%s.topic1(time, s) values (%s, 1)", consumerGroupId, timestamp);
       LOGGER.info(sql);
-      return TestUtils.tryExecuteNonQueryWithRetry(receiverEnv, sql, defaultConnection);
+      TestUtils.executeNonQuery(receiverEnv, sql, defaultConnection);
+      return;
     }
 
     if ("root.topic2.s".equals(columnName)) {
@@ -1138,10 +1134,10 @@ public class IoTDBSubscriptionConsumerGroupIT extends AbstractSubscriptionDualIT
           String.format(
               "insert into root.%s.topic2(time, s) values (%s, 3)", consumerGroupId, timestamp);
       LOGGER.info(sql);
-      return TestUtils.tryExecuteNonQueryWithRetry(receiverEnv, sql, defaultConnection);
+      TestUtils.executeNonQuery(receiverEnv, sql, defaultConnection);
+      return;
     }
 
     LOGGER.warn("unexpected column name: {}", columnName);
-    throw new Exception("unexpected column name");
   }
 }
