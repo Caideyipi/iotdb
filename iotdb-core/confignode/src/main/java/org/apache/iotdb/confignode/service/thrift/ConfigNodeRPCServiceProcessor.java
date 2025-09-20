@@ -673,6 +673,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
     resp.setMemberInfo(dataSet.getMemberList());
     resp.setPermissionInfo(dataSet.getPermissionInfoResp());
     resp.setTag(dataSet.getTag());
+    resp.setUsersInfo(dataSet.getUsersInfo());
     return resp;
   }
 
@@ -715,6 +716,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
     final TAuthorizerResp resp = new TAuthorizerResp(dataSet.getStatus());
     resp.setMemberInfo(dataSet.getMemberList());
     resp.setPermissionInfo(dataSet.getPermissionInfoResp());
+    resp.setUsersInfo(dataSet.getUsersInfo());
     resp.setTag(dataSet.getTag());
     return resp;
   }
