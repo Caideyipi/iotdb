@@ -240,6 +240,8 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         ConfigNodeInfo.getInstance().storeConfigNodeList();
         // Register this DataNode to the cluster when first start
         sendRegisterRequestToConfigNode(false);
+        saveSecretKey();
+        saveHardwareCode();
       } else {
         /* Check encrypt magic string */
         try {
@@ -249,6 +251,8 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         }
         // Send restart request of this DataNode
         sendRestartRequestToConfigNode();
+        loadSecretKey();
+        loadHardwareCode();
       }
       // TierManager need DataNodeId to do some operations so the reset method need to be invoked
       // after DataNode adding
@@ -560,7 +564,23 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
   }
 
   private void configOSStorage(int dataNodeID) {
-    FSFactoryProducer.setFileInputFactory(new HybridFileInputFactoryDecorator(dataNodeID));
+      FSFactoryProducer.setFileInputFactory(new HybridFileInputFactoryDecorator(dataNodeID));
+  }
+
+  protected void saveSecretKey() {
+    // Do nothing
+  }
+
+  protected void saveHardwareCode() {
+    // Do nothing
+  }
+
+  protected void loadSecretKey() throws IOException {
+    // Do nothing
+  }
+
+  protected void loadHardwareCode() throws IOException {
+    // Do nothing
   }
 
   private void makeRegionsCorrect(List<TRegionReplicaSet> correctRegions) {
