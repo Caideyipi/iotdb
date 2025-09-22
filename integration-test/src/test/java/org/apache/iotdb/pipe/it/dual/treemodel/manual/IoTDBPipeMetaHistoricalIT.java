@@ -342,7 +342,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
 
       // Do not fail if the failure has nothing to do with pipe
       // Because the failures will randomly generate due to resource limitation
-      if (!TestUtils.tryExecuteNonQueriesWithRetry(
+      TestUtils.executeNonQueries(
           senderEnv,
           Arrays.asList(
               "create database root.ln",
@@ -358,9 +358,7 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
               "CREATE VIEW root.ln.device.status AS root.ln.wf02.wt01.status",
               // Insert large timestamp to avoid deletion by ttl
               "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"),
-          null)) {
-        return;
-      }
+          null);
 
       final Map<String, String> extractorAttributes = new HashMap<>();
       final Map<String, String> processorAttributes = new HashMap<>();
@@ -403,10 +401,8 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
           "Time,root.ln.wf02.wt01.status,root.ln.device.status,",
           Collections.emptySet());
 
-      if (!TestUtils.tryExecuteNonQueryWithRetry(
-          senderEnv, "create timeseries using schema template on root.ln.wf01.wt02", null)) {
-        return;
-      }
+      TestUtils.executeNonQuery(
+          senderEnv, "create timeseries using schema template on root.ln.wf01.wt02", null);
 
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv,
