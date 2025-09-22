@@ -1879,6 +1879,11 @@ password_expiration_days=-1
 # effectiveMode: hot_reload
 password_reuse_interval_days=-1
 
+# Whether to enable the with-grant-option in grant statement.
+# Datatype: boolean
+# effectiveMode: first_start
+enable_grant_option=true
+
 ####################
 ### UDF Configuration
 ####################
