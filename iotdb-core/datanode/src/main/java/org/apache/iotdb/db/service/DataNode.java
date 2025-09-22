@@ -86,6 +86,7 @@ import org.apache.iotdb.db.qp.sql.IoTDBSqlParser;
 import org.apache.iotdb.db.qp.sql.SqlLexer;
 import org.apache.iotdb.db.queryengine.execution.exchange.MPPDataExchangeService;
 import org.apache.iotdb.db.queryengine.execution.schedule.DriverScheduler;
+import org.apache.iotdb.db.queryengine.plan.Coordinator;
 import org.apache.iotdb.db.queryengine.plan.analyze.cache.schema.DataNodeTTLCache;
 import org.apache.iotdb.db.queryengine.plan.parser.ASTVisitor;
 import org.apache.iotdb.db.queryengine.plan.parser.StatementGenerator;
@@ -273,8 +274,9 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
       logger.info("IoTDB configuration: {}", config.getConfigMessage());
       logger.info("Congratulations, IoTDB DataNode is set up successfully. Now, enjoy yourself!");
 
-      // Start the Audit Service
+      // Start the Audit Service when necessary
       if (CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
+        DNAuditLogger.getInstance().setCoordinator(Coordinator.getInstance());
         AuditLogFields fields =
             new AuditLogFields(
                 null,
@@ -564,7 +566,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
   }
 
   private void configOSStorage(int dataNodeID) {
-      FSFactoryProducer.setFileInputFactory(new HybridFileInputFactoryDecorator(dataNodeID));
+    FSFactoryProducer.setFileInputFactory(new HybridFileInputFactoryDecorator(dataNodeID));
   }
 
   protected void saveSecretKey() {

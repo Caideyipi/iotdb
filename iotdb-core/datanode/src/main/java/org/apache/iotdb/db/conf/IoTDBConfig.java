@@ -3791,6 +3791,10 @@ public class IoTDBConfig {
     return auditableOperationType;
   }
 
+  public void setAuditableOperationType(List<AuditLogOperation> auditableOperationType) {
+    this.auditableOperationType = auditableOperationType;
+  }
+
   public List<AuditLogStorage> getAuditLogStorage() {
     return auditLogStorage;
   }

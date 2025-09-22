@@ -18,6 +18,7 @@
  */
 package org.apache.iotdb.db.conf;
 
+import org.apache.iotdb.commons.audit.AuditLogOperation;
 import org.apache.iotdb.commons.binaryallocator.BinaryAllocator;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
@@ -35,7 +36,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TCQConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TGlobalConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TRatisConfig;
 import org.apache.iotdb.consensus.config.PipeConsensusConfig;
-import org.apache.iotdb.db.audit.AuditLogOperation;
 import org.apache.iotdb.db.audit.AuditLogStorage;
 import org.apache.iotdb.db.consensus.DataRegionConsensusImpl;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
@@ -3113,7 +3113,7 @@ public class IoTDBDescriptor {
     }
 
     if (properties.getProperty("audit_log_operation") != null) {
-      conf.setAuditLogOperation(
+      conf.setAuditableOperationType(
           Arrays.stream(properties.getProperty("audit_log_operation").split(","))
               .map(AuditLogOperation::valueOf)
               .collect(Collectors.toList()));
