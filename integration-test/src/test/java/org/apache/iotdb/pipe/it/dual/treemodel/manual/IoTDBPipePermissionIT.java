@@ -189,7 +189,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
       TestUtils.executeNonQueries(
           senderEnv,
           Arrays.asList(
-              "create user someUser 'passwd'",
+              "create user someUser 'passwd$%@#$@%'",
               "create timeseries root.noPermission.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN"),
           null);
       awaitUntilFlush(senderEnv);
