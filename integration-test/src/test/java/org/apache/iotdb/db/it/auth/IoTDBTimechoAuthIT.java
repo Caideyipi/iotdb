@@ -58,7 +58,7 @@ public class IoTDBTimechoAuthIT {
       try (Connection userCon = EnvFactory.getEnv().getConnection("tempuser", "tempPW@123456789");
           Statement userStmt = userCon.createStatement()) {
         Assert.assertThrows(SQLException.class, () -> userStmt.execute("SHOW ACTIVATION"));
-        adminStmt.execute("GRANT MAINTAIN ON root.** TO USER tempuser");
+        adminStmt.execute("GRANT SYSTEM ON root.** TO USER tempuser");
         userStmt.execute("SHOW ACTIVATION");
       }
     }
