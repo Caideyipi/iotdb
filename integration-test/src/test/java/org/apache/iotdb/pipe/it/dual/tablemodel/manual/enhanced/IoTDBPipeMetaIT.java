@@ -312,7 +312,8 @@ public class IoTDBPipeMetaIT extends AbstractPipeTableModelDualManualIT {
 
       TestUtils.executeNonQueries(
           senderEnv,
-          Arrays.asList("create user testUser 'password'", "grant all on root.** to user testUser"),
+          Arrays.asList(
+              "create user testUser 'password!@#$!@#$'", "grant all on root.** to user testUser"),
           null);
 
       TestUtils.executeNonQueries(
