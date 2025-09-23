@@ -85,9 +85,14 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.Activa
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowActivationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.activation.ShowSystemInfoStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.CreateTrainingStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.DropModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.LoadModelStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAIDevicesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowAINodesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowLoadedModelsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.ShowModelsStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.model.UnloadModelStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.AlterPipeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipePluginStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.CreatePipeStatement;
@@ -126,8 +131,10 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.view.ShowLogicalV
 import org.apache.iotdb.db.queryengine.plan.statement.sys.AuthorStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.ClearCacheStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.ExplainAnalyzeStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.sys.ExplainStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.FlushStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.KillQueryStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.sys.LoadConfigurationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetConfigurationStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetSqlDialectStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetSystemStatusStatement;
@@ -164,10 +171,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
 
   @Override
   public TSStatus visitNode(StatementNode node, TreeAccessCheckContext context) {
-    if (AuthorityChecker.SUPER_USER.equals(context.getUsername())) {
-      return SUCCEED;
-    }
-    return AuthorityChecker.getTSStatus(false, "Only the admin user can perform this operation");
+    throw new IllegalStateException("Each operation should have permission check.");
   }
 
   @Override
@@ -232,7 +236,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
       return SUCCEED;
     }
     // own SYSTEM can see all, otherwise can only see PATHS that user has READ_SCHEMA auth
-    if (!AuthorityChecker.checkSystemPermission(context.getUsername(), PrivilegeType.SYSTEM)) {
+    if (!checkHasGlobalAuth(context.getUsername(), PrivilegeType.SYSTEM)) {
       statement.setCanSeeAll(false);
       return visitAuthorityInformation(statement, context);
     } else {
@@ -292,11 +296,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
     if (AuthorityChecker.SUPER_USER.equals(context.getUsername())) {
       return SUCCEED;
     }
-    return AuthorityChecker.getTSStatus(
-        AuthorityChecker.checkSystemPermission(context.getUsername(), PrivilegeType.SYSTEM)
-            || AuthorityChecker.checkSystemPermission(
-                context.getUsername(), PrivilegeType.EXTEND_TEMPLATE),
-        PrivilegeType.SYSTEM);
+    return checkGlobalAuth(context.getUsername(), PrivilegeType.EXTEND_TEMPLATE);
   }
 
   // ============================= timeseries view related ===============
@@ -458,8 +458,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
         }
 
       case LIST_ROLE:
-        if (AuthorityChecker.checkSystemPermission(
-            context.getUsername(), PrivilegeType.MANAGE_ROLE)) {
+        if (checkHasGlobalAuth(context.getUsername(), PrivilegeType.MANAGE_ROLE)) {
           return SUCCEED;
         }
         // list roles of other user is not allowed
@@ -573,6 +572,36 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   @Override
   public TSStatus visitDropModel(DropModelStatement statement, TreeAccessCheckContext context) {
     return checkModelManagement(context.getUsername());
+  }
+
+  @Override
+  public TSStatus visitCreateTraining(
+      CreateTrainingStatement createTrainingStatement, TreeAccessCheckContext context) {
+    return checkModelManagement(context.getUsername());
+  }
+
+  @Override
+  public TSStatus visitUnloadModel(
+      UnloadModelStatement unloadModelStatement, TreeAccessCheckContext context) {
+    return checkModelManagement(context.getUsername());
+  }
+
+  @Override
+  public TSStatus visitLoadModel(
+      LoadModelStatement loadModelStatement, TreeAccessCheckContext context) {
+    return checkModelManagement(context.getUsername());
+  }
+
+  @Override
+  public TSStatus visitShowAIDevices(
+      ShowAIDevicesStatement showAIDevicesStatement, TreeAccessCheckContext context) {
+    return checkModelManagement(context.getUsername());
+  }
+
+  @Override
+  public TSStatus visitShowLoadedModels(
+      ShowLoadedModelsStatement showLoadedModelsStatement, TreeAccessCheckContext context) {
+    return SUCCEED;
   }
 
   @Override
@@ -694,10 +723,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
     if (AuthorityChecker.SUPER_USER.equals(userName)) {
       return SUCCEED;
     }
-    return AuthorityChecker.getTSStatus(
-        AuthorityChecker.checkSystemPermission(userName, PrivilegeType.SYSTEM)
-            || AuthorityChecker.checkSystemPermission(userName, PrivilegeType.USE_TRIGGER),
-        PrivilegeType.SYSTEM);
+    return checkGlobalAuth(userName, PrivilegeType.USE_TRIGGER);
   }
 
   // ============================== database related ===========================
@@ -747,11 +773,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
     if (AuthorityChecker.SUPER_USER.equals(context.getUsername())) {
       return SUCCEED;
     }
-    return AuthorityChecker.getTSStatus(
-        AuthorityChecker.checkSystemPermission(context.getUsername(), PrivilegeType.SYSTEM)
-            || AuthorityChecker.checkSystemPermission(
-                context.getUsername(), PrivilegeType.MANAGE_DATABASE),
-        PrivilegeType.SYSTEM);
+    return checkGlobalAuth(context.getUsername(), PrivilegeType.MANAGE_DATABASE);
   }
 
   private TSStatus checkCreateOrAlterDatabasePermission(String userName, PartialPath databaseName) {
@@ -765,10 +787,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
       return SUCCEED;
     }
 
-    return AuthorityChecker.getTSStatus(
-        AuthorityChecker.checkSystemPermission(userName, PrivilegeType.SYSTEM)
-            || AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MANAGE_DATABASE),
-        PrivilegeType.SYSTEM);
+    return checkGlobalAuth(userName, PrivilegeType.MANAGE_DATABASE);
   }
 
   private TSStatus checkShowOrCountDatabasePermission(
@@ -856,6 +875,11 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   public TSStatus visitExplainAnalyze(
       ExplainAnalyzeStatement statement, TreeAccessCheckContext context) {
     return statement.getQueryStatement().accept(this, context);
+  }
+
+  @Override
+  public TSStatus visitExplain(ExplainStatement explainStatement, TreeAccessCheckContext context) {
+    return explainStatement.getQueryStatement().accept(this, context);
   }
 
   // ============================= timeseries related =================================
@@ -1286,26 +1310,28 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   @Override
   public TSStatus visitActivate(
       ActivateStatement activateStatement, TreeAccessCheckContext context) {
-    return checkActiveManagement(context.userName);
+    return checkActiveManagement(context.getUsername());
   }
 
   @Override
   public TSStatus visitShowActivation(
       ShowActivationStatement showActivationStatement, TreeAccessCheckContext context) {
-    return checkActiveManagement(context.userName);
+    return checkActiveManagement(context.getUsername());
   }
 
   @Override
   public TSStatus visitShowSystemInfo(
       ShowSystemInfoStatement showSystemInfoStatement, TreeAccessCheckContext context) {
-    return checkActiveManagement(context.userName);
+    return checkActiveManagement(context.getUsername());
   }
 
   private TSStatus checkActiveManagement(String userName) {
-    return AuthorityChecker.getTSStatus(
-        AuthorityChecker.checkSystemPermission(userName, PrivilegeType.SYSTEM)
-            || AuthorityChecker.checkSystemPermission(userName, PrivilegeType.MAINTAIN),
-        PrivilegeType.MAINTAIN);
+    return checkGlobalAuth(userName, PrivilegeType.MAINTAIN);
+  }
+
+  public TSStatus visitLoadConfiguration(
+      LoadConfigurationStatement loadConfigurationStatement, TreeAccessCheckContext context) {
+    return checkOnlySuperUser(context.getUsername());
   }
 
   // ======================== TTL related ===========================
@@ -1456,5 +1482,12 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
     if (!checkHasGlobalAuth(userName, PrivilegeType.AUDIT)) {
       statement.setCanSeeAuditDB(false);
     }
+  }
+
+  private TSStatus checkOnlySuperUser(String userName) {
+    if (AuthorityChecker.SUPER_USER.equals(userName)) {
+      return SUCCEED;
+    }
+    return AuthorityChecker.getTSStatus(false, "Only the admin user can perform this operation");
   }
 }
