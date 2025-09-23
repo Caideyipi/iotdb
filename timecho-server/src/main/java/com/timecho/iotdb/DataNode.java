@@ -19,13 +19,13 @@
 package com.timecho.iotdb;
 
 import org.apache.iotdb.commons.exception.StartupException;
-import org.apache.iotdb.commons.secret.SecretKey;
-import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.OSUtils;
 import com.timecho.iotdb.dataregion.migration.MigrationTaskManager;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.schemaregion.mtree.EnterpriseCachedMNodeFactory;

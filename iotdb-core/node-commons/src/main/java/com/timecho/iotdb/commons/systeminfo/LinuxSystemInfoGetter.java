@@ -17,17 +17,20 @@
  * under the License.
  */
 
-package org.apache.iotdb.commons.systeminfo;
+package com.timecho.iotdb.commons.systeminfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Scanner;
+import java.io.InputStreamReader;
 
-public class WindowsSystemInfoGetter extends SystemInfoGetter {
+public class LinuxSystemInfoGetter extends SystemInfoGetter {
 
-  private static final Logger logger = LoggerFactory.getLogger(WindowsSystemInfoGetter.class);
+  private static final Logger logger = LoggerFactory.getLogger(LinuxSystemInfoGetter.class);
+
+  private static final String BASH = "/bin/bash";
 
   @Override
   Logger getLogger() {
@@ -36,32 +39,31 @@ public class WindowsSystemInfoGetter extends SystemInfoGetter {
 
   @Override
   String getCPUIdImpl() throws IOException {
-    return executeShell("wmic cpu get processorid");
+    return executeShell(
+        new String[] {
+          BASH, "-c", "dmidecode -t processor | grep 'ID' | awk -F ':' '{print $2}' | head -n 1"
+        });
   }
 
   @Override
   String getMainBoardIdImpl() throws IOException {
-    return executeShell("wmic baseboard get serialnumber");
+    return executeShell(
+        new String[] {
+          BASH, "-c", "dmidecode | grep 'Serial Number' | awk -F ':' '{print $2}' | head -n 1"
+        });
   }
 
   @Override
   String getSystemUUIDImpl() throws IOException {
-    return executeShell("wmic csproduct get uuid");
+    return executeShell(new String[] {BASH, "-c", "cat /sys/class/dmi/id/product_uuid"});
   }
 
-  private static String executeShell(String shell) throws IOException {
+  protected String executeShell(String[] shell) throws IOException {
     Process process = Runtime.getRuntime().exec(shell);
     process.getOutputStream().close();
-    Scanner scanner = new Scanner(process.getInputStream());
-    if (scanner.hasNext()) {
-      scanner.next();
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+      return reader.readLine().trim();
     }
-    String serialNumber = "";
-    if (scanner.hasNext()) {
-      serialNumber = scanner.next().trim();
-    }
-
-    scanner.close();
-    return serialNumber;
   }
 }

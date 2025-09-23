@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.commons.license.limit;
+package com.timecho.iotdb.commons.license.limit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,17 +1,17 @@
-package org.apache.iotdb.commons.utils;
+package com.timecho.iotdb.commons.utils;
 
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.commons.license.License;
 import org.apache.iotdb.commons.structure.SortedProperties;
-import org.apache.iotdb.commons.systeminfo.ISystemInfoGetter;
-import org.apache.iotdb.commons.systeminfo.LinuxSystemInfoGetter;
-import org.apache.iotdb.commons.systeminfo.MacSystemInfoGetter;
-import org.apache.iotdb.commons.systeminfo.SystemInfoGetter;
-import org.apache.iotdb.commons.systeminfo.WindowsSystemInfoGetter;
 
 import cn.hutool.system.OsInfo;
 import cn.hutool.system.SystemUtil;
 import com.google.common.collect.ImmutableMap;
+import com.timecho.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.systeminfo.ISystemInfoGetter;
+import com.timecho.iotdb.commons.systeminfo.LinuxSystemInfoGetter;
+import com.timecho.iotdb.commons.systeminfo.MacSystemInfoGetter;
+import com.timecho.iotdb.commons.systeminfo.SystemInfoGetter;
+import com.timecho.iotdb.commons.systeminfo.WindowsSystemInfoGetter;
 import org.apache.commons.codec.binary.Base32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

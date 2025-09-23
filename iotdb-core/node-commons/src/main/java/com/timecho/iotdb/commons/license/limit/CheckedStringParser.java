@@ -17,34 +17,9 @@
  * under the License.
  */
 
-package org.apache.iotdb.commons.systeminfo;
+package com.timecho.iotdb.commons.license.limit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.ratis.util.function.CheckedFunction;
 
-import static cn.hutool.system.oshi.OshiUtil.getSystem;
-
-public class MacSystemInfoGetter extends SystemInfoGetter {
-
-  private static final Logger logger = LoggerFactory.getLogger(MacSystemInfoGetter.class);
-
-  @Override
-  Logger getLogger() {
-    return logger;
-  }
-
-  @Override
-  String getCPUIdImpl() {
-    return "";
-  }
-
-  @Override
-  String getMainBoardIdImpl() {
-    return getSystem().getBaseboard().getSerialNumber();
-  }
-
-  @Override
-  String getSystemUUIDImpl() {
-    return getSystem().getHardwareUUID();
-  }
-}
+@FunctionalInterface
+public interface CheckedStringParser<T> extends CheckedFunction<String, T, Exception> {}

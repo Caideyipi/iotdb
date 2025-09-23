@@ -20,7 +20,6 @@
 package com.timecho.iotdb.manager.node;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
-import org.apache.iotdb.commons.license.License;
 import org.apache.iotdb.confignode.manager.node.NodeManager;
 import org.apache.iotdb.confignode.persistence.node.NodeInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
@@ -29,6 +28,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartResp;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import com.timecho.iotdb.commons.license.License;
 import com.timecho.iotdb.manager.ITimechoManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,13 +19,13 @@
 
 package com.timecho.iotdb.service;
 
-import org.apache.iotdb.commons.secret.SecretKey;
-import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.service.thrift.ConfigNodeRPCServiceProcessor;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.OSUtils;
 import com.timecho.iotdb.manager.TimechoConfigManager;
 import com.timecho.iotdb.manager.activation.ActivationManager;
 import com.timecho.iotdb.service.thrift.TimechoConfigNodeRPCServiceProcessor;

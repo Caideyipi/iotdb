@@ -19,7 +19,7 @@
 
 package org.apache.iotdb.confignode.manager.activation;
 
-import org.apache.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.license.License;
 
 /**
  * This class provides a license which has no restraint. Only for integration tests (except

@@ -1,4 +1,4 @@
-package org.apache.iotdb.commons.secret;
+package com.timecho.iotdb.commons.secret;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;

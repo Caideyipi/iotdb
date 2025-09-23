@@ -21,13 +21,13 @@ package com.timecho.iotdb.manager.activation;
 
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
-import org.apache.iotdb.commons.license.License;
-import org.apache.iotdb.commons.license.RSA;
-import org.apache.iotdb.commons.systeminfo.SystemInfoGetter;
-import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 
 import com.google.common.collect.ImmutableMap;
+import com.timecho.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.license.RSA;
+import com.timecho.iotdb.commons.systeminfo.SystemInfoGetter;
+import com.timecho.iotdb.commons.utils.OSUtils;
 
 import java.io.BufferedReader;
 import java.io.File;

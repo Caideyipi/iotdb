@@ -17,13 +17,14 @@
  * under the License.
  */
 
-package org.apache.iotdb.commons.license;
+package com.timecho.iotdb.commons.license;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.commons.license.limit.Limit;
-import org.apache.iotdb.commons.license.limit.LimitAllowAbsent;
+import org.apache.iotdb.commons.license.ActivateStatus;
 
+import com.timecho.iotdb.commons.license.limit.Limit;
+import com.timecho.iotdb.commons.license.limit.LimitAllowAbsent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,20 +17,17 @@
  * under the License.
  */
 
-package org.apache.iotdb.commons.systeminfo;
+package com.timecho.iotdb.commons.systeminfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Scanner;
 
-public class LinuxSystemInfoGetter extends SystemInfoGetter {
+public class WindowsSystemInfoGetter extends SystemInfoGetter {
 
-  private static final Logger logger = LoggerFactory.getLogger(LinuxSystemInfoGetter.class);
-
-  private static final String BASH = "/bin/bash";
+  private static final Logger logger = LoggerFactory.getLogger(WindowsSystemInfoGetter.class);
 
   @Override
   Logger getLogger() {
@@ -39,31 +36,32 @@ public class LinuxSystemInfoGetter extends SystemInfoGetter {
 
   @Override
   String getCPUIdImpl() throws IOException {
-    return executeShell(
-        new String[] {
-          BASH, "-c", "dmidecode -t processor | grep 'ID' | awk -F ':' '{print $2}' | head -n 1"
-        });
+    return executeShell("wmic cpu get processorid");
   }
 
   @Override
   String getMainBoardIdImpl() throws IOException {
-    return executeShell(
-        new String[] {
-          BASH, "-c", "dmidecode | grep 'Serial Number' | awk -F ':' '{print $2}' | head -n 1"
-        });
+    return executeShell("wmic baseboard get serialnumber");
   }
 
   @Override
   String getSystemUUIDImpl() throws IOException {
-    return executeShell(new String[] {BASH, "-c", "cat /sys/class/dmi/id/product_uuid"});
+    return executeShell("wmic csproduct get uuid");
   }
 
-  protected String executeShell(String[] shell) throws IOException {
+  private static String executeShell(String shell) throws IOException {
     Process process = Runtime.getRuntime().exec(shell);
     process.getOutputStream().close();
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-      return reader.readLine().trim();
+    Scanner scanner = new Scanner(process.getInputStream());
+    if (scanner.hasNext()) {
+      scanner.next();
     }
+    String serialNumber = "";
+    if (scanner.hasNext()) {
+      serialNumber = scanner.next().trim();
+    }
+
+    scanner.close();
+    return serialNumber;
   }
 }

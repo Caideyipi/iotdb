@@ -1,4 +1,4 @@
-package org.apache.iotdb.commons.secret;
+package com.timecho.iotdb.commons.secret;
 
 import org.apache.tsfile.encrypt.EncryptUtils;
 import org.slf4j.Logger;
