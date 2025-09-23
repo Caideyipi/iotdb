@@ -1569,7 +1569,12 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     SESSION_MANAGER.registerSession(session);
 
     SESSION_MANAGER.supplySession(
-        session, req.getUsername(), ZoneId.of(req.getZoneId()), ClientVersion.V_1_0);
+        session,
+        // TODO: User the real userId
+        -1,
+        req.getUsername(),
+        ZoneId.of(req.getZoneId()),
+        ClientVersion.V_1_0);
 
     String executedSQL = req.queryBody;
 
