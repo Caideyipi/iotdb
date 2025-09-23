@@ -17,14 +17,13 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation;
+package org.apache.iotdb.commons.license;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.commons.license.limit.Limit;
+import org.apache.iotdb.commons.license.limit.LimitAllowAbsent;
 
-import com.timecho.iotdb.manager.activation.limit.Limit;
-import com.timecho.iotdb.manager.activation.limit.LimitAllowAbsent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,7 +250,7 @@ public class License {
     }
   }
 
-  void logActivateStatus(boolean onlyForStatusChange) {
+  public void logActivateStatus(boolean onlyForStatusChange) {
     ActivateStatus nowActivateStatus = getActivateStatus();
     if (onlyForStatusChange) {
       if (!nowActivateStatus.equals(oldActivateStatus)) {
@@ -334,7 +333,7 @@ public class License {
 
   // region show status to outside
 
-  boolean isActivated() {
+  public boolean isActivated() {
     return this.getLicenseExpireTimestamp() >= System.currentTimeMillis();
   }
 

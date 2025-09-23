@@ -26,24 +26,20 @@ import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.commons.license.License;
+import org.apache.iotdb.commons.license.RSA;
 import org.apache.iotdb.commons.structure.SortedProperties;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
+import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.rpc.thrift.TClusterActivationStatus;
 import org.apache.iotdb.db.utils.DateTimeUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
-import cn.hutool.system.OsInfo;
-import cn.hutool.system.SystemUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.timecho.iotdb.manager.TimechoConfigManager;
-import com.timecho.iotdb.manager.activation.systeminfo.ISystemInfoGetter;
-import com.timecho.iotdb.manager.activation.systeminfo.LinuxSystemInfoGetter;
-import com.timecho.iotdb.manager.activation.systeminfo.MacSystemInfoGetter;
-import com.timecho.iotdb.manager.activation.systeminfo.SystemInfoGetter;
-import com.timecho.iotdb.manager.activation.systeminfo.WindowsSystemInfoGetter;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
@@ -128,14 +124,6 @@ public class ActivationManager {
 
   LicenseFileMonitor licenseFileMonitor;
 
-  private static final ISystemInfoGetter systemInfoGetter = generateSystemInfoGetter();
-
-  static final ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter =
-      ImmutableMap.of(
-          License.CPU_ID_NAME, systemInfoGetter::getCPUId,
-          License.MAIN_BOARD_ID_NAME, systemInfoGetter::getMainBoardId,
-          License.SYSTEM_UUID_NAME, systemInfoGetter::getSystemUUID);
-
   static final ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
       ImmutableMap.of(
           License.IP_ADDRESS_NAME,
@@ -147,7 +135,7 @@ public class ActivationManager {
 
   private static final ImmutableMap<String, Supplier<String>> systemInfoNameToItsGetter =
       ImmutableMap.<String, Supplier<String>>builder()
-          .putAll(hardwareSystemInfoNameToItsGetter)
+          .putAll(OSUtils.hardwareSystemInfoNameToItsGetter)
           .putAll(configurableSystemInfoNameToItsGetter)
           .build();
 
@@ -189,19 +177,6 @@ public class ActivationManager {
                     .getClusterSchemaManager()
                     .updateSchemaQuotaConfiguration(
                         license.getDeviceNumLimit(), license.getSensorNumLimit()));
-  }
-
-  static SystemInfoGetter generateSystemInfoGetter() {
-    OsInfo osInfo = SystemUtil.getOsInfo();
-    if (osInfo.isWindows()) {
-      return new WindowsSystemInfoGetter();
-    } else if (osInfo.isMac()) {
-      return new MacSystemInfoGetter();
-    } else if (osInfo.isLinux()) {
-      return new LinuxSystemInfoGetter();
-    }
-    logger.warn("OS {} is not officially supported, will be treated as Linux", osInfo.getName());
-    return new LinuxSystemInfoGetter();
   }
 
   private void createActivationDir() throws LicenseException {
@@ -691,37 +666,34 @@ public class ActivationManager {
     return contentWithVersion.substring(VERSION_LENGTH + 1);
   }
 
+  private static List<Properties> getPropertiesList() throws LicenseException, IOException {
+    Properties hardwareInfoProperties = new SortedProperties();
+    OSUtils.hardwareSystemInfoNameToItsGetter.forEach(
+        (name, getter) -> hardwareInfoProperties.setProperty(name, getter.get()));
+    Properties configurableInfoProperties = new SortedProperties();
+    configurableSystemInfoNameToItsGetter.forEach(
+        (name, getter) -> configurableInfoProperties.setProperty(name, getter.get()));
+    Properties nodeUuidProperties = new SortedProperties();
+    nodeUuidProperties.setProperty(License.NODE_UUID_NAME, getNodeUUID());
+    return Arrays.asList(hardwareInfoProperties, configurableInfoProperties, nodeUuidProperties);
+  }
+
   private static String generateSystemInfoContentOfV02() throws LicenseException {
     try {
-      Properties hardwareInfoProperties = new SortedProperties();
-      hardwareSystemInfoNameToItsGetter.forEach(
-          (name, getter) -> hardwareInfoProperties.setProperty(name, getter.get()));
-      Properties configurableInfoProperties = new SortedProperties();
-      configurableSystemInfoNameToItsGetter.forEach(
-          (name, getter) -> configurableInfoProperties.setProperty(name, getter.get()));
-      Properties nodeUuidProperties = new SortedProperties();
-      nodeUuidProperties.setProperty(License.NODE_UUID_NAME, getNodeUUID());
-      List<Properties> propertiesList =
-          Arrays.asList(hardwareInfoProperties, configurableInfoProperties, nodeUuidProperties);
-      List<String> encodedList = new ArrayList<>();
-      String combinedOriginal = "";
+      List<Properties> propertiesList = getPropertiesList();
+      StringBuilder combinedOriginal = new StringBuilder();
       for (Properties properties : propertiesList) {
         StringWriter stringWriter = new StringWriter();
         properties.store(stringWriter, null);
         String originalInfo = stringWriter.toString();
-        combinedOriginal += originalInfo;
-        // remove time
-        if (originalInfo.charAt(0) == '#') {
-          originalInfo = originalInfo.substring(originalInfo.indexOf('\n') + 1);
-        }
-        encodedList.add(encodeTo8(originalInfo));
+        combinedOriginal.append(originalInfo);
       }
       try (FileOutputStream fos = new FileOutputStream(HISTORY_FILE_PATH, true)) {
-        fos.write(RSA.publicEncrypt(combinedOriginal).getBytes());
+        fos.write(RSA.publicEncrypt(combinedOriginal.toString()).getBytes());
         fos.write("\n".getBytes());
         fos.getFD().sync();
       }
-      return encodedList.stream().reduce((a, b) -> a + "-" + b).get();
+      return OSUtils.generateSystemInfoContentOfV02(propertiesList);
     } catch (Exception e) {
       throw new LicenseException(e);
     }
@@ -764,18 +736,12 @@ public class ActivationManager {
     return temp.substring(0, 8) + "-" + temp.substring(8, 16);
   }
 
-  private static String encodeTo8(String originalInfo) throws NoSuchAlgorithmException {
-    MessageDigest md5 = MessageDigest.getInstance("MD5");
-    Base32 base32 = new Base32();
-    return base32.encodeAsString(md5.digest(originalInfo.getBytes())).substring(0, 8);
-  }
-
   // region verify system info
 
   public boolean verifyAllSystemInfo(Properties licenseProperties) throws LicenseException {
     return verifyAllSystemInfoOfEveryVersion(
         licenseProperties,
-        hardwareSystemInfoNameToItsGetter,
+        OSUtils.hardwareSystemInfoNameToItsGetter,
         configurableSystemInfoNameToItsGetter);
   }
 

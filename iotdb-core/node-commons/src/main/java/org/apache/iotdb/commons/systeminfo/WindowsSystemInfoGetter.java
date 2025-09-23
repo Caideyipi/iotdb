@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation.systeminfo;
+package org.apache.iotdb.commons.systeminfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

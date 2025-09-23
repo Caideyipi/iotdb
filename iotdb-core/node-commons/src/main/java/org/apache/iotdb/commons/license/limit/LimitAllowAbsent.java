@@ -17,34 +17,33 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation.systeminfo;
+package org.apache.iotdb.commons.license.limit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static cn.hutool.system.oshi.OshiUtil.getSystem;
+public class LimitAllowAbsent<T> extends Limit<T> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(LimitAllowAbsent.class);
 
-public class MacSystemInfoGetter extends SystemInfoGetter {
+  private final T valueIfAbsent;
 
-  private static final Logger logger = LoggerFactory.getLogger(MacSystemInfoGetter.class);
-
-  @Override
-  Logger getLogger() {
-    return logger;
+  public LimitAllowAbsent(T valueWithoutLicense, CheckedStringParser<T> parser, T valueIfAbsent) {
+    super(valueWithoutLicense, parser);
+    this.valueIfAbsent = valueIfAbsent;
   }
 
-  @Override
-  String getCPUIdImpl() {
-    return "";
+  /** Use this if any license property not exist. */
+  public void setToAbsent() {
+    setValue(valueIfAbsent);
   }
 
+  // If valueStr is null, set to absent
   @Override
-  String getMainBoardIdImpl() {
-    return getSystem().getBaseboard().getSerialNumber();
-  }
-
-  @Override
-  String getSystemUUIDImpl() {
-    return getSystem().getHardwareUUID();
+  public void parse(String valueStr) throws Exception {
+    if (valueStr == null) {
+      setToAbsent();
+      return;
+    }
+    super.parse(valueStr);
   }
 }

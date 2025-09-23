@@ -17,46 +17,34 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation.limit;
+package org.apache.iotdb.commons.systeminfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Limit<T> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Limit.class);
-  private T value;
-  private final T valueWithoutLicense;
-  CheckedStringParser<T> parser;
+import static cn.hutool.system.oshi.OshiUtil.getSystem;
 
-  public Limit(T valueWithoutLicense, CheckedStringParser<T> parser) {
-    value = valueWithoutLicense;
-    this.valueWithoutLicense = valueWithoutLicense;
-    this.parser = parser;
-  }
+public class MacSystemInfoGetter extends SystemInfoGetter {
 
-  public void setValue(T value) {
-    this.value = value;
-  }
+  private static final Logger logger = LoggerFactory.getLogger(MacSystemInfoGetter.class);
 
-  public T getValue() {
-    return value;
-  }
-  ;
-
-  /** Use this if license not exist. */
-  public void reset() {
-    value = valueWithoutLicense;
-  }
-
-  public void parse(String valueStr) throws Exception {
-    this.value = parser.apply(valueStr);
+  @Override
+  Logger getLogger() {
+    return logger;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Limit)) {
-      return false;
-    }
-    return value.equals(((Limit<?>) obj).value);
+  String getCPUIdImpl() {
+    return "";
+  }
+
+  @Override
+  String getMainBoardIdImpl() {
+    return getSystem().getBaseboard().getSerialNumber();
+  }
+
+  @Override
+  String getSystemUUIDImpl() {
+    return getSystem().getHardwareUUID();
   }
 }

@@ -21,10 +21,13 @@ package com.timecho.iotdb.manager.activation;
 
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.commons.license.License;
+import org.apache.iotdb.commons.license.RSA;
+import org.apache.iotdb.commons.systeminfo.SystemInfoGetter;
+import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 
 import com.google.common.collect.ImmutableMap;
-import com.timecho.iotdb.manager.activation.systeminfo.SystemInfoGetter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -123,7 +126,7 @@ public class ActivationVerifier {
   }
 
   private static void checkSystemInfo(Properties systemProperties, Properties licenseProperties) {
-    SystemInfoGetter systemInfoGetter = ActivationManager.generateSystemInfoGetter();
+    SystemInfoGetter systemInfoGetter = OSUtils.generateSystemInfoGetter();
     systemInfoGetter.setLogEnabled(false);
 
     ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
@@ -137,7 +140,7 @@ public class ActivationVerifier {
 
     if (!ActivationManager.verifyAllSystemInfoOfEveryVersion(
         licenseProperties,
-        ActivationManager.hardwareSystemInfoNameToItsGetter,
+        OSUtils.hardwareSystemInfoNameToItsGetter,
         configurableSystemInfoNameToItsGetter)) {
       errorThenExit(FAIL_MESSAGE);
     }

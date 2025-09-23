@@ -20,6 +20,7 @@
 package com.timecho.iotdb.manager.load.service;
 
 import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatReq;
+import org.apache.iotdb.commons.license.License;
 import org.apache.iotdb.confignode.client.async.handlers.heartbeat.ConfigNodeHeartbeatHandler;
 import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.manager.load.cache.LoadCache;
@@ -33,7 +34,6 @@ import com.timecho.iotdb.client.async.handlers.heartbeat.TimechoConfigNodeHeartb
 import com.timecho.iotdb.manager.ITimechoManager;
 import com.timecho.iotdb.manager.TimechoConfigManager;
 import com.timecho.iotdb.manager.activation.ActivationManager;
-import com.timecho.iotdb.manager.activation.License;
 import com.timecho.iotdb.manager.load.TimechoLoadManager;
 
 public class TimechoHeartbeatService extends HeartbeatService {

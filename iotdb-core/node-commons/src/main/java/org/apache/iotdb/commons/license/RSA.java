@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation;
+package org.apache.iotdb.commons.license;
 
 import org.apache.iotdb.commons.exception.LicenseException;
 

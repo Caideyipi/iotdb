@@ -19,8 +19,11 @@
 
 package com.timecho.iotdb.service;
 
+import org.apache.iotdb.commons.secret.SecretKey;
+import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
+import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.service.thrift.ConfigNodeRPCServiceProcessor;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
@@ -29,7 +32,9 @@ import com.timecho.iotdb.service.thrift.TimechoConfigNodeRPCServiceProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.UUID;
 
 public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConfigNode.class);
@@ -67,5 +72,37 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
   @Override
   protected ConfigNodeRPCServiceProcessor getConfigNodeRPCServiceProcessor() {
     return new TimechoConfigNodeRPCServiceProcessor(timechoConfigManager);
+  }
+
+  @Override
+  protected void saveSecretKey() {
+    SecretKey.getInstance()
+        .initSecretKeyFile(
+            ConfigNodeDescriptor.getInstance().getConf().getSystemDir(),
+            String.valueOf(UUID.randomUUID()));
+  }
+
+  @Override
+  protected void saveHardwareCode() {
+    try {
+      String hardwareCode = OSUtils.generateSystemInfoContentWithVersion();
+      SecretKey.getInstance()
+          .initHardwareCodeFile(
+              ConfigNodeDescriptor.getInstance().getConf().getSystemDir(), hardwareCode);
+    } catch (Exception e) {
+      LOGGER.error("hardware generation failed.");
+    }
+  }
+
+  @Override
+  protected void loadSecretKey() throws IOException {
+    SecretKey.getInstance()
+        .loadSecretKeyFromFile(ConfigNodeDescriptor.getInstance().getConf().getSystemDir());
+  }
+
+  @Override
+  protected void loadHardwareCode() throws IOException {
+    SecretKey.getInstance()
+        .loadHardwareCodeFromFile(ConfigNodeDescriptor.getInstance().getConf().getSystemDir());
   }
 }

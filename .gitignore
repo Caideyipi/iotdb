@@ -103,7 +103,7 @@ remote/
 !integration-test/src/main/java/org/apache/iotdb/it/env/remote/
 
 # activation
-./activation/
+activation/
 .env
 
 # gitpod

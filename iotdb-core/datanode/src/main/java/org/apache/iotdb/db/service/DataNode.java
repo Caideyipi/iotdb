@@ -565,6 +565,14 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     }
   }
 
+  protected void saveSecretKey(String secretKey) {
+    // Do nothing.
+  }
+
+  protected void saveHardwareCode(String hardwareCode) {
+    // Do nothing.
+  }
+
   private void configOSStorage(int dataNodeID) {
     FSFactoryProducer.setFileInputFactory(new HybridFileInputFactoryDecorator(dataNodeID));
   }

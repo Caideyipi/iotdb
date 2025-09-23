@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
+import org.apache.iotdb.commons.license.License;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
@@ -42,7 +43,6 @@ import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 
 import com.google.common.collect.ImmutableMap;
 import com.timecho.iotdb.manager.activation.ActivationManager;
-import com.timecho.iotdb.manager.activation.License;
 import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
 import org.apache.tsfile.utils.Pair;
@@ -86,10 +86,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.timecho.iotdb.manager.activation.ActivationManager.LICENSE_FILE_NAME;
-import static com.timecho.iotdb.manager.activation.License.DATANODE_NUM_LIMIT_NAME;
-import static com.timecho.iotdb.manager.activation.License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
-import static com.timecho.iotdb.manager.activation.License.LICENSE_EXPIRE_TIMESTAMP_NAME;
-import static com.timecho.iotdb.manager.activation.License.LICENSE_ISSUE_TIMESTAMP_NAME;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_UNACTIVATED;
@@ -97,6 +93,10 @@ import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_UNACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.UNACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.UNKNOWN;
+import static org.apache.iotdb.commons.license.License.DATANODE_NUM_LIMIT_NAME;
+import static org.apache.iotdb.commons.license.License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
+import static org.apache.iotdb.commons.license.License.LICENSE_EXPIRE_TIMESTAMP_NAME;
+import static org.apache.iotdb.commons.license.License.LICENSE_ISSUE_TIMESTAMP_NAME;
 
 @RunWith(IoTDBTestRunner.class)
 @Category({ClusterIT.class})
@@ -570,7 +570,7 @@ public class IoTDBActivationIT {
     EnvFactory.getEnv().initClusterEnvironment(3, 0);
     final String specialLicenseContent =
         buildLicenseFromBase(
-            License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME,
+            DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME,
             String.valueOf(shortDisconnectionTimeLimit));
     try (SyncConfigNodeIServiceClient leaderClient =
         (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
@@ -602,7 +602,7 @@ public class IoTDBActivationIT {
     EnvFactory.getEnv().initClusterEnvironment(5, 0);
     final String specialLicenseContent =
         buildLicenseFromBase(
-            License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME,
+            DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME,
             String.valueOf(shortDisconnectionTimeLimit));
     final int leaderIndex = EnvFactory.getEnv().getLeaderConfigNodeIndex();
     SyncConfigNodeIServiceClient leaderClient =

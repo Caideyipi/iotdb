@@ -19,8 +19,11 @@
 package com.timecho.iotdb;
 
 import org.apache.iotdb.commons.exception.StartupException;
+import org.apache.iotdb.commons.secret.SecretKey;
+import org.apache.iotdb.commons.utils.OSUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
 import org.apache.iotdb.db.conf.IoTDBConfig;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 
 import com.timecho.iotdb.dataregion.migration.MigrationTaskManager;
@@ -33,7 +36,9 @@ import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public class DataNode extends org.apache.iotdb.db.service.DataNode {
@@ -89,6 +94,38 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
       logger.error(message);
       throw new StartupException(message);
     }
+  }
+
+  @Override
+  protected void saveSecretKey() {
+    SecretKey.getInstance()
+        .initSecretKeyFile(
+            IoTDBDescriptor.getInstance().getConfig().getSystemDir(),
+            String.valueOf(UUID.randomUUID()));
+  }
+
+  @Override
+  protected void saveHardwareCode() {
+    try {
+      String hardwareCode = OSUtils.generateSystemInfoContentWithVersion();
+      SecretKey.getInstance()
+          .initHardwareCodeFile(
+              IoTDBDescriptor.getInstance().getConfig().getSystemDir(), hardwareCode);
+    } catch (Exception e) {
+      logger.error("hardware generation failed.");
+    }
+  }
+
+  @Override
+  protected void loadSecretKey() throws IOException {
+    SecretKey.getInstance()
+        .loadSecretKeyFromFile(IoTDBDescriptor.getInstance().getConfig().getSystemDir());
+  }
+
+  @Override
+  protected void loadHardwareCode() throws IOException {
+    SecretKey.getInstance()
+        .loadHardwareCodeFromFile(IoTDBDescriptor.getInstance().getConfig().getSystemDir());
   }
 
   private static class DataNodeNewHolder {

@@ -17,9 +17,13 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation.limit;
+package org.apache.iotdb.commons.systeminfo;
 
-import org.apache.ratis.util.function.CheckedFunction;
+public interface ISystemInfoGetter {
 
-@FunctionalInterface
-public interface CheckedStringParser<T> extends CheckedFunction<String, T, Exception> {}
+  String getCPUId();
+
+  String getMainBoardId();
+
+  String getSystemUUID();
+}
