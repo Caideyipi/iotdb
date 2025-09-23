@@ -39,6 +39,8 @@ import org.apache.iotdb.db.tools.schema.SRStatementGenerator;
 import org.apache.iotdb.db.tools.schema.SchemaRegionSnapshotParser;
 
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
+import com.timecho.iotdb.schemaregion.mtree.EnterpriseCachedMNodeFactory;
+import com.timecho.iotdb.schemaregion.mtree.EnterpriseMemMNodeFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
@@ -105,8 +107,8 @@ public class SchemaRegionSnapshotViewParserTest {
     rawConfig =
         new SchemaRegionSnapshotParserTestParams("Raw-Config", COMMON_CONFIG.getSchemaEngineMode());
     COMMON_CONFIG.setSchemaEngineMode(testParams.schemaRegionMode);
-    MNodeFactoryLoader.getInstance()
-        .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
+    MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseMemMNodeFactory.class);
+    MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseCachedMNodeFactory.class);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
     SchemaEngine.getInstance().init();
     if (testParams.schemaRegionMode.equals("Memory")) {

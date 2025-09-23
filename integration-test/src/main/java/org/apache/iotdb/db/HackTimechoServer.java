@@ -26,6 +26,8 @@ import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLo
 
 import com.timecho.iotdb.DataNode;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
+import com.timecho.iotdb.schemaregion.mtree.EnterpriseCachedMNodeFactory;
+import com.timecho.iotdb.schemaregion.mtree.EnterpriseMemMNodeFactory;
 
 /** This class is used to run integration test using timecho-server without license. */
 public class HackTimechoServer extends DataNode {
@@ -35,8 +37,8 @@ public class HackTimechoServer extends DataNode {
 
   public static void main(String[] args) {
     // set up environment for schema region
-    MNodeFactoryLoader.getInstance()
-        .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
+    MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseMemMNodeFactory.class);
+    MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseCachedMNodeFactory.class);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
     HackTimechoServer hackTimechoServer = new HackTimechoServer();
     int returnCode = hackTimechoServer.run(args);

@@ -25,6 +25,8 @@ import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLo
 
 import com.timecho.iotdb.dataregion.migration.MigrationTaskManager;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
+import com.timecho.iotdb.schemaregion.mtree.EnterpriseCachedMNodeFactory;
+import com.timecho.iotdb.schemaregion.mtree.EnterpriseMemMNodeFactory;
 import com.timecho.iotdb.service.ClientRPCServiceImplNew;
 import com.timecho.iotdb.service.DataNodeInternalRPCServiceNew;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
@@ -43,8 +45,8 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
 
   protected static void startUp(String[] args, Supplier<DataNode> dataNodeSupplier) {
     // set up environment for schema region
-    MNodeFactoryLoader.getInstance()
-        .addScanPackage(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_PACKAGE);
+    MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseMemMNodeFactory.class);
+    MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseCachedMNodeFactory.class);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
 
     // set up environment for object storage
