@@ -20,35 +20,42 @@
 
 -->
 <assembly>
-    <id>bin</id>
+    <id>security-bin</id>
     <formats>
         <format>dir</format>
         <format>zip</format>
     </formats>
-    <baseDirectory>timechodb-${project.version}-bin</baseDirectory>
-    <dependencySets>
+    <baseDirectory>timechodb-${project.version}-security-bin</baseDirectory>
+    <!-- <dependencySets>
         <dependencySet>
-            <includes>
-                <!-- lib -->
-                <include>*:iotdb-server:zip:*</include>
-                <include>*:iotdb-cli:zip:*</include>
-                <include>*:iotdb-confignode:zip:*</include>
-                <include>*:timecho-server:zip:*</include>
-                <include>*:timecho-confignode:zip:*</include>
-            </includes>
-            <outputDirectory>${file.separator}</outputDirectory>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <unpack>true</unpack>
-            <unpackOptions>
-                <excludes>
-                    <exclude>tools/**</exclude>
-                    <exclude>conf/**</exclude>
-                    <exclude>sbin/**</exclude>
-                </excludes>
-            </unpackOptions>
+            <outputDirectory>lib</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <excludes>
+                <exclude>*:*:zip:*</exclude>
+                <exclude>org.apache.tsfile:*</exclude>
+                <exclude>org.apache.iotdb:*</exclude>
+                <exclude>com.timecho.iotdb:*</exclude>
+            </excludes>
         </dependencySet>
-    </dependencySets>
+    </dependencySets> -->
     <fileSets>
+        <!-- 包含合并的依赖JAR -->
+        <fileSet>
+            <outputDirectory>lib</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>common-dependency.jar</include>
+            </includes>
+        </fileSet>
+        <!-- 混淆后的主JAR文件 -->
+        <fileSet>
+            <outputDirectory>lib</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>timechodb-server-${project.version}.jar</include>
+            </includes>
+        </fileSet>
+        <!-- 配置文件 -->
         <fileSet>
             <outputDirectory>conf</outputDirectory>
             <directory>${project.basedir}/../iotdb-core/datanode/src/assembly/resources/conf</directory>
@@ -62,15 +69,13 @@
             <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf</directory>
             <excludes>
                 <exclude>security/**</exclude>
+                <exclude>iotdb-system.properties</exclude>
+                <exclude>**/ainode-env.*</exclude>
             </excludes>
         </fileSet>
         <fileSet>
-            <outputDirectory>activation</outputDirectory>
-            <directory>${maven.multiModuleProjectDirectory}/activation</directory>
-            <fileMode>0755</fileMode>
-            <excludes>
-                <exclude>**/*</exclude>
-            </excludes>
+            <outputDirectory>conf</outputDirectory>
+            <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf/security</directory>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
@@ -78,24 +83,6 @@
             <excludes>
                 <exclude>ainode-env.*</exclude>
                 <exclude>**/ainode-env.*</exclude>
-            </excludes>
-            <fileMode>0755</fileMode>
-        </fileSet>
-        <fileSet>
-            <outputDirectory>sbin</outputDirectory>
-            <directory>${project.basedir}/../scripts/sbin</directory>
-            <excludes>
-                <exclude>*ainode.*</exclude>
-                <exclude>**/*ainode.*</exclude>
-            </excludes>
-            <fileMode>0755</fileMode>
-        </fileSet>
-        <fileSet>
-            <outputDirectory>tools</outputDirectory>
-            <directory>${project.basedir}/../scripts/tools</directory>
-            <excludes>
-                <exclude>*ainode.*</exclude>
-                <exclude>**/*ainode.*</exclude>
             </excludes>
             <fileMode>0755</fileMode>
         </fileSet>
@@ -112,6 +99,35 @@
             <excludes>
                 <exclude>META-INF/**</exclude>
             </excludes>
+        </fileSet>
+        <!-- 激活目录 -->
+        <fileSet>
+            <outputDirectory>activation</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/activation</directory>
+            <fileMode>0755</fileMode>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+        <!-- 启动脚本 -->
+        <fileSet>
+            <outputDirectory>sbin</outputDirectory>
+            <directory>${project.basedir}/../scripts/sbin</directory>
+            <excludes>
+                <exclude>*ainode.*</exclude>
+                <exclude>**/*ainode.*</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <!-- 工具脚本 -->
+        <fileSet>
+            <outputDirectory>tools</outputDirectory>
+            <directory>${project.basedir}/../scripts/tools</directory>
+            <excludes>
+                <exclude>*ainode.*</exclude>
+                <exclude>**/*ainode.*</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
         </fileSet>
     </fileSets>
     <files>

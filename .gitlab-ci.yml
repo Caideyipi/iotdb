@@ -59,6 +59,7 @@ stages:
   - .pre
   - test
   - sonarqube-check
+  - owasp-dependency-check
 #  - sonarqube-vulnerability-report
 
 unit-test:
@@ -458,6 +459,107 @@ sonarqube-check:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == 'master'
     - if: $CI_COMMIT_BRANCH == 'enable_sonar'
+
+owasp-dependency-check-fast:
+  stage: test
+  tags:
+    - timechodb
+  
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  
+  script:
+    # 仅检查直接依赖，跳过传递依赖以加快速度
+    - mvn clean install -DskipTests -am -s $MAVEN_SETTINGS_XML
+    - |
+      mvn org.owasp:dependency-check-maven:check \
+        -DfailBuildOnCVSS=8 \
+        -DskipTestScope=true \
+        -DskipProvidedScope=true \
+        -DossIndexUsername=$OSS_INDEX_USER \
+        -DossIndexPassword=$OSS_INDEX_TOKEN \
+        -DdataDirectory=/root/.m2/owasp \
+        -DnvdApiKey=$NVD_API_KEY -s $MAVEN_SETTINGS_XML
+  
+  artifacts:
+    paths:
+      - target/dependency-check-report.html
+    expire_in: 7 days
+    when: on_failure
+
+  interruptible: true
+   # 允许失败，不阻塞流水线
+  allow_failure: true
+
+owasp-dependency-check:
+  stage: owasp-dependency-check
+  tags:
+    - timechodb
+  # 定时执行：每周日 UTC 16:00 (北京时间周一 00:00)
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+    - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
+  
+  before_script:    
+    # 设置时区
+    - ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+    # 显示环境信息
+    - java -version
+    - mvn -version
+    
+  script:
+    # 清理并安装项目依赖
+    - echo "开始 Maven 安装..."
+    - mvn clean install -DskipTests -am -s $MAVEN_SETTINGS_XML
+    
+    # 执行 OWASP 依赖检查
+    - echo "执行 OWASP 依赖漏洞检查..."
+    - |
+      mvn org.owasp:dependency-check-maven:check \
+        -DossIndexUsername=$OSS_INDEX_USER \
+        -DossIndexPassword=$OSS_INDEX_TOKEN \
+        -DdataDirectory=/root/.m2/owasp \
+        -DnvdApiKey=$NVD_API_KEY -s $MAVEN_SETTINGS_XML
+
+    # 生成聚合报告
+    - echo "生成 OWASP 聚合报告..."
+    - |
+      mvn org.owasp:dependency-check-maven:aggregate \
+        -DossIndexUsername=$OSS_INDEX_USER \
+        -DossIndexPassword=$OSS_INDEX_TOKEN \
+        -DdataDirectory=/root/.m2/owasp \
+        -DnvdApiKey=$NVD_API_KEY -s $MAVEN_SETTINGS_XML
+    
+    # 生成时间戳用于报告命名
+    - export REPORT_DATE=$(date +"%Y-%m-%d")
+    - echo "报告生成时间：$REPORT_DATE"
+    
+  after_script:
+    # 检查报告文件
+    - |
+      if [ -f "target/dependency-check-report.html" ]; then
+        echo "OWASP 依赖检查报告生成成功"
+        ls -la target/dependency-check-report.*
+      else
+        echo "警告：未找到 OWASP 报告文件"
+        find . -name "*dependency-check*" -type f 2>/dev/null || true
+      fi
+  
+  artifacts:
+    name: "owasp-dependency-check-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_CREATED_AT"
+    paths:
+      - target/dependency-check-report.html
+      - target/dependency-check-report.xml
+      - target/dependency-check-report.json
+    reports:
+      # GitLab 原生安全报告格式（如果可用）
+      dependency_scanning: target/dependency-check-report.json
+    expire_in: 360 days
+    when: always
+  
+  # 允许失败，不阻塞流水线
+  allow_failure: true
 
 #sonarqube-vulnerability-report:
 #  stage: sonarqube-vulnerability-report

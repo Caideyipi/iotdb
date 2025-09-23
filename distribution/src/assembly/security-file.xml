@@ -20,28 +20,37 @@
 
 -->
 <assembly>
-    <id>mpp-share</id>
+    <id>security-file</id>
     <formats>
         <format>dir</format>
+        <format>zip</format>
     </formats>
-    <includeBaseDirectory>false</includeBaseDirectory>
-    <dependencySets>
-        <dependencySet>
-            <outputDirectory>lib</outputDirectory>
-            <scope>runtime</scope>
-            <unpack>false</unpack>
-            <includes>
-                <include>*:jar</include>
-            </includes>
-            <excludes>
-                <exclude>*.zip</exclude>
-            </excludes>
-        </dependencySet>
-    </dependencySets>
+    <baseDirectory>timechodb-${project.version}-security-file</baseDirectory>
     <fileSets>
+        <!-- 安全说明文档 -->
         <fileSet>
-            <outputDirectory>security-lib</outputDirectory>
-            <directory>${integrationTest.securityDistributionPath}/lib</directory>
+            <outputDirectory>/</outputDirectory>
+            <directory>${project.basedir}/src/security</directory>
+            <includes>
+                <include>README-SECURITY.md</include>
+            </includes>
+        </fileSet>
+        <!-- 混淆后的主JAR文件 -->
+        <fileSet>
+            <outputDirectory>lib</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>timechodb-server-${project.version}.jar</include>
+            </includes>
+        </fileSet>
+        <!-- 混淆映射文件（从target目录） -->
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>obfuscation-*.txt</include>
+                <include>generated-proguard.conf</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>

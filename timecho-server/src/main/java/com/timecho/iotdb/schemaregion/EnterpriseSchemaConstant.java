@@ -25,6 +25,4 @@ public class EnterpriseSchemaConstant {
   }
 
   public static final String ENTERPRISE_MNODE_FACTORY_ENV = "Enterprise";
-  public static final String ENTERPRISE_MNODE_FACTORY_PACKAGE =
-      "com.timecho.iotdb.schemaregion.mtree";
 }

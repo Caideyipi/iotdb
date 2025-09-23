@@ -46,6 +46,7 @@ tsfile-jdbc/src/main/resources/output/queryRes.csv
 !example/client-cpp-example/src/CMakeLists.txt
 !iotdb-core/ainode/requirements.txt
 !iotdb-core/ainode/requirements_dev.txt
+!distribution/src/security/obfuscation-dict.txt
 
 
 *.jar

@@ -41,33 +41,406 @@
             <artifactId>iotdb-cli</artifactId>
             <version>2.0.6-SNAPSHOT</version>
             <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>service-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-confignode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>timechodb-thrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-ainode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>node-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>iotdb-thrift-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-consensus</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>external-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>metrics-interface</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>object-storage</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>session-parent</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-antlr</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>pipe-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>trigger-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>udf-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>tsfile</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.iotdb</groupId>
             <artifactId>iotdb-confignode</artifactId>
             <version>2.0.6-SNAPSHOT</version>
             <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>service-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-confignode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>timechodb-thrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-ainode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>node-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.thrift</groupId>
+                    <artifactId>libthrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>iotdb-thrift-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-consensus</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>external-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>metrics-interface</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>object-storage</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.ratis</groupId>
+                    <artifactId>ratis-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>pipe-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>trigger-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>udf-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>tsfile</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-server</artifactId>
             <version>2.0.6-SNAPSHOT</version>
             <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>service-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-confignode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>timechodb-thrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-ainode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>node-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>iotdb-thrift-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-consensus</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>external-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>metrics-interface</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>object-storage</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>tsfile</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-confignode</artifactId>
             <version>2.0.6-SNAPSHOT</version>
             <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-confignode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>service-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-confignode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>timechodb-thrift</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-thrift-ainode</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>node-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.timecho.iotdb</groupId>
+                    <artifactId>iotdb-thrift-commons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-consensus</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>iotdb-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>tsfile</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.iotdb</groupId>
             <artifactId>library-udf</artifactId>
             <version>2.0.6-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>tsfile</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tsfile</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.iotdb</groupId>
+                    <artifactId>udf-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.7.0</version>
+                <executions>
+                    <!-- Obfuscate IoTDB Server -->
+                    <execution>
+                        <id>obfuscate-timechodb</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                        <configuration>
+                            <proguardVersion>7.7.0</proguardVersion>
+                            <assembly>
+                                <inclusions>
+                                    <!-- <inclusion>
+                                        <groupId>org.apache.tsfile</groupId>
+                                        <artifactId>common</artifactId>
+                                    </inclusion> -->
+                                    <inclusion>
+                                        <groupId>org.apache.tsfile</groupId>
+                                        <artifactId>tsfile</artifactId>
+                                    </inclusion>
+                                    <inclusion>
+                                        <groupId>org.apache.iotdb</groupId>
+                                        <artifactId>*</artifactId>
+                                        <!-- <filter>!META-INF/**</filter> -->
+                                    </inclusion>
+                                    <inclusion>
+                                        <groupId>com.timecho.iotdb</groupId>
+                                        <artifactId>*</artifactId>
+                                        <!-- <filter>!META-INF/**</filter> -->
+                                    </inclusion>
+                                </inclusions>
+                            </assembly>
+                            <inLibsFilter>!META-INF/**</inLibsFilter>
+                            <generateTemporaryConfigurationFile>true</generateTemporaryConfigurationFile>
+                            <outputDirectory>${project.basedir}/target</outputDirectory>
+                            <outjar>timechodb-server-${project.version}.jar</outjar>
+                            <includeDependency>true</includeDependency>
+                            <proguardInclude>${project.basedir}/src/security/proguard.conf</proguardInclude>
+                            <libs>
+                                <lib>${java.home}/</lib>
+                            </libs>
+                            <options>
+                                <option>-printmapping ${project.basedir}/target/obfuscation-mapping.txt</option>
+                                <option>-printseeds ${project.basedir}/target/obfuscation-seeds.txt</option>
+                                <option>-printusage ${project.basedir}/target/obfuscation-usage.txt</option>
+                                <option>-printconfiguration ${project.basedir}/target/obfuscation-configuration.txt</option>
+                            </options>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 对于 pom 项目，强制生成 JAR -->
+                            <outputFile>${project.build.directory}/common-dependency.jar</outputFile>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <!-- 过滤器配置：排除所有核心代码，仅保留第三方依赖 -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- 排除核心代码包 -->
+                                        <exclude>org/apache/tsfile/**</exclude>
+                                        <exclude>org/apache/iotdb/**</exclude>
+                                        <exclude>com/timecho/**</exclude>
+                                        <!-- 排除签名文件 -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <!-- 排除 Maven 元数据 -->
+                                        <exclude>META-INF/maven/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <!-- 明确排除核心项目的依赖 -->
+                                <filter>
+                                    <artifact>org.apache.tsfile:*</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.iotdb:*</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.timecho.iotdb:*</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -82,6 +455,33 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>src/assembly/all.xml</descriptor>
+                            </descriptors>
+                            <finalName>timechodb-${project.version}</finalName>
+                        </configuration>
+                    </execution>
+                    <!-- Package security binaries-->
+                    <execution>
+                        <id>security-bin</id>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/all-security.xml</descriptor>
+                            </descriptors>
+                            <finalName>timechodb-${project.version}</finalName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>security-file</id>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/security-file.xml</descriptor>
                             </descriptors>
                             <finalName>timechodb-${project.version}</finalName>
                         </configuration>
@@ -111,6 +511,20 @@
                                     <directory>${project.build.directory}</directory>
                                     <includes>
                                         <include>timechodb-${project.version}-bin.zip</include>
+                                    </includes>
+                                </fileSet>
+                                <!--security-bin-->
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>timechodb-${project.version}-security-bin.zip</include>
+                                    </includes>
+                                </fileSet>
+                                <!--security-file-->
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>timechodb-${project.version}-security-file.zip</include>
                                     </includes>
                                 </fileSet>
                             </fileSets>

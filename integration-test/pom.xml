@@ -39,6 +39,8 @@
         <integrationTest.readAndVerifyWithMultiNode>true</integrationTest.readAndVerifyWithMultiNode>
         <integrationTest.dataRegionPerDataNode>0</integrationTest.dataRegionPerDataNode>
         <integrationTest.testEnv/>
+        <integrationTest.securityDistributionPath>${maven.multiModuleProjectDirectory}/distribution/target/timechodb-${project.version}-security-bin/timechodb-${project.version}-security-bin</integrationTest.securityDistributionPath>
+        <integrationTest.securityTest>false</integrationTest.securityTest>
         <lightWeightStandaloneMode.configNodeConsensus>Simple</lightWeightStandaloneMode.configNodeConsensus>
         <!-- -DClusterConfigurations values configured here -->
         <lightWeightStandaloneMode.configNodeNumber>1</lightWeightStandaloneMode.configNodeNumber>
@@ -244,6 +246,13 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.iotdb</groupId>
+            <artifactId>iotdb-distribution</artifactId>
+            <version>2.0.6-SNAPSHOT</version>
+            <scope>compile</scope>
+            <type>pom</type>
+        </dependency>
+        <dependency>
             <groupId>org.fusesource.mqtt-client</groupId>
             <artifactId>mqtt-client</artifactId>
         </dependency>
@@ -321,6 +330,7 @@
                             <reuseForks>false</reuseForks>
                             <systemPropertyVariables>
                                 <TestEnv>${integrationTest.testEnv}</TestEnv>
+                                <integrationTest.securityTest>${integrationTest.securityTest}</integrationTest.securityTest>
                                 <RandomSelectWriteNode>${integrationTest.randomSelectWriteNode}</RandomSelectWriteNode>
                                 <ReadAndVerifyWithMultiNode>${integrationTest.readAndVerifyWithMultiNode}</ReadAndVerifyWithMultiNode>
                                 <DataRegionPerDataNode>${integrationTest.dataRegionPerDataNode}</DataRegionPerDataNode>
