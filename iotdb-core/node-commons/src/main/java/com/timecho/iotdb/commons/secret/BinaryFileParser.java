@@ -8,10 +8,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Binary file parsing and writing utility class Provides functions for reading, parsing, and
@@ -75,7 +75,7 @@ public class BinaryFileParser {
     ByteBuffer buffer = ByteBuffer.allocate(totalSize).order(byteOrder);
 
     // Add some random bytes as interference
-    Random random = new Random();
+    SecureRandom random = new SecureRandom();
     buffer.putInt(random.nextInt());
 
     // Simple XOR encryption for text bytes
