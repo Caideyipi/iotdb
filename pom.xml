@@ -86,7 +86,6 @@
         <module>timecho-server</module>
         <module>timecho-isession</module>
         <module>timecho-session</module>
-        <module>config-encryptor</module>
     </modules>
     <properties>
         <!-- This was the last version to support Java 8 -->
