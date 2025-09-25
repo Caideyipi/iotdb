@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.timecho.iotdb.commons.license;
+package com.timecho.iotdb.commons.commission;
 
 import org.apache.iotdb.commons.exception.LicenseException;
 
@@ -36,7 +36,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.function.Function;
 
-public class RSA {
+public class Bandit {
   private static final String RSA_PUBLIC_KEY =
       "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAWzhK/X+CtDhMQyUzVEQH/euInXQxbC4vXPi/HNvhBqg4p4fGN600OFWpuB3ToGgL2wOP5+JVaOUqUh7GRSEUzzPt+GGOLGujuzsT5auZ/TgJmsWUTsL555bYYp5euoPBy/KdbkjMKR8vGTITG75ngj2JhN+1etYkUlgUfuhoOQIDAQAB";
 
@@ -53,7 +53,7 @@ public class RSA {
 
   private static final String ILLEGAL_LICENSE = "illegal license";
 
-  private RSA() {
+  private Bandit() {
     throw new IllegalStateException("Utility class");
   }
 

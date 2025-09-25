@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package com.timecho.iotdb.commons.license;
+package com.timecho.iotdb.commons.commission;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.license.ActivateStatus;
 
-import com.timecho.iotdb.commons.license.limit.Limit;
-import com.timecho.iotdb.commons.license.limit.LimitAllowAbsent;
+import com.timecho.iotdb.commons.commission.obligation.Obligation;
+import com.timecho.iotdb.commons.commission.obligation.ObligationAllowAbsent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +35,8 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-public class License {
-  private static final Logger logger = LoggerFactory.getLogger(License.class);
+public class Lottery {
+  private static final Logger logger = LoggerFactory.getLogger(Lottery.class);
 
   // license common fields
   public static final String LICENSE_ISSUE_TIMESTAMP_NAME = "L1";
@@ -65,23 +65,23 @@ public class License {
   public static final String AINODE_NUM_LIMIT_NAME = "ML1";
 
   // activate info
-  protected final Limit<Long> licenseIssueTimestamp = new Limit<>(0L, Long::parseLong);
-  protected final Limit<Long> licenseExpireTimestamp = new Limit<>(0L, Long::parseLong);
-  protected final Limit<Long> disconnectionFromActiveNodeTimeLimit =
-      new LimitAllowAbsent<>(0L, Long::parseLong, TimeUnit.DAYS.toMillis(7));
-  protected final Limit<Boolean> skipHardwareSystemInfoCheck =
-      new Limit<>(false, Boolean::parseBoolean);
-  protected final Limit<Short> dataNodeNumLimit =
-      new LimitAllowAbsent<>((short) 0, Short::parseShort, Short.MAX_VALUE);
-  protected final Limit<Integer> dataNodeCpuCoreNumLimit =
-      new LimitAllowAbsent<>(0, Integer::parseInt, Integer.MAX_VALUE);
-  protected final Limit<Long> deviceNumLimit =
-      new LimitAllowAbsent<>(0L, Long::parseLong, Long.MAX_VALUE);
-  protected final Limit<Long> sensorNumLimit =
-      new LimitAllowAbsent<>(0L, Long::parseLong, Long.MAX_VALUE);
-  protected final Limit<Short> aiNodeNumLimit =
-      new LimitAllowAbsent<>((short) 0, Short::parseShort, (short) 0);
-  private final List<Limit<?>> allLimit;
+  protected final Obligation<Long> licenseIssueTimestamp = new Obligation<>(0L, Long::parseLong);
+  protected final Obligation<Long> licenseExpireTimestamp = new Obligation<>(0L, Long::parseLong);
+  protected final Obligation<Long> disconnectionFromActiveNodeTimeObligation =
+      new ObligationAllowAbsent<>(0L, Long::parseLong, TimeUnit.DAYS.toMillis(7));
+  protected final Obligation<Boolean> skipHardwareSystemInfoCheck =
+      new Obligation<>(false, Boolean::parseBoolean);
+  protected final Obligation<Short> dataNodeNumObligation =
+      new ObligationAllowAbsent<>((short) 0, Short::parseShort, Short.MAX_VALUE);
+  protected final Obligation<Integer> dataNodeCpuCoreNumObligation =
+      new ObligationAllowAbsent<>(0, Integer::parseInt, Integer.MAX_VALUE);
+  protected final Obligation<Long> deviceNumObligation =
+      new ObligationAllowAbsent<>(0L, Long::parseLong, Long.MAX_VALUE);
+  protected final Obligation<Long> sensorNumObligation =
+      new ObligationAllowAbsent<>(0L, Long::parseLong, Long.MAX_VALUE);
+  protected final Obligation<Short> aiNodeNumObligation =
+      new ObligationAllowAbsent<>((short) 0, Short::parseShort, (short) 0);
+  private final List<Obligation<?>> allObligation;
 
   // other info
   protected enum LicenseSource {
@@ -100,22 +100,22 @@ public class License {
 
   // endregion
 
-  public License(Runnable onLicenseChange) {
+  public Lottery(Runnable onLicenseChange) {
     this.onLicenseChange = onLicenseChange;
-    allLimit =
+    allObligation =
         Arrays.asList(
             licenseIssueTimestamp,
             licenseExpireTimestamp,
-            disconnectionFromActiveNodeTimeLimit,
+            disconnectionFromActiveNodeTimeObligation,
             skipHardwareSystemInfoCheck,
-            dataNodeNumLimit,
-            dataNodeCpuCoreNumLimit,
-            deviceNumLimit,
-            sensorNumLimit,
-            aiNodeNumLimit);
+            dataNodeNumObligation,
+            dataNodeCpuCoreNumObligation,
+            deviceNumObligation,
+            sensorNumObligation,
+            aiNodeNumObligation);
   }
 
-  public License() {
+  public Lottery() {
     this(DO_NOTHING_WHEN_LICENSE_CHANGE);
   }
 
@@ -130,27 +130,27 @@ public class License {
   }
 
   public short getDataNodeNumLimit() {
-    return dataNodeNumLimit.getValue();
+    return dataNodeNumObligation.getValue();
   }
 
   public int getDataNodeCpuCoreNumLimit() {
-    return dataNodeCpuCoreNumLimit.getValue();
+    return dataNodeCpuCoreNumObligation.getValue();
   }
 
   public long getDeviceNumLimit() {
-    return deviceNumLimit.getValue();
+    return deviceNumObligation.getValue();
   }
 
   public long getSensorNumLimit() {
-    return sensorNumLimit.getValue();
+    return sensorNumObligation.getValue();
   }
 
   public long getDisconnectionFromActiveNodeTimeLimit() {
-    return this.disconnectionFromActiveNodeTimeLimit.getValue();
+    return this.disconnectionFromActiveNodeTimeObligation.getValue();
   }
 
   public short getAINodeNumLimit() {
-    return this.aiNodeNumLimit.getValue();
+    return this.aiNodeNumObligation.getValue();
   }
 
   // endregion
@@ -159,8 +159,8 @@ public class License {
     if (licenseSource.equals(LicenseSource.NO_LICENSE)) {
       return false;
     }
-    for (Limit<?> limit : allLimit) {
-      limit.reset();
+    for (Obligation<?> obligation : allObligation) {
+      obligation.reset();
     }
     licenseSource = LicenseSource.NO_LICENSE;
     this.onLicenseChange.run();
@@ -173,23 +173,23 @@ public class License {
   public boolean loadFromProperties(Properties properties, boolean needLog)
       throws LicenseException {
     // try load properties
-    License newLicense = new License(null);
+    Lottery newLottery = new Lottery(null);
     // activate info
     try {
       // To add a new license field, set a default value for compatible with older license version
-      newLicense.licenseIssueTimestamp.parse(properties.getProperty(LICENSE_ISSUE_TIMESTAMP_NAME));
-      newLicense.licenseExpireTimestamp.parse(
+      newLottery.licenseIssueTimestamp.parse(properties.getProperty(LICENSE_ISSUE_TIMESTAMP_NAME));
+      newLottery.licenseExpireTimestamp.parse(
           properties.getProperty(LICENSE_EXPIRE_TIMESTAMP_NAME));
-      newLicense.skipHardwareSystemInfoCheck.parse(
+      newLottery.skipHardwareSystemInfoCheck.parse(
           properties.getProperty(SKIP_HARDWARE_SYSTEM_INFO_CHECK_NAME));
-      newLicense.dataNodeNumLimit.parse(properties.getProperty(DATANODE_NUM_LIMIT_NAME));
-      newLicense.dataNodeCpuCoreNumLimit.parse(
+      newLottery.dataNodeNumObligation.parse(properties.getProperty(DATANODE_NUM_LIMIT_NAME));
+      newLottery.dataNodeCpuCoreNumObligation.parse(
           properties.getProperty(DATANODE_CPU_CORE_NUM_LIMIT_NAME));
-      newLicense.deviceNumLimit.parse(properties.getProperty(DEVICE_NUM_LIMIT_NAME));
-      newLicense.sensorNumLimit.parse(properties.getProperty(SENSOR_NUM_LIMIT_NAME));
-      newLicense.disconnectionFromActiveNodeTimeLimit.parse(
+      newLottery.deviceNumObligation.parse(properties.getProperty(DEVICE_NUM_LIMIT_NAME));
+      newLottery.sensorNumObligation.parse(properties.getProperty(SENSOR_NUM_LIMIT_NAME));
+      newLottery.disconnectionFromActiveNodeTimeObligation.parse(
           properties.getProperty(DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME));
-      newLicense.aiNodeNumLimit.parse(properties.getProperty(AINODE_NUM_LIMIT_NAME, "0"));
+      newLottery.aiNodeNumObligation.parse(properties.getProperty(AINODE_NUM_LIMIT_NAME, "0"));
     } catch (Exception e) {
       logger.error("License parse error", e);
       return false;
@@ -197,9 +197,9 @@ public class License {
 
     // compare and copy
     if (needLog) {
-      this.logLicenseDifferences(newLicense);
+      this.logLicenseDifferences(newLottery);
     }
-    this.copyFrom(newLicense);
+    this.copyFrom(newLottery);
     this.licenseSource = LicenseSource.FROM_FILE;
 
     // if activate status change, log
@@ -213,20 +213,20 @@ public class License {
   }
 
   public void loadFromTLicense(TLicense license) throws LicenseException {
-    License newLicense = new License(null);
-    newLicense.licenseIssueTimestamp.setValue(license.licenseIssueTimestamp);
-    newLicense.licenseExpireTimestamp.setValue(license.getExpireTimestamp());
-    newLicense.disconnectionFromActiveNodeTimeLimit.setValue(
+    Lottery newLottery = new Lottery(null);
+    newLottery.licenseIssueTimestamp.setValue(license.licenseIssueTimestamp);
+    newLottery.licenseExpireTimestamp.setValue(license.getExpireTimestamp());
+    newLottery.disconnectionFromActiveNodeTimeObligation.setValue(
         license.getDisconnectionFromActiveNodeTime());
-    newLicense.dataNodeCpuCoreNumLimit.setValue(license.cpuCoreNum);
-    newLicense.dataNodeNumLimit.setValue(license.dataNodeNum);
-    newLicense.deviceNumLimit.setValue(license.deviceNum);
-    newLicense.sensorNumLimit.setValue(license.sensorNum);
-    newLicense.aiNodeNumLimit.setValue(license.getAiNodeNum());
+    newLottery.dataNodeCpuCoreNumObligation.setValue(license.cpuCoreNum);
+    newLottery.dataNodeNumObligation.setValue(license.dataNodeNum);
+    newLottery.deviceNumObligation.setValue(license.deviceNum);
+    newLottery.sensorNumObligation.setValue(license.sensorNum);
+    newLottery.aiNodeNumObligation.setValue(license.getAiNodeNum());
 
     // compare and copy
-    this.logLicenseDifferences(newLicense);
-    this.copyFrom(newLicense);
+    this.logLicenseDifferences(newLottery);
+    this.copyFrom(newLottery);
     this.licenseSource = LicenseSource.FROM_REMOTE;
 
     // if activate status change, log
@@ -269,53 +269,58 @@ public class License {
     oldActivateStatus = nowActivateStatus;
   }
 
-  private <T> void logFieldDifference(String name, Limit<T> mine, Limit<T> another)
+  private <T> void logFieldDifference(String name, Obligation<T> mine, Obligation<T> another)
       throws LicenseException {
     if (!Objects.equals(mine.getValue(), another.getValue())) {
       String rawContent = String.format("%s: %s -> %s", name, mine.getValue(), another.getValue());
-      String encryptedContent = RSA.publicEncrypt(rawContent);
+      String encryptedContent = Bandit.publicEncrypt(rawContent);
       logger.info(encryptedContent);
     }
   }
 
-  private void logLicenseDifferences(License anotherLicense) throws LicenseException {
+  private void logLicenseDifferences(Lottery anotherLottery) throws LicenseException {
     logFieldDifference(
-        "licenseIssueTimestamp", this.licenseIssueTimestamp, anotherLicense.licenseIssueTimestamp);
+        "licenseIssueTimestamp", this.licenseIssueTimestamp, anotherLottery.licenseIssueTimestamp);
     logFieldDifference(
         "licenseExpireTimestamp",
         this.licenseExpireTimestamp,
-        anotherLicense.licenseExpireTimestamp);
+        anotherLottery.licenseExpireTimestamp);
     logFieldDifference(
         "disconnectionFromActiveNodeTimeLimit",
-        this.disconnectionFromActiveNodeTimeLimit,
-        anotherLicense.disconnectionFromActiveNodeTimeLimit);
+        this.disconnectionFromActiveNodeTimeObligation,
+        anotherLottery.disconnectionFromActiveNodeTimeObligation);
     logFieldDifference(
         "skipHardwareSystemInfoCheck",
         this.skipHardwareSystemInfoCheck,
-        anotherLicense.skipHardwareSystemInfoCheck);
-    logFieldDifference("dataNodeNumLimit", this.dataNodeNumLimit, anotherLicense.dataNodeNumLimit);
+        anotherLottery.skipHardwareSystemInfoCheck);
+    logFieldDifference(
+        "dataNodeNumLimit", this.dataNodeNumObligation, anotherLottery.dataNodeNumObligation);
     logFieldDifference(
         "dataNodeCpuCoreNumLimit",
-        this.dataNodeCpuCoreNumLimit,
-        anotherLicense.dataNodeCpuCoreNumLimit);
-    logFieldDifference("deviceNumLimit", this.deviceNumLimit, anotherLicense.deviceNumLimit);
-    logFieldDifference("sensorNumLimit", this.sensorNumLimit, anotherLicense.sensorNumLimit);
-    logFieldDifference("aiNodeNumLimit", this.aiNodeNumLimit, anotherLicense.aiNodeNumLimit);
+        this.dataNodeCpuCoreNumObligation,
+        anotherLottery.dataNodeCpuCoreNumObligation);
+    logFieldDifference(
+        "deviceNumLimit", this.deviceNumObligation, anotherLottery.deviceNumObligation);
+    logFieldDifference(
+        "sensorNumLimit", this.sensorNumObligation, anotherLottery.sensorNumObligation);
+    logFieldDifference(
+        "aiNodeNumLimit", this.aiNodeNumObligation, anotherLottery.aiNodeNumObligation);
   }
 
   // show difference between old license and new license
-  private void copyFrom(License anotherLicense) {
-    this.licenseIssueTimestamp.setValue(anotherLicense.licenseIssueTimestamp.getValue());
-    this.licenseExpireTimestamp.setValue(anotherLicense.licenseExpireTimestamp.getValue());
-    this.disconnectionFromActiveNodeTimeLimit.setValue(
-        anotherLicense.disconnectionFromActiveNodeTimeLimit.getValue());
+  private void copyFrom(Lottery anotherLottery) {
+    this.licenseIssueTimestamp.setValue(anotherLottery.licenseIssueTimestamp.getValue());
+    this.licenseExpireTimestamp.setValue(anotherLottery.licenseExpireTimestamp.getValue());
+    this.disconnectionFromActiveNodeTimeObligation.setValue(
+        anotherLottery.disconnectionFromActiveNodeTimeObligation.getValue());
     this.skipHardwareSystemInfoCheck.setValue(
-        anotherLicense.skipHardwareSystemInfoCheck.getValue());
-    this.dataNodeNumLimit.setValue(anotherLicense.dataNodeNumLimit.getValue());
-    this.dataNodeCpuCoreNumLimit.setValue(anotherLicense.dataNodeCpuCoreNumLimit.getValue());
-    this.deviceNumLimit.setValue(anotherLicense.deviceNumLimit.getValue());
-    this.sensorNumLimit.setValue(anotherLicense.sensorNumLimit.getValue());
-    this.aiNodeNumLimit.setValue(anotherLicense.aiNodeNumLimit.getValue());
+        anotherLottery.skipHardwareSystemInfoCheck.getValue());
+    this.dataNodeNumObligation.setValue(anotherLottery.dataNodeNumObligation.getValue());
+    this.dataNodeCpuCoreNumObligation.setValue(
+        anotherLottery.dataNodeCpuCoreNumObligation.getValue());
+    this.deviceNumObligation.setValue(anotherLottery.deviceNumObligation.getValue());
+    this.sensorNumObligation.setValue(anotherLottery.sensorNumObligation.getValue());
+    this.aiNodeNumObligation.setValue(anotherLottery.aiNodeNumObligation.getValue());
   }
 
   public TLicense toTLicense() {
@@ -371,14 +376,14 @@ public class License {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof License)) {
+    if (!(obj instanceof Lottery)) {
       return false;
     }
-    License another = (License) obj;
-    Iterator<Limit<?>> iterator = another.allLimit.iterator();
+    Lottery another = (Lottery) obj;
+    Iterator<Obligation<?>> iterator = another.allObligation.iterator();
     try {
-      for (Limit<?> limit : allLimit) {
-        if (!Objects.equals(limit.getValue(), iterator.next().getValue())) {
+      for (Obligation<?> obligation : allObligation) {
+        if (!Objects.equals(obligation.getValue(), iterator.next().getValue())) {
           return false;
         }
       }

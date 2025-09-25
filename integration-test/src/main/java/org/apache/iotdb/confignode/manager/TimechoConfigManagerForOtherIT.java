@@ -20,7 +20,7 @@
 package org.apache.iotdb.confignode.manager;
 
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.confignode.manager.activation.ActivationManagerWithoutAnyLimit;
+import org.apache.iotdb.confignode.manager.regulate.RegulateManagerWithoutAnyLimit;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
 
@@ -38,6 +38,6 @@ public class TimechoConfigManagerForOtherIT extends TimechoConfigManager {
 
   @Override
   public void initActivationManager() throws LicenseException {
-    this.activationManager = new ActivationManagerWithoutAnyLimit(this);
+    this.regulateManager = new RegulateManagerWithoutAnyLimit(this);
   }
 }

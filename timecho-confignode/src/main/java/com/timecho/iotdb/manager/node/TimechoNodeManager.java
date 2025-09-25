@@ -28,7 +28,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartResp;
 import org.apache.iotdb.rpc.TSStatusCode;
 
-import com.timecho.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.commission.Lottery;
 import com.timecho.iotdb.manager.ITimechoManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +44,9 @@ public class TimechoNodeManager extends NodeManager {
 
   @Override
   protected TSStatus registerDataNodeActivationCheck(TDataNodeRegisterReq req) {
-    License license = configManager.getActivationManager().getLicense();
+    Lottery lottery = configManager.getActivationManager().getLicense();
     // check if no license
-    if (license.noLicense()) {
+    if (lottery.noLicense()) {
       LOGGER.info(
           "There is no license in cluster, allow DataNode start: {}",
           req.getDataNodeConfiguration().getLocation().getInternalEndPoint());
@@ -60,13 +60,13 @@ public class TimechoNodeManager extends NodeManager {
       return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     }
     // check DataNode num limit
-    if (nodeInfo.getRegisteredDataNodeCount() + 1 > license.getDataNodeNumLimit()) {
+    if (nodeInfo.getRegisteredDataNodeCount() + 1 > lottery.getDataNodeNumLimit()) {
       final String message =
           String.format(
               "Deny DataNode registration: DataNodes number limit exceeded, %d + 1 = %d, greater than %d",
               nodeInfo.getRegisteredDataNodeCount(),
               nodeInfo.getRegisteredDataNodeCount() + 1,
-              license.getDataNodeNumLimit());
+              lottery.getDataNodeNumLimit());
       LOGGER.warn(message);
       return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     } else {
@@ -75,13 +75,13 @@ public class TimechoNodeManager extends NodeManager {
               "DataNode register node num check pass. "
                   + "After the successful register of this datanode, "
                   + "the remaining quota for node num will be set to %d.",
-              license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
+              lottery.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount() - 1);
       LOGGER.info(message);
     }
     // check DataNode's cpu core num limit
     int clusterCpuCores = nodeInfo.getDataNodeTotalCpuCoreCount();
     int newNodeCpuCores = req.getDataNodeConfiguration().getResource().getCpuCoreNum();
-    int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
+    int cpuCoreLimit = lottery.getDataNodeCpuCoreNumLimit();
     if (clusterCpuCores + newNodeCpuCores > cpuCoreLimit) {
       String message =
           String.format(
@@ -106,7 +106,7 @@ public class TimechoNodeManager extends NodeManager {
 
   @Override
   protected TSStatus registerAINodeActivationCheck(TAINodeRegisterReq req) {
-    final License license = configManager.getActivationManager().getLicense();
+    final Lottery lottery = configManager.getActivationManager().getLicense();
     // check if unactivated
     if (!configManager.getActivationManager().isActivated()) {
       final String message =
@@ -115,14 +115,14 @@ public class TimechoNodeManager extends NodeManager {
       return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     }
     // check AINode num limit
-    license.getAINodeNumLimit();
-    if (nodeInfo.getRegisteredAINodes().size() + 1 > license.getAINodeNumLimit()) {
+    lottery.getAINodeNumLimit();
+    if (nodeInfo.getRegisteredAINodes().size() + 1 > lottery.getAINodeNumLimit()) {
       final String message =
           String.format(
               "Deny AINode registration: AINodes number limit exceeded, %d + 1 = %d, greater than %d",
               nodeInfo.getRegisteredAINodeCount(),
               nodeInfo.getRegisteredAINodeCount() + 1,
-              license.getAINodeNumLimit());
+              lottery.getAINodeNumLimit());
       LOGGER.warn(message);
       return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode()).setMessage(message);
     }
@@ -131,16 +131,16 @@ public class TimechoNodeManager extends NodeManager {
 
   @Override
   protected void printDataNodeRegistrationResult() {
-    License license = configManager.getActivationManager().getLicense();
+    Lottery lottery = configManager.getActivationManager().getLicense();
     LOGGER.info(
         "Accept DataNode registration, node quota remain {}, cpu core quota remain {}",
-        license.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
-        license.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
+        lottery.getDataNodeNumLimit() - nodeInfo.getRegisteredDataNodeCount(),
+        lottery.getDataNodeCpuCoreNumLimit() - nodeInfo.getDataNodeTotalCpuCoreCount());
   }
 
   @Override
   protected TDataNodeRestartResp updateDataNodeActivationCheck(TDataNodeRestartReq req) {
-    License license = configManager.getActivationManager().getLicense();
+    Lottery lottery = configManager.getActivationManager().getLicense();
     TDataNodeRestartResp resp = new TDataNodeRestartResp();
     resp.setConfigNodeList(getRegisteredConfigNodes());
     // check DataNode's cpu core num limit
@@ -158,7 +158,7 @@ public class TimechoNodeManager extends NodeManager {
     }
     final int clusterCpuCoresExceptThisNode =
         nodeInfo.getDataNodeTotalCpuCoreCount() - previousNodeCpuCores;
-    final int cpuCoreLimit = license.getDataNodeCpuCoreNumLimit();
+    final int cpuCoreLimit = lottery.getDataNodeCpuCoreNumLimit();
     if (clusterCpuCoresExceptThisNode + restartNodeCpuCores > cpuCoreLimit) {
       String message =
           String.format(

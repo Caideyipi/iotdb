@@ -6,7 +6,7 @@ import org.apache.iotdb.commons.structure.SortedProperties;
 import cn.hutool.system.OsInfo;
 import cn.hutool.system.SystemUtil;
 import com.google.common.collect.ImmutableMap;
-import com.timecho.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.commission.Lottery;
 import com.timecho.iotdb.commons.systeminfo.ISystemInfoGetter;
 import com.timecho.iotdb.commons.systeminfo.LinuxSystemInfoGetter;
 import com.timecho.iotdb.commons.systeminfo.MacSystemInfoGetter;
@@ -31,9 +31,9 @@ public class OSUtils {
   private static final ISystemInfoGetter systemInfoGetter = generateSystemInfoGetter();
   public static final ImmutableMap<String, Supplier<String>> hardwareSystemInfoNameToItsGetter =
       ImmutableMap.of(
-          License.CPU_ID_NAME, systemInfoGetter::getCPUId,
-          License.MAIN_BOARD_ID_NAME, systemInfoGetter::getMainBoardId,
-          License.SYSTEM_UUID_NAME, systemInfoGetter::getSystemUUID);
+          Lottery.CPU_ID_NAME, systemInfoGetter::getCPUId,
+          Lottery.MAIN_BOARD_ID_NAME, systemInfoGetter::getMainBoardId,
+          Lottery.SYSTEM_UUID_NAME, systemInfoGetter::getSystemUUID);
 
   public static SystemInfoGetter generateSystemInfoGetter() {
     OsInfo osInfo = SystemUtil.getOsInfo();

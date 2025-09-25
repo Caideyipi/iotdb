@@ -17,33 +17,46 @@
  * under the License.
  */
 
-package com.timecho.iotdb.commons.license.limit;
+package com.timecho.iotdb.commons.commission.obligation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LimitAllowAbsent<T> extends Limit<T> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(LimitAllowAbsent.class);
+public class Obligation<T> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Obligation.class);
+  private T value;
+  private final T valueWithoutLicense;
+  CheckedStringParser<T> parser;
 
-  private final T valueIfAbsent;
-
-  public LimitAllowAbsent(T valueWithoutLicense, CheckedStringParser<T> parser, T valueIfAbsent) {
-    super(valueWithoutLicense, parser);
-    this.valueIfAbsent = valueIfAbsent;
+  public Obligation(T valueWithoutLicense, CheckedStringParser<T> parser) {
+    value = valueWithoutLicense;
+    this.valueWithoutLicense = valueWithoutLicense;
+    this.parser = parser;
   }
 
-  /** Use this if any license property not exist. */
-  public void setToAbsent() {
-    setValue(valueIfAbsent);
+  public void setValue(T value) {
+    this.value = value;
   }
 
-  // If valueStr is null, set to absent
-  @Override
+  public T getValue() {
+    return value;
+  }
+  ;
+
+  /** Use this if license not exist. */
+  public void reset() {
+    value = valueWithoutLicense;
+  }
+
   public void parse(String valueStr) throws Exception {
-    if (valueStr == null) {
-      setToAbsent();
-      return;
+    this.value = parser.apply(valueStr);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Obligation)) {
+      return false;
     }
-    super.parse(valueStr);
+    return value.equals(((Obligation<?>) obj).value);
   }
 }

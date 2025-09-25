@@ -37,7 +37,7 @@ import org.apache.iotdb.confignode.service.thrift.ConfigNodeRPCServiceProcessor;
 import org.apache.iotdb.rpc.TSStatusCode;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
-import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,7 +110,7 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
       for (TConfigNodeLocation location : locations) {
         if (location.getConfigNodeId()
             == ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId()) {
-          systemInfoList.add(ActivationManager.generateSystemInfoContentWithVersion());
+          systemInfoList.add(RegulateManager.generateSystemInfoContentWithVersion());
         } else {
           try (SyncConfigNodeIServiceClient client =
               clientManager.borrowClient(location.getInternalEndPoint())) {
@@ -130,7 +130,7 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
   @Override
   public String getSystemInfo() throws TException {
     try {
-      return ActivationManager.generateSystemInfoContentWithVersion();
+      return RegulateManager.generateSystemInfoContentWithVersion();
     } catch (Exception e) {
       throw new TException(e);
     }

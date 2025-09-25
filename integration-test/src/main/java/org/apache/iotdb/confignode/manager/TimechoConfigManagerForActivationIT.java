@@ -20,7 +20,7 @@
 package org.apache.iotdb.confignode.manager;
 
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.confignode.manager.activation.ActivationManagerWithoutEncryptionAndMachineBinding;
+import org.apache.iotdb.confignode.manager.regulate.RegulateManagerWithoutEncryptionAndMachineBinding;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
 
@@ -38,6 +38,6 @@ public class TimechoConfigManagerForActivationIT extends TimechoConfigManager {
 
   @Override
   public void initActivationManager() throws LicenseException {
-    this.activationManager = new ActivationManagerWithoutEncryptionAndMachineBinding(this);
+    this.regulateManager = new RegulateManagerWithoutEncryptionAndMachineBinding(this);
   }
 }

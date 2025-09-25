@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.timecho.iotdb.commons.license.limit;
+package com.timecho.iotdb.commons.commission.obligation;
 
 import org.apache.ratis.util.function.CheckedFunction;
 

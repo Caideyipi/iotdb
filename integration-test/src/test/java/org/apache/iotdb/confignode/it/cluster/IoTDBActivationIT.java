@@ -41,8 +41,8 @@ import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 
 import com.google.common.collect.ImmutableMap;
-import com.timecho.iotdb.commons.license.License;
-import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.commons.commission.Lottery;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
 import org.apache.tsfile.utils.Pair;
@@ -85,11 +85,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.timecho.iotdb.commons.license.License.DATANODE_NUM_LIMIT_NAME;
-import static com.timecho.iotdb.commons.license.License.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
-import static com.timecho.iotdb.commons.license.License.LICENSE_EXPIRE_TIMESTAMP_NAME;
-import static com.timecho.iotdb.commons.license.License.LICENSE_ISSUE_TIMESTAMP_NAME;
-import static com.timecho.iotdb.manager.activation.ActivationManager.LICENSE_FILE_NAME;
+import static com.timecho.iotdb.commons.commission.Lottery.DATANODE_NUM_LIMIT_NAME;
+import static com.timecho.iotdb.commons.commission.Lottery.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
+import static com.timecho.iotdb.commons.commission.Lottery.LICENSE_EXPIRE_TIMESTAMP_NAME;
+import static com.timecho.iotdb.commons.commission.Lottery.LICENSE_ISSUE_TIMESTAMP_NAME;
+import static com.timecho.iotdb.manager.regulate.RegulateManager.LICENSE_FILE_NAME;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_ACTIVATED;
 import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_UNACTIVATED;
@@ -128,7 +128,7 @@ public class IoTDBActivationIT {
   @BeforeClass
   public static void setUpClass() throws IOException {
     System.setProperty("TestEnv", "Timecho");
-    baseLicenseProperties = ActivationManager.buildUnlimitedLicenseProperties();
+    baseLicenseProperties = RegulateManager.buildUnlimitedLicenseProperties();
     StringWriter writer = new StringWriter();
     baseLicenseProperties.store(writer, null);
     baseLicenseContent = writer.toString();
@@ -805,8 +805,8 @@ public class IoTDBActivationIT {
   @Order(normalTest)
   public void dataNodeCpuNumLimitSequentialTest() throws Exception {
     EnvFactory.getEnv().initClusterEnvironment(1, 0);
-    String cpuCoreLimit1 = buildLicenseFromBase(License.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "1");
-    String cpuCoreLimit2 = buildLicenseFromBase(License.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "2");
+    String cpuCoreLimit1 = buildLicenseFromBase(Lottery.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "1");
+    String cpuCoreLimit2 = buildLicenseFromBase(Lottery.DATANODE_CPU_CORE_NUM_LIMIT_NAME, "2");
     try (SyncConfigNodeIServiceClient leaderClient =
         (SyncConfigNodeIServiceClient) EnvFactory.getEnv().getLeaderConfigNodeConnection()) {
       List<DataNodeWrapper> dataNodeWrappers = new ArrayList<>();
@@ -1101,9 +1101,9 @@ public class IoTDBActivationIT {
       EnvFactory.getEnv().registerNewDataNode(true);
       Session session = (Session) EnvFactory.getEnv().getSessionConnection();
       LicenseInfoResp resp = session.getLicenseInfo();
-      License license = new License(() -> {});
-      ActivationManager.tryLoadLicenseFromString(license, baseLicenseContent);
-      Assert.assertEquals(license.toTLicense().toString(), resp.license.toString());
+      Lottery lottery = new Lottery(() -> {});
+      RegulateManager.tryLoadLicenseFromString(lottery, baseLicenseContent);
+      Assert.assertEquals(lottery.toTLicense().toString(), resp.license.toString());
       allCheckPass();
     }
   }
@@ -1112,7 +1112,7 @@ public class IoTDBActivationIT {
 
   // region Helpers
   private static void waitLicenseReload() {
-    saferSleep(ActivationManager.FILE_MONITOR_INTERVAL * 2);
+    saferSleep(RegulateManager.FILE_MONITOR_INTERVAL * 2);
   }
 
   private <K, V> String mapToString(Map<K, V> map) {

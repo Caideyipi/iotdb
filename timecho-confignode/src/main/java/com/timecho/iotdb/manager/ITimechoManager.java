@@ -23,9 +23,9 @@ import org.apache.iotdb.confignode.manager.IManager;
 import org.apache.iotdb.confignode.rpc.thrift.TAINodeRegisterReq;
 import org.apache.iotdb.consensus.common.DataSet;
 
-import com.timecho.iotdb.manager.activation.ActivationManager;
 import com.timecho.iotdb.manager.load.TimechoLoadManager;
 import com.timecho.iotdb.manager.node.TimechoNodeManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 
 public interface ITimechoManager extends IManager {
   /**
@@ -33,7 +33,7 @@ public interface ITimechoManager extends IManager {
    *
    * @return ActivationManager instance
    */
-  ActivationManager getActivationManager();
+  RegulateManager getActivationManager();
 
   /**
    * Register AINode

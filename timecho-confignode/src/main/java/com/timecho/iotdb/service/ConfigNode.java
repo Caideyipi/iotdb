@@ -27,7 +27,7 @@ import org.apache.iotdb.confignode.service.thrift.ConfigNodeRPCServiceProcessor;
 import com.timecho.iotdb.commons.secret.SecretKey;
 import com.timecho.iotdb.commons.utils.OSUtils;
 import com.timecho.iotdb.manager.TimechoConfigManager;
-import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 import com.timecho.iotdb.service.thrift.TimechoConfigNodeRPCServiceProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
 
   @Override
   protected void generateSystemInfoFile() {
-    ActivationManager.generateSystemInfoFile();
+    RegulateManager.generateSystemInfoFile();
   }
 
   @Override

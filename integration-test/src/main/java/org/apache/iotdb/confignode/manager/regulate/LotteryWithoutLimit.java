@@ -17,15 +17,15 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation;
+package org.apache.iotdb.confignode.manager.regulate;
 
-import com.timecho.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.commission.Lottery;
 
 /**
  * This class provides a license which has no restraint. Only for integration tests (except
  * IoTDBActivationTest)
  */
-public class LicenseWithoutLimit extends License {
+public class LotteryWithoutLimit extends Lottery {
   private static long LICENSE_ISSUE_TIMESTAMP_UNLIMITED = 10000;
   private static long LICENSE_EXPIRE_TIMESTAMP_UNLIMITED =
       4102416000000L; // 4102416000000 == 2100-01-01 00:00:00
@@ -37,18 +37,18 @@ public class LicenseWithoutLimit extends License {
   private static LicenseSource LICENSE_SOURCE_UNLIMITED = LicenseSource.FROM_FILE;
   private static short AI_NODE_NUM_UNLIMITED = Short.MAX_VALUE;
 
-  public LicenseWithoutLimit(Runnable onLicenseChange) {
+  public LotteryWithoutLimit(Runnable onLicenseChange) {
     super(onLicenseChange);
     this.licenseIssueTimestamp.setValue(LICENSE_ISSUE_TIMESTAMP_UNLIMITED);
     this.licenseExpireTimestamp.setValue(LICENSE_EXPIRE_TIMESTAMP_UNLIMITED);
-    this.dataNodeNumLimit.setValue(DATA_NODE_NUM_UNLIMITED);
-    this.dataNodeCpuCoreNumLimit.setValue(DATA_NODE_CPU_CORE_NUM_UNLIMITED);
-    this.deviceNumLimit.setValue(DEVICE_NUM_UNLIMITED);
-    this.sensorNumLimit.setValue(SENSOR_NUM_UNLIMITED);
-    this.disconnectionFromActiveNodeTimeLimit.setValue(
+    this.dataNodeNumObligation.setValue(DATA_NODE_NUM_UNLIMITED);
+    this.dataNodeCpuCoreNumObligation.setValue(DATA_NODE_CPU_CORE_NUM_UNLIMITED);
+    this.deviceNumObligation.setValue(DEVICE_NUM_UNLIMITED);
+    this.sensorNumObligation.setValue(SENSOR_NUM_UNLIMITED);
+    this.disconnectionFromActiveNodeTimeObligation.setValue(
         DISCONNECTION_FROM_ACTIVE_NODE_TIME_UNLIMITED);
     this.licenseSource = LICENSE_SOURCE_UNLIMITED;
-    this.aiNodeNumLimit.setValue(AI_NODE_NUM_UNLIMITED);
+    this.aiNodeNumObligation.setValue(AI_NODE_NUM_UNLIMITED);
     this.onLicenseChange.run();
   }
 }

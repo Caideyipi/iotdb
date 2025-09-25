@@ -17,21 +17,21 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation;
+package org.apache.iotdb.confignode.manager.regulate;
 
 import org.apache.iotdb.commons.exception.LicenseException;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
-import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Properties;
 
 /** License Manager without system info check, only for IoTDBActivationTest */
-public class ActivationManagerWithoutEncryptionAndMachineBinding extends ActivationManager {
+public class RegulateManagerWithoutEncryptionAndMachineBinding extends RegulateManager {
 
-  public ActivationManagerWithoutEncryptionAndMachineBinding(TimechoConfigManager configManager)
+  public RegulateManagerWithoutEncryptionAndMachineBinding(TimechoConfigManager configManager)
       throws LicenseException {
     super(configManager);
   }

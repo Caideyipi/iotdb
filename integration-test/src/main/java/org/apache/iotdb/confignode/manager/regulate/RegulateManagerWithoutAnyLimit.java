@@ -17,30 +17,30 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.manager.activation;
+package org.apache.iotdb.confignode.manager.regulate;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.commons.exception.LicenseException;
 
 import com.timecho.iotdb.manager.TimechoConfigManager;
-import com.timecho.iotdb.manager.activation.ActivationManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 
 import java.util.Properties;
 
 /** Only for integration test (except IoTDBActivationTest) */
-public class ActivationManagerWithoutAnyLimit extends ActivationManager {
+public class RegulateManagerWithoutAnyLimit extends RegulateManager {
 
-  public ActivationManagerWithoutAnyLimit(TimechoConfigManager configManager)
+  public RegulateManagerWithoutAnyLimit(TimechoConfigManager configManager)
       throws LicenseException {
     super(configManager);
-    this.license =
-        new LicenseWithoutLimit(
+    this.lottery =
+        new LotteryWithoutLimit(
             () ->
                 configManager
                     .getClusterSchemaManager()
                     .updateSchemaQuotaConfiguration(
-                        LicenseWithoutLimit.DEVICE_NUM_UNLIMITED,
-                        LicenseWithoutLimit.SENSOR_NUM_UNLIMITED));
+                        LotteryWithoutLimit.DEVICE_NUM_UNLIMITED,
+                        LotteryWithoutLimit.SENSOR_NUM_UNLIMITED));
   }
 
   @Override

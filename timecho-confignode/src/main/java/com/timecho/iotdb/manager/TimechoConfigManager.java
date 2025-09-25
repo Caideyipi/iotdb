@@ -39,9 +39,9 @@ import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
-import com.timecho.iotdb.manager.activation.ActivationManager;
 import com.timecho.iotdb.manager.load.TimechoLoadManager;
 import com.timecho.iotdb.manager.node.TimechoNodeManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
 
   private TimechoNodeManager timechoNodeManager;
   private TimechoLoadManager timechoLoadManager;
-  protected ActivationManager activationManager;
+  protected RegulateManager regulateManager;
 
   private static final ConfigNodeConfig CONF = ConfigNodeDescriptor.getInstance().getConf();
 
@@ -93,8 +93,8 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
   }
 
   @Override
-  public ActivationManager getActivationManager() {
-    return activationManager;
+  public RegulateManager getActivationManager() {
+    return regulateManager;
   }
 
   @Override
@@ -116,7 +116,7 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
         getLoadManager().getNodeSimplifiedActivateStatus();
     nodeActivateInfoMap.put(
         CONF.getConfigNodeId(),
-        new TNodeActivateInfo(activationManager.getActivateStatus().toSimpleString()));
+        new TNodeActivateInfo(regulateManager.getActivateStatus().toSimpleString()));
     result.setNodeActivateInfo(nodeActivateInfoMap);
 
     return result;
@@ -134,7 +134,7 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
     locations.sort(Comparator.comparingInt(TConfigNodeLocation::getConfigNodeId));
     try {
       cliActivateCheckNumberCorrect(licenseList, locations);
-      activationManager.cliActivateCheckLicenseContentAvailable(licenseList);
+      regulateManager.cliActivateCheckLicenseContentAvailable(licenseList);
       cliActivateCheckSystemInfo(licenseList, locations, clientManager);
       cliActivateDistributeLicense(licenseList, locations, clientManager);
       LOGGER.info("[CLI activation] Successfully updated all ConfigNodes' license");
@@ -202,13 +202,13 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
       if (location.getConfigNodeId()
           == ConfigNodeDescriptor.getInstance().getConf().getConfigNodeId()) {
         setLicenseResult =
-            activationManager.setLicenseFile(
-                ActivationManager.LICENSE_FILE_NAME, licenseIterator.next());
+            regulateManager.setLicenseFile(
+                RegulateManager.LICENSE_FILE_NAME, licenseIterator.next());
       } else {
         try (SyncConfigNodeIServiceClient client =
             clientManager.borrowClient(location.getInternalEndPoint())) {
           setLicenseResult =
-              client.setLicenseFile(ActivationManager.LICENSE_FILE_NAME, licenseIterator.next());
+              client.setLicenseFile(RegulateManager.LICENSE_FILE_NAME, licenseIterator.next());
         }
       }
       if (setLicenseResult.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
@@ -228,20 +228,20 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
   public TShowActivationResp showActivation() {
     TShowActivationResp resp =
         new TShowActivationResp(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
-    resp.setLicense(activationManager.getLicense().toTLicense());
-    resp.setUsage(activationManager.getLicenseUsage());
-    resp.setClusterActivationStatus(activationManager.calculateClusterActivationStatus());
+    resp.setLicense(regulateManager.getLicense().toTLicense());
+    resp.setUsage(regulateManager.getLicenseUsage());
+    resp.setClusterActivationStatus(regulateManager.calculateClusterActivationStatus());
     return resp;
   }
 
   public TSStatus checkSystemInfo(String license) {
-    if (activationManager.checkLicenseContentAvailable(license)) {
+    if (regulateManager.checkLicenseContentAvailable(license)) {
       return RpcUtils.SUCCESS_STATUS;
     }
     return new TSStatus(TSStatusCode.LICENSE_ERROR.getStatusCode());
   }
 
   protected void initActivationManager() throws LicenseException {
-    this.activationManager = new ActivationManager(this);
+    this.regulateManager = new RegulateManager(this);
   }
 }

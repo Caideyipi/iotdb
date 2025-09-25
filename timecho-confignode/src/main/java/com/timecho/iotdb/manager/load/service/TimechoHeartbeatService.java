@@ -30,11 +30,11 @@ import org.apache.iotdb.mpp.rpc.thrift.TDataNodeActivation;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatReq;
 
 import com.timecho.iotdb.client.async.handlers.heartbeat.TimechoConfigNodeHeartbeatHandler;
-import com.timecho.iotdb.commons.license.License;
+import com.timecho.iotdb.commons.commission.Lottery;
 import com.timecho.iotdb.manager.ITimechoManager;
 import com.timecho.iotdb.manager.TimechoConfigManager;
-import com.timecho.iotdb.manager.activation.ActivationManager;
 import com.timecho.iotdb.manager.load.TimechoLoadManager;
+import com.timecho.iotdb.manager.regulate.RegulateManager;
 
 public class TimechoHeartbeatService extends HeartbeatService {
 
@@ -63,22 +63,22 @@ public class TimechoHeartbeatService extends HeartbeatService {
 
   @Override
   protected void setActivationRelatedInfoForConfigNodeReq(TConfigNodeHeartbeatReq req) {
-    ActivationManager activationManager = timechoConfigManager.getActivationManager();
-    License license = activationManager.getLicense();
+    RegulateManager regulateManager = timechoConfigManager.getActivationManager();
+    Lottery lottery = regulateManager.getLicense();
     TimechoLoadManager loadManager = timechoConfigManager.getLoadManager();
     loadManager.updateActivationStatusCache();
     if (loadManager.someConfigNodeNotSentHeartbeatYet()) {
       if (timechoConfigManager.getActivationManager().activeNodeExistForLeader()) {
-        req.setLicence(license.toTLicense());
+        req.setLicence(lottery.toTLicense());
       }
     } else {
-      if (activationManager.isActive() || loadManager.activeNodeLive()) {
-        req.setLicence(license.toTLicense());
+      if (regulateManager.isActive() || loadManager.activeNodeLive()) {
+        req.setLicence(lottery.toTLicense());
       } else if (loadManager.activeNodeDisconnect()) {
         // do nothing
       } else {
         req.setActivationControl(TActivationControl.ALL_LICENSE_FILE_DELETED);
-        activationManager.giveUpLicenseBecauseLeaderBelieveThereIsNoActiveNodeInCluster();
+        regulateManager.giveUpLicenseBecauseLeaderBelieveThereIsNoActiveNodeInCluster();
       }
     }
   }

@@ -17,15 +17,15 @@
  * under the License.
  */
 
-package com.timecho.iotdb.manager.activation;
+package com.timecho.iotdb.manager.regulate;
 
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 
 import com.google.common.collect.ImmutableMap;
-import com.timecho.iotdb.commons.license.License;
-import com.timecho.iotdb.commons.license.RSA;
+import com.timecho.iotdb.commons.commission.Bandit;
+import com.timecho.iotdb.commons.commission.Lottery;
 import com.timecho.iotdb.commons.systeminfo.SystemInfoGetter;
 import com.timecho.iotdb.commons.utils.OSUtils;
 
@@ -42,7 +42,7 @@ import java.util.function.Supplier;
 
 import static java.lang.System.exit;
 
-public class ActivationVerifier {
+public class RegulateVerifier {
   private static final int SUCCESS_CODE = 0;
   private static final int FAIL_CODE = 1;
   private static final int UNABLE_TO_VERIFY_CODE = 2;
@@ -80,7 +80,7 @@ public class ActivationVerifier {
       }
       encryptedLicenseContent = stringBuilder.toString();
       licenseProperties =
-          ActivationManager.loadLicenseFromEveryVersionStatic(encryptedLicenseContent);
+          RegulateManager.loadLicenseFromEveryVersionStatic(encryptedLicenseContent);
     } catch (Exception e) {
       System.out.println(exceptionToEncryptedString(e));
       errorThenExit(LOAD_FAIL_MESSAGE);
@@ -131,14 +131,14 @@ public class ActivationVerifier {
 
     ImmutableMap<String, Supplier<String>> configurableSystemInfoNameToItsGetter =
         ImmutableMap.of(
-            License.IP_ADDRESS_NAME,
+            Lottery.IP_ADDRESS_NAME,
             () -> String.valueOf(systemProperties.get(IoTDBConstant.CN_INTERNAL_ADDRESS)),
-            License.INTERNAL_PORT_NAME,
+            Lottery.INTERNAL_PORT_NAME,
             () -> String.valueOf(systemProperties.get(IoTDBConstant.CN_INTERNAL_PORT)),
-            License.IS_SEED_CONFIGNODE_NODE_NAME,
+            Lottery.IS_SEED_CONFIGNODE_NODE_NAME,
             () -> String.valueOf(systemProperties.get("is_seed_config_node")));
 
-    if (!ActivationManager.verifyAllSystemInfoOfEveryVersion(
+    if (!RegulateManager.verifyAllSystemInfoOfEveryVersion(
         licenseProperties,
         OSUtils.hardwareSystemInfoNameToItsGetter,
         configurableSystemInfoNameToItsGetter)) {
@@ -147,14 +147,14 @@ public class ActivationVerifier {
   }
 
   private static void checkLicense(Properties licenseProperties) {
-    License license = new License(() -> {});
+    Lottery lottery = new Lottery(() -> {});
     try {
-      license.loadFromProperties(licenseProperties, false);
+      lottery.loadFromProperties(licenseProperties, false);
     } catch (Exception e) {
       System.out.println(exceptionToEncryptedString(e));
       errorThenExit(FAIL_MESSAGE);
     }
-    if (!ActivationManager.checkSystemTimeAndIssueTimeImpl(license)) {
+    if (!RegulateManager.checkSystemTimeAndIssueTimeImpl(lottery)) {
       System.out.println("Time check failed");
       errorThenExit(FAIL_MESSAGE);
     }
@@ -182,7 +182,7 @@ public class ActivationVerifier {
     StringWriter writer = new StringWriter();
     e.printStackTrace(new PrintWriter(writer));
     try {
-      return RSA.publicEncrypt(writer.toString());
+      return Bandit.publicEncrypt(writer.toString());
     } catch (Exception ee) {
       return e.getMessage();
     }
