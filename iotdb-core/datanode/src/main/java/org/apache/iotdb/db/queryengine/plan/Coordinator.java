@@ -56,7 +56,6 @@ import org.apache.iotdb.db.queryengine.plan.relational.planner.optimizations.Dat
 import org.apache.iotdb.db.queryengine.plan.relational.planner.optimizations.DistributedOptimizeFactory;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.optimizations.LogicalOptimizeFactory;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.optimizations.PlanOptimizer;
-import org.apache.iotdb.db.queryengine.plan.relational.security.AccessControl;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.AddColumn;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.AlterDB;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ClearCache;
@@ -191,7 +190,6 @@ public class Coordinator {
   private final StatementRewrite statementRewrite;
   private final List<PlanOptimizer> logicalPlanOptimizers;
   private final List<PlanOptimizer> distributionPlanOptimizers;
-  private final AccessControl accessControl;
   private final DataNodeLocationSupplierFactory.DataNodeLocationSupplier dataNodeLocationSupplier;
 
   private Coordinator() {
@@ -206,7 +204,6 @@ public class Coordinator {
             dispatchThreadNum,
             dispatchThreadNum,
             new ThreadPoolExecutor.CallerRunsPolicy());
-    this.accessControl = AuthorityChecker.getAccessControl();
     this.statementRewrite = new StatementRewriteFactory().getStatementRewrite();
     this.logicalPlanOptimizers =
         new LogicalOptimizeFactory(
@@ -403,7 +400,7 @@ public class Coordinator {
             statementRewrite,
             logicalPlanOptimizers,
             distributionPlanOptimizers,
-            accessControl,
+            AuthorityChecker.getAccessControl(),
             dataNodeLocationSupplier);
     return new QueryExecution(tableModelPlanner, queryContext, executor);
   }
@@ -486,7 +483,9 @@ public class Coordinator {
           null,
           executor,
           statement.accept(
-              new TableConfigTaskVisitor(clientSession, metadata, accessControl), queryContext));
+              new TableConfigTaskVisitor(
+                  clientSession, metadata, AuthorityChecker.getAccessControl()),
+              queryContext));
     }
     if (statement instanceof WrappedInsertStatement) {
       ((WrappedInsertStatement) statement).setContext(queryContext);
@@ -502,7 +501,7 @@ public class Coordinator {
             statementRewrite,
             logicalPlanOptimizers,
             distributionPlanOptimizers,
-            accessControl,
+            AuthorityChecker.getAccessControl(),
             dataNodeLocationSupplier);
     return new QueryExecution(tableModelPlanner, queryContext, executor);
   }
@@ -609,10 +608,6 @@ public class Coordinator {
 
   public static Coordinator getInstance() {
     return INSTANCE;
-  }
-
-  public AccessControl getAccessControl() {
-    return accessControl;
   }
 
   public void recordExecutionTime(long queryId, long executionTime) {
