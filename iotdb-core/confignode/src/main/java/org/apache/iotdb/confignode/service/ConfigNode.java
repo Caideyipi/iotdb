@@ -221,6 +221,8 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
         /* Always set ConfigNodeId before initConsensusManager */
         CONF.setConfigNodeId(SEED_CONFIG_NODE_ID);
         configManager.initConsensusManager();
+        // Generate the builtin admin users after initConsensusManager
+        initBuiltinUsers();
 
         // Persistence system parameters after the consensusGroup is built,
         // or the consensusGroup will not be initialized successfully otherwise.
@@ -294,6 +296,10 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
 
   protected void generateSystemInfoFile() {
     throw new UnsupportedOperationException(WRONG_MAIN_CLASS_MESSAGE);
+  }
+  
+  protected void initBuiltinUsers() {
+    // nothing to do
   }
 
   void processPid() {
