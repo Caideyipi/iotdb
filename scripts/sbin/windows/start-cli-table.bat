@@ -25,7 +25,7 @@ if "%DEFAULT_SQL_DIALECT%"=="" set DEFAULT_SQL_DIALECT=table
 
 REM Default connection parameters
 set user_param=-u root
-set passwd_param=-pw root
+set passwd_param=-pw TimechoDB@2021
 set host_param=-h 127.0.0.1
 set port_param=-p 6667
 set sql_dialect_param=-sql_dialect %DEFAULT_SQL_DIALECT%
