@@ -297,7 +297,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
   protected void generateSystemInfoFile() {
     throw new UnsupportedOperationException(WRONG_MAIN_CLASS_MESSAGE);
   }
-  
+
   protected void initBuiltinUsers() {
     // nothing to do
   }
