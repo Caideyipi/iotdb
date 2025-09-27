@@ -65,6 +65,7 @@ import org.apache.iotdb.service.rpc.thrift.TSProtocolVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ratis.util.MemoizedSupplier;
 import org.apache.tsfile.read.common.block.TsBlock;
+import org.apache.tsfile.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,10 +147,11 @@ public class SessionManager implements SessionManagerMBean {
   /**
    * Check if the password for the give user has expired.
    *
-   * @return the timestamp when the password will expire. Long.MAX if the password never expires.
-   *     Null if the password history cannot be found.
+   * @return the first element is the timestamp when the password will expire, Long.MAX if the
+   *     password never expires. the second element is the time when the password was changed to the
+   *     current value Null if the password history cannot be found.
    */
-  public Long checkPasswordExpiration(String username, String password) {
+  public Pair<Long, Long> checkPasswordExpiration(String username, String password) {
     // check password expiration
     long passwordExpirationDays =
         CommonDescriptor.getInstance().getConfig().getPasswordExpirationDays();
@@ -208,9 +210,10 @@ public class SessionManager implements SessionManagerMBean {
         if (oldPassword.equals(AuthUtils.encryptPassword(password))) {
           if (lastPasswordTime + passwordExpirationDays * 1000 * 86400 <= lastPasswordTime) {
             // overflow or passwordExpirationDays <= 0
-            return Long.MAX_VALUE;
+            return new Pair<>(Long.MAX_VALUE, lastPasswordTime);
           } else {
-            return lastPasswordTime + passwordExpirationDays * 1000 * 86400;
+            return new Pair<>(
+                lastPasswordTime + passwordExpirationDays * 1000 * 86400, lastPasswordTime);
           }
         } else {
           // 1. the password is incorrect, later logIn will fail
@@ -223,7 +226,7 @@ public class SessionManager implements SessionManagerMBean {
     } catch (Throwable e) {
       LOGGER.error("Fail to check password expiration", e);
       if (mayBypassPasswordCheckInException) {
-        return Long.MAX_VALUE;
+        return new Pair<>(Long.MAX_VALUE, 0L);
       } else {
         throw new IoTDBRuntimeException(
             "Internal server error " + ", please log in later or disable password expiration.",
@@ -246,7 +249,8 @@ public class SessionManager implements SessionManagerMBean {
       IClientSession.SqlDialect sqlDialect) {
     BasicOpenSessionResp openSessionResp = new BasicOpenSessionResp();
 
-    Long timeToExpire = checkPasswordExpiration(username, password);
+    Pair<Long, Long> expirationAndModifiedTime = checkPasswordExpiration(username, password);
+    Long timeToExpire = expirationAndModifiedTime != null ? expirationAndModifiedTime.left : null;
     if (timeToExpire != null && timeToExpire <= System.currentTimeMillis()) {
       openSessionResp
           .sessionId(-1)
@@ -269,6 +273,21 @@ public class SessionManager implements SessionManagerMBean {
         session.setSqlDialect(sqlDialect);
         supplySession(session, userId, username, ZoneId.of(zoneId), clientVersion);
         String logInMessage = "Login successfully";
+
+        long passwordStaleWarningDays =
+            CommonDescriptor.getInstance().getConfig().getPasswordStaleWarningDays();
+        if (passwordStaleWarningDays > 0 && expirationAndModifiedTime != null) {
+          long modifiedTime =
+              CommonDateTimeUtils.convertIoTDBTimeToMillis(expirationAndModifiedTime.right);
+          long timeToWarn = modifiedTime + passwordStaleWarningDays * 86400 * 1000L;
+          if (timeToWarn <= System.currentTimeMillis()) {
+            logInMessage +=
+                String.format(
+                    ". Warning: Your password has not been changed for over %s days. For security best practices, please consider updating your password.",
+                    passwordStaleWarningDays);
+          }
+        }
+
         if (timeToExpire != null && timeToExpire != Long.MAX_VALUE) {
           DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
           logInMessage +=
@@ -304,6 +323,7 @@ public class SessionManager implements SessionManagerMBean {
                             Instant.ofEpochMilli(timeToExpire), ZoneId.systemDefault()));
           }
         }
+
         openSessionResp
             .sessionId(session.getId())
             .setCode(TSStatusCode.SUCCESS_STATUS.getStatusCode())

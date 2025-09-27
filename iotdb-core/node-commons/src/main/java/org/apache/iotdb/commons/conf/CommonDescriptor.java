@@ -298,6 +298,12 @@ public class CommonDescriptor {
                 "password_reuse_interval_seconds",
                 String.valueOf(config.getPasswordReuseIntervalDays()))));
 
+    config.setPasswordStaleWarningDays(
+        Long.parseLong(
+            properties.getProperty(
+                "password_stale_warning_days",
+                String.valueOf(config.getPasswordStaleWarningDays()))));
+
     loadRetryProperties(properties);
     loadBinaryAllocatorProps(properties);
   }

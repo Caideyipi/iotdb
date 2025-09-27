@@ -928,8 +928,10 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
       return RpcUtils.getStatus(openSessionResp.getCode(), openSessionResp.getMessage());
     }
 
-    Long timeToExpire = SESSION_MANAGER.checkPasswordExpiration(username, password);
-    if (timeToExpire != null && timeToExpire <= System.currentTimeMillis()) {
+    Pair<Long, Long> expirationAndModifiedTime =
+        SESSION_MANAGER.checkPasswordExpiration(username, password);
+    if (expirationAndModifiedTime != null
+        && expirationAndModifiedTime.getLeft() <= System.currentTimeMillis()) {
       return RpcUtils.getStatus(
           TSStatusCode.ILLEGAL_PASSWORD.getStatusCode(),
           "Password has expired, please use \"ALTER USER\" to change to a new one");

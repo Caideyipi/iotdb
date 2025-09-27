@@ -454,6 +454,7 @@ public class CommonConfig {
   // an old password cannot be reused within the given interval if >= 0.
   private long passwordReuseIntervalDays = -1;
   private boolean mayBypassPasswordCheckInException = true;
+  private long passwordStaleWarningDays = 30;
 
   /** whether to enable the audit log * */
   private boolean enableAuditLog = false;
@@ -2678,7 +2679,7 @@ public class CommonConfig {
   }
 
   public void setPasswordReuseIntervalDays(long passwordReuseIntervalDays) {
-    this.passwordReuseIntervalDays = passwordReuseIntervalDays;
+    this.passwordReuseIntervalDays = passwordReuseIntervalDays == 0 ? 1 : passwordReuseIntervalDays;
   }
 
   public boolean isMayBypassPasswordCheckInException() {
@@ -2745,5 +2746,13 @@ public class CommonConfig {
 
   public void setAuditableOperationResult(String auditableOperationResult) {
     this.auditableOperationResult = auditableOperationResult;
+  }
+
+  public long getPasswordStaleWarningDays() {
+    return passwordStaleWarningDays;
+  }
+
+  public void setPasswordStaleWarningDays(long passwordStaleWarningDays) {
+    this.passwordStaleWarningDays = passwordStaleWarningDays;
   }
 }

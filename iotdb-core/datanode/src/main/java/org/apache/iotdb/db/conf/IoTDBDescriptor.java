@@ -1033,6 +1033,14 @@ public class IoTDBDescriptor {
                     "password_reuse_interval_days",
                     String.valueOf(commonDescriptor.getConfig().getPasswordReuseIntervalDays()))));
 
+    commonDescriptor
+        .getConfig()
+        .setPasswordStaleWarningDays(
+            Long.parseLong(
+                properties.getProperty(
+                    "password_stale_warning_days",
+                    String.valueOf(commonDescriptor.getConfig().getPasswordStaleWarningDays()))));
+
     loadWALProps(properties);
 
     // Timed flush memtable
@@ -2416,6 +2424,14 @@ public class IoTDBDescriptor {
                       "password_reuse_interval_days",
                       String.valueOf(
                           commonDescriptor.getConfig().getPasswordReuseIntervalDays()))));
+
+      commonDescriptor
+          .getConfig()
+          .setPasswordStaleWarningDays(
+              Long.parseLong(
+                  properties.getProperty(
+                      "password_stale_warning_days",
+                      String.valueOf(commonDescriptor.getConfig().getPasswordStaleWarningDays()))));
 
       conf.setEnablePartialInsert(
           Boolean.parseBoolean(

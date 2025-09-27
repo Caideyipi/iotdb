@@ -599,6 +599,13 @@ public class IoTDBConnection implements Connection {
               expirationDateStr);
         }
       }
+
+      String staleInformer = "Warning: Your password has not been changed";
+      int staleIndex = message.indexOf(staleInformer);
+      if (staleIndex != -1) {
+        String expirationDateStr = message.substring(staleIndex);
+        logger.warn(expirationDateStr);
+      }
     } catch (TException e) {
       transport.close();
       if (e.getMessage().contains("Required field 'client_protocol' was not present!")) {
