@@ -981,8 +981,11 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
         .setDatabase(databaseName.getFullPath())
         .setPrivilegeType(PrivilegeType.MANAGE_DATABASE)
         .setAuditLogOperation(AuditLogOperation.DDL);
-    // root.__audit can never be created or alter
     if (TREE_MODEL_AUDIT_DATABASE_PATH.equals(databaseName)) {
+      if (AuthorityChecker.INTERNAL_AUDIT_USER.equals(auditEntity.getUsername())) {
+        // root.__audit can never be created or alter by other users
+        return SUCCEED;
+      }
       recordObjectAuthenticationAuditLog(auditEntity.setResult(false), databaseName::getFullPath);
       return new TSStatus(TSStatusCode.NO_PERMISSION.getStatusCode())
           .setMessage(String.format(READ_ONLY_DB_ERROR_MSG, TREE_MODEL_AUDIT_DATABASE));
@@ -1672,23 +1675,23 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   @Override
   public TSStatus visitActivate(
       ActivateStatement activateStatement, TreeAccessCheckContext context) {
-    return checkActiveManagement(context.getUsername());
+    return checkActiveManagement(context);
   }
 
   @Override
   public TSStatus visitShowActivation(
       ShowActivationStatement showActivationStatement, TreeAccessCheckContext context) {
-    return checkActiveManagement(context.getUsername());
+    return checkActiveManagement(context);
   }
 
   @Override
   public TSStatus visitShowSystemInfo(
       ShowSystemInfoStatement showSystemInfoStatement, TreeAccessCheckContext context) {
-    return checkActiveManagement(context.getUsername());
+    return checkActiveManagement(context);
   }
 
-  private TSStatus checkActiveManagement(String userName) {
-    return checkGlobalAuth(userName, PrivilegeType.MAINTAIN);
+  private TSStatus checkActiveManagement(IAuditEntity auditEntity) {
+    return checkGlobalAuth(auditEntity, PrivilegeType.MAINTAIN, () -> "");
   }
 
   public TSStatus visitLoadConfiguration(

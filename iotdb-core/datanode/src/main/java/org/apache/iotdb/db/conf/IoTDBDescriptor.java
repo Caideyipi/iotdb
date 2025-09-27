@@ -18,7 +18,6 @@
  */
 package org.apache.iotdb.db.conf;
 
-import org.apache.iotdb.commons.audit.AuditLogOperation;
 import org.apache.iotdb.commons.binaryallocator.BinaryAllocator;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
@@ -36,7 +35,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TCQConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TGlobalConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TRatisConfig;
 import org.apache.iotdb.consensus.config.PipeConsensusConfig;
-import org.apache.iotdb.db.audit.AuditLogStorage;
 import org.apache.iotdb.db.consensus.DataRegionConsensusImpl;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.pipe.resource.log.PipePeriodicalLogReducer;
@@ -98,7 +96,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongConsumer;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class IoTDBDescriptor {
 
@@ -3112,37 +3109,6 @@ public class IoTDBDescriptor {
         Optional.ofNullable(properties.getProperty("black_ip_list", conf.getRawBlackIPList()))
             .map(value -> value.split(","))
             .orElse(new String[0]));
-
-    conf.setEnableAuditLog(
-        Boolean.parseBoolean(
-            Optional.ofNullable(
-                    properties.getProperty(
-                        "enable_audit_log", String.valueOf(conf.isEnableAuditLog())))
-                .map(String::trim)
-                .orElse(String.valueOf(conf.isEnableAuditLog()))));
-
-    if (properties.getProperty("audit_log_storage") != null) {
-      conf.setAuditLogStorage(
-          Arrays.stream(properties.getProperty("audit_log_storage").split(","))
-              .map(AuditLogStorage::valueOf)
-              .collect(Collectors.toList()));
-    }
-
-    if (properties.getProperty("audit_log_operation") != null) {
-      conf.setAuditableOperationType(
-          Arrays.stream(properties.getProperty("audit_log_operation").split(","))
-              .map(AuditLogOperation::valueOf)
-              .collect(Collectors.toList()));
-    }
-
-    conf.setEnableAuditLogForNativeInsertApi(
-        Boolean.parseBoolean(
-            Optional.ofNullable(
-                    properties.getProperty(
-                        "enable_audit_log_for_native_insert_api",
-                        String.valueOf(conf.isEnableAuditLogForNativeInsertApi())))
-                .map(String::trim)
-                .orElse(String.valueOf(conf.isEnableAuditLogForNativeInsertApi()))));
   }
 
   private static class IoTDBDescriptorHolder {

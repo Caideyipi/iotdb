@@ -3799,7 +3799,7 @@ public class IoTDBConfig {
   void setBlackIPList(String[] blackIPList) {
     this.blackIPList = String.join(",", blackIPList);
   }
-  
+
   public void setModeMapSizeThreshold(int modeMapSizeThreshold) {
     this.modeMapSizeThreshold = modeMapSizeThreshold;
   }
