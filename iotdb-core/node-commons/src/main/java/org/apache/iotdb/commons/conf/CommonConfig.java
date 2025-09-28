@@ -2698,6 +2698,15 @@ public class CommonConfig {
     this.enableAuditLog = enableAuditLog;
   }
 
+  public String getAuditableOperationTypeInStr() {
+    StringBuilder result = new StringBuilder();
+    for (AuditLogOperation operation : auditableOperationType) {
+      result.append(operation.name()).append(",");
+    }
+    result.deleteCharAt(result.length() - 1);
+    return result.toString();
+  }
+
   public List<AuditLogOperation> getAuditableOperationType() {
     return auditableOperationType;
   }
@@ -2719,6 +2728,10 @@ public class CommonConfig {
       }
     }
     this.auditableOperationType = auditableOperationType;
+  }
+
+  public String getAuditableOperationLevelInStr() {
+    return auditableOperationLevel.name();
   }
 
   public PrivilegeLevel getAuditableOperationLevel() {

@@ -279,8 +279,8 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         DNAuditLogger.getInstance().setCoordinator(Coordinator.getInstance());
         AuditLogFields fields =
             new AuditLogFields(
-                null,
                 -1,
+                null,
                 null,
                 AuditEventType.CHANGE_AUDIT_OPTION,
                 AuditLogOperation.CONTROL,
@@ -295,7 +295,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
                 CommonDescriptor.getInstance().getConfig().getAuditableOperationLevel().toString(),
                 CommonDescriptor.getInstance().getConfig().getAuditableOperationResult(),
                 thisNode);
-        DNAuditLogger.getInstance().log(fields, logMessage);
+        DNAuditLogger.getInstance().log(fields, () -> logMessage);
       }
 
       if (isUsingPipeConsensus()) {
@@ -490,8 +490,11 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     String clusterId = runtimeConfiguration.getClusterId();
     storeClusterID(clusterId);
 
-    /* Store table info*/
+    /* Store table info */
     DataNodeTableCache.getInstance().init(runtimeConfiguration.getTableInfo());
+
+    /* Store audit log configuration */
+    CommonDescriptor.getInstance().loadAuditConfig(runtimeConfiguration.auditConfig);
   }
 
   /**
