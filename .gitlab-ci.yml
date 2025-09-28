@@ -791,7 +791,7 @@ owasp-dependency-check:
 
     # 生成聚合报告
     - echo "生成 OWASP 聚合报告..."
-    - mvn org.owasp:dependency-check-maven:aggregate -DossIndexUsername=${OSS_INDEX_USER} -DossIndexPassword=${OSS_INDEX_TOKEN} -DdataDirectory=/root/.m2/owasp -DnvdApiKey=${NVD_API_KEY} -s $MAVEN_SETTINGS_XML
+    - mvn org.owasp:dependency-check-maven:aggregate -DossIndexUsername=${OSS_INDEX_USER} -DossIndexPassword=${OSS_INDEX_TOKEN} -DdataDirectory=/root/.m2/owasp -DnvdApiKey=${NVD_API_KEY} -Dformats=HTML,XML,JSON -s $MAVEN_SETTINGS_XML
 
     # 生成时间戳用于报告命名
     - export REPORT_DATE=$(date +"%Y-%m-%d")

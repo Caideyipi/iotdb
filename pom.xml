@@ -1046,6 +1046,11 @@
                     <artifactId>xml-format-maven-plugin</artifactId>
                     <version>3.2.2</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>12.1.6</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
