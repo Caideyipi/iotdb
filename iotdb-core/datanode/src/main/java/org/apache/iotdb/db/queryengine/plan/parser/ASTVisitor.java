@@ -2503,7 +2503,6 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   }
 
   // Create Role
-
   @Override
   public Statement visitCreateRole(IoTDBSqlParser.CreateRoleContext ctx) {
     AuthorStatement authorStatement = new AuthorStatement(AuthorType.CREATE_ROLE);
@@ -2517,6 +2516,14 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
     AuthorStatement authorStatement = new AuthorStatement(AuthorType.UPDATE_USER);
     authorStatement.setUserName(parseIdentifier(ctx.userName.getText()));
     authorStatement.setNewPassword(parseStringLiteral(ctx.password.getText()));
+    return authorStatement;
+  }
+
+  @Override
+  public Statement visitRenameUser(IoTDBSqlParser.RenameUserContext ctx) {
+    AuthorStatement authorStatement = new AuthorStatement(AuthorType.RENAME_USER);
+    authorStatement.setUserName(parseIdentifier(ctx.username.getText()));
+    authorStatement.setNewUsername(parseIdentifier(ctx.newUsername.getText()));
     return authorStatement;
   }
 

@@ -83,7 +83,7 @@ dmlStatement
     ;
 
 dclStatement
-    : createUser | createRole | alterUser | grantUser | grantRole | grantRoleToUser
+    : createUser | createRole | alterUser | renameUser | grantUser | grantRole | grantRoleToUser
     | revokeUser |  revokeRole | revokeRoleFromUser | dropUser | dropRole
     | listUser | listRole | listPrivilegesUser | listPrivilegesRole
     ;
@@ -1080,6 +1080,11 @@ createRole
 // Alter Password
 alterUser
     : ALTER USER userName=usernameWithRoot SET PASSWORD password=STRING_LITERAL
+    ;
+
+// Rename user
+renameUser
+    : ALTER USER username=usernameWithRoot RENAME TO newUsername=identifier
     ;
 
 // Grant User Privileges

@@ -638,16 +638,21 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
     if (req.getAuthorType() < 0 || req.getAuthorType() >= AuthorType.values().length) {
       throw new IndexOutOfBoundsException("Invalid Author Type ordinal");
     }
-    ConfigPhysicalPlanType configPhysicalPlanType =
-        ConfigPhysicalPlanType.values()[
-            req.getAuthorType() + ConfigPhysicalPlanType.CreateUser.ordinal()];
-    switch (configPhysicalPlanType) {
-      case UpdateUser:
-        configPhysicalPlanType = ConfigPhysicalPlanType.UpdateUserV2;
-        break;
-      case DropUser:
-        configPhysicalPlanType = ConfigPhysicalPlanType.DropUserV2;
-        break;
+    ConfigPhysicalPlanType configPhysicalPlanType;
+    if (req.getAuthorType() == AuthorType.RENAME_USER.ordinal()) {
+      configPhysicalPlanType = ConfigPhysicalPlanType.RenameUser;
+    } else {
+      configPhysicalPlanType =
+          ConfigPhysicalPlanType.values()[
+              req.getAuthorType() + ConfigPhysicalPlanType.CreateUser.ordinal()];
+      switch (configPhysicalPlanType) {
+        case UpdateUser:
+          configPhysicalPlanType = ConfigPhysicalPlanType.UpdateUserV2;
+          break;
+        case DropUser:
+          configPhysicalPlanType = ConfigPhysicalPlanType.DropUserV2;
+          break;
+      }
     }
     return configManager.operatePermission(
         new AuthorTreePlan(
@@ -659,7 +664,8 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
             req.getPermissions(),
             req.isGrantOpt(),
             AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getNodeNameList())),
-            req.getExecutedByUserID()));
+            req.getExecutedByUserID(),
+            req.getNewUsername()));
   }
 
   @Override
@@ -680,7 +686,8 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
                     req.getPermissions(),
                     req.isGrantOpt(),
                     AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getNodeNameList())),
-                    req.getExecutedByUserID()));
+                    req.getExecutedByUserID(),
+                    req.getNewUsername()));
     final TAuthorizerResp resp = new TAuthorizerResp(dataSet.getStatus());
     resp.setMemberInfo(dataSet.getMemberList());
     resp.setPermissionInfo(dataSet.getPermissionInfoResp());
@@ -694,16 +701,21 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
     if (req.getAuthorType() < 0 || req.getAuthorType() >= AuthorRType.values().length) {
       throw new IndexOutOfBoundsException("Invalid Author Type ordinal");
     }
-    ConfigPhysicalPlanType configPhysicalPlanType =
-        ConfigPhysicalPlanType.values()[
-            req.getAuthorType() + ConfigPhysicalPlanType.RCreateUser.ordinal()];
-    switch (configPhysicalPlanType) {
-      case RUpdateUser:
-        configPhysicalPlanType = ConfigPhysicalPlanType.RUpdateUserV2;
-        break;
-      case RDropUser:
-        configPhysicalPlanType = ConfigPhysicalPlanType.RDropUserV2;
-        break;
+    ConfigPhysicalPlanType configPhysicalPlanType;
+    if (req.getAuthorType() == AuthorRType.RENAME_USER.ordinal()) {
+      configPhysicalPlanType = ConfigPhysicalPlanType.RRenameUser;
+    } else {
+      configPhysicalPlanType =
+          ConfigPhysicalPlanType.values()[
+              req.getAuthorType() + ConfigPhysicalPlanType.RCreateUser.ordinal()];
+      switch (configPhysicalPlanType) {
+        case RUpdateUser:
+          configPhysicalPlanType = ConfigPhysicalPlanType.RUpdateUserV2;
+          break;
+        case RDropUser:
+          configPhysicalPlanType = ConfigPhysicalPlanType.RDropUserV2;
+          break;
+      }
     }
     return configManager.operatePermission(
         new AuthorRelationalPlan(
@@ -715,7 +727,8 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
             req.getPermissions(),
             req.isGrantOpt(),
             req.getPassword(),
-            req.getExecutedByUserID()));
+            req.getExecutedByUserID(),
+            req.getNewUsername()));
   }
 
   @Override
@@ -736,7 +749,8 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
                     req.getPermissions(),
                     req.isGrantOpt(),
                     req.getPassword(),
-                    req.getExecutedByUserID()));
+                    req.getExecutedByUserID(),
+                    ""));
     final TAuthorizerResp resp = new TAuthorizerResp(dataSet.getStatus());
     resp.setMemberInfo(dataSet.getMemberList());
     resp.setPermissionInfo(dataSet.getPermissionInfoResp());
