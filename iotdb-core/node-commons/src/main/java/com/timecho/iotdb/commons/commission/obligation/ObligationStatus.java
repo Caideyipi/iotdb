@@ -17,9 +17,9 @@
  * under the License.
  */
 
-package org.apache.iotdb.commons.license;
+package com.timecho.iotdb.commons.commission.obligation;
 
-public enum ActivateStatus {
+public enum ObligationStatus {
   // For ConfigNode
   ACTIVE_ACTIVATED("ACTIVE_ACTIVATED"),
   PASSIVE_ACTIVATED("PASSIVE_ACTIVATED"),
@@ -35,7 +35,7 @@ public enum ActivateStatus {
 
   private final String status;
 
-  ActivateStatus(String status) {
+  ObligationStatus(String status) {
     this.status = status;
   }
 

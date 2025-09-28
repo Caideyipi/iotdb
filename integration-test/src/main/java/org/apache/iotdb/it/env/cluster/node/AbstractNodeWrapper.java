@@ -494,11 +494,11 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
               + File.separator
               + "template-node-share"
               + File.separator
-              + (isSecurityTest() ? "security-lib" : "lib")
+              + (isSafeTest() ? "safe-lib" : "lib")
               + File.separator;
       File directory = new File(libPath);
       String osName = System.getProperty("os.name").toLowerCase();
-      String server_node_lib_path = "";
+      String server_node_lib_path = libPath + "*";
       if (directory.exists() && directory.isDirectory() && !osName.contains("win")) {
         File[] files = directory.listFiles();
         for (File file : files) {
@@ -507,8 +507,6 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
             break;
           }
         }
-      } else {
-        server_node_lib_path = TEMPLATE_NODE_LIB_PATH;
       }
       startCmd.addAll(
           Arrays.asList(
@@ -838,7 +836,7 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
     return portList;
   }
 
-  private boolean isSecurityTest() {
-    return System.getProperty("integrationTest.securityTest", "false").equalsIgnoreCase("true");
+  private boolean isSafeTest() {
+    return System.getProperty("integrationTest.safeTest", "false").equalsIgnoreCase("true");
   }
 }

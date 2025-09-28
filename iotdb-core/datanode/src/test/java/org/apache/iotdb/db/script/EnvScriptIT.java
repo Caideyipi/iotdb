@@ -20,6 +20,7 @@ package org.apache.iotdb.db.script;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /** This test case is strange that it relies on the maven output files */
+@Ignore("Ignore this case because it in integration test")
 public class EnvScriptIT {
 
   @Before

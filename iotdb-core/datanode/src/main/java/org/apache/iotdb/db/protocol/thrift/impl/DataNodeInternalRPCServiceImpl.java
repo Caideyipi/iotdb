@@ -62,7 +62,6 @@ import org.apache.iotdb.commons.consensus.index.ProgressIndexType;
 import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.exception.MetadataException;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.path.ExtendedPartialPath;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
@@ -313,6 +312,7 @@ import org.apache.iotdb.trigger.api.enums.FailureStrategy;
 import org.apache.iotdb.trigger.api.enums.TriggerEvent;
 
 import com.google.common.collect.ImmutableList;
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 import org.apache.thrift.TException;
 import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.exception.NotImplementedException;
@@ -2137,8 +2137,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     }
     resp.setActivateStatus(
         config.isUnactivated()
-            ? ActivateStatus.UNACTIVATED.toString()
-            : ActivateStatus.ACTIVATED.toString());
+            ? ObligationStatus.UNACTIVATED.toString()
+            : ObligationStatus.ACTIVATED.toString());
 
     // Update pipe meta if necessary
     if (req.isNeedPipeMetaList()) {

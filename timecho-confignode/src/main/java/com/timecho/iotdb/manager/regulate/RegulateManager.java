@@ -25,7 +25,6 @@ import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.structure.SortedProperties;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
@@ -38,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.timecho.iotdb.commons.commission.Bandit;
 import com.timecho.iotdb.commons.commission.Lottery;
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 import com.timecho.iotdb.commons.utils.OSUtils;
 import com.timecho.iotdb.manager.TimechoConfigManager;
 import org.apache.commons.codec.binary.Base32;
@@ -539,25 +539,26 @@ public class RegulateManager {
   }
 
   public TClusterActivationStatus calculateClusterActivationStatus() {
-    Map<Integer, ActivateStatus> activationMap =
+    Map<Integer, ObligationStatus> activationMap =
         configManager.getLoadManager().getNodeActivateStatus().entrySet().stream()
             .collect(
-                Collectors.toMap(Entry::getKey, entry -> ActivateStatus.valueOf(entry.getValue())));
-    Collection<ActivateStatus> activateStatuses = activationMap.values();
-    if (activateStatuses.stream().allMatch(ActivateStatus::isFullyActivated)) {
+                Collectors.toMap(
+                    Entry::getKey, entry -> ObligationStatus.valueOf(entry.getValue())));
+    Collection<ObligationStatus> activateStatuses = activationMap.values();
+    if (activateStatuses.stream().allMatch(ObligationStatus::isFullyActivated)) {
       return TClusterActivationStatus.ACTIVATED;
-    } else if (activateStatuses.stream().allMatch(ActivateStatus::isActivated)) {
+    } else if (activateStatuses.stream().allMatch(ObligationStatus::isActivated)) {
       return TClusterActivationStatus.PARTLY_ACTIVATED;
-    } else if (activateStatuses.stream().anyMatch(ActivateStatus::isUnactivated)) {
+    } else if (activateStatuses.stream().anyMatch(ObligationStatus::isUnactivated)) {
       return TClusterActivationStatus.UNACTIVATED;
-    } else if (activateStatuses.stream().anyMatch(ActivateStatus::isActivated)) {
+    } else if (activateStatuses.stream().anyMatch(ObligationStatus::isActivated)) {
       return TClusterActivationStatus.PARTLY_ACTIVATED;
     } else {
       return TClusterActivationStatus.UNKNOWN;
     }
   }
 
-  public ActivateStatus getActivateStatus() {
+  public ObligationStatus getActivateStatus() {
     return lottery.getActivateStatus();
   }
 

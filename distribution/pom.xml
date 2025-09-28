@@ -29,18 +29,26 @@
     <artifactId>iotdb-distribution</artifactId>
     <packaging>pom</packaging>
     <name>IoTDB: Distribution</name>
+    <properties>
+        <proguard.config>proguard.conf</proguard.config>
+        <jdk.library>${java.home}/jmods</jdk.library>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.iotdb</groupId>
             <artifactId>iotdb-server</artifactId>
             <version>2.0.6-SNAPSHOT</version>
-            <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.reflections</groupId>
+                    <artifactId>reflections</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.iotdb</groupId>
             <artifactId>iotdb-cli</artifactId>
             <version>2.0.6-SNAPSHOT</version>
-            <type>zip</type>
             <exclusions>
                 <exclusion>
                     <groupId>com.timecho.iotdb</groupId>
@@ -120,7 +128,6 @@
             <groupId>org.apache.iotdb</groupId>
             <artifactId>iotdb-confignode</artifactId>
             <version>2.0.6-SNAPSHOT</version>
-            <type>zip</type>
             <exclusions>
                 <exclusion>
                     <groupId>com.timecho.iotdb</groupId>
@@ -200,7 +207,6 @@
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-server</artifactId>
             <version>2.0.6-SNAPSHOT</version>
-            <type>zip</type>
             <exclusions>
                 <exclusion>
                     <groupId>com.timecho.iotdb</groupId>
@@ -260,7 +266,6 @@
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timecho-confignode</artifactId>
             <version>2.0.6-SNAPSHOT</version>
-            <type>zip</type>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.iotdb</groupId>
@@ -352,9 +357,9 @@
                             <outputDirectory>${project.basedir}/target</outputDirectory>
                             <outjar>timechodb-server-${project.version}.jar</outjar>
                             <includeDependency>true</includeDependency>
-                            <proguardInclude>${project.basedir}/src/security/proguard.conf</proguardInclude>
+                            <proguardInclude>${project.basedir}/src/security/${proguard.config}</proguardInclude>
                             <libs>
-                                <lib>${java.home}/</lib>
+                                <lib>${jdk.library}</lib>
                             </libs>
                             <options>
                                 <option>-printmapping ${project.basedir}/target/obfuscation-mapping.txt</option>
@@ -422,6 +427,58 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- JAR 签名：使用 jarsigner 对生成的核心 JAR 进行签名。
+                 需提供属性：-Dkeystore=/path/ks.jks -Dstorepass=xxx -Dkeypass=xxx -Dalias=timechodb
+                 可跳过：-Djarsigner.skip=true -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-core-jars</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${jarsigner.skip}</skip>
+                            <archiveDirectory>${project.build.directory}</archiveDirectory>
+                            <includes>
+                                <include>timechodb-server-${project.version}.jar</include>
+                                <include>common-dependency.jar</include>
+                                <!-- <include>dependency/*.jar</include> -->
+                            </includes>
+                            <keystore>${keystore}</keystore>
+                            <storepass>${storepass}</storepass>
+                            <keypass>${keypass}</keypass>
+                            <alias>${alias}</alias>
+                            <!-- <certchain>${chain}</certchain> -->
+                            <arguments>
+                                <argument>-tsa</argument>
+                                <argument>http://timestamp.digicert.com</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/dependency</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -440,16 +497,16 @@
                             <finalName>timechodb-${project.version}</finalName>
                         </configuration>
                     </execution>
-                    <!-- Package security binaries-->
+                    <!-- Package safe binaries-->
                     <execution>
-                        <id>security-bin</id>
+                        <id>safe-bin</id>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <phase>package</phase>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/assembly/all-security.xml</descriptor>
+                                <descriptor>src/assembly/all-safe.xml</descriptor>
                             </descriptors>
                             <finalName>timechodb-${project.version}</finalName>
                         </configuration>
@@ -624,6 +681,31 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>with-integration-tests</id>
+            <properties>
+                <proguard.config>proguard-it.conf</proguard.config>
+                <jarsigner.skip>true</jarsigner.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>.java-9-below</id>
+            <activation>
+                <jdk>(,9)</jdk>
+            </activation>
+            <properties>
+                <jdk.library>${java.home}/lib</jdk.library>
+            </properties>
+        </profile>
+        <profile>
+            <id>.java-9-and-above</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <properties>
+                <jdk.library>${java.home}/jmods</jdk.library>
+            </properties>
         </profile>
     </profiles>
 </project>

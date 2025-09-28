@@ -20,12 +20,12 @@
 
 -->
 <assembly>
-    <id>security-bin</id>
+    <id>safe-bin</id>
     <formats>
         <format>dir</format>
         <format>zip</format>
     </formats>
-    <baseDirectory>timechodb-${project.version}-security-bin</baseDirectory>
+    <baseDirectory>timechodb-${project.version}-safe-bin</baseDirectory>
     <!-- <dependencySets>
         <dependencySet>
             <outputDirectory>lib</outputDirectory>
@@ -68,14 +68,14 @@
             <outputDirectory>conf</outputDirectory>
             <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf</directory>
             <excludes>
-                <exclude>security/**</exclude>
+                <exclude>safe/**</exclude>
                 <exclude>iotdb-system.properties</exclude>
                 <exclude>**/ainode-env.*</exclude>
             </excludes>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
-            <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf/security</directory>
+            <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf/safe</directory>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>

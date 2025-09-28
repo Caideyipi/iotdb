@@ -225,9 +225,13 @@ public class ClusterConstant {
           + File.separator
           + "template-node-share"
           + File.separator
-          + "lib"
+          + (isSafeTest() ? "safe-lib" : "lib")
           + File.separator
           + "*";
+
+  public static boolean isSafeTest() {
+    return System.getProperty("integrationTest.safeTest", "false").equalsIgnoreCase("true");
+  }
 
   // Env Constant
   public static final int NODE_START_TIMEOUT = 100;

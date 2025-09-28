@@ -125,7 +125,7 @@
                         </goals>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/assembly/all-security.xml</descriptor>
+                                <descriptor>src/assembly/all-safe.xml</descriptor>
                             </descriptors>
                             <finalName>timechodb-${project.version}</finalName>
                         </configuration>

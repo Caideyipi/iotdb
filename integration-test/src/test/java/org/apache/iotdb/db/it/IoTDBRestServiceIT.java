@@ -20,6 +20,7 @@ package org.apache.iotdb.db.it;
 
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.env.cluster.ClusterConstant;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
@@ -86,6 +87,7 @@ public class IoTDBRestServiceIT {
 
   @Test
   public void ping() {
+    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     HttpGet httpGet = new HttpGet("http://127.0.0.1:" + port + "/ping");
     CloseableHttpResponse response = null;
@@ -333,6 +335,7 @@ public class IoTDBRestServiceIT {
 
   @Test
   public void errorInsertTablet() {
+    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpResponse response = null;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     try {
@@ -385,6 +388,7 @@ public class IoTDBRestServiceIT {
 
   @Test
   public void insertAndQuery() {
+    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     rightInsertTablet(httpClient);
     query(httpClient);
@@ -728,6 +732,7 @@ public class IoTDBRestServiceIT {
 
   @Test
   public void queryWithUnsetAuthorization() {
+    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpResponse response = null;
     try {
       CloseableHttpClient httpClient = HttpClientBuilder.create().build();
@@ -773,6 +778,7 @@ public class IoTDBRestServiceIT {
 
   @Test
   public void queryWithWrongAuthorization() {
+    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpResponse response = null;
     try {
       CloseableHttpClient httpClient = HttpClientBuilder.create().build();

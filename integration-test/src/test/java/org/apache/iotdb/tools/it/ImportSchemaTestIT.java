@@ -21,6 +21,7 @@ package org.apache.iotdb.tools.it;
 
 import org.apache.iotdb.cli.it.AbstractScriptIT;
 import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.env.cluster.ClusterConstant;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
@@ -55,8 +56,14 @@ public class ImportSchemaTestIT extends AbstractScriptIT {
     port = EnvFactory.getEnv().getPort();
     toolsPath = EnvFactory.getEnv().getToolsPath();
     libPath = EnvFactory.getEnv().getLibPath();
-    homePath =
-        libPath.substring(0, libPath.lastIndexOf(File.separator + "lib" + File.separator + "*"));
+    if (ClusterConstant.isSafeTest()) {
+      homePath =
+          libPath.substring(
+              0, libPath.lastIndexOf(File.separator + "safe-lib" + File.separator + "*"));
+    } else {
+      homePath =
+          libPath.substring(0, libPath.lastIndexOf(File.separator + "lib" + File.separator + "*"));
+    }
   }
 
   @AfterClass

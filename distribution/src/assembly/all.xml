@@ -26,29 +26,14 @@
         <format>zip</format>
     </formats>
     <baseDirectory>timechodb-${project.version}-bin</baseDirectory>
-    <dependencySets>
-        <dependencySet>
-            <includes>
-                <!-- lib -->
-                <include>*:iotdb-server:zip:*</include>
-                <include>*:iotdb-cli:zip:*</include>
-                <include>*:iotdb-confignode:zip:*</include>
-                <include>*:timecho-server:zip:*</include>
-                <include>*:timecho-confignode:zip:*</include>
-            </includes>
-            <outputDirectory>${file.separator}</outputDirectory>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <unpack>true</unpack>
-            <unpackOptions>
-                <excludes>
-                    <exclude>tools/**</exclude>
-                    <exclude>conf/**</exclude>
-                    <exclude>sbin/**</exclude>
-                </excludes>
-            </unpackOptions>
-        </dependencySet>
-    </dependencySets>
     <fileSets>
+        <fileSet>
+            <outputDirectory>lib</outputDirectory>
+            <directory>${project.build.directory}/dependency</directory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
             <directory>${project.basedir}/../iotdb-core/datanode/src/assembly/resources/conf</directory>
@@ -61,7 +46,7 @@
             <outputDirectory>conf</outputDirectory>
             <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf</directory>
             <excludes>
-                <exclude>security/**</exclude>
+                <exclude>safe/**</exclude>
             </excludes>
         </fileSet>
         <fileSet>

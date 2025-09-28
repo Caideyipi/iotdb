@@ -21,10 +21,10 @@ package com.timecho.iotdb.commons.commission;
 
 import org.apache.iotdb.common.rpc.thrift.TLicense;
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.commons.license.ActivateStatus;
 
 import com.timecho.iotdb.commons.commission.obligation.Obligation;
 import com.timecho.iotdb.commons.commission.obligation.ObligationAllowAbsent;
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +96,7 @@ public class Lottery {
   protected final Runnable onLicenseChange;
   private static final Runnable DO_NOTHING_WHEN_LICENSE_CHANGE = () -> {};
 
-  private ActivateStatus oldActivateStatus = ActivateStatus.UNKNOWN;
+  private ObligationStatus oldActivateStatus = ObligationStatus.UNKNOWN;
 
   // endregion
 
@@ -252,7 +252,7 @@ public class Lottery {
   }
 
   public void logActivateStatus(boolean onlyForStatusChange) {
-    ActivateStatus nowActivateStatus = getActivateStatus();
+    ObligationStatus nowActivateStatus = getActivateStatus();
     if (onlyForStatusChange) {
       if (!nowActivateStatus.equals(oldActivateStatus)) {
         logger.info(
@@ -356,18 +356,18 @@ public class Lottery {
     licenseSource = LicenseSource.UNKNOWN;
   }
 
-  public ActivateStatus getActivateStatus() {
+  public ObligationStatus getActivateStatus() {
     if (this.isActive()) {
       if (this.isActivated()) {
-        return ActivateStatus.ACTIVE_ACTIVATED;
+        return ObligationStatus.ACTIVE_ACTIVATED;
       } else {
-        return ActivateStatus.ACTIVE_UNACTIVATED;
+        return ObligationStatus.ACTIVE_UNACTIVATED;
       }
     } else {
       if (this.isActivated()) {
-        return ActivateStatus.PASSIVE_ACTIVATED;
+        return ObligationStatus.PASSIVE_ACTIVATED;
       } else {
-        return ActivateStatus.PASSIVE_UNACTIVATED;
+        return ObligationStatus.PASSIVE_UNACTIVATED;
       }
     }
   }

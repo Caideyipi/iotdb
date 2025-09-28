@@ -40,8 +40,22 @@
     </dependencySets>
     <fileSets>
         <fileSet>
-            <outputDirectory>security-lib</outputDirectory>
-            <directory>${integrationTest.securityDistributionPath}/lib</directory>
+            <outputDirectory>safe-lib</outputDirectory>
+            <directory>${integrationTest.safeDistributionPath}/lib</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>safe-lib</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/library-udf/target/</directory>
+            <includes>
+                <include>library-udf-${project.version}-jar-with-dependencies.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>safe-lib</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>integration-test-${project.version}.jar</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>

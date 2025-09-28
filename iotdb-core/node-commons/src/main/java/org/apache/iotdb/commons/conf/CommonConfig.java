@@ -25,12 +25,12 @@ import org.apache.iotdb.commons.client.property.ClientPoolProperty.DefaultProper
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.enums.HandleSystemErrorStrategy;
 import org.apache.iotdb.commons.enums.PipeRateAverage;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.utils.FileUtils;
 import org.apache.iotdb.commons.utils.KillPoint.KillPoint;
 import org.apache.iotdb.rpc.RpcUtils;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 import org.apache.tsfile.fileSystem.FSType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -771,14 +771,14 @@ public class CommonConfig {
     this.lastStatus = this.status;
     this.lastStatusReason = this.statusReason;
     this.status = NodeStatus.ReadOnly;
-    this.statusReason = ActivateStatus.UNACTIVATED.toString();
+    this.statusReason = ObligationStatus.UNACTIVATED.toString();
     logger.warn(
         "DataNode's activation status changed: activated -> unactivated. Only query statements are permitted!");
   }
 
   public boolean isUnactivated() {
     return status.equals(NodeStatus.ReadOnly)
-        && Objects.equals(statusReason, ActivateStatus.UNACTIVATED.toString());
+        && Objects.equals(statusReason, ObligationStatus.UNACTIVATED.toString());
   }
 
   public synchronized void setActivated() {

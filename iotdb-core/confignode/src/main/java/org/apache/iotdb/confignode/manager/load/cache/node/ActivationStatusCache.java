@@ -19,8 +19,9 @@
 
 package org.apache.iotdb.confignode.manager.load.cache.node;
 
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
+
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 
 public class ActivationStatusCache {
   // After expireTime, active node will be treated as disconnected.
@@ -29,20 +30,20 @@ public class ActivationStatusCache {
           * 1000_000L;
   private boolean fake = false;
   private final long timestamp;
-  private final ActivateStatus activateStatus;
+  private final ObligationStatus activateStatus;
 
   public ActivationStatusCache() {
     this.fake = true;
     this.timestamp = 0;
-    this.activateStatus = ActivateStatus.UNKNOWN;
+    this.activateStatus = ObligationStatus.UNKNOWN;
   }
 
-  public ActivationStatusCache(long timestamp, ActivateStatus activateStatus) {
+  public ActivationStatusCache(long timestamp, ObligationStatus activateStatus) {
     this.timestamp = timestamp;
     this.activateStatus = activateStatus;
   }
 
-  public ActivateStatus getActivateStatus() {
+  public ObligationStatus getActivateStatus() {
     return activateStatus;
   }
 

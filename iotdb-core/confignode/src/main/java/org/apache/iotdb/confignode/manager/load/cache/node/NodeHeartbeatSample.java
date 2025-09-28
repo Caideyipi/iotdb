@@ -22,15 +22,16 @@ package org.apache.iotdb.confignode.manager.load.cache.node;
 import org.apache.iotdb.ainode.rpc.thrift.TAIHeartbeatResp;
 import org.apache.iotdb.common.rpc.thrift.TLoadSample;
 import org.apache.iotdb.commons.cluster.NodeStatus;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.manager.load.cache.AbstractHeartbeatSample;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatResp;
 
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
+
 /** NodeHeartbeatSample records the heartbeat sample of a Node. */
 public class NodeHeartbeatSample extends AbstractHeartbeatSample {
 
-  private final ActivateStatus activateStatus;
+  private final ObligationStatus activateStatus;
 
   private final NodeStatus status;
   private final String statusReason;
@@ -40,7 +41,7 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
   /** Constructor for generating default sample with specified status */
   public NodeHeartbeatSample(NodeStatus status) {
     super(System.nanoTime());
-    this.activateStatus = ActivateStatus.UNKNOWN;
+    this.activateStatus = ObligationStatus.UNKNOWN;
     this.status = status;
     this.statusReason = null;
     this.loadSample = null;
@@ -49,7 +50,7 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
   /** Constructor for generating default sample with specified status and timestamp */
   public NodeHeartbeatSample(long sampleNanoTimestamp, NodeStatus status) {
     super(sampleNanoTimestamp);
-    this.activateStatus = ActivateStatus.UNKNOWN;
+    this.activateStatus = ObligationStatus.UNKNOWN;
     this.status = status;
     this.statusReason = null;
     this.loadSample = null;
@@ -62,9 +63,9 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
     this.loadSample = heartbeatResp.isSetLoadSample() ? heartbeatResp.getLoadSample() : null;
     if (heartbeatResp.getActivateStatus() == null) {
-      this.activateStatus = ActivateStatus.UNKNOWN;
+      this.activateStatus = ObligationStatus.UNKNOWN;
     } else {
-      this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
+      this.activateStatus = ObligationStatus.valueOf(heartbeatResp.getActivateStatus());
     }
   }
 
@@ -74,9 +75,9 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
     this.status = NodeStatus.parse(heartbeatResp.getStatus());
     this.statusReason = heartbeatResp.isSetStatusReason() ? heartbeatResp.getStatusReason() : null;
     if (heartbeatResp.getActivateStatus() == null) {
-      this.activateStatus = ActivateStatus.UNKNOWN;
+      this.activateStatus = ObligationStatus.UNKNOWN;
     } else {
-      this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
+      this.activateStatus = ObligationStatus.valueOf(heartbeatResp.getActivateStatus());
     }
     if (heartbeatResp.isSetLoadSample()) {
       this.loadSample = heartbeatResp.getLoadSample();
@@ -91,9 +92,9 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
     this.status = NodeStatus.Running;
     this.statusReason = null;
     if (heartbeatResp.getActivateStatus() == null) {
-      this.activateStatus = ActivateStatus.UNKNOWN;
+      this.activateStatus = ObligationStatus.UNKNOWN;
     } else {
-      this.activateStatus = ActivateStatus.valueOf(heartbeatResp.getActivateStatus());
+      this.activateStatus = ObligationStatus.valueOf(heartbeatResp.getActivateStatus());
     }
     this.loadSample = null;
   }
@@ -102,7 +103,7 @@ public class NodeHeartbeatSample extends AbstractHeartbeatSample {
     return status;
   }
 
-  public ActivateStatus getActivateStatus() {
+  public ObligationStatus getActivateStatus() {
     return activateStatus;
   }
 

@@ -81,6 +81,9 @@
     <profiles>
         <profile>
             <id>get-jar-with-dependencies</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -110,6 +113,34 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-resources-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jarsigner-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign-core-jars</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${jarsigner.skip}</skip>
+                                    <archiveDirectory>${project.build.directory}</archiveDirectory>
+                                    <keystore>${keystore}</keystore>
+                                    <storepass>${storepass}</storepass>
+                                    <keypass>${keypass}</keypass>
+                                    <alias>${alias}</alias>
+                                    <arguments>
+                                        <argument>-tsa</argument>
+                                        <argument>http://timestamp.digicert.com</argument>
+                                        <argument>-signedjar</argument>
+                                        <argument>${project.build.directory}/${project.build.finalName}-signed.jar</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

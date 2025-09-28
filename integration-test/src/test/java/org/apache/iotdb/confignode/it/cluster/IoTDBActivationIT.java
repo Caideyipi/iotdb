@@ -23,7 +23,6 @@ import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.exception.LicenseException;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
@@ -42,6 +41,7 @@ import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 
 import com.google.common.collect.ImmutableMap;
 import com.timecho.iotdb.commons.commission.Lottery;
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 import com.timecho.iotdb.manager.regulate.RegulateManager;
 import com.timecho.iotdb.session.Session;
 import org.apache.thrift.TException;
@@ -89,14 +89,14 @@ import static com.timecho.iotdb.commons.commission.Lottery.DATANODE_NUM_LIMIT_NA
 import static com.timecho.iotdb.commons.commission.Lottery.DISCONNECTION_FROM_ACTIVE_NODE_TIME_LIMIT_NAME;
 import static com.timecho.iotdb.commons.commission.Lottery.LICENSE_EXPIRE_TIMESTAMP_NAME;
 import static com.timecho.iotdb.commons.commission.Lottery.LICENSE_ISSUE_TIMESTAMP_NAME;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.ACTIVATED;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.ACTIVE_ACTIVATED;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.ACTIVE_UNACTIVATED;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.PASSIVE_ACTIVATED;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.PASSIVE_UNACTIVATED;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.UNACTIVATED;
+import static com.timecho.iotdb.commons.commission.obligation.ObligationStatus.UNKNOWN;
 import static com.timecho.iotdb.manager.regulate.RegulateManager.LICENSE_FILE_NAME;
-import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVATED;
-import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_ACTIVATED;
-import static org.apache.iotdb.commons.license.ActivateStatus.ACTIVE_UNACTIVATED;
-import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_ACTIVATED;
-import static org.apache.iotdb.commons.license.ActivateStatus.PASSIVE_UNACTIVATED;
-import static org.apache.iotdb.commons.license.ActivateStatus.UNACTIVATED;
-import static org.apache.iotdb.commons.license.ActivateStatus.UNKNOWN;
 
 @RunWith(IoTDBTestRunner.class)
 @Category({ClusterIT.class})
@@ -279,10 +279,10 @@ public class IoTDBActivationIT {
     final int testTimes = 20;
     EnvFactory.getEnv().initClusterEnvironment(configNodeNum, 0);
     SyncConfigNodeIServiceClient leaderClient;
-    Function<Map<ActivateStatus, Integer>, List<ActivateStatus>> mapToList =
+    Function<Map<ObligationStatus, Integer>, List<ObligationStatus>> mapToList =
         map -> {
-          List<ActivateStatus> list = new ArrayList<>();
-          for (ActivateStatus activateStatus : map.keySet()) {
+          List<ObligationStatus> list = new ArrayList<>();
+          for (ObligationStatus activateStatus : map.keySet()) {
             for (int i = 0; i < map.get(activateStatus); i++) {
               list.add(activateStatus);
             }
@@ -298,10 +298,10 @@ public class IoTDBActivationIT {
     // 1. randomly choose one ConfigNode, flip its activate state
     // 2. deactivate all ConfigNode
     Random random = new Random();
-    Map<ActivateStatus, Integer> initStatusCountMap = new HashMap<>();
+    Map<ObligationStatus, Integer> initStatusCountMap = new HashMap<>();
     initStatusCountMap.put(PASSIVE_ACTIVATED, configNodeNum - 1);
     initStatusCountMap.put(ACTIVE_ACTIVATED, 0);
-    Map<ActivateStatus, Integer> statusCountMap = new HashMap<>(initStatusCountMap);
+    Map<ObligationStatus, Integer> statusCountMap = new HashMap<>(initStatusCountMap);
     for (int i = 0; i < testTimes; i++) {
       int choice = random.nextInt(10);
       if (choice < 9) {
@@ -312,7 +312,7 @@ public class IoTDBActivationIT {
         if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
           continue;
         }
-        ActivateStatus activateStatus = ActivateStatus.valueOf(status.getMessage());
+        ObligationStatus activateStatus = ObligationStatus.valueOf(status.getMessage());
         if (ACTIVE_ACTIVATED.equals(activateStatus)) {
           client.deleteLicenseFile(LICENSE_FILE_NAME);
           statusCountMap.computeIfPresent(ACTIVE_ACTIVATED, (key, count) -> count - 1);
@@ -468,7 +468,7 @@ public class IoTDBActivationIT {
           }
           runInParallel(updateRandomly);
           waitLicenseReload();
-          List<ActivateStatus> expectation = new ArrayList<>();
+          List<ObligationStatus> expectation = new ArrayList<>();
           for (int j = 0; j < updateNum; j++) {
             expectation.add(ACTIVE_ACTIVATED);
           }
@@ -510,7 +510,7 @@ public class IoTDBActivationIT {
           if (activeActivatedNum == 0) {
             testPassiveUnactivated(leaderClient, configNodeNum, 0);
           } else {
-            List<ActivateStatus> expectation = new ArrayList<>();
+            List<ObligationStatus> expectation = new ArrayList<>();
             for (int j = 0; j < activeActivatedNum; j++) {
               expectation.add(ACTIVE_ACTIVATED);
             }
@@ -1015,12 +1015,12 @@ public class IoTDBActivationIT {
       ResultSet resultSet = statement.executeQuery("show cluster");
       while (resultSet.next()) {
         // must contain "ActivateStatus" column, and this column must contain valid value
-        ActivateStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
+        ObligationStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
       }
       resultSet = statement.executeQuery("show cluster details");
       while (resultSet.next()) {
         // must contain "ActivateStatus" column, and this column must contain valid value
-        ActivateStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
+        ObligationStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
       }
     }
 
@@ -1125,10 +1125,10 @@ public class IoTDBActivationIT {
     return builder.toString();
   }
 
-  private String listToString(List<ActivateStatus> list) {
+  private String listToString(List<ObligationStatus> list) {
     StringBuilder builder = new StringBuilder();
     builder.append("{");
-    for (ActivateStatus status : list) {
+    for (ObligationStatus status : list) {
       builder.append(status).append(", ");
     }
     builder.append("}");
@@ -1147,20 +1147,20 @@ public class IoTDBActivationIT {
   }
 
   private void testStatusWithRetry(
-      SyncConfigNodeIServiceClient leaderClient, List<ActivateStatus> expectation)
+      SyncConfigNodeIServiceClient leaderClient, List<ObligationStatus> expectation)
       throws Exception {
     testStatusWithRetry(leaderClient, expectation, 60000);
   }
 
   private void testStatusFalse(
-      SyncConfigNodeIServiceClient leaderClient, List<ActivateStatus> expectation)
+      SyncConfigNodeIServiceClient leaderClient, List<ObligationStatus> expectation)
       throws Exception {
     testStatusFalseWithFailMessage(leaderClient, expectation, "");
   }
 
   private void testStatusFalseWithFailMessage(
       SyncConfigNodeIServiceClient leaderClient,
-      List<ActivateStatus> expectation,
+      List<ObligationStatus> expectation,
       String failMessage)
       throws Exception {
     long startTime = System.currentTimeMillis();
@@ -1176,7 +1176,7 @@ public class IoTDBActivationIT {
           && compareLists(
               expectation,
               resp.getActivationStatusMap().values().stream()
-                  .map(ActivateStatus::valueOf)
+                  .map(ObligationStatus::valueOf)
                   .collect(Collectors.toList()))) {
         String errMsg =
             "Test fail because cluster goes into the undesirable state: "
@@ -1195,7 +1195,7 @@ public class IoTDBActivationIT {
   }
 
   private void testStatusWithRetry(
-      SyncConfigNodeIServiceClient client, List<ActivateStatus> expectation, long timeLimit)
+      SyncConfigNodeIServiceClient client, List<ObligationStatus> expectation, long timeLimit)
       throws Exception {
     logger.info("expect {}", listToString(expectation));
     long startTime = System.currentTimeMillis();
@@ -1211,7 +1211,7 @@ public class IoTDBActivationIT {
           && compareLists(
               expectation,
               resp.getActivationStatusMap().values().stream()
-                  .map(ActivateStatus::valueOf)
+                  .map(ObligationStatus::valueOf)
                   .collect(Collectors.toList()))) {
         logger.info("check pass");
         break;
@@ -1242,7 +1242,7 @@ public class IoTDBActivationIT {
   private void testPassiveActivated(
       SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
       throws Exception {
-    List<ActivateStatus> statusList = new ArrayList<>();
+    List<ObligationStatus> statusList = new ArrayList<>();
     for (int i = 0; i < configNodeNum; i++) {
       statusList.add(PASSIVE_ACTIVATED);
     }
@@ -1255,7 +1255,7 @@ public class IoTDBActivationIT {
   private void testStatusAllActiveActivate(
       SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
       throws Exception {
-    List<ActivateStatus> statusList = new ArrayList<>();
+    List<ObligationStatus> statusList = new ArrayList<>();
     for (int i = 0; i < configNodeNum; i++) {
       statusList.add(ACTIVE_ACTIVATED);
     }
@@ -1268,7 +1268,7 @@ public class IoTDBActivationIT {
   private void testPassiveUnactivated(
       SyncConfigNodeIServiceClient leaderClient, int configNodeNum, int dataNodeNum)
       throws Exception {
-    List<ActivateStatus> statusList = new ArrayList<>();
+    List<ObligationStatus> statusList = new ArrayList<>();
     for (int i = 0; i < configNodeNum; i++) {
       statusList.add(PASSIVE_UNACTIVATED);
     }

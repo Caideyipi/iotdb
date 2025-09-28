@@ -30,7 +30,6 @@ import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.cluster.NodeType;
 import org.apache.iotdb.commons.cluster.RegionStatus;
-import org.apache.iotdb.commons.license.ActivateStatus;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.manager.IManager;
@@ -52,6 +51,7 @@ import org.apache.iotdb.confignode.manager.load.cache.region.RegionStatistics;
 import org.apache.iotdb.confignode.manager.partition.RegionGroupStatus;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 
+import com.timecho.iotdb.commons.commission.obligation.ObligationStatus;
 import org.apache.thrift.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -558,9 +558,9 @@ public class LoadCache {
   public Map<Integer, TNodeActivateInfo> getNodeSimplifiedActivateStatus() {
     Map<Integer, TNodeActivateInfo> result = new HashMap<>();
     for (Map.Entry<Integer, ActivationStatusCache> entry : activationStatusCacheMap.entrySet()) {
-      ActivateStatus status = entry.getValue().getActivateStatus();
+      ObligationStatus status = entry.getValue().getActivateStatus();
       if (entry.getValue().isFake() || entry.getValue().tooOld()) {
-        status = ActivateStatus.UNKNOWN;
+        status = ObligationStatus.UNKNOWN;
       }
       result.put(entry.getKey(), new TNodeActivateInfo(status.toSimpleString()));
     }
@@ -573,9 +573,9 @@ public class LoadCache {
             Collectors.toMap(
                 Map.Entry::getKey,
                 e -> {
-                  ActivateStatus status = e.getValue().getActivateStatus();
+                  ObligationStatus status = e.getValue().getActivateStatus();
                   if (e.getValue().isFake() || e.getValue().tooOld()) {
-                    status = ActivateStatus.UNKNOWN;
+                    status = ObligationStatus.UNKNOWN;
                   }
                   return status.toString();
                 }));

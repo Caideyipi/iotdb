@@ -19,6 +19,7 @@
 package org.apache.iotdb.relational.it.rest.it;
 
 import org.apache.iotdb.it.env.EnvFactory;
+import org.apache.iotdb.it.env.cluster.ClusterConstant;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.TableClusterIT;
@@ -102,6 +103,7 @@ public class IoTDBRestServiceCaseWhenThenIT {
 
   @Test
   public void test() {
+    if (ClusterConstant.isSafeTest()) return;
     ping();
     prepareTableData();
     testKind1Basic();
