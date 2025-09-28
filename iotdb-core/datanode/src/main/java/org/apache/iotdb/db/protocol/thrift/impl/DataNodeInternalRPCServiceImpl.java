@@ -3042,8 +3042,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   public TSStatus writeAuditLog(TAuditLogReq req) {
     AuditLogFields fields =
         new AuditLogFields(
-            req.getUserId(),
             req.getUsername(),
+            req.getUserId(),
             req.getCliHostname(),
             AuditEventType.valueOf(req.getAuditEventType()),
             AuditLogOperation.valueOf(req.getOperationType()),

@@ -23,7 +23,6 @@ import org.apache.iotdb.commons.enums.HandleSystemErrorStrategy;
 import org.apache.iotdb.commons.exception.BadNodeUrlException;
 import org.apache.iotdb.commons.pipe.config.PipeDescriptor;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
-import org.apache.iotdb.confignode.rpc.thrift.TAuditConfig;
 import org.apache.iotdb.confignode.rpc.thrift.TGlobalConfig;
 
 import org.slf4j.Logger;
@@ -502,15 +501,6 @@ public class CommonDescriptor {
     config.setSchemaEngineMode(globalConfig.schemaEngineMode);
     config.setTagAttributeTotalSize(globalConfig.tagAttributeTotalSize);
     config.setDiskSpaceWarningThreshold(globalConfig.getDiskSpaceWarningThreshold());
-  }
-
-  public void loadAuditConfig(TAuditConfig auditConfig) {
-    config.setEnableAuditLog(auditConfig.isEnableAuditLog());
-    if (auditConfig.isEnableAuditLog()) {
-      config.setAuditableOperationType(auditConfig.getAuditableOperationType());
-      config.setAuditableOperationLevel(auditConfig.getAuditableOperationLevel());
-      config.setAuditableOperationResult(auditConfig.getAuditableOperationResult());
-    }
   }
 
   public void initThriftSSL(TrimProperties properties) {
