@@ -1687,7 +1687,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   }
 
   private TSStatus checkActiveManagement(IAuditEntity auditEntity) {
-    return checkGlobalAuth(auditEntity.getUsername(), PrivilegeType.MAINTAIN);
+    return checkGlobalAuth(auditEntity, PrivilegeType.MAINTAIN, () -> "");
   }
 
   public TSStatus visitLoadConfiguration(
