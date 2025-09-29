@@ -1582,6 +1582,13 @@ public class IoTDBAuthIT {
     try (Connection connection = EnvFactory.getEnv().getConnection();
         Statement statement = connection.createStatement()) {
       statement.execute("ALTER USER root SET PASSWORD 'newPassword666888'");
+    } catch (SQLException e) {
+      e.printStackTrace();
+      fail(e.getMessage());
+    }
+
+    try (Connection connection = EnvFactory.getEnv().getConnection("root", "newPassword666888");
+        Statement statement = connection.createStatement()) {
       statement.execute("ALTER USER root SET PASSWORD 'rootHasANewPassword123'");
     } catch (SQLException e) {
       e.printStackTrace();

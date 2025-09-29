@@ -74,6 +74,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.apache.iotdb.db.utils.ErrorHandlingUtils.onNpeOrUnexpectedException;
@@ -392,8 +393,16 @@ public class SessionManager implements SessionManagerMBean {
   public boolean checkLogin(IClientSession session) {
     boolean isLoggedIn = session != null && session.isLogin();
 
+    int idleSessionTimeoutInMinutes =
+        IoTDBDescriptor.getInstance().getConfig().getIdleSessionTimeoutInMinutes();
     if (!isLoggedIn) {
       LOGGER.info("{}: Not login. ", IoTDBConstant.GLOBAL_DB_NAME);
+    } else if (idleSessionTimeoutInMinutes > 0) {
+      long idleInNanos = idleSessionTimeoutInMinutes * 60 * 1000 * 1000 * 1000L;
+      if (System.nanoTime() - currSessionIdleTime.get() > idleInNanos) {
+        closeSession(session, Coordinator.getInstance()::cleanupQueryExecution);
+      }
+      return false;
     }
 
     return isLoggedIn;
@@ -602,6 +611,18 @@ public class SessionManager implements SessionManagerMBean {
             .map(IClientSession::convertToTSConnectionInfo)
             .sorted(Comparator.comparingLong(TSConnectionInfo::getLogInTime))
             .collect(Collectors.toList()));
+  }
+
+  public void removeSessions(Predicate<IClientSession> sessionNeedToBeRemoved) {
+    Set<IClientSession> sessionsToRemove =
+        sessions.keySet().stream().filter(sessionNeedToBeRemoved).collect(Collectors.toSet());
+
+    sessionsToRemove.forEach(
+        session -> {
+          session.setLogin(false);
+          sessions.remove(session);
+          closeSession(session, Coordinator.getInstance()::cleanupQueryExecution);
+        });
   }
 
   private static class SessionManagerHelper {

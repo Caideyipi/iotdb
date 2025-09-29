@@ -2304,10 +2304,16 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   @Override
   public TSStatus invalidatePermissionCache(TInvalidatePermissionCacheReq req) {
-    if (AuthorityChecker.invalidateCache(req.getUsername(), req.getRoleName())) {
-      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    if (!AuthorityChecker.invalidateCache(req.getUsername(), req.getRoleName())) {
+      return RpcUtils.getStatus(TSStatusCode.CLEAR_PERMISSION_CACHE_ERROR);
     }
-    return RpcUtils.getStatus(TSStatusCode.CLEAR_PERMISSION_CACHE_ERROR);
+    if (req.needDisconnect) {
+      SessionManager.getInstance()
+          .removeSessions(
+              session ->
+                  session.getUsername() != null && session.getUsername().equals(req.getUsername()));
+    }
+    return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
   }
 
   @Override

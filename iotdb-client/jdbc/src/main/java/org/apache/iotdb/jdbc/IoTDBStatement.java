@@ -237,6 +237,14 @@ public class IoTDBStatement implements Statement {
         RpcUtils.verifySuccess(closeResp);
         stmtId = -1;
       }
+    } catch (StatementExecutionException e) {
+      // ignore if the connection is disconnected by the server
+      if (e.getMessage() == null
+          || !e.getMessage()
+              .equals(
+                  "802: Log in failed. Either you are not authorized or the session has timed out.")) {
+        throw new SQLException("Error occurs when closing statement.", e);
+      }
     } catch (Exception e) {
       throw new SQLException("Error occurs when closing statement.", e);
     }

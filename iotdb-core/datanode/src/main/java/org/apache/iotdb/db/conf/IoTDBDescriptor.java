@@ -744,8 +744,17 @@ public class IoTDBDescriptor {
     if (maxConcurrentClientNum <= 0) {
       maxConcurrentClientNum = 1000;
     }
-
     conf.setRpcMaxConcurrentClientNum(maxConcurrentClientNum);
+
+    int idleSessionTimeoutMinutes =
+        Integer.parseInt(
+            properties.getProperty(
+                "idle_session_timeout_in_minutes",
+                Integer.toString(conf.getIdleSessionTimeoutInMinutes())));
+    if (idleSessionTimeoutMinutes == 0) {
+      idleSessionTimeoutMinutes = 1;
+    }
+    conf.setIdleSessionTimeoutInMinutes(idleSessionTimeoutMinutes);
 
     boolean startUp = true;
     loadAutoCreateSchemaProps(properties, startUp);
@@ -2333,6 +2342,16 @@ public class IoTDBDescriptor {
           Optional.ofNullable(properties.getProperty("black_ip_list", conf.getRawBlackIPList()))
               .map(value -> value.split(","))
               .orElse(new String[0]));
+
+      int idleSessionTimeoutMinutes =
+          Integer.parseInt(
+              properties.getProperty(
+                  "idle_session_timeout_in_minutes",
+                  Integer.toString(conf.getIdleSessionTimeoutInMinutes())));
+      if (idleSessionTimeoutMinutes == 0) {
+        idleSessionTimeoutMinutes = 1;
+      }
+      conf.setIdleSessionTimeoutInMinutes(idleSessionTimeoutMinutes);
 
       // update compaction config
       loadCompactionHotModifiedProps(properties);

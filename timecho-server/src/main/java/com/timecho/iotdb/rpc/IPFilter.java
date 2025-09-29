@@ -19,6 +19,7 @@ package com.timecho.iotdb.rpc;
 
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.db.protocol.session.SessionManager;
 
 import com.giladam.listmatch.PatternList;
 import org.slf4j.Logger;
@@ -48,6 +49,34 @@ public class IPFilter {
   static PatternList blackPattern;
 
   static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+  static {
+    logger.info("Initializing white/black list update call back");
+    conf.setOnBlackListUpdated(
+        () -> {
+          if (!conf.isEnableBlackList() && !conf.isEnableWhiteList()) {
+            return;
+          }
+          SessionManager.getInstance()
+              .removeSessions(
+                  session -> {
+                    String clientAddress = session.getClientAddress();
+                    return isDeniedConnect(clientAddress);
+                  });
+        });
+    conf.setOnWhiteListUpdated(
+        () -> {
+          if (!conf.isEnableBlackList() && !conf.isEnableWhiteList()) {
+            return;
+          }
+          SessionManager.getInstance()
+              .removeSessions(
+                  session -> {
+                    String clientAddress = session.getClientAddress();
+                    return isDeniedConnect(clientAddress);
+                  });
+        });
+  }
 
   public static boolean isInWhiteList(String ip) {
     if (whitePattern == null) {

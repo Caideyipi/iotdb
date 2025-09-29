@@ -27,6 +27,7 @@ import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLo
 import com.timecho.iotdb.commons.secret.SecretKey;
 import com.timecho.iotdb.commons.utils.OSUtils;
 import com.timecho.iotdb.dataregion.migration.MigrationTaskManager;
+import com.timecho.iotdb.rpc.IPFilter;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.schemaregion.mtree.EnterpriseCachedMNodeFactory;
 import com.timecho.iotdb.schemaregion.mtree.EnterpriseMemMNodeFactory;
@@ -64,6 +65,9 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
     TSFileDescriptor.getInstance()
         .getConfig()
         .setObjectStorageTsFileOutput("com.timecho.iotdb.os.fileSystem.OSTsFileOutput");
+    // just to init the class
+    //noinspection ResultOfMethodCallIgnored
+    IPFilter.getAllowListPatterns();
 
     logger.info("IoTDB-DataNode environment variables: {}", IoTDBConfig.getEnvironmentVariables());
     logger.info("IoTDB-DataNode default charset is: {}", Charset.defaultCharset().displayName());

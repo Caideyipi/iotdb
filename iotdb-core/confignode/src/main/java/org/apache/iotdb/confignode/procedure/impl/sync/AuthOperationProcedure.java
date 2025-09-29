@@ -28,6 +28,7 @@ import org.apache.iotdb.commons.utils.ThriftCommonsSerDeUtils;
 import org.apache.iotdb.confignode.client.sync.CnToDnSyncRequestType;
 import org.apache.iotdb.confignode.client.sync.SyncDataNodeClientPool;
 import org.apache.iotdb.confignode.consensus.request.ConfigPhysicalPlan;
+import org.apache.iotdb.confignode.consensus.request.ConfigPhysicalPlanType;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
@@ -99,6 +100,15 @@ public class AuthOperationProcedure extends AbstractNodeProcedure<AuthOperationP
           TSStatus status;
           req.setUsername(user);
           req.setRoleName(role);
+          req.setNeedDisconnect(
+              plan.getAuthorType() == ConfigPhysicalPlanType.DropUser
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.RDropUser
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.DropUserV2
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.RDropUserV2
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.UpdateUser
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.RUpdateUser
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.UpdateUserV2
+                  || plan.getAuthorType() == ConfigPhysicalPlanType.RUpdateUserV2);
           Iterator<Pair<TDataNodeConfiguration, Long>> it = dataNodesToInvalid.iterator();
           while (it.hasNext()) {
             Pair<TDataNodeConfiguration, Long> pair = it.next();

@@ -103,6 +103,9 @@ public class IoTDBConfig {
 
   public static final Pattern NODE_PATTERN = Pattern.compile(NODE_MATCHER);
 
+  private Runnable onWhiteListUpdated = () -> {};
+  private Runnable onBlackListUpdated = () -> {};
+
   /** Whether to enable the mqtt service. */
   private boolean enableMQTTService = false;
 
@@ -141,6 +144,8 @@ public class IoTDBConfig {
 
   /** Max concurrent client number */
   private int rpcMaxConcurrentClientNum = 1000;
+
+  private int idleSessionTimeoutInMinutes = -1;
 
   private long allocateMemoryForRead = Runtime.getRuntime().maxMemory() * 3 / 10;
 
@@ -3786,6 +3791,7 @@ public class IoTDBConfig {
 
   void setWhiteIPList(String[] whiteIPList) {
     this.whiteIPList = String.join(",", whiteIPList);
+    onWhiteListUpdated.run();
   }
 
   public String[] getBlackIPList() {
@@ -3798,6 +3804,7 @@ public class IoTDBConfig {
 
   void setBlackIPList(String[] blackIPList) {
     this.blackIPList = String.join(",", blackIPList);
+    onBlackListUpdated.run();
   }
 
   public void setModeMapSizeThreshold(int modeMapSizeThreshold) {
@@ -4368,5 +4375,21 @@ public class IoTDBConfig {
   public void setIncludeNullValueInWriteThroughputMetric(
       boolean includeNullValueInWriteThroughputMetric) {
     this.includeNullValueInWriteThroughputMetric = includeNullValueInWriteThroughputMetric;
+  }
+
+  public void setOnBlackListUpdated(Runnable onBlackListUpdated) {
+    this.onBlackListUpdated = onBlackListUpdated;
+  }
+
+  public void setOnWhiteListUpdated(Runnable onWhiteListUpdated) {
+    this.onWhiteListUpdated = onWhiteListUpdated;
+  }
+
+  public int getIdleSessionTimeoutInMinutes() {
+    return idleSessionTimeoutInMinutes;
+  }
+
+  public void setIdleSessionTimeoutInMinutes(int idleSessionTimeoutInMinutes) {
+    this.idleSessionTimeoutInMinutes = idleSessionTimeoutInMinutes;
   }
 }

@@ -25,6 +25,7 @@ import org.apache.iotdb.common.rpc.thrift.TNodeResource;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 
 import com.timecho.iotdb.DataNode;
+import com.timecho.iotdb.rpc.IPFilter;
 import com.timecho.iotdb.schemaregion.EnterpriseSchemaConstant;
 import com.timecho.iotdb.schemaregion.mtree.EnterpriseCachedMNodeFactory;
 import com.timecho.iotdb.schemaregion.mtree.EnterpriseMemMNodeFactory;
@@ -40,6 +41,10 @@ public class HackTimechoServer extends DataNode {
     MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseMemMNodeFactory.class);
     MNodeFactoryLoader.getInstance().addNodeFactory(EnterpriseCachedMNodeFactory.class);
     MNodeFactoryLoader.getInstance().setEnv(EnterpriseSchemaConstant.ENTERPRISE_MNODE_FACTORY_ENV);
+
+    // just to init class
+    //noinspection ResultOfMethodCallIgnored
+    IPFilter.getAllowListPatterns();
     HackTimechoServer hackTimechoServer = new HackTimechoServer();
     int returnCode = hackTimechoServer.run(args);
     if (returnCode != 0) {

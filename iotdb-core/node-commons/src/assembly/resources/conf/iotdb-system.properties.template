@@ -546,6 +546,15 @@ cn_max_client_count_for_each_node_in_client_manager=1000
 # Datatype: int
 dn_session_timeout_threshold=0
 
+# The maximum idle time duration of a session (in minutes)
+# Options:
+#   -1 = Completely disable automatic session timeout
+#    0 = Automatically adjusted to minimum value 1
+#   ≥1 = Custom timeout duration in minutes
+# effectiveMode: hot_reload
+# Datatype: Integer
+idle_session_timeout_in_minutes=-1
+
 # whether enable thrift compression
 # effectiveMode: restart
 # Datatype: boolean
