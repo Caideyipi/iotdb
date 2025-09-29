@@ -318,6 +318,7 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
 
   @Override
   public IConfigTask visitAuthor(AuthorStatement statement, MPPQueryContext context) {
+    statement.setExecutedByUserId(context.getUserId());
     if (statement.getAuthorType() == AuthorType.UPDATE_USER) {
       visitUpdateUser(statement);
     }
