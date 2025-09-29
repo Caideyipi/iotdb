@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.it.auth;
 
+import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.LocalStandaloneIT;
@@ -88,7 +89,8 @@ public class IoTDBUserRenameIT {
       adminStmt.execute("ALTER USER root RENAME TO admin");
     }
     // Ensure every rename works
-    try (Connection adminCon = EnvFactory.getEnv().getConnection("admin", "root", dialect);
+    try (Connection adminCon =
+            EnvFactory.getEnv().getConnection("admin", SessionConfig.DEFAULT_PASSWORD, dialect);
         Statement adminStmt = adminCon.createStatement()) {
       final String ans = "0,admin,\n" + "10000,user4,\n" + "10001,user2,\n";
       ResultSet resultSet = adminStmt.executeQuery("LIST USER");
