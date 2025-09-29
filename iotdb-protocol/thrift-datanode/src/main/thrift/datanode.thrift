@@ -1007,6 +1007,11 @@ service IDataNodeRPCService {
   common.TSStatus invalidatePermissionCache(TInvalidatePermissionCacheReq req)
 
   /**
+   * Enable separation of admin powers in datanode
+   **/
+  common.TSStatus enableSeparationOfAdminPower()
+
+  /**
    * Config node will create a pipe plugin on a list of data nodes.
    *
    * @param function name, function class name, and executable uris
