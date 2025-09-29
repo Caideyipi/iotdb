@@ -443,7 +443,9 @@ security-integration-test-1c1d:
     - 'mvn verify -P with-integration-tests -P SecurityIT -P SimpleIT -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+  - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+  - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
     
   artifacts:
     when: on_failure
@@ -492,7 +494,9 @@ security-table-integration-test-1c1d:
     - 'mvn verify -P with-integration-tests -P SecurityIT -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableSimpleIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+  - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+  - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
     
   artifacts:
     when: on_failure
@@ -545,7 +549,9 @@ security-pipe-single:
         CLUSTER2: [HighPerformanceMode]
   interruptible: true
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+  - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+  - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
 
   artifacts:
     when: on_failure
@@ -603,7 +609,9 @@ security-pipe-dual-tree-auto-enhanced:
         CLUSTER2: [HighPerformanceMode]
   interruptible: true
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+  - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+  - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
     
   artifacts:
     when: on_failure
@@ -632,7 +640,9 @@ security-pipe-dual-tree-manual:
         CLUSTER2: [HighPerformanceMode]
   interruptible: true
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+  - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+  - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
 
   artifacts:
     when: on_failure
@@ -690,7 +700,10 @@ security-pipe-dual-table-manual-enhanced:
         CLUSTER2: [HighPerformanceMode]
   interruptible: true
   rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+  - if: $CI_PIPELINE_SOURCE == "schedule"
+  - if: $CI_PIPELINE_SOURCE == "web"  # 手动触发
+  - if: $CI_PIPELINE_SOURCE == "api"  # API 触发
+  
 
   artifacts:
     when: on_failure
