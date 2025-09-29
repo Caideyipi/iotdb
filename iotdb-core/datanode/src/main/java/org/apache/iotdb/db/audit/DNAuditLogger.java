@@ -235,8 +235,8 @@ public class DNAuditLogger extends AbstractAuditLogger {
             return;
           }
         } catch (ClientManagerException | TException | IOException e) {
-          logger.error(
-              "Failed to show database before creating database {} for audit log",
+          logger.warn(
+              "[AUDIT] Failed to show database before creating database {} for audit log",
               SystemConstant.AUDIT_DATABASE);
         }
 
@@ -289,8 +289,8 @@ public class DNAuditLogger extends AbstractAuditLogger {
                   .status;
           if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()
               && status.getCode() != TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode()) {
-            logger.error(
-                "Failed to create database in table model for audit log, because {}",
+            logger.warn(
+                "[AUDIT] Failed to create database in table model for audit log, because {}",
                 status.getMessage());
           }
           stmt =
@@ -339,13 +339,15 @@ public class DNAuditLogger extends AbstractAuditLogger {
           if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()
               && status.getCode()
                   != TSStatusCode.MEASUREMENT_ALREADY_EXISTS_IN_TEMPLATE.getStatusCode()) {
-            logger.error("Failed to create view for audit log, because {}", status.getMessage());
+            logger.warn(
+                "[AUDIT] Failed to create view for audit log, because {}", status.getMessage());
           } else {
-            logger.info("Create view for audit log successfully");
+            logger.info("[AUDIT] Create view for audit log successfully");
             tableViewIsInitialized.set(true);
           }
         } else {
-          logger.error("Failed to create database {} for audit log", SystemConstant.AUDIT_DATABASE);
+          logger.warn(
+              "[AUDIT] Failed to create database {} for audit log", SystemConstant.AUDIT_DATABASE);
         }
       }
     }
@@ -356,45 +358,41 @@ public class DNAuditLogger extends AbstractAuditLogger {
     if (!IS_AUDIT_LOG_ENABLED) {
       return;
     }
-    createViewIfNecessary();
-    if (noNeedInsertAuditLog(auditLogFields)) {
-      return;
-    }
-    long userId = auditLogFields.getUserId();
-    String user = String.valueOf(userId);
-    if (userId == -1) {
-      user = "none";
-    }
-    String dataNodeId = String.valueOf(config.getDataNodeId());
-    InsertRowStatement statement;
     try {
-      statement =
+      createViewIfNecessary();
+      if (noNeedInsertAuditLog(auditLogFields)) {
+        return;
+      }
+      long userId = auditLogFields.getUserId();
+      String user = String.valueOf(userId);
+      if (userId == -1) {
+        user = "none";
+      }
+      String dataNodeId = String.valueOf(config.getDataNodeId());
+      InsertRowStatement statement =
           generateInsertStatement(
               auditLogFields,
               log.get(),
               DEVICE_PATH_CACHE.getPartialPath(String.format(AUDIT_LOG_DEVICE, dataNodeId, user)));
-    } catch (IllegalPathException e) {
-      logger.error("Failed to log audit events because ", e);
-      return;
-    }
-    for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
-      ExecutionResult insertResult =
-          coordinator.executeForTreeModel(
-              statement,
-              SESSION_MANAGER.requestQueryId(),
-              sessionInfo,
-              "",
-              ClusterPartitionFetcher.getInstance(),
-              SCHEMA_FETCHER);
-      if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        return;
-      }
-      try {
+      for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
+        ExecutionResult insertResult =
+            coordinator.executeForTreeModel(
+                statement,
+                SESSION_MANAGER.requestQueryId(),
+                sessionInfo,
+                "",
+                ClusterPartitionFetcher.getInstance(),
+                SCHEMA_FETCHER);
+        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+          return;
+        }
         TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        logger.error("Audit log insertion retry sleep was interrupted", e);
       }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.warn("[AUDIT] Audit log insertion retry sleep was interrupted because", e);
+    } catch (Exception e) {
+      logger.warn("[AUDIT] Failed to log audit events because", e);
     }
     AuditEventType type = auditLogFields.getAuditEventType();
     if (isLoginEvent(type)) {
@@ -422,33 +420,35 @@ public class DNAuditLogger extends AbstractAuditLogger {
     if (!IS_AUDIT_LOG_ENABLED) {
       return;
     }
-    createViewIfNecessary();
-    if (noNeedInsertAuditLog(auditLogFields)) {
-      return;
-    }
-    InsertRowStatement statement =
-        generateInsertStatement(
-            auditLogFields,
-            log,
-            DEVICE_PATH_CACHE.getPartialPath(String.format(AUDIT_CN_LOG_DEVICE, nodeId)));
-    for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
-      ExecutionResult insertResult =
-          coordinator.executeForTreeModel(
-              statement,
-              SESSION_MANAGER.requestQueryId(),
-              sessionInfo,
-              "",
-              ClusterPartitionFetcher.getInstance(),
-              SCHEMA_FETCHER);
-      if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+    try {
+      createViewIfNecessary();
+      if (noNeedInsertAuditLog(auditLogFields)) {
         return;
       }
-      try {
-        TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        logger.error("Audit log insertion retry sleep was interrupted", e);
+      InsertRowStatement statement =
+          generateInsertStatement(
+              auditLogFields,
+              log,
+              DEVICE_PATH_CACHE.getPartialPath(String.format(AUDIT_CN_LOG_DEVICE, nodeId)));
+      for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
+        ExecutionResult insertResult =
+            coordinator.executeForTreeModel(
+                statement,
+                SESSION_MANAGER.requestQueryId(),
+                sessionInfo,
+                "",
+                ClusterPartitionFetcher.getInstance(),
+                SCHEMA_FETCHER);
+        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+          return;
+        }
       }
+      TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.warn("[AUDIT] Audit log insertion retry sleep was interrupted", e);
+    } catch (Exception e) {
+      logger.warn("[AUDIT] Failed to log audit events because", e);
     }
   }
 
