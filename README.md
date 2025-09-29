@@ -281,7 +281,7 @@ or
 IoTDB> exit
 ```
 
-For more information about the commands supported by IoTDB SQL, please see [User Guide](https://iotdb.apache.org/UserGuide/Master/QuickStart/QuickStart.html).
+For more information about the commands supported by IoTDB SQL, please see [User Guide](https://iotdb.apache.org/UserGuide/latest/QuickStart/QuickStart.html).
 
 ### Stop IoTDB
 
@@ -295,7 +295,10 @@ The server can be stopped with "ctrl-C" or the following script:
 > sbin\stop-standalone.bat
 ```
 
-# The use of CSV Import and Export Tool
+# The use of Data Import and Export Tool
+
+see [The use of Data Import Tool](https://iotdb.apache.org/UserGuide/latest/Tools-System/Data-Import-Tool.html)
+see [The use of Data Export Tool](https://iotdb.apache.org/UserGuide/latest/Tools-System/Data-Export-Tool.html)
 
 see [The use of CSV Import and Export Tool](https://www.timecho.com/docs/zh/UserGuide/latest/Tools-System/Data-Import-Tool.html)
 

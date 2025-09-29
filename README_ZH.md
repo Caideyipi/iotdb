@@ -284,7 +284,7 @@ or
 IoTDB> exit
 ```
 
-有关IoTDB SQL支持的命令的更多信息，请参见[用户指南](https://iotdb.apache.org/zh/UserGuide/Master/QuickStart/QuickStart.html)。
+有关IoTDB SQL支持的命令的更多信息，请参见[用户指南](https://iotdb.apache.org/zh/UserGuide/latest/QuickStart/QuickStart.html)。
 
 ### 停止 IoTDB
 
@@ -298,7 +298,7 @@ server 可以使用 "ctrl-C" 或者执行下面的脚本:
 > sbin\stop-standalone.bat
 ```
 
-# 导入导出CSV工具
+# 数据导入导出工具
 
 查看 [导入导出CSV工具](https://www.timecho.com/docs/zh/UserGuide/latest/Tools-System/Data-Import-Tool.html)
 
