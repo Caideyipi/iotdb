@@ -52,7 +52,7 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
   @Before
   public void setUp() throws Exception {
     IoTDBDescriptor.getInstance().getConfig().setPasswordLockTimeMinutes(1);
-    EnvFactory.getEnv().initClusterEnvironment();
+    EnvFactory.getEnv().initClusterEnvironment(1, 1);
     ip = EnvFactory.getEnv().getIP();
     port = EnvFactory.getEnv().getPort();
     sbinPath = EnvFactory.getEnv().getSbinPath();
