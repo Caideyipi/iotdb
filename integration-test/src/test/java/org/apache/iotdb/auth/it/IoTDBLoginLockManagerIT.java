@@ -67,7 +67,6 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
     EnvFactory.getEnv().cleanClusterEnvironment();
   }
 
-  @Ignore
   @Test
   public void testExemptUser() throws Exception {
     // root login success
@@ -84,7 +83,6 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
     login("root", "root", new String[] {loginSuccessMsg}, 1);
   }
 
-  @Ignore
   @Test
   public void testUnlockManual() throws Exception {
     ISession session = EnvFactory.getEnv().getSessionConnection();

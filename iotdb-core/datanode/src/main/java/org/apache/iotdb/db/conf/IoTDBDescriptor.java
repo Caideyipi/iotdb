@@ -756,6 +756,23 @@ public class IoTDBDescriptor {
     }
     conf.setIdleSessionTimeoutInMinutes(idleSessionTimeoutMinutes);
 
+    conf.setFailedLoginAttempts(
+        Integer.parseInt(
+            properties.getProperty(
+                "failed_login_attempts", Integer.toString(conf.getFailedLoginAttempts()))));
+
+    conf.setFailedLoginAttemptsPerUser(
+        Integer.parseInt(
+            properties.getProperty(
+                "failed_login_attempts_per_user",
+                Integer.toString(conf.getFailedLoginAttemptsPerUser()))));
+
+    conf.setPasswordLockTimeMinutes(
+        Integer.parseInt(
+            properties.getProperty(
+                "password_lock_time_minutes",
+                Integer.toString(conf.getPasswordLockTimeMinutes()))));
+
     boolean startUp = true;
     loadAutoCreateSchemaProps(properties, startUp);
 
