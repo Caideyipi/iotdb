@@ -49,6 +49,8 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
 
   private static String homePath;
 
+  private static boolean skipTest;
+
   @Before
   public void setUp() throws Exception {
     IoTDBDescriptor.getInstance().getConfig().setPasswordLockTimeMinutes(1);
@@ -57,8 +59,13 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
     port = EnvFactory.getEnv().getPort();
     sbinPath = EnvFactory.getEnv().getSbinPath();
     libPath = EnvFactory.getEnv().getLibPath();
-    homePath =
-        libPath.substring(0, libPath.lastIndexOf(File.separator + "lib" + File.separator + "*"));
+    int libPathIndex = libPath.lastIndexOf(File.separator + "lib" + File.separator + "*");
+    // the obfuscation may lead to an incorrect path, if so, skip the tests
+    if (libPathIndex != -1) {
+      homePath = libPath.substring(0, libPathIndex);
+    } else {
+      skipTest = true;
+    }
   }
 
   @After
@@ -68,6 +75,9 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
 
   @Test
   public void testExemptUser() throws Exception {
+    if (skipTest) {
+      return;
+    }
     // root login success
     String loginSuccessMsg =
         "Msg: org.apache.iotdb.jdbc.IoTDBSQLException: 700: Error occurred while parsing SQL to physical plan: line 1:8 no viable alternative at input 'SELECT 1'";
@@ -84,6 +94,9 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
 
   @Test
   public void testUnlockManual() throws Exception {
+    if (skipTest) {
+      return;
+    }
     ISession session = EnvFactory.getEnv().getSessionConnection();
     // create test account 'test'
     session.executeNonQueryStatement("CREATE USER test 'tesT@12345678'");
