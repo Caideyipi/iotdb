@@ -65,7 +65,7 @@ public class LocalFileAuthorizerTest {
   @Test
   public void testLogin() throws AuthException {
     Assert.assertTrue(authorizer.login("root", "TimechoDB@2021"));
-    Assert.assertFalse(authorizer.login("root", "error"));
+    Assert.assertThrows(AuthException.class, () -> authorizer.login("root", "error"));
   }
 
   @Test
