@@ -255,18 +255,9 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         }
         // Send restart request of this DataNode
         sendRestartRequestToConfigNode();
-      }
-      try {
         loadSecretKey();
         loadHardwareCode();
-        initEncryptProps();
-      } catch (IOException e) {
-        initSecretKey();
-        loadSecretKey();
-        loadHardwareCode();
-        initEncryptProps();
       }
-      encryptConfigFile();
       // TierManager need DataNodeId to do some operations so the reset method need to be invoked
       // after DataNode adding
       TierManager.getInstance().resetFolders();
@@ -616,18 +607,6 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
   }
 
   protected void loadHardwareCode() throws IOException {
-    // Do nothing
-  }
-
-  protected void initEncryptProps() {
-    // Do nothing
-  }
-
-  protected void initSecretKey() throws IOException {
-    // Do nothing
-  }
-
-  protected void encryptConfigFile() {
     // Do nothing
   }
 
