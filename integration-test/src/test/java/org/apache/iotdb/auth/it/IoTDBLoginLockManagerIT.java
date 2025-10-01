@@ -71,7 +71,7 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
     // root login success
     String loginSuccessMsg =
         "Msg: org.apache.iotdb.jdbc.IoTDBSQLException: 700: Error occurred while parsing SQL to physical plan: line 1:8 no viable alternative at input 'SELECT 1'";
-    login("root", "root", new String[] {loginSuccessMsg}, 1);
+    login("root", "TimechoDB@2021", new String[] {loginSuccessMsg}, 1);
 
     /* root will not be locked */
     String authFailedMsg = "ErrorCan't execute sql because801: Authentication failed.";
@@ -79,18 +79,18 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
       login("root", "wrong", new String[] {authFailedMsg}, 1);
     }
     // account was not locked
-    login("root", "root", new String[] {loginSuccessMsg}, 1);
+    login("root", "TimechoDB@2021", new String[] {loginSuccessMsg}, 1);
   }
 
   @Test
   public void testUnlockManual() throws Exception {
     ISession session = EnvFactory.getEnv().getSessionConnection();
     // create test account 'test'
-    session.executeNonQueryStatement("CREATE USER test 'test'");
+    session.executeNonQueryStatement("CREATE USER test 'tesT@12345678'");
     // TEST login success
     String loginSuccessMsg =
         "Msg: org.apache.iotdb.jdbc.IoTDBSQLException: 700: Error occurred while parsing SQL to physical plan: line 1:8 no viable alternative at input 'SELECT 1'";
-    login("test", "test", new String[] {loginSuccessMsg}, 1);
+    login("test", "tesT@12345678", new String[] {loginSuccessMsg}, 1);
 
     /* test unlock user lock */
     String authFailedMsg = "ErrorCan't execute sql because801: Authentication failed.";
@@ -98,20 +98,20 @@ public class IoTDBLoginLockManagerIT extends AbstractScriptIT {
       login("test", "wrong", new String[] {authFailedMsg}, 1);
     }
     // account was locked
-    login("test", "test", new String[] {authFailedMsg}, 1);
+    login("test", "tesT@12345678", new String[] {authFailedMsg}, 1);
     // unlock user-lock manual
     session.executeNonQueryStatement("ALTER USER test ACCOUNT UNLOCK");
-    login("test", "test", new String[] {loginSuccessMsg}, 1);
+    login("test", "tesT@12345678", new String[] {loginSuccessMsg}, 1);
 
     /* test unlock user-ip lock */
     for (int i = 0; i < 5; i++) {
       login("test", "wrong", new String[] {authFailedMsg}, 1);
     }
     // account was locked
-    login("test", "test", new String[] {authFailedMsg}, 1);
+    login("test", "tesT@12345678", new String[] {authFailedMsg}, 1);
     // unlock user-lock manual
     session.executeNonQueryStatement("ALTER USER test @ '127.0.0.1' ACCOUNT UNLOCK");
-    login("test", "test", new String[] {loginSuccessMsg}, 1);
+    login("test", "tesT@12345678", new String[] {loginSuccessMsg}, 1);
   }
 
   protected void login(String username, String password, String[] expectOutput, int statusCode)
