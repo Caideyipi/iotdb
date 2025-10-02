@@ -2682,7 +2682,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
               "fakePipeName",
               // TODO: currently use root to create topic
               temporaryTopicMeta.generateExtractorAttributes(
-                  CommonDescriptor.getInstance().getConfig().getAdminName()),
+                  CommonDescriptor.getInstance().getConfig().getDefaultAdminName()),
               temporaryTopicMeta.generateProcessorAttributes(),
               temporaryTopicMeta.generateConnectorAttributes("fakeConsumerGroupId"));
     } catch (final Exception e) {
