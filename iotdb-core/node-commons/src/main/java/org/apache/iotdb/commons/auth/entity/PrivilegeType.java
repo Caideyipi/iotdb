@@ -190,7 +190,7 @@ public enum PrivilegeType {
   }
 
   public boolean isHided() {
-    return this == AUDIT;
+    return false;
   }
 
   public AuditLogOperation getAuditLogOperation() {

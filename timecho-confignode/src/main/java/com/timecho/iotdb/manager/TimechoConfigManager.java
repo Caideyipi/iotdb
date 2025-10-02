@@ -24,14 +24,21 @@ import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.common.rpc.thrift.TSetConfigurationReq;
 import org.apache.iotdb.commons.client.ClientPoolFactory;
 import org.apache.iotdb.commons.client.IClientManager;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.cluster.NodeStatus;
+import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
+import org.apache.iotdb.confignode.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
+import org.apache.iotdb.confignode.manager.PermissionManager;
+import org.apache.iotdb.confignode.manager.ProcedureManager;
+import org.apache.iotdb.confignode.persistence.ProcedureInfo;
+import org.apache.iotdb.confignode.persistence.auth.AuthorInfo;
 import org.apache.iotdb.confignode.persistence.node.NodeInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
@@ -42,6 +49,7 @@ import org.apache.iotdb.rpc.TSStatusCode;
 import com.timecho.iotdb.manager.load.TimechoLoadManager;
 import com.timecho.iotdb.manager.node.TimechoNodeManager;
 import com.timecho.iotdb.manager.regulate.RegulateManager;
+import com.timecho.iotdb.persistence.auth.TimechoAuthorInfo;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +76,21 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
   public TimechoConfigManager() throws IOException, LicenseException {
     super();
     initActivationManager();
+  }
+
+  @Override
+  protected PermissionManager createPermissionManager(AuthorInfo authorInfo) {
+    return new TimechoPermissionManager(this, authorInfo);
+  }
+
+  @Override
+  protected ProcedureManager createProcedureManager(ProcedureInfo procedureInfo) {
+    return new TimechoProcedureManager(this, procedureInfo);
+  }
+
+  @Override
+  protected AuthorInfo createAuthorInfo() {
+    return new TimechoAuthorInfo();
   }
 
   @Override
@@ -243,5 +266,30 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
 
   protected void initActivationManager() throws LicenseException {
     this.regulateManager = new RegulateManager(this);
+  }
+
+  @Override
+  public TSStatus setConfiguration(TSetConfigurationReq req) {
+    // check special configuration
+    String isEnableSeparationOfAdminPower =
+        req.getConfigs().get(IoTDBConstant.ENABLE_SEPARATION_OF_ADMIN_POWERS);
+    if (isEnableSeparationOfAdminPower != null) {
+      if (!Boolean.parseBoolean(isEnableSeparationOfAdminPower)) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION, "No permission to turn off the separation of powers mode");
+      }
+      TSStatus tsStatus = confirmLeader();
+      if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        return tsStatus;
+      }
+      return ((TimechoProcedureManager) getProcedureManager())
+          .enableSeparationOfAdminPowers(
+              new EnableSeparationOfAdminPowersPlan(
+                  IoTDBConstant.DEFAULT_SYSTEM_ADMIN_USERNAME,
+                  IoTDBConstant.DEFAULT_SECURITY_ADMIN_USERNAME,
+                  IoTDBConstant.DEFAULT_AUDIT_ADMIN_USERNAME));
+    }
+
+    return super.setConfiguration(req);
   }
 }

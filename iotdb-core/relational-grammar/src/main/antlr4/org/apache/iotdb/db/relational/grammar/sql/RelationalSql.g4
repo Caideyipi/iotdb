@@ -803,6 +803,7 @@ systemPrivilege
     | MANAGE_ROLE
     | SYSTEM
     | SECURITY
+    | AUDIT
     ;
 
 objectPrivilege

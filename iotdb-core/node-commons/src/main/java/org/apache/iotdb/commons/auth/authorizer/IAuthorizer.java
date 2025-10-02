@@ -259,4 +259,8 @@ public interface IAuthorizer extends SnapshotProcessor {
   void createUserWithoutCheck(String username, String password) throws AuthException;
 
   void createUserWithRawPassword(String username, String password) throws AuthException;
+
+  void enableSeparationOfPowers(
+      String systemAdminUsername, String securityAdminUsername, String auditAdminUsername)
+      throws AuthException;
 }

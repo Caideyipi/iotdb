@@ -482,6 +482,7 @@ enable_https=false
 # Whether enable SSL for cluster internal connections
 # effectiveMode: restart
 # Datatype: boolean
+# Privilege: SECURITY
 enable_internal_ssl=false
 
 # SSL key store path
@@ -501,10 +502,12 @@ key_store_pwd=
 # linux e.g. /home/iotdb/server.truststore (absolute path) or server.truststore (relative path)
 # windows e.g. C:\\iotdb\\server.truststore (absolute path) or server.truststore (relative path)
 # effectiveMode: restart
+# Privilege: SECURITY
 trust_store_path=
 
 # SSL trust store password
 # effectiveMode: restart
+# Privilege: SECURITY
 # Datatype: String
 trust_store_pwd=
 
@@ -1873,6 +1876,7 @@ trusted_uri_pattern=file:.*
 # 4. contain at least one special character (another character except the above three).
 # Datatype: boolean
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 enforce_strong_password=true
 
 # When >= 0, the password of a user will expire after last modification/creation in the giving
@@ -1880,12 +1884,14 @@ enforce_strong_password=true
 # Notice: if the cluster have upgraded from an old version, the will not take effective
 # Datatype: int
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 password_expiration_days=-1
 
 # When >= 0, the old password of a user cannot be reused within the days specified by this item,
 # after a successful password change.
 # Datatype: int
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 password_reuse_interval_days=-1
 
 # The number of days since last password change to trigger a warning
@@ -2315,20 +2321,24 @@ auditable_operation_result=success, fail
 # whether enable white ip list
 # effectiveMode: hot_reload
 # warning: When the whitelist function is enabled, if 127.0.0.1 is not added to the whitelist, the local machine cannot log in.
+# Privilege: SECURITY
 enable_white_list=false
 
 # whether enable white ip list
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 enable_black_list=false
 
 #  white ip list  (separated by commas and malformed IPs will be ignored and logged)
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 # example: white_ip_list=127.0.0.1,192.168.32.21
 # warning: When the whitelist function is enabled, if 127.0.0.1 is not added to the whitelist, the local machine cannot log in.
 white_ip_list=
 
 #  black ip list  (separated by commas and malformed IPs will be ignored and logged)
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 # example: white_ip_list=127.0.0.1,192.168.32.21
 black_ip_list=
 
@@ -2445,3 +2455,12 @@ enable_retry_for_unknown_error=false
 # effectiveMode: hot_reload
 # Datatype: Boolean
 include_null_value_in_write_throughput_metric=false
+
+####################
+### Power Configuration
+####################
+# Whether to open separation of powers
+# Notice: it can only be changed from false to true, once set to true, can never be changed back.
+# effectiveMode: first_start_or_set_configuration
+# Datatype: Boolean
+enable_separation_of_powers=false

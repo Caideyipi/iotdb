@@ -80,6 +80,7 @@ import org.apache.iotdb.confignode.procedure.impl.subscription.topic.runtime.Top
 import org.apache.iotdb.confignode.procedure.impl.sync.AuthOperationProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.CreatePipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.DropPipeProcedure;
+import org.apache.iotdb.confignode.procedure.impl.sync.EnableSeparationOfAdminPowersProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.StartPipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.StopPipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.testonly.AddNeverFinishSubProcedureProcedure;
@@ -267,6 +268,9 @@ public class ProcedureFactory implements IProcedureFactory {
         break;
       case AUTH_OPERATE_PROCEDURE:
         procedure = new AuthOperationProcedure(false);
+        break;
+      case ENABLE_SEPARATION_OF_ADMIN_POWERS_PROCEDURE:
+        procedure = new EnableSeparationOfAdminPowersProcedure();
         break;
       case PIPE_ENRICHED_DELETE_DATABASE_PROCEDURE:
         procedure = new DeleteDatabaseProcedure(true);
@@ -531,6 +535,8 @@ public class ProcedureFactory implements IProcedureFactory {
       return ProcedureType.ALTER_LOGICAL_VIEW_PROCEDURE;
     } else if (procedure instanceof AuthOperationProcedure) {
       return ProcedureType.AUTH_OPERATE_PROCEDURE;
+    } else if (procedure instanceof EnableSeparationOfAdminPowersProcedure) {
+      return ProcedureType.ENABLE_SEPARATION_OF_ADMIN_POWERS_PROCEDURE;
     } else if (procedure instanceof SetTTLProcedure) {
       return ProcedureType.SET_TTL_PROCEDURE;
     } else if (procedure instanceof CreateManyDatabasesProcedure) {

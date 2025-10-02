@@ -316,6 +316,8 @@ public class ConfigNodeConfig {
 
   private long forceWalPeriodForConfigNodeSimpleInMs = 100;
 
+  private boolean enableSeparationOfPowers = false;
+
   public ConfigNodeConfig() {
     // empty constructor
   }
@@ -1274,5 +1276,13 @@ public class ConfigNodeConfig {
 
   public void setFailureDetectorPhiAcceptablePauseInMs(long failureDetectorPhiAcceptablePauseInMs) {
     this.failureDetectorPhiAcceptablePauseInMs = failureDetectorPhiAcceptablePauseInMs;
+  }
+
+  public boolean isEnableSeparationOfPowers() {
+    return enableSeparationOfPowers;
+  }
+
+  public void setEnableSeparationOfPowers(boolean enableSeparationOfPowers) {
+    this.enableSeparationOfPowers = enableSeparationOfPowers;
   }
 }

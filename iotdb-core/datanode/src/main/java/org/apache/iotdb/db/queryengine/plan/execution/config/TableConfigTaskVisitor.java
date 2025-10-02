@@ -432,6 +432,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitShowSystemInfo(ShowSystemInfo node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
+    accessControl.checkUserGlobalSysPrivilege(context);
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new ShowSystemInfoTask();
@@ -440,6 +441,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   @Override
   protected IConfigTask visitCliActivate(CliActivate node, MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
+    accessControl.checkUserGlobalSysPrivilege(context);
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new CliActivateTask(node.getLicenseList());
@@ -449,6 +451,7 @@ public class TableConfigTaskVisitor extends AstVisitor<IConfigTask, MPPQueryCont
   protected IConfigTask visitShowActivation(
       final ShowActivation node, final MPPQueryContext context) {
     context.setQueryType(QueryType.READ);
+    accessControl.checkUserGlobalSysPrivilege(context);
     // As the implementation is identical, we'll simply translate to the
     // corresponding tree-model variant and execute that.
     return new ShowActivationTask();

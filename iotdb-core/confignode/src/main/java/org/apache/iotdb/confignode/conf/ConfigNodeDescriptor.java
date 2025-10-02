@@ -345,6 +345,12 @@ public class ConfigNodeDescriptor {
                 "enable_auto_leader_balance_for_iot_consensus",
                 String.valueOf(conf.isEnableAutoLeaderBalanceForIoTConsensus()))));
 
+    conf.setEnableSeparationOfPowers(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                IoTDBConstant.ENABLE_SEPARATION_OF_ADMIN_POWERS,
+                String.valueOf(conf.isEnableSeparationOfPowers()))));
+
     String routePriorityPolicy =
         properties.getProperty("route_priority_policy", conf.getRoutePriorityPolicy());
     if (IPriorityBalancer.GREEDY_POLICY.equals(routePriorityPolicy)

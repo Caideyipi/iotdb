@@ -19,6 +19,7 @@
 
 package com.timecho.iotdb.service;
 
+import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
@@ -56,6 +57,18 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
       System.exit(returnCode);
     }
     org.apache.iotdb.confignode.service.ConfigNode.setInstance(configNode);
+  }
+
+  @Override
+  protected void initBuiltinUsers() {
+    if (ConfigNodeDescriptor.getInstance().getConf().isEnableSeparationOfPowers()) {
+      configManager
+          .getPermissionManager()
+          .enableSeparationOfPowers(
+              IoTDBConstant.DEFAULT_SYSTEM_ADMIN_USERNAME,
+              IoTDBConstant.DEFAULT_SECURITY_ADMIN_USERNAME,
+              IoTDBConstant.DEFAULT_AUDIT_ADMIN_USERNAME);
+    }
   }
 
   @Override

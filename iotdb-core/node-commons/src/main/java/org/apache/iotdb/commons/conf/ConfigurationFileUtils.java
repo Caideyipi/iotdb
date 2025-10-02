@@ -195,6 +195,9 @@ public class ConfigurationFileUtils {
   }
 
   public static boolean parameterNeedKeepConsistentInCluster(String key) {
+    if (IoTDBConstant.ENABLE_SEPARATION_OF_ADMIN_POWERS.equals(key)) {
+      return true;
+    }
     return false;
   }
 

@@ -33,6 +33,7 @@ import com.timecho.iotdb.client.async.handlers.heartbeat.TimechoConfigNodeHeartb
 import com.timecho.iotdb.commons.commission.Lottery;
 import com.timecho.iotdb.manager.ITimechoManager;
 import com.timecho.iotdb.manager.TimechoConfigManager;
+import com.timecho.iotdb.manager.TimechoPermissionManager;
 import com.timecho.iotdb.manager.load.TimechoLoadManager;
 import com.timecho.iotdb.manager.regulate.RegulateManager;
 
@@ -48,6 +49,20 @@ public class TimechoHeartbeatService extends HeartbeatService {
   protected void setConfigManager(IManager configManager) {
     this.timechoConfigManager = (TimechoConfigManager) configManager;
     super.configManager = this.timechoConfigManager;
+  }
+
+  @Override
+  protected TDataNodeHeartbeatReq genHeartbeatReq() {
+    TDataNodeHeartbeatReq req = super.genHeartbeatReq();
+    boolean enableSeparationOfAdminPowers =
+        ((TimechoPermissionManager) configManager.getPermissionManager())
+            .isEnableSeparationOfAdminPowers();
+    byte bits = 0b00000000;
+    if (enableSeparationOfAdminPowers) {
+      bits |= (byte) 0b00000001;
+    }
+    req.setBooleanVariables1(bits);
+    return req;
   }
 
   @Override

@@ -483,6 +483,14 @@ public abstract class BasicAuthorizer implements IAuthorizer, IService {
   }
 
   @Override
+  public void enableSeparationOfPowers(
+      String systemAdminUsername, String securityAdminUsername, String auditAdminUsername)
+      throws AuthException {
+    userManager.enableSeparationOfAdminPowers(
+        systemAdminUsername, securityAdminUsername, auditAdminUsername);
+  }
+
+  @Override
   public boolean processTakeSnapshot(File snapshotDir) throws TException, IOException {
     return userManager.processTakeSnapshot(snapshotDir)
         && roleManager.processTakeSnapshot(snapshotDir);

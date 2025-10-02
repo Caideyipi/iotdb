@@ -61,6 +61,7 @@ import org.apache.iotdb.confignode.consensus.request.write.ainode.RegisterAINode
 import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.ainode.UpdateAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorPlan;
+import org.apache.iotdb.confignode.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.ApplyConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateClusterIdPlan;
@@ -517,6 +518,12 @@ public class ConfigPlanExecutor {
       case RRevokeUserRole:
       case RRenameUser:
         return authorInfo.authorNonQuery((AuthorPlan) physicalPlan);
+      case EnableSeparationOfAdminPowers:
+        EnableSeparationOfAdminPowersPlan plan = (EnableSeparationOfAdminPowersPlan) physicalPlan;
+        return authorInfo.enableSeparationOfAdminPowers(
+            plan.getSystemAdminUsername(),
+            plan.getSecurityAdminUsername(),
+            plan.getAuditAdminUsername());
       case ApplyConfigNode:
         return nodeInfo.applyConfigNode((ApplyConfigNodePlan) physicalPlan);
       case RemoveConfigNode:

@@ -113,6 +113,55 @@ public abstract class BasicUserManager extends BasicRoleManager {
         "Internal user {} initialized", CommonDescriptor.getInstance().getConfig().getAdminName());
   }
 
+  public void enableSeparationOfAdminPowers(
+      String systemAdminUsername, String securityAdminUsername, String auditAdminUsername)
+      throws AuthException {
+    User systemAdmin = this.getEntity(systemAdminUsername);
+    User securityAdmin = this.getEntity(securityAdminUsername);
+    User auditAdmin = this.getEntity(auditAdminUsername);
+    if (systemAdmin != null || securityAdmin != null || auditAdmin != null) {
+      throw new AuthException(
+          TSStatusCode.USER_ALREADY_EXIST, "Builtin username of admin is already in use");
+    }
+
+    try {
+      tryToCreateBuiltinUser(
+          systemAdminUsername,
+          CommonDescriptor.getInstance().getConfig().getAdminPassword(),
+          User.INTERNAL_SYSTEM_ADMIN,
+          true,
+          true);
+      systemAdmin = getEntity(systemAdminUsername);
+      systemAdmin.grantSysPrivilege(PrivilegeType.SYSTEM, true);
+
+      tryToCreateBuiltinUser(
+          securityAdminUsername,
+          CommonDescriptor.getInstance().getConfig().getAdminPassword(),
+          User.INTERNAL_SECURITY_ADMIN,
+          true,
+          true);
+      securityAdmin = getEntity(securityAdminUsername);
+      securityAdmin.grantSysPrivilege(PrivilegeType.SECURITY, true);
+
+      tryToCreateBuiltinUser(
+          auditAdminUsername,
+          CommonDescriptor.getInstance().getConfig().getAdminPassword(),
+          User.INTERNAL_AUDIT_ADMIN,
+          true,
+          true);
+      auditAdmin = getEntity(auditAdminUsername);
+      auditAdmin.grantSysPrivilege(PrivilegeType.AUDIT, true);
+    } catch (AuthException e) {
+      deleteEntity(systemAdminUsername);
+      deleteEntity(securityAdminUsername);
+      deleteEntity(auditAdminUsername);
+      LOGGER.error("Failed to create builtin admin users", e);
+      throw e;
+    }
+
+    LOGGER.info("Builtin admin users have been initialized");
+  }
+
   private void initUserId() {
     try {
       long maxUserId = this.accessor.loadUserId();

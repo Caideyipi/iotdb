@@ -29,6 +29,7 @@ import org.apache.iotdb.confignode.consensus.request.write.ainode.RemoveAINodePl
 import org.apache.iotdb.confignode.consensus.request.write.ainode.UpdateAINodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorRelationalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorTreePlan;
+import org.apache.iotdb.confignode.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.ApplyConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.RemoveConfigNodePlan;
 import org.apache.iotdb.confignode.consensus.request.write.confignode.UpdateClusterIdPlan;
@@ -333,6 +334,9 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
         case RRevokeUserSysPri:
         case RRevokeRoleSysPri:
           plan = new AuthorRelationalPlan(configPhysicalPlanType);
+          break;
+        case EnableSeparationOfAdminPowers:
+          plan = new EnableSeparationOfAdminPowersPlan();
           break;
         case ApplyConfigNode:
           plan = new ApplyConfigNodePlan();

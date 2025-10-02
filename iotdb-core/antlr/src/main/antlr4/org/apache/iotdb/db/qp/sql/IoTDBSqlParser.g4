@@ -1167,6 +1167,7 @@ privilegeValue
     | WRITE
     | SYSTEM
     | SECURITY
+    | AUDIT
     | PRIVILEGE_VALUE
     ;
 

@@ -355,6 +355,11 @@ public class IoTDBConstant {
   public static final String HOUR_UNIT = "hour";
   public static final String DAY_UNIT = "day";
 
+  public static final String ENABLE_SEPARATION_OF_ADMIN_POWERS = "enable_separation_of_powers";
+  public static final String DEFAULT_SYSTEM_ADMIN_USERNAME = "sys_admin";
+  public static final String DEFAULT_SECURITY_ADMIN_USERNAME = "security_admin";
+  public static final String DEFAULT_AUDIT_ADMIN_USERNAME = "audit_admin";
+
   // client version number
   public enum ClientVersion {
     V_0_12,

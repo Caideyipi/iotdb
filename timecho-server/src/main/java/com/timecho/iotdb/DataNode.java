@@ -18,12 +18,18 @@
  */
 package com.timecho.iotdb;
 
+import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.commons.exception.StartupException;
+import org.apache.iotdb.confignode.rpc.thrift.TRuntimeConfiguration;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
+import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthCheckerImpl;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
 
+import com.timecho.iotdb.auth.StrictAccessControlImpl;
+import com.timecho.iotdb.auth.StrictTreeAccessCheckVisitor;
 import com.timecho.iotdb.commons.secret.SecretKey;
 import com.timecho.iotdb.commons.utils.OSUtils;
 import com.timecho.iotdb.dataregion.migration.MigrationTaskManager;
@@ -39,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -97,6 +104,19 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
           "TimechoDB DataNode can only be used with TimechoDB ConfigNode and cannot be used with IoTDB ConfigNode.";
       logger.error(message);
       throw new StartupException(message);
+    }
+  }
+
+  @Override
+  protected void storeRuntimeConfigurations(
+      List<TConfigNodeLocation> configNodeLocations, TRuntimeConfiguration runtimeConfiguration)
+      throws StartupException {
+    super.storeRuntimeConfigurations(configNodeLocations, runtimeConfiguration);
+    if (runtimeConfiguration.isSetEnableSeparationOfAdminPowers()
+        && runtimeConfiguration.isEnableSeparationOfAdminPowers()) {
+      AuthorityChecker.setAccessControl(
+          new StrictAccessControlImpl(
+              new ITableAuthCheckerImpl(), new StrictTreeAccessCheckVisitor()));
     }
   }
 

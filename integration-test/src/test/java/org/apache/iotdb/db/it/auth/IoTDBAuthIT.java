@@ -177,6 +177,7 @@ public class IoTDBAuthIT {
             new HashSet<>(
                 Arrays.asList(
                     ",,SYSTEM,true,",
+                    ",,AUDIT,true,",
                     ",,SECURITY,true,",
                     ",root.**,READ_DATA,true,",
                     ",root.**,WRITE_DATA,true,",
@@ -646,6 +647,7 @@ public class IoTDBAuthIT {
         resultSet = adminStmt.executeQuery("LIST PRIVILEGES OF USER root");
         ans =
             ",,SYSTEM,true,\n"
+                + ",,AUDIT,true,\n"
                 + ",,SECURITY,true,\n"
                 + ",root.**,READ_DATA,true,\n"
                 + ",root.**,WRITE_DATA,true,\n"
@@ -998,6 +1000,7 @@ public class IoTDBAuthIT {
     ResultSet resultSet = adminStmt.executeQuery("LIST PRIVILEGES OF USER user1");
     String ans =
         ",,SYSTEM,false,\n"
+            + ",,AUDIT,false,\n"
             + ",,SECURITY,false,\n"
             + ",root.**,READ_DATA,false,\n"
             + ",root.**,WRITE_DATA,false,\n"
@@ -1016,6 +1019,7 @@ public class IoTDBAuthIT {
     resultSet = adminStmt.executeQuery("LIST PRIVILEGES OF USER user2");
     ans =
         ",,SYSTEM,true,\n"
+            + ",,AUDIT,true,\n"
             + ",,SECURITY,true,\n"
             + ",root.**,READ_DATA,true,\n"
             + ",root.**,WRITE_DATA,true,\n"
@@ -1034,6 +1038,7 @@ public class IoTDBAuthIT {
         resultSet = userStmt.executeQuery("LIST PRIVILEGES OF USER user1");
         ans =
             ",,SYSTEM,false,\n"
+                + ",,AUDIT,false,\n"
                 + ",,SECURITY,false,\n"
                 + ",root.**,READ_DATA,false,\n"
                 + ",root.**,WRITE_DATA,false,\n"
@@ -1059,6 +1064,7 @@ public class IoTDBAuthIT {
         resultSet = userStmt.executeQuery("LIST PRIVILEGES OF USER user1");
         ans =
             ",,SYSTEM,false,\n"
+                + ",,AUDIT,false,\n"
                 + ",root.**,READ_DATA,false,\n"
                 + ",root.**,WRITE_DATA,false,\n"
                 + ",root.**,READ_SCHEMA,false,\n"

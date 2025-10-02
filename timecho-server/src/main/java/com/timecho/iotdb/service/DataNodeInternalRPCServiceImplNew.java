@@ -19,11 +19,21 @@
 
 package com.timecho.iotdb.service;
 
+import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.protocol.thrift.impl.DataNodeInternalRPCServiceImpl;
+import org.apache.iotdb.db.queryengine.plan.relational.security.AccessControlImpl;
+import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthCheckerImpl;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatReq;
+import org.apache.iotdb.mpp.rpc.thrift.TDataNodeHeartbeatResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaResp;
+import org.apache.iotdb.rpc.RpcUtils;
 
+import com.timecho.iotdb.auth.StrictAccessControlImpl;
+import com.timecho.iotdb.auth.StrictTreeAccessCheckVisitor;
 import com.timecho.iotdb.dataregion.compaction.selector.impl.SharedStorageCompactionSelector;
+import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,5 +53,30 @@ public class DataNodeInternalRPCServiceImplNew extends DataNodeInternalRPCServic
           e);
       return new TFetchLeaderRemoteReplicaResp();
     }
+  }
+
+  @Override
+  public TDataNodeHeartbeatResp getDataNodeHeartBeat(TDataNodeHeartbeatReq req) throws TException {
+    if (req.isSetBooleanVariables1()) {
+      byte booleanVariables1 = req.getBooleanVariables1();
+      if ((booleanVariables1 & ((byte) 0b00000001)) != 0) {
+        if (AuthorityChecker.getAccessControl() instanceof AccessControlImpl) {
+          AuthorityChecker.setAccessControl(
+              new StrictAccessControlImpl(
+                  new ITableAuthCheckerImpl(), new StrictTreeAccessCheckVisitor()));
+        }
+      }
+    }
+    return super.getDataNodeHeartBeat(req);
+  }
+
+  @Override
+  public TSStatus enableSeparationOfAdminPower() throws TException {
+    if (AuthorityChecker.getAccessControl() instanceof AccessControlImpl) {
+      AuthorityChecker.setAccessControl(
+          new StrictAccessControlImpl(
+              new ITableAuthCheckerImpl(), new StrictTreeAccessCheckVisitor()));
+    }
+    return RpcUtils.SUCCESS_STATUS;
   }
 }
