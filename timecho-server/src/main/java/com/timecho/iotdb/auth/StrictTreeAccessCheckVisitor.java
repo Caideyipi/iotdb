@@ -61,6 +61,7 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
             statement::getUserName);
 
       case UPDATE_USER:
+      case RENAME_USER:
         context
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);

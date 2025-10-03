@@ -56,6 +56,7 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.SECURITY, auditEntity);
         return;
       case UPDATE_USER:
+      case RENAME_USER:
         auditEntity
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
