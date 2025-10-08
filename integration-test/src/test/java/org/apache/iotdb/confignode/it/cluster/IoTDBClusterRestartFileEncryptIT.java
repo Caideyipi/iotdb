@@ -20,12 +20,15 @@
 package org.apache.iotdb.confignode.it.cluster;
 
 import org.apache.iotdb.commons.exception.LicenseException;
+import org.apache.iotdb.isession.ITableSession;
+import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.env.AbstractEnv;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,7 +42,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -84,6 +89,7 @@ public class IoTDBClusterRestartFileEncryptIT {
     EnvFactory.getEnv().startAllDataNodes();
     ((AbstractEnv) EnvFactory.getEnv()).checkClusterStatusWithoutUnknown();
 
+    Assert.assertTrue(checkConfigFileContains("series_slot_num=50"));
     userAndRoleCheck();
   }
 
@@ -172,5 +178,33 @@ public class IoTDBClusterRestartFileEncryptIT {
     } finally {
       set.close();
     }
+  }
+
+  private static boolean checkConfigFileContains(String... contents) {
+    Map<String, String> showConfigurationResults = new HashMap<>();
+    for (String content : contents) {
+      String[] split = content.split("=");
+      showConfigurationResults.put(split[0], split[1]);
+    }
+    return checkShowConfigurationContains(showConfigurationResults);
+  }
+
+  private static boolean checkShowConfigurationContains(Map<String, String> expectedKeyValues) {
+    try (ITableSession tableSessionConnection = EnvFactory.getEnv().getTableSessionConnection()) {
+      SessionDataSet sessionDataSet =
+          tableSessionConnection.executeQueryStatement("show configuration");
+      SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
+      while (iterator.next()) {
+        String name = iterator.getString(1);
+        String value = iterator.isNull(2) ? null : iterator.getString(2);
+        String expectedValue = expectedKeyValues.remove(name);
+        if (expectedValue != null && !expectedValue.equals(value)) {
+          return false;
+        }
+      }
+    } catch (Exception e) {
+      return false;
+    }
+    return expectedKeyValues.isEmpty();
   }
 }

@@ -34,7 +34,22 @@ IF EXIST "%CONFIGNODE_HOME%\conf\iotdb-system.properties" (
   )
 )
 
-set cn_internal_port=10710
+for /f  "eol=; tokens=2,2 delims==" %%i in ('findstr /i "^cn_internal_port"
+"%config_file%"') do (
+  set cn_internal_port=%%i
+)
+@REM trim the port
+:delLeft1
+if "%cn_internal_port:~0,1%"==" " (
+    set "cn_internal_port=%cn_internal_port:~1%"
+    goto delLeft1
+)
+
+:delRight1
+if "%cn_internal_port:~-1%"==" " (
+    set "cn_internal_port=%cn_internal_port:~0,-1%"
+    goto delRight1
+)
 
 if not defined cn_internal_port (
   echo "WARNING: cn_internal_port not found in the configuration file. Using default value cn_internal_port = 10710"

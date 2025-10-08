@@ -49,7 +49,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -151,9 +150,13 @@ public class WALManager implements IService {
     String[] walDirs = CommonDescriptor.getInstance().getConfig().getWalDirs();
     for (String walDirPath : walDirs) {
       File walDir = new File(walDirPath);
-      for (File file : Objects.requireNonNull(walDir.listFiles())) {
-        if (WALFileUtils.listAllEncryptedWALFiles(file).length > 0) {
-          return true;
+      File[] walFiles = walDir.listFiles();
+      if (walFiles != null) {
+        for (File file : walFiles) {
+          File[] files = WALFileUtils.listAllEncryptedWALFiles(file);
+          if (files != null && files.length > 0) {
+            return true;
+          }
         }
       }
     }

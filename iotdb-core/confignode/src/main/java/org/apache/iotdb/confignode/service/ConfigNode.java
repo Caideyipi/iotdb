@@ -163,17 +163,21 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
     LOGGER.info("Activating {}...", ConfigNodeConstant.GLOBAL_NAME);
 
     try {
-      try {
-        loadSecretKey();
-        loadHardwareCode();
-        initEncryptProps();
-      } catch (IOException e) {
-        initSecretKey();
-        loadSecretKey();
-        loadHardwareCode();
-        initEncryptProps();
+      if (isNeedEncrypt()) {
+        try {
+          loadSecretKey();
+          loadHardwareCode();
+          initEncryptProps();
+        } catch (IOException e) {
+          initSecretKey();
+          loadSecretKey();
+          loadHardwareCode();
+          initEncryptProps();
+        }
+        if (isEncryptConfigFile()) {
+          encryptConfigFile();
+        }
       }
-      encryptConfigFile();
       processPid();
       // Add shutdown hook
       addShutDownHook();
@@ -299,6 +303,15 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
       exitStatusCode = StatusUtils.retrieveExitStatusCode(e);
       stop();
     }
+  }
+
+  private static boolean isNeedEncrypt() {
+    return CommonDescriptor.getInstance().getConfig().isEnableEncryptPermissionFile()
+        || CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile();
+  }
+
+  private static boolean isEncryptConfigFile() {
+    return CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile();
   }
 
   protected void generateSystemInfoFile() {

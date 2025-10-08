@@ -245,8 +245,10 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         ConfigNodeInfo.getInstance().storeConfigNodeList();
         // Register this DataNode to the cluster when first start
         sendRegisterRequestToConfigNode(false);
-        saveSecretKey();
-        saveHardwareCode();
+        if (isEncryptConfigFile()) {
+          saveSecretKey();
+          saveHardwareCode();
+        }
       } else {
         /* Check encrypt magic string */
         try {
@@ -257,17 +259,19 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
         // Send restart request of this DataNode
         sendRestartRequestToConfigNode();
       }
-      try {
-        loadSecretKey();
-        loadHardwareCode();
-        initEncryptProps();
-      } catch (IOException e) {
-        initSecretKey();
-        loadSecretKey();
-        loadHardwareCode();
-        initEncryptProps();
+      if (isEncryptConfigFile()) {
+        try {
+          loadSecretKey();
+          loadHardwareCode();
+          initEncryptProps();
+        } catch (IOException e) {
+          initSecretKey();
+          loadSecretKey();
+          loadHardwareCode();
+          initEncryptProps();
+        }
+        encryptConfigFile();
       }
-      encryptConfigFile();
       // TierManager need DataNodeId to do some operations so the reset method need to be invoked
       // after DataNode adding
       TierManager.getInstance().resetFolders();
@@ -340,6 +344,10 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
       System.exit(exitStatusCode);
     }
     logger.info("DataNode started");
+  }
+
+  private static boolean isEncryptConfigFile() {
+    return CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile();
   }
 
   @Override
@@ -593,14 +601,6 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
       logger.error(dataNodeRegisterResp.getStatus().getMessage());
       throw new StartupException("Cannot register to the cluster.");
     }
-  }
-
-  protected void saveSecretKey(String secretKey) {
-    // Do nothing.
-  }
-
-  protected void saveHardwareCode(String hardwareCode) {
-    // Do nothing.
   }
 
   private void configOSStorage(int dataNodeID) {

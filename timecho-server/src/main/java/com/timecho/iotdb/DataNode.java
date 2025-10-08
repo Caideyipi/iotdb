@@ -173,7 +173,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
                 + CommonConfig.SYSTEM_CONFIG_NAME
                 + SecretKey.FILE_ENCRYPTED_SUFFIX);
     if ((configFileUrl == null || !(new File(configFileUrl.getPath()).exists()))
-        && WALManager.existsEncryptedFile()) {
+        && !WALManager.existsEncryptedFile()) {
       saveSecretKey();
       saveHardwareCode();
     } else {

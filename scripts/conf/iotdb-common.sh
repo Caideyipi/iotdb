@@ -168,6 +168,39 @@ checkDataNodePortUsages () {
     echo "Warning: If you do not use sudo, the checking may not detect all the occupied ports."
   fi
   occupied=false
+  if [ -f "$IOTDB_CONF/iotdb-system.properties" ]; then
+      dn_rpc_port=$(sed '/^dn_rpc_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-system.properties)
+      dn_internal_port=$(sed '/^dn_internal_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-system.properties)
+      dn_mpp_data_exchange_port=$(sed '/^dn_mpp_data_exchange_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-system.properties)
+      dn_schema_region_consensus_port=$(sed '/^dn_schema_region_consensus_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-system.properties)
+      dn_data_region_consensus_port=$(sed '/^dn_data_region_consensus_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-system.properties)
+  elif [ -f "$IOTDB_HOME/conf/iotdb-system.properties" ]; then
+      dn_rpc_port=$(sed '/^dn_rpc_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-system.properties)
+      dn_internal_port=$(sed '/^dn_internal_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-system.properties)
+      dn_mpp_data_exchange_port=$(sed '/^dn_mpp_data_exchange_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-system.properties)
+      dn_schema_region_consensus_port=$(sed '/^dn_schema_region_consensus_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-system.properties)
+      dn_data_region_consensus_port=$(sed '/^dn_data_region_consensus_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-system.properties)
+  elif [ -f "$IOTDB_CONF/iotdb-datanode.properties" ]; then
+    dn_rpc_port=$(sed '/^dn_rpc_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+    dn_internal_port=$(sed '/^dn_internal_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+    dn_mpp_data_exchange_port=$(sed '/^dn_mpp_data_exchange_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+    dn_schema_region_consensus_port=$(sed '/^dn_schema_region_consensus_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+    dn_data_region_consensus_port=$(sed '/^dn_data_region_consensus_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+  elif [ -f "$IOTDB_HOME/conf/iotdb-datanode.properties" ]; then
+    dn_rpc_port=$(sed '/^dn_rpc_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-datanode.properties)
+    dn_internal_port=$(sed '/^dn_internal_port=/!d;s/.*=//' "${IOTDB_HOME}"/conf/iotdb-datanode.properties)
+    dn_mpp_data_exchange_port=$(sed '/^dn_mpp_data_exchange_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+    dn_schema_region_consensus_port=$(sed '/^dn_schema_region_consensus_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+    dn_data_region_consensus_port=$(sed '/^dn_data_region_consensus_port=/!d;s/.*=//' "${IOTDB_CONF}"/iotdb-datanode.properties)
+  else
+    echo "Warning: cannot find iotdb-system.properties or iotdb-datanode.properties, check the default configuration"
+  fi
+
+  check_config_unique "dn_rpc_port" "$dn_rpc_port"
+  check_config_unique "dn_internal_port" "$dn_internal_port"
+  check_config_unique "dn_mpp_data_exchange_port" "$dn_mpp_data_exchange_port"
+  check_config_unique "dn_schema_region_consensus_port" "$dn_schema_region_consensus_port"
+  check_config_unique "dn_data_region_consensus_port" "$dn_data_region_consensus_port"
 
   dn_rpc_port=${dn_rpc_port:-6667}
   dn_internal_port=${dn_internal_port:-10730}
