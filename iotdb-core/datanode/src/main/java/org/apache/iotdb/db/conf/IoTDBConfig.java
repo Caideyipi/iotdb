@@ -1823,7 +1823,7 @@ public class IoTDBConfig {
     return rpcMaxConcurrentClientNum;
   }
 
-  void setRpcMaxConcurrentClientNum(int rpcMaxConcurrentClientNum) {
+  public void setRpcMaxConcurrentClientNum(int rpcMaxConcurrentClientNum) {
     this.rpcMaxConcurrentClientNum = rpcMaxConcurrentClientNum;
   }
 

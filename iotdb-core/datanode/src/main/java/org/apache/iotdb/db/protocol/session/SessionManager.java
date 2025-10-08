@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.audit.AuditEventType;
 import org.apache.iotdb.commons.audit.AuditLogFields;
 import org.apache.iotdb.commons.audit.AuditLogOperation;
 import org.apache.iotdb.commons.audit.UserEntity;
+import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.IoTDBRuntimeException;
@@ -37,6 +38,7 @@ import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.auth.LoginLockManager;
+import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.protocol.basic.BasicOpenSessionResp;
 import org.apache.iotdb.db.protocol.thrift.OperationType;
@@ -72,11 +74,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -249,7 +253,7 @@ public class SessionManager implements SessionManagerMBean {
       return openSessionResp;
     }
 
-    long userId = AuthorityChecker.getUserId(username).orElse(-1L);
+    final long userId = AuthorityChecker.getUserId(username).orElse(-1L);
     boolean enableLoginLock = userId != -1;
     LoginLockManager loginLockManager = LoginLockManager.getInstance();
     if (enableLoginLock && loginLockManager.checkLock(userId, session.getClientAddress())) {
@@ -263,12 +267,22 @@ public class SessionManager implements SessionManagerMBean {
 
     TSStatus loginStatus = AuthorityChecker.checkUser(username, password);
     if (loginStatus.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      // check session nums
+      User user = AuthorityChecker.getAuthorityFetcher().getAuthorCache().getUserCache(username);
+      TSStatus checkSessionNumStatus =
+          checkSessionNums(username, user.getMaxSessionPerUser(), user.getMinSessionPerUser());
       // check the version compatibility
       if (!tsProtocolVersion.equals(CURRENT_RPC_VERSION)) {
         openSessionResp
             .sessionId(-1)
             .setCode(TSStatusCode.INCOMPATIBLE_VERSION.getStatusCode())
             .setMessage("The version is incompatible, please upgrade to " + IoTDBConstant.VERSION);
+      } else if (checkSessionNumStatus.getCode()
+          == TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode()) {
+        openSessionResp
+            .sessionId(-1)
+            .setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode())
+            .setMessage(checkSessionNumStatus.getMessage());
       } else {
         session.setSqlDialect(sqlDialect);
         supplySession(session, userId, username, ZoneId.of(zoneId), clientVersion);
@@ -465,6 +479,13 @@ public class SessionManager implements SessionManagerMBean {
     return isLoggedIn;
   }
 
+  public int checkCurrentConnectNum(String username) {
+    return Math.toIntExact(
+        sessions.keySet().stream()
+            .filter(s -> username.equals(s.getUsername())) // 假设 IClientSession#getUsername()
+            .count());
+  }
+
   public long requestStatementId(IClientSession session) {
     long statementId = statementIdGenerator.incrementAndGet();
     session.addStatementId(statementId);
@@ -538,6 +559,7 @@ public class SessionManager implements SessionManagerMBean {
    */
   public void removeCurrSession() {
     IClientSession session = currSession.get();
+
     if (session != null) {
       sessions.remove(session);
     }
@@ -610,6 +632,16 @@ public class SessionManager implements SessionManagerMBean {
         session.getClientVersion(),
         session.getDatabaseName(),
         session.getSqlDialect());
+  }
+
+  public Map<String, Integer> getSessionsNumInfo() {
+    Map<String, Integer> currentSessionInfo =
+        sessions.keySet().stream()
+            .filter(Objects::nonNull)
+            .map(IClientSession::getUsername)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toConcurrentMap(Function.identity(), k -> 1, Integer::sum));
+    return currentSessionInfo;
   }
 
   // Sometimes we need to switch from table model to tree model,
@@ -689,5 +721,51 @@ public class SessionManager implements SessionManagerMBean {
     private SessionManagerHelper() {
       // empty constructor
     }
+  }
+
+  public TSStatus checkSessionNums(String username, int maxSessionPerUser, int minSessionPerUser) {
+    TSStatus sessionNumCheckStatus = new TSStatus();
+    IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
+    int rpcMaxConcurrentClientNum = config.getRpcMaxConcurrentClientNum();
+    // 1. check total maximum connection limit.
+    int usedSessionNum =
+        Math.toIntExact(
+            sessions.keySet().stream().filter(s -> s != null && s.getUsername() != null).count());
+    if (usedSessionNum == rpcMaxConcurrentClientNum) {
+      sessionNumCheckStatus.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+      sessionNumCheckStatus.setMessage(
+          "The current number of client connections has reached the maximum connection limit allowed by the system.");
+      return sessionNumCheckStatus;
+    }
+
+    // 2. check max session limit per user.
+    int currentSessionNums =
+        Math.toIntExact(
+            sessions.keySet().stream().filter(s -> username.equals(s.getUsername())).count());
+    if (maxSessionPerUser == 0 || currentSessionNums == maxSessionPerUser) {
+      sessionNumCheckStatus.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+      sessionNumCheckStatus.setMessage(
+          String.format(
+              "The current number of connections for user %s has reached its maximum limit. Please try again later. ",
+              username));
+      return sessionNumCheckStatus;
+    }
+    // 3. check min session per user.
+    if (currentSessionNums < minSessionPerUser) {
+      sessionNumCheckStatus.setCode(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+      return sessionNumCheckStatus;
+    } else {
+      Map<String, Integer> currentSessionInfo = getSessionsNumInfo();
+
+      // check session number in confignode.
+      TSStatus status = AuthorityChecker.checkSesionNumOnConnect(currentSessionInfo);
+      if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        sessionNumCheckStatus.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+        sessionNumCheckStatus.setMessage(
+            String.format(
+                "Insufficient connection pool resources, please try again later. ", username));
+      }
+    }
+    return sessionNumCheckStatus;
   }
 }

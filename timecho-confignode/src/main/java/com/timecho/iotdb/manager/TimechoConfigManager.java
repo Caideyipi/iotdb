@@ -90,7 +90,7 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
 
   @Override
   protected AuthorInfo createAuthorInfo() {
-    return new TimechoAuthorInfo();
+    return new TimechoAuthorInfo(this);
   }
 
   @Override

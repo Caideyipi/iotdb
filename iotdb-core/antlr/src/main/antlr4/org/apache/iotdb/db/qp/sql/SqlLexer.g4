@@ -783,6 +783,14 @@ SESSION
     : S E S S I O N
     ;
 
+MAX_SESSION_PER_USER
+    : M A X '_' S E S S I O N '_' P E R '_' U S E R
+    ;
+
+MIN_SESSION_PER_USER
+    : M I N '_' S E S S I O N '_' P E R '_' U S E R
+    ;
+
 SET
     : S E T
     ;

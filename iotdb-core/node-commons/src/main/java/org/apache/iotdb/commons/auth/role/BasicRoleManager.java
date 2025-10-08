@@ -255,4 +255,14 @@ public abstract class BasicRoleManager implements IEntityManager, SnapshotProces
   public boolean existsEncryptedFile() {
     return accessor.existsEncryptedFile();
   }
+
+  public int getMinSessionSum() {
+    return entityMap.values().stream()
+        .mapToInt(
+            r -> {
+              Integer v = r.getMinSessionPerUser();
+              return (v == null || v == -1) ? 0 : v;
+            })
+        .sum();
+  }
 }

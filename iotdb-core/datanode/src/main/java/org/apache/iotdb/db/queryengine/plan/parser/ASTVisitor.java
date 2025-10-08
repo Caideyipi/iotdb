@@ -2553,6 +2553,21 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
     return authorStatement;
   }
 
+  public Statement visitAlterUserMaxSession(IoTDBSqlParser.AlterUserMaxSessionContext ctx) {
+    AuthorStatement authorStatement = new AuthorStatement(AuthorType.UPDATE_USER_MAX_SESSION);
+    authorStatement.setUserName(parseIdentifier(ctx.userName.getText()));
+    authorStatement.setMaxSessionPerUser(Integer.parseInt(ctx.max_session_per_user.getText()));
+    return authorStatement;
+  }
+
+  @Override
+  public Statement visitAlterUserMinSession(IoTDBSqlParser.AlterUserMinSessionContext ctx) {
+    AuthorStatement authorStatement = new AuthorStatement(AuthorType.UPDATE_USER_MIN_SESSION);
+    authorStatement.setUserName(parseIdentifier(ctx.userName.getText()));
+    authorStatement.setMinSessionPerUser(Integer.parseInt(ctx.min_session_per_user.getText()));
+    return authorStatement;
+  }
+
   // Grant User Privileges
   @Override
   public Statement visitGrantUser(IoTDBSqlParser.GrantUserContext ctx) {

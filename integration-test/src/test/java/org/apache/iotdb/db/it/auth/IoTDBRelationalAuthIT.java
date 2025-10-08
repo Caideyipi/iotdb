@@ -137,7 +137,10 @@ public class IoTDBRelationalAuthIT {
       adminStmt.execute("create role testrole");
       adminStmt.execute("GRANT ROLE testrole to testuser");
       rs = adminStmt.executeQuery("LIST USER OF ROLE testrole");
-      TestUtils.assertResultSetEqual(rs, "UserId,User,", Collections.singleton("10000,testuser,"));
+      TestUtils.assertResultSetEqual(
+          rs,
+          "UserId,User,MaxSessionPerUser,MinSessionPerUser,",
+          Collections.singleton("10000,testuser,-1,-1,"));
       rs = adminStmt.executeQuery("LIST ROLE OF USER testuser");
       TestUtils.assertResultSetEqual(rs, "Role,", Collections.singleton("testrole,"));
     }
@@ -534,11 +537,12 @@ public class IoTDBRelationalAuthIT {
 
       ResultSet resultSet = adminStmt.executeQuery("List user");
       Set<String> resultSetList = new HashSet<>();
-      resultSetList.add("0,root,");
-      resultSetList.add("10000,testuser,");
-      resultSetList.add("10001,!@#$%^*()_+-=1,");
-      resultSetList.add("10002,!@#$%^*()_+-=2,");
-      TestUtils.assertResultSetEqual(resultSet, "UserId,User,", resultSetList);
+      resultSetList.add("0,root,-1,-1,");
+      resultSetList.add("10000,testuser,-1,-1,");
+      resultSetList.add("10001,!@#$%^*()_+-=1,-1,-1,");
+      resultSetList.add("10002,!@#$%^*()_+-=2,-1,-1,");
+      TestUtils.assertResultSetEqual(
+          resultSet, "UserId,User,MaxSessionPerUser,MinSessionPerUser,", resultSetList);
       resultSet = adminStmt.executeQuery("List role");
       TestUtils.assertResultSetEqual(resultSet, "Role,", Collections.singleton("!@#$%^*()_+-=3,"));
       adminStmt.execute("GRANT role \"!@#$%^*()_+-=3\" to  \"!@#$%^*()_+-=1\"");

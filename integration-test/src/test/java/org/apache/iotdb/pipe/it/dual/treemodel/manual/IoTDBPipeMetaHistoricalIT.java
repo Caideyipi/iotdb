@@ -233,8 +233,15 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv,
           "list user of role `admin`",
-          ColumnHeaderConstant.USER_ID + "," + ColumnHeaderConstant.USER + ",",
-          Collections.singleton("10000,thulab,"));
+          ColumnHeaderConstant.USER_ID
+              + ","
+              + ColumnHeaderConstant.USER
+              + ","
+              + ColumnHeaderConstant.MAX_SESSION_PER_USER
+              + ","
+              + ColumnHeaderConstant.MIN_SESSION_PER_USER
+              + ",",
+          Collections.singleton("10000,thulab,-1,-1,"));
       TestUtils.assertDataEventuallyOnEnv(
           receiverEnv,
           "list privileges of role `admin`",

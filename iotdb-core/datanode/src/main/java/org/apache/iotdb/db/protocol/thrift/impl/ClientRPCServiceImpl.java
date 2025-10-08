@@ -45,6 +45,7 @@ import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.NonAlignedFullPath;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.schema.column.ColumnHeader;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.commons.utils.PathUtils;
 import org.apache.iotdb.commons.utils.TimePartitionUtils;
 import org.apache.iotdb.db.audit.DNAuditLogger;
@@ -93,10 +94,12 @@ import org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.cache.Ta
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.cache.TableId;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.cache.TreeDeviceSchemaCacheManager;
 import org.apache.iotdb.db.queryengine.plan.relational.security.TreeAccessCheckContext;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.RelationalAuthorStatement;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.SetSqlDialect;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Use;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.parser.ParsingException;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.parser.SqlParser;
+import org.apache.iotdb.db.queryengine.plan.relational.type.AuthorRType;
 import org.apache.iotdb.db.queryengine.plan.statement.Statement;
 import org.apache.iotdb.db.queryengine.plan.statement.StatementType;
 import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
@@ -118,6 +121,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.template.DropSche
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.template.SetSchemaTemplateStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.template.UnsetSchemaTemplateStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.view.CreateTableViewStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.sys.AuthorStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.SetSqlDialectStatement;
 import org.apache.iotdb.db.schemaengine.SchemaEngine;
 import org.apache.iotdb.db.schemaengine.schemaregion.ISchemaRegion;
@@ -315,6 +319,9 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
     String statement = req.getStatement();
     IClientSession clientSession = SESSION_MANAGER.getCurrSessionAndUpdateIdleTime();
 
+    int rpcMaxConcurrentClientNum =
+        IoTDBDescriptor.getInstance().getConfig().getRpcMaxConcurrentClientNum();
+
     // quota
     OperationQuota quota = null;
     if (!SESSION_MANAGER.checkLogin(clientSession)) {
@@ -340,6 +347,27 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           return RpcUtils.getTSExecuteStatementResp(
               RpcUtils.getStatus(
                   TSStatusCode.SQL_PARSE_ERROR, "This operation type is not supported"));
+        }
+
+        // parameter check
+        if (s instanceof AuthorStatement) {
+          AuthorStatement stat = (AuthorStatement) s;
+          if (stat.getType() == StatementType.MODIFY_MAX_USER_SESSION) {
+            if (!AuthUtils.validateSessionPerUser(
+                stat.getMaxSessionPerUser(), rpcMaxConcurrentClientNum)) {
+              return RpcUtils.getTSExecuteStatementResp(
+                  RpcUtils.getStatus(
+                      TSStatusCode.ILLEGAL_PARAMETER, "This maxSessionPerUser number is illegal."));
+            }
+          }
+          if (stat.getType() == StatementType.MODIFY_MIN_USER_SESSION) {
+            if (!AuthUtils.validateSessionPerUser(
+                stat.getMinSessionPerUser(), rpcMaxConcurrentClientNum)) {
+              return RpcUtils.getTSExecuteStatementResp(
+                  RpcUtils.getStatus(
+                      TSStatusCode.ILLEGAL_PARAMETER, "This minSessionPerUser number is illegal."));
+            }
+          }
         }
 
         if (s instanceof CreateTableViewStatement) {
@@ -392,6 +420,27 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
         if (s instanceof Use) {
           useDatabase = true;
+        }
+
+        if (s instanceof RelationalAuthorStatement) {
+          RelationalAuthorStatement stat = (RelationalAuthorStatement) s;
+          if (stat.getAuthorType() == AuthorRType.UPDATE_MAX_USER_SESSION) {
+            if (!AuthUtils.validateSessionPerUser(
+                stat.getMaxSessionPerUser(), rpcMaxConcurrentClientNum)) {
+              return RpcUtils.getTSExecuteStatementResp(
+                  RpcUtils.getStatus(
+                      TSStatusCode.ILLEGAL_PARAMETER, "This maxSessionPerUser number is illegal."));
+            }
+          }
+
+          if (stat.getAuthorType() == AuthorRType.UPDATE_MIN_USER_SESSION) {
+            if (!AuthUtils.validateSessionPerUser(
+                stat.getMinSessionPerUser(), rpcMaxConcurrentClientNum)) {
+              return RpcUtils.getTSExecuteStatementResp(
+                  RpcUtils.getStatus(
+                      TSStatusCode.ILLEGAL_PARAMETER, "This minSessionPerUser number is illegal."));
+            }
+          }
         }
 
         if (s instanceof SetSqlDialect) {

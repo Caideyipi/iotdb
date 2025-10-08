@@ -30,12 +30,13 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Collections;
 
 public class RoleTest {
 
   @Test
-  public void testRole_InitAndSerialize() throws IllegalPathException {
+  public void testRole_InitAndSerialize() throws IllegalPathException, IOException {
     Role role = new Role("role");
     PathPrivilege pathPrivilege = new PathPrivilege(new PartialPath("root.ln"));
     role.setPrivilegeList(Collections.singletonList(pathPrivilege));

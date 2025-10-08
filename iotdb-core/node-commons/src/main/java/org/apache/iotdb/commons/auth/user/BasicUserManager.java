@@ -306,6 +306,51 @@ public abstract class BasicUserManager extends BasicRoleManager {
     }
   }
 
+  public boolean updateUserMaxSession(String username, int maxSessionPerUser) throws AuthException {
+    lock.writeLock(username);
+    try {
+      User user = this.getEntity(username);
+      if (user == null) {
+        throw new AuthException(
+            getEntityNotExistErrorCode(), String.format(getNoSuchEntityError(), username));
+      }
+      int minSessionPerUser = user.getMinSessionPerUser();
+      if (maxSessionPerUser != -1 && maxSessionPerUser < minSessionPerUser) {
+        throw new AuthException(
+            TSStatusCode.ILLEGAL_PARAMETER,
+            "The value of maxSessionPerUser cannot be less than the value of minSessionPerUser.");
+      }
+      user.setMaxSessionPerUser(maxSessionPerUser);
+      return true;
+    } finally {
+      lock.writeUnlock(username);
+    }
+  }
+
+  public boolean updateUserMinSession(String username, int minSessionPerUser) throws AuthException {
+
+    lock.writeLock(username);
+    try {
+      User user = this.getEntity(username);
+      if (user == null) {
+        throw new AuthException(
+            getEntityNotExistErrorCode(), String.format(getNoSuchEntityError(), username));
+      }
+      int maxSessionPerUser = user.getMaxSessionPerUser();
+      if (minSessionPerUser != -1
+          && maxSessionPerUser != -1
+          && maxSessionPerUser < minSessionPerUser) {
+        throw new AuthException(
+            TSStatusCode.ILLEGAL_PARAMETER,
+            "The value of minSessionPerUser cannot be greater than the value of maxSessionPerUser.");
+      }
+      user.setMinSessionPerUser(minSessionPerUser);
+      return true;
+    } finally {
+      lock.writeUnlock(username);
+    }
+  }
+
   public void grantRoleToUser(String roleName, String username) throws AuthException {
     lock.writeLock(username);
     try {

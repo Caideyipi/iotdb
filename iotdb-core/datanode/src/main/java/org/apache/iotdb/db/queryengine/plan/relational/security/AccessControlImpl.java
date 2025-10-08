@@ -303,6 +303,13 @@ public class AccessControlImpl implements AccessControl {
           ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
         }
         return;
+      case UPDATE_MAX_USER_SESSION:
+      case UPDATE_MIN_USER_SESSION:
+        if (AuthorityChecker.SUPER_USER.equals(userName)) {
+          return;
+        }
+        authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.MANAGE_USER, auditEntity);
+        return;
       case CREATE_ROLE:
       case DROP_ROLE:
         auditEntity

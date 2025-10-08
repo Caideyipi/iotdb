@@ -27,11 +27,23 @@ import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorRelationalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorTreePlan;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
+import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
+
+import java.util.Map;
 
 public interface IAuthorPlanExecutor {
   TPermissionInfoResp login(String username, String password);
+
+  TSStatus checkSessionNumOnAlter(
+      String username, int newSessionPerUser, ConfigManager configManager);
+
+  TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum);
+
+  TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) throws AuthException;
 
   String login4Pipe(final String username, final String password);
 

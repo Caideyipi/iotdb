@@ -60,6 +60,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerRelationalReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckSessionNumReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckUserPrivilegesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCloseConsumerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
@@ -739,6 +741,20 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TPermissionInfoResp getUser(String userName) throws TException {
     return executeRemoteCallWithRetry(
         () -> client.getUser(userName), resp -> !updateConfigNodeLeader(resp.status));
+  }
+
+  @Override
+  public TSStatus checkSessionNum(TCheckSessionNumReq req) throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.checkSessionNum(req), status -> !updateConfigNodeLeader(status));
+  }
+
+  @Override
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum)
+      throws TException {
+    return executeRemoteCallWithRetry(
+        () -> client.checkMaxClientNumValid(maxConcurrentClientNum),
+        resp -> !updateConfigNodeLeader(resp.status));
   }
 
   @Override

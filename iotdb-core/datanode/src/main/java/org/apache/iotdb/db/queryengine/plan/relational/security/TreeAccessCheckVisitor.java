@@ -552,6 +552,14 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
             statement::getUserName)) {
           return RpcUtils.SUCCESS_STATUS;
         }
+      case UPDATE_USER_MAX_SESSION:
+      case UPDATE_USER_MIN_SESSION:
+        if (checkHasGlobalAuth(
+            context.setAuditLogOperation(AuditLogOperation.QUERY),
+            PrivilegeType.MANAGE_USER,
+            statement::getUserName)) {
+          return RpcUtils.SUCCESS_STATUS;
+        }
         statement.setUserName(context.getUsername());
         return RpcUtils.SUCCESS_STATUS;
 

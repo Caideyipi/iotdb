@@ -214,6 +214,8 @@ keyWords
     | SELECT
     | SERIESSLOTID
     | SESSION
+    | MAX_SESSION_PER_USER
+    | MIN_SESSION_PER_USER
     | SET
     | SETTLE
     | SGLEVEL

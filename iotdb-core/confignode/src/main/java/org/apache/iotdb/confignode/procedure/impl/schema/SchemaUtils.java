@@ -42,6 +42,7 @@ import org.apache.iotdb.mpp.rpc.thrift.TCheckSchemaRegionUsingTemplateReq;
 import org.apache.iotdb.mpp.rpc.thrift.TCheckSchemaRegionUsingTemplateResp;
 import org.apache.iotdb.mpp.rpc.thrift.TCountPathsUsingTemplateReq;
 import org.apache.iotdb.mpp.rpc.thrift.TCountPathsUsingTemplateResp;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchSessionsNumInfo;
 import org.apache.iotdb.mpp.rpc.thrift.TUpdateTableReq;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -312,5 +313,16 @@ public class SchemaUtils {
       status.setMessage(e.getMessage());
     }
     return status;
+  }
+
+  public static Map<Integer, TFetchSessionsNumInfo> fetchSessionsNumInfo(
+      ConfigManager configManager) {
+    final Map<Integer, TDataNodeLocation> dataNodeLocationMap =
+        configManager.getNodeManager().getRegisteredDataNodeLocations();
+    final DataNodeAsyncRequestContext<Object, TFetchSessionsNumInfo> clientHandler =
+        new DataNodeAsyncRequestContext<>(
+            CnToDnAsyncRequestType.FETCH_SESSIONS_NUM_INFO, dataNodeLocationMap);
+    CnToDnInternalServiceAsyncRequestManager.getInstance().sendAsyncRequestWithRetry(clientHandler);
+    return clientHandler.getResponseMap();
   }
 }

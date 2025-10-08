@@ -49,32 +49,6 @@ public class AuthorRelationalPlan extends AuthorPlan {
       final String tableName,
       final Set<Integer> permissions,
       final boolean grantOpt,
-      final String password,
-      final int maxSessionPerUser,
-      final int minSessionPerUser) {
-    super(
-        authorType,
-        userName,
-        roleName,
-        password,
-        "",
-        grantOpt,
-        maxSessionPerUser,
-        minSessionPerUser);
-
-    this.databaseName = databaseName;
-    this.tableName = tableName;
-    this.permissions = permissions;
-  }
-
-  public AuthorRelationalPlan(
-      final ConfigPhysicalPlanType authorType,
-      final String userName,
-      final String roleName,
-      final String databaseName,
-      final String tableName,
-      final Set<Integer> permissions,
-      final boolean grantOpt,
       final String password) {
     this(
         authorType,
@@ -85,8 +59,10 @@ public class AuthorRelationalPlan extends AuthorPlan {
         permissions,
         grantOpt,
         password,
-        0,
-        "");
+        -1,
+        "",
+        -1,
+        -1);
   }
 
   public AuthorRelationalPlan(
@@ -99,9 +75,18 @@ public class AuthorRelationalPlan extends AuthorPlan {
       final boolean grantOpt,
       final String password,
       final long executedByUserId,
-      final String newUsername) {
-    super(authorType, userName, roleName, password, "", grantOpt, -1, -1);
-
+      final String newUsername,
+      final int maxSessionPerUser,
+      final int minSessionPerUser) {
+    super(
+        authorType,
+        userName,
+        roleName,
+        password,
+        "",
+        grantOpt,
+        maxSessionPerUser,
+        minSessionPerUser);
     this.databaseName = databaseName;
     this.tableName = tableName;
     this.permissions = permissions;

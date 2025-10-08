@@ -114,7 +114,11 @@ public class IoTDBUserRenameIT {
       // We can create another root
       adminStmt.execute("CREATE USER root 'IoTDB@2025abc'");
       // Ensure everything works
-      final String ans = "0,admin,\n" + "10000,user4,\n" + "10001,user2,\n" + "10002,root,\n";
+      final String ans =
+          "0,admin,-1,-1,\n"
+              + "10000,user4,-1,-1,\n"
+              + "10001,user2,-1,-1,\n"
+              + "10002,root,-1,-1,\n";
       ResultSet resultSet = adminStmt.executeQuery("LIST USER");
       validateResultSet(resultSet, ans);
     }

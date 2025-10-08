@@ -34,7 +34,9 @@ import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorRelationalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorTreePlan;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
+import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 
 import org.apache.thrift.TException;
@@ -43,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class AuthorInfo implements SnapshotProcessor {
 
@@ -53,11 +56,13 @@ public class AuthorInfo implements SnapshotProcessor {
 
   protected IAuthorizer authorizer;
   protected volatile IAuthorPlanExecutor authorPlanExecutor;
+  private ConfigManager configManager;
 
-  public AuthorInfo() {
+  public AuthorInfo(ConfigManager configManager) {
     try {
       authorizer = BasicAuthorizer.getInstance();
-      authorPlanExecutor = new AuthorPlanExecutor(authorizer);
+      authorPlanExecutor = new AuthorPlanExecutor(authorizer, configManager);
+      this.configManager = configManager;
     } catch (AuthException e) {
       LOGGER.error("get user or role permissionInfo failed because ", e);
     }
@@ -73,6 +78,17 @@ public class AuthorInfo implements SnapshotProcessor {
 
   public String login4Pipe(final String username, final String password) {
     return authorPlanExecutor.login4Pipe(username, password);
+  }
+
+  public TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
+    return authorPlanExecutor.checkSessionNumOnConnect(
+        currentSessionInfo, rpcMaxConcurrentClientNum);
+  }
+
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum)
+      throws AuthException {
+    return authorPlanExecutor.checkMaxClientNumValid(maxConcurrentClientNum);
   }
 
   public TPermissionInfoResp checkUserPrivileges(String username, PrivilegeUnion union) {

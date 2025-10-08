@@ -110,7 +110,7 @@ public class IoTDBClusterRestartFileEncryptIT {
     try (Connection connection = EnvFactory.getEnv().getTableConnection();
         Statement statement = connection.createStatement()) {
       ResultSet resultSet = statement.executeQuery("LIST USER");
-      String ans = "0,root,\n" + "10000,test1,\n";
+      String ans = "0,root,-1,-1,\n" + "10000,test1,-1,-1,\n";
       validateResultSet(resultSet, ans);
       resultSet = statement.executeQuery("LIST ROLE");
       ans = "role1,\n";

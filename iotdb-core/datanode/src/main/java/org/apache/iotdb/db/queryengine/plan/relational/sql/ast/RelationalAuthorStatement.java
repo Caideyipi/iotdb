@@ -49,6 +49,8 @@ public class RelationalAuthorStatement extends Statement {
 
   private String password;
   private String oldPassword;
+  private int maxSessionPerUser;
+  private int minSessionPerUser;
 
   private Set<PrivilegeType> privilegeType;
 
@@ -132,6 +134,14 @@ public class RelationalAuthorStatement extends Statement {
     return this.password;
   }
 
+  public int getMaxSessionPerUser() {
+    return this.maxSessionPerUser;
+  }
+
+  public int getMinSessionPerUser() {
+    return this.minSessionPerUser;
+  }
+
   public boolean isGrantOption() {
     return grantOption;
   }
@@ -192,6 +202,14 @@ public class RelationalAuthorStatement extends Statement {
     this.loginAddr = loginAddr;
   }
 
+  public void setMaxSessionPerUser(int maxSessionPerUser) {
+    this.maxSessionPerUser = maxSessionPerUser;
+  }
+
+  public void setMinSessionPerUser(int minSessionPerUser) {
+    this.minSessionPerUser = minSessionPerUser;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -231,6 +249,8 @@ public class RelationalAuthorStatement extends Statement {
       case DROP_ROLE:
       case DROP_USER:
       case UPDATE_USER:
+      case UPDATE_MAX_USER_SESSION:
+      case UPDATE_MIN_USER_SESSION:
       case GRANT_ROLE_ANY:
       case GRANT_USER_ANY:
       case GRANT_ROLE_ALL:

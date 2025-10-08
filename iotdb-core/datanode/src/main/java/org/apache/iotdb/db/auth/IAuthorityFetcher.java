@@ -25,6 +25,7 @@ import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.db.queryengine.plan.execution.config.ConfigTaskResult;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.RelationalAuthorStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.AuthorStatement;
@@ -33,10 +34,17 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface IAuthorityFetcher {
 
   TSStatus checkUser(String username, String password);
+
+  TSStatus checkSessionNumOnConnect(Map<String, Integer> currentSessionInfo);
+
+  TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum);
+
+  User getCacheUser(String userName);
 
   boolean checkRole(String username, String roleName);
 

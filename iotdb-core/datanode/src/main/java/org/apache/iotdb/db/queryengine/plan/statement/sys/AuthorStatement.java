@@ -50,6 +50,8 @@ public class AuthorStatement extends Statement implements IConfigStatement {
   private long executedByUserId;
   private String newUsername = "";
   private String loginAddr;
+  private int maxSessionPerUser;
+  private int minSessionPerUser;
 
   /**
    * Constructor with AuthorType.
@@ -83,6 +85,12 @@ public class AuthorStatement extends Statement implements IConfigStatement {
         break;
       case REVOKE_USER:
         this.setType(StatementType.REVOKE_USER_PRIVILEGE);
+        break;
+      case UPDATE_USER_MAX_SESSION:
+        this.setType(StatementType.MODIFY_MAX_USER_SESSION);
+        break;
+      case UPDATE_USER_MIN_SESSION:
+        this.setType(StatementType.MODIFY_MIN_USER_SESSION);
         break;
       case UPDATE_USER:
         this.setType(StatementType.MODIFY_PASSWORD);
@@ -135,8 +143,24 @@ public class AuthorStatement extends Statement implements IConfigStatement {
     return userName;
   }
 
+  public int getMaxSessionPerUser() {
+    return maxSessionPerUser;
+  }
+
+  public int getMinSessionPerUser() {
+    return minSessionPerUser;
+  }
+
   public void setUserName(String userName) {
     this.userName = userName;
+  }
+
+  public void setMaxSessionPerUser(int maxSessionPerUser) {
+    this.maxSessionPerUser = maxSessionPerUser;
+  }
+
+  public void setMinSessionPerUser(int minSessionPerUser) {
+    this.minSessionPerUser = minSessionPerUser;
   }
 
   public String getRoleName() {
@@ -233,6 +257,8 @@ public class AuthorStatement extends Statement implements IConfigStatement {
       case UPDATE_USER:
       case RENAME_USER:
       case ACCOUNT_UNLOCK:
+      case UPDATE_USER_MAX_SESSION:
+      case UPDATE_USER_MIN_SESSION:
         queryType = QueryType.WRITE;
         break;
       case LIST_USER:

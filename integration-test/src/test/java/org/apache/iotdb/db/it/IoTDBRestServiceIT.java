@@ -1407,6 +1407,8 @@ public class IoTDBRestServiceIT {
           {
             add(ColumnHeaderConstant.USER_ID);
             add(ColumnHeaderConstant.USER);
+            add(ColumnHeaderConstant.MAX_SESSION_PER_USER);
+            add(ColumnHeaderConstant.MIN_SESSION_PER_USER);
           }
         };
     List<Object> values1 =
@@ -2071,6 +2073,8 @@ public class IoTDBRestServiceIT {
           {
             add(ColumnHeaderConstant.USER_ID);
             add(ColumnHeaderConstant.USER);
+            add(ColumnHeaderConstant.MAX_SESSION_PER_USER);
+            add(ColumnHeaderConstant.MIN_SESSION_PER_USER);
           }
         };
     List<Object> values1 =

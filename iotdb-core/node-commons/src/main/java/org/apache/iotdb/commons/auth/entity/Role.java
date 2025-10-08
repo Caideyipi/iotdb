@@ -621,7 +621,7 @@ public class Role {
         objectPrivilegeMap);
   }
 
-  public ByteBuffer serialize() {
+  public ByteBuffer serialize() throws IOException {
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
 

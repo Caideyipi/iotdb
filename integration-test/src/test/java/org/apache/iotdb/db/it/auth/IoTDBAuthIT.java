@@ -472,7 +472,7 @@ public class IoTDBAuthIT {
 
     try {
       ResultSet resultSet = adminStmt.executeQuery("LIST USER");
-      String ans = "0,root,\n";
+      String ans = "0,root,-1,-1,\n";
       try {
         validateResultSet(resultSet, ans);
 
@@ -481,17 +481,17 @@ public class IoTDBAuthIT {
         }
         resultSet = adminStmt.executeQuery("LIST USER");
         ans =
-            "0,root,\n"
-                + "10000,user0,\n"
-                + "10001,user1,\n"
-                + "10002,user2,\n"
-                + "10003,user3,\n"
-                + "10004,user4,\n"
-                + "10005,user5,\n"
-                + "10006,user6,\n"
-                + "10007,user7,\n"
-                + "10008,user8,\n"
-                + "10009,user9,\n";
+            "0,root,-1,-1,\n"
+                + "10000,user0,-1,-1,\n"
+                + "10001,user1,-1,-1,\n"
+                + "10002,user2,-1,-1,\n"
+                + "10003,user3,-1,-1,\n"
+                + "10004,user4,-1,-1,\n"
+                + "10005,user5,-1,-1,\n"
+                + "10006,user6,-1,-1,\n"
+                + "10007,user7,-1,-1,\n"
+                + "10008,user8,-1,-1,\n"
+                + "10009,user9,-1,-1,\n";
         validateResultSet(resultSet, ans);
 
         for (int i = 0; i < 10; i++) {
@@ -501,12 +501,12 @@ public class IoTDBAuthIT {
         }
         resultSet = adminStmt.executeQuery("LIST USER");
         ans =
-            "0,root,\n"
-                + "10001,user1,\n"
-                + "10003,user3,\n"
-                + "10005,user5,\n"
-                + "10007,user7,\n"
-                + "10009,user9,\n";
+            "0,root,-1,-1,\n"
+                + "10001,user1,-1,-1,\n"
+                + "10003,user3,-1,-1,\n"
+                + "10005,user5,-1,-1,\n"
+                + "10007,user7,-1,-1,\n"
+                + "10009,user9,-1,-1,\n";
         validateResultSet(resultSet, ans);
       } finally {
         resultSet.close();
@@ -590,7 +590,7 @@ public class IoTDBAuthIT {
         ans = "role1,\nrole2,\n";
         validateResultSet(resultSet, ans);
         resultSet = userStmt.executeQuery("LIST USER OF ROLE role1");
-        ans = "10000,user1,\n10001,user2,\n";
+        ans = "10000,user1,-1,-1,\n10001,user2,-1,-1,\n";
         validateResultSet(resultSet, ans);
       } finally {
         userStmt.close();
@@ -774,25 +774,25 @@ public class IoTDBAuthIT {
 
       ResultSet resultSet = adminStmt.executeQuery("LIST USER OF ROLE dalao");
       String ans =
-          "10011,DailySecurity,\n"
-              + "10006,DoubleLight,\n"
-              + "10010,East,\n"
-              + "10007,Eastwards,\n"
-              + "10005,GoldLuck,\n"
-              + "10003,GoodWoods,\n"
-              + "10004,HealthHonor,\n"
-              + "10000,HighFly,\n"
-              + "10012,Moon,\n"
-              + "10002,Persistence,\n"
-              + "10013,RayBud,\n"
-              + "10008,ScentEffusion,\n"
-              + "10009,Smart,\n"
-              + "10001,SunComparison,\n";
+          "10011,DailySecurity,-1,-1,\n"
+              + "10006,DoubleLight,-1,-1,\n"
+              + "10010,East,-1,-1,\n"
+              + "10007,Eastwards,-1,-1,\n"
+              + "10005,GoldLuck,-1,-1,\n"
+              + "10003,GoodWoods,-1,-1,\n"
+              + "10004,HealthHonor,-1,-1,\n"
+              + "10000,HighFly,-1,-1,\n"
+              + "10012,Moon,-1,-1,\n"
+              + "10002,Persistence,-1,-1,\n"
+              + "10013,RayBud,-1,-1,\n"
+              + "10008,ScentEffusion,-1,-1,\n"
+              + "10009,Smart,-1,-1,\n"
+              + "10001,SunComparison,-1,-1,\n";
       try {
         validateResultSet(resultSet, ans);
 
         resultSet = adminStmt.executeQuery("LIST USER OF ROLE zhazha");
-        ans = "10014,RiverSky,\n";
+        ans = "10014,RiverSky,-1,-1,\n";
         validateResultSet(resultSet, ans);
 
         adminStmt.execute("REVOKE ROLE zhazha from RiverSky");
@@ -847,25 +847,25 @@ public class IoTDBAuthIT {
     try (Connection userCon = EnvFactory.getEnv().getConnection("tempuser", "temppw123456");
         Statement userStmt = userCon.createStatement()) {
       try {
-        String ans = "10010,tempuser,\n";
+        String ans = "10010,tempuser,-1,-1,\n";
         ResultSet resultSet = userStmt.executeQuery("LIST USER");
         validateResultSet(resultSet, ans);
         // with list user privilege
         adminStmt.execute("GRANT SECURITY on root.** TO USER tempuser");
         resultSet = userStmt.executeQuery("LIST USER");
         ans =
-            "0,root,\n"
-                + "10010,tempuser,\n"
-                + "10000,user0,\n"
-                + "10001,user1,\n"
-                + "10002,user2,\n"
-                + "10003,user3,\n"
-                + "10004,user4,\n"
-                + "10005,user5,\n"
-                + "10006,user6,\n"
-                + "10007,user7,\n"
-                + "10008,user8,\n"
-                + "10009,user9,\n";
+            "0,root,-1,-1,\n"
+                + "10010,tempuser,-1,-1,\n"
+                + "10000,user0,-1,-1,\n"
+                + "10001,user1,-1,-1,\n"
+                + "10002,user2,-1,-1,\n"
+                + "10003,user3,-1,-1,\n"
+                + "10004,user4,-1,-1,\n"
+                + "10005,user5,-1,-1,\n"
+                + "10006,user6,-1,-1,\n"
+                + "10007,user7,-1,-1,\n"
+                + "10008,user8,-1,-1,\n"
+                + "10009,user9,-1,-1,\n";
         validateResultSet(resultSet, ans);
       } finally {
         userStmt.close();

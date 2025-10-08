@@ -31,12 +31,12 @@ public abstract class AuthorPlan extends ConfigPhysicalReadPlan {
   protected String newPassword;
   protected String userName;
   protected boolean grantOpt;
-  protected int maxSessionPerUser;
-  protected int minSessionPerUser;
   protected String newUsername = "";
 
   // Used for read plans or some write plans whose type name ends with 'V2'
   protected long executedByUserId;
+  protected int maxSessionPerUser = -1;
+  protected int minSessionPerUser = -1;
 
   public AuthorPlan(final ConfigPhysicalPlanType type) {
     super(type);
@@ -92,7 +92,7 @@ public abstract class AuthorPlan extends ConfigPhysicalReadPlan {
   }
 
   public void setMinSessionPerUser(final int minSessionPerUser) {
-    this.maxSessionPerUser = minSessionPerUser;
+    this.minSessionPerUser = minSessionPerUser;
   }
 
   public void setPassword(final String password) {

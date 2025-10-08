@@ -29,6 +29,7 @@ import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.PrivilegeUnion;
 import org.apache.iotdb.commons.auth.entity.Role;
 import org.apache.iotdb.commons.auth.entity.User;
+import org.apache.iotdb.commons.cluster.NodeStatus;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
@@ -38,11 +39,15 @@ import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorRelationalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorTreePlan;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
+import org.apache.iotdb.confignode.manager.ConfigManager;
+import org.apache.iotdb.confignode.procedure.impl.schema.SchemaUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TListUserInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRoleResp;
 import org.apache.iotdb.confignode.rpc.thrift.TUserResp;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchSessionsNumInfo;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
@@ -60,6 +65,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.iotdb.commons.auth.utils.AuthUtils.constructAuthorityScope;
 import static org.apache.iotdb.confignode.persistence.auth.AuthorInfo.NO_USER_MSG;
@@ -68,9 +75,13 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthorPlanExecutor.class);
   private final IAuthorizer authorizer;
+  public static final AtomicBoolean alterFlag = new AtomicBoolean(false);
+  public static final AtomicInteger reservedConnNum = new AtomicInteger(0);
+  private ConfigManager configManager;
 
-  public AuthorPlanExecutor(IAuthorizer authorizer) {
+  public AuthorPlanExecutor(IAuthorizer authorizer, ConfigManager configManager) {
     this.authorizer = authorizer;
+    this.configManager = configManager;
   }
 
   @Override
@@ -106,6 +117,116 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
   }
 
   @Override
+  public TSStatus checkSessionNumOnAlter(
+      String username, int newSessionPerUser, ConfigManager configManager) {
+    alterFlag.set(true);
+    reservedConnNum.set(newSessionPerUser);
+    int idleNum = 0;
+    TSStatus resp = new TSStatus();
+    try {
+      User user = authorizer.getUser(username);
+      if (user == null) {
+        throw new AuthException(
+            TSStatusCode.USER_NOT_EXIST, String.format("No such user : %s", username));
+      }
+      if (newSessionPerUser <= user.getMinSessionPerUser()) {
+        alterFlag.set(false);
+        reservedConnNum.set(0);
+        resp.setCode(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+        resp.setMessage("Sufficient connection resources. ");
+        return resp;
+      }
+
+      if (!checkDnUnknownStatus(configManager)) {
+        Map<Integer, TFetchSessionsNumInfo> sessionsNumInfoFromEachNode =
+            SchemaUtils.fetchSessionsNumInfo(configManager);
+        for (TFetchSessionsNumInfo info : sessionsNumInfoFromEachNode.values()) {
+          idleNum =
+              authorizer.getIdleSessionNumOnAlter(
+                  username,
+                  info.getCurrentSessionInfo(),
+                  info.getRpcMaxConcurrentClientNum(),
+                  newSessionPerUser);
+          if (idleNum < 0) {
+            alterFlag.set(false);
+            reservedConnNum.set(0);
+            resp.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+            resp.setMessage("InSufficient connection resources. ");
+            return resp;
+          }
+        }
+      } else {
+        alterFlag.set(false);
+        reservedConnNum.set(0);
+        resp.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+        resp.setMessage("Some dn's status is unknown, please fix it.");
+        return resp;
+      }
+
+      alterFlag.set(false);
+      reservedConnNum.set(0);
+      resp.setCode(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+      resp.setMessage("Sufficient connection resources. ");
+      return resp;
+    } catch (AuthException e) {
+      alterFlag.set(false);
+      reservedConnNum.addAndGet(0);
+      LOGGER.error("meet error while check session resource .", e);
+      resp.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+      resp.setMessage(e.getMessage());
+      return resp;
+    }
+  }
+
+  private Boolean checkDnUnknownStatus(ConfigManager configManager) {
+    List<Integer> unknownDns =
+        configManager.getLoadManager().filterDataNodeThroughStatus(NodeStatus.Unknown);
+    if (!unknownDns.isEmpty()) {
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
+    int idleNum = 0;
+    TSStatus resp = new TSStatus();
+    try {
+      idleNum =
+          authorizer.getIdleSessionNumOnConnect(currentSessionInfo, rpcMaxConcurrentClientNum)
+              - reservedConnNum.get();
+      if (idleNum > 0) {
+        resp.setCode(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+        resp.setMessage("Sufficient connection resources. ");
+        return resp;
+      } else {
+        resp.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+        resp.setMessage("InSufficient connection resources. ");
+        return resp;
+      }
+    } catch (AuthException e) {
+      LOGGER.error("meet error while check session resource .", e);
+      resp.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
+      resp.setMessage(e.getMessage());
+      return resp;
+    }
+  }
+
+  @Override
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum)
+      throws AuthException {
+    TCheckMaxClientNumResp result = new TCheckMaxClientNumResp();
+    int minSessionSum = authorizer.getMinSessionSum();
+    result.setMinSessionsSum(minSessionSum);
+    if (maxConcurrentClientNum < minSessionSum) {
+      result.setStatus(RpcUtils.getStatus(TSStatusCode.SESSION_NUMS_EXCEEDED));
+    } else {
+      result.setStatus(RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS));
+    }
+    return result;
+  }
+
   public String login4Pipe(final String username, final String password) {
     return authorizer.login4Pipe(username, password);
   }
@@ -117,6 +238,8 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
     String roleName = authorPlan.getRoleName();
     String password = authorPlan.getPassword();
     String newPassword = authorPlan.getNewPassword();
+    int maxSessionPerUser = authorPlan.getMaxSessionPerUser();
+    int minSessionPerUser = authorPlan.getMinSessionPerUser();
     Set<Integer> permissions = authorPlan.getPermissions();
     boolean grantOpt = authorPlan.getGrantOpt();
     List<PartialPath> nodeNameList = authorPlan.getNodeNameList();
@@ -129,6 +252,16 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
           break;
         case RenameUser:
           authorizer.renameUser(userName, newUsername);
+          break;
+        case UpdateUserMaxSession:
+          authorizer.updateUserMaxSession(userName, maxSessionPerUser);
+          break;
+        case UpdateUserMinSession:
+          TSStatus status = checkSessionNumOnAlter(userName, minSessionPerUser, configManager);
+          if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+            return status;
+          }
+          authorizer.updateUserMinSession(userName, minSessionPerUser);
           break;
         case CreateUser:
           authorizer.createUser(userName, password);
@@ -245,6 +378,17 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
           break;
         case RRenameUser:
           authorizer.renameUser(userName, newUsername);
+          break;
+        case RUpdateUserMaxSession:
+          authorizer.updateUserMaxSession(userName, authorPlan.getMaxSessionPerUser());
+          break;
+        case RUpdateUserMinSession:
+          TSStatus status =
+              checkSessionNumOnAlter(userName, authorPlan.getMinSessionPerUser(), configManager);
+          if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+            return status;
+          }
+          authorizer.updateUserMinSession(userName, authorPlan.getMinSessionPerUser());
           break;
         case RDropRole:
           authorizer.deleteRole(roleName);
@@ -589,6 +733,8 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
       result.setRoleInfo(new HashMap<>());
     }
     result.setUserInfo(tUserResp);
+    result.setMaxSessionPerUser(user.getMaxSessionPerUser());
+    result.setMinSessionPerUser(user.getMinSessionPerUser());
     result.setStatus(new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
     return result;
   }

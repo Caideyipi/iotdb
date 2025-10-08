@@ -236,7 +236,6 @@ public class CNPhysicalPlanGenerator
           updateUserMinSession.setNodeNameList(new ArrayList<>());
           planDeque.add(updateUserMinSession);
         }
-
       } else {
         final AuthorTreePlan createRole = new AuthorTreePlan(ConfigPhysicalPlanType.CreateRole);
         createRole.setRoleName(user);

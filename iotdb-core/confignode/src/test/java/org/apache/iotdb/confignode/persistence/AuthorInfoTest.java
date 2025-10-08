@@ -68,7 +68,7 @@ public class AuthorInfoTest {
 
   @BeforeClass
   public static void setup() {
-    authorInfo = new AuthorInfo();
+    authorInfo = new AuthorInfo(null);
     if (!snapshotDir.exists()) {
       snapshotDir.mkdirs();
     }
@@ -689,7 +689,11 @@ public class AuthorInfoTest {
             "",
             Collections.emptySet(),
             false,
-            "password123456");
+            "password123456",
+            -1,
+            "",
+            -1,
+            -1);
 
     checkAuthorNonQueryReturn(plan);
 
@@ -709,7 +713,11 @@ public class AuthorInfoTest {
             "",
             Collections.emptySet(),
             false,
-            "");
+            "",
+            -1,
+            "",
+            -1,
+            -1);
     checkAuthorNonQueryReturn(plan);
 
     // list user
@@ -738,7 +746,11 @@ public class AuthorInfoTest {
             "",
             Collections.emptySet(),
             false,
-            "");
+            "",
+            -1,
+            "",
+            -1,
+            -1);
 
     checkAuthorNonQueryReturn(plan);
 
@@ -752,7 +764,11 @@ public class AuthorInfoTest {
             "",
             Collections.emptySet(),
             false,
-            "password123456");
+            "password123456",
+            -1,
+            "",
+            -1,
+            -1);
 
     checkAuthorNonQueryReturn(plan);
     checkAuthorNonQueryReturn(
@@ -764,7 +780,11 @@ public class AuthorInfoTest {
             "",
             Collections.emptySet(),
             false,
-            ""));
+            "",
+            -1,
+            "",
+            -1,
+            -1));
 
     // grant privileges
     checkAuthorNonQueryReturn(

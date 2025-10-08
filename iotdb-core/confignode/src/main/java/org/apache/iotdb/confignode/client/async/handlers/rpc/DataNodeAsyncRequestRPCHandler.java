@@ -34,6 +34,7 @@ import org.apache.iotdb.mpp.rpc.thrift.TCheckTimeSeriesExistenceResp;
 import org.apache.iotdb.mpp.rpc.thrift.TCountPathsUsingTemplateResp;
 import org.apache.iotdb.mpp.rpc.thrift.TDeviceViewResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListResp;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchSessionsNumInfo;
 import org.apache.iotdb.mpp.rpc.thrift.TPushConsumerGroupMetaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TPushPipeMetaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TPushTopicMetaResp;
@@ -190,6 +191,14 @@ public abstract class DataNodeAsyncRequestRPCHandler<Response>
             targetDataNode,
             dataNodeLocationMap,
             (Map<Integer, TDeviceViewResp>) responseMap,
+            countDownLatch);
+      case FETCH_SESSIONS_NUM_INFO:
+        return new FetchSessionNumInfoRPCHandler(
+            requestType,
+            requestId,
+            targetDataNode,
+            dataNodeLocationMap,
+            (Map<Integer, TFetchSessionsNumInfo>) responseMap,
             countDownLatch);
       case SET_TTL:
       case CREATE_DATA_REGION:

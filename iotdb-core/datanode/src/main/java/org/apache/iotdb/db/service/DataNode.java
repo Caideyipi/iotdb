@@ -56,6 +56,7 @@ import org.apache.iotdb.commons.udf.service.UDFClassLoaderManager;
 import org.apache.iotdb.commons.udf.service.UDFExecutableManager;
 import org.apache.iotdb.commons.utils.FileUtils;
 import org.apache.iotdb.commons.utils.PathUtils;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRegisterResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDataNodeRestartReq;
@@ -279,6 +280,9 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
 
       // Setup rpc service
       setUpRPCService();
+
+      // Check the validity of system parameters
+      checkParameterValid();
 
       // Serialize mutable system properties
       IoTDBStartCheck.getInstance().serializeMutableSystemPropertiesIfNecessary();
@@ -916,6 +920,20 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     }
     // init service protocols
     initProtocols();
+  }
+
+  protected void checkParameterValid() throws StartupException {
+    // 1. Check the validity of parameter dn_rpc_max_comput_cient_num
+    int maxConcurrentClientNum = config.getRpcMaxConcurrentClientNum();
+    TCheckMaxClientNumResp status = AuthorityChecker.checkMaxClientNumValid(maxConcurrentClientNum);
+    if (status.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      maxConcurrentClientNum = status.getMinSessionsSum();
+      logger.warn(
+          String.format(
+              "The dn_rpc_max_concurrent_client_num parameter is less than the number of connections that the system needs to reserve, so it has been reset to %s",
+              maxConcurrentClientNum));
+      config.setRpcMaxConcurrentClientNum(maxConcurrentClientNum);
+    }
   }
 
   protected void registerInternalRPCService() throws StartupException {

@@ -32,6 +32,7 @@ import org.apache.iotdb.commons.schema.column.ColumnHeader;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.commons.service.metric.PerformanceOverviewMetrics;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDBPrivilege;
 import org.apache.iotdb.confignode.rpc.thrift.TListUserInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TPathPrivilege;
@@ -146,6 +147,14 @@ public class AuthorityChecker {
       return status;
     }
     return accessControl.allowUserToLogin(userName);
+  }
+
+  public static TSStatus checkSesionNumOnConnect(Map<String, Integer> currentSessionInfo) {
+    return authorityFetcher.get().checkSessionNumOnConnect(currentSessionInfo);
+  }
+
+  public static TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
+    return authorityFetcher.get().checkMaxClientNumValid(maxConcurrentClientNum);
   }
 
   public static SettableFuture<ConfigTaskResult> queryPermission(AuthorStatement authorStatement) {
@@ -445,9 +454,10 @@ public class AuthorityChecker {
         builder
             .getColumnBuilder(1)
             .writeBinary(new Binary(userinfo.getUsername(), TSFileConfig.STRING_CHARSET));
+        builder.getColumnBuilder(2).writeInt(userinfo.getMaxSessionPerUser());
+        builder.getColumnBuilder(3).writeInt(userinfo.getMinSessionPerUser());
         builder.declarePosition();
       }
-
     } else {
       headerList = LIST_USER_OR_ROLE_PRIVILEGES_COLUMN_HEADERS;
       types =
@@ -514,5 +524,9 @@ public class AuthorityChecker {
             builder);
       }
     }
+  }
+
+  public static TSStatus queryMinSessionPerUser(List<String> nameList) {
+    return authorityFetcher.get().checkUser("userName", "password");
   }
 }

@@ -34,7 +34,9 @@ import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorRelationalPlan;
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorTreePlan;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
+import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TListUserInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.db.auth.AuthorityChecker;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -57,7 +60,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
 
   public StrictAuthorPlanExecutor(IAuthorizer authorizer) {
     this.authorizer = authorizer;
-    this.commonAuthorPlanExecutor = new AuthorPlanExecutor(authorizer);
+    this.commonAuthorPlanExecutor = new AuthorPlanExecutor(authorizer, null);
   }
 
   @Override
@@ -72,6 +75,26 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
                   "SUPER USER is not allowed to login when separation of admin powers is enabled."));
     }
     return resp;
+  }
+
+  @Override
+  public TSStatus checkSessionNumOnAlter(
+      String username, int newSessionPerUser, ConfigManager configManager) {
+    return commonAuthorPlanExecutor.checkSessionNumOnAlter(
+        username, newSessionPerUser, configManager);
+  }
+
+  @Override
+  public TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
+    return commonAuthorPlanExecutor.checkSessionNumOnConnect(
+        currentSessionInfo, rpcMaxConcurrentClientNum);
+  }
+
+  @Override
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum)
+      throws AuthException {
+    return commonAuthorPlanExecutor.checkMaxClientNumValid(maxConcurrentClientNum);
   }
 
   @Override

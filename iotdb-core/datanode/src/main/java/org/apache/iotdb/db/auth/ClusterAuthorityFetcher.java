@@ -42,11 +42,14 @@ import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerRelationalReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckSessionNumReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckUserPrivilegesReq;
-import org.apache.iotdb.confignode.rpc.thrift.TLoginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TPathPrivilege;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRoleResp;
+import org.apache.iotdb.db.conf.IoTDBConfig;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
 import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
@@ -69,6 +72,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -80,7 +84,6 @@ public class ClusterAuthorityFetcher implements IAuthorityFetcher {
   private final IAuthorCache iAuthorCache;
   private boolean cacheOutDate = false;
   private long heartBeatTimeStamp = 0;
-
   private boolean acceptCache = true;
 
   private static final IClientManager<ConfigRegionId, ConfigNodeClient> CONFIG_NODE_CLIENT_MANAGER =
@@ -544,44 +547,67 @@ public class ClusterAuthorityFetcher implements IAuthorityFetcher {
 
   @Override
   public TSStatus checkUser(String username, String password) {
-    checkCacheAvailable();
-    User user = iAuthorCache.getUserCache(username);
-    if (user != null) {
-      if (user.isOpenIdUser()) {
-        return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
-      } else if (password != null && AuthUtils.validatePassword(password, user.getPassword())) {
-        return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
-      } else if (password != null
-          && AuthUtils.validatePassword(
-              password, user.getPassword(), AsymmetricEncrypt.DigestAlgorithm.MD5)) {
-        return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
-      } else {
-        return RpcUtils.getStatus(TSStatusCode.WRONG_LOGIN_PASSWORD, "Authentication failed.");
-      }
+    User user = getUser(username);
+    if (user == null) {
+      return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, "Authentication failed.");
+    }
+    if (user.isOpenIdUser()) {
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS, "Login successfully");
+    } else if (password != null && AuthUtils.validatePassword(password, user.getPassword())) {
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS, "Login successfully");
+    } else if (password != null
+        && AuthUtils.validatePassword(
+            password, user.getPassword(), AsymmetricEncrypt.DigestAlgorithm.MD5)) {
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS, "Login successfully");
     } else {
-      TLoginReq req = new TLoginReq(username, password);
-      TPermissionInfoResp status = null;
-      try (ConfigNodeClient configNodeClient =
-          CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-        // Send request to some API server
-        status = configNodeClient.login(req);
-      } catch (ClientManagerException | TException e) {
-        LOGGER.error(CONNECTERROR);
-        status = new TPermissionInfoResp();
-        status.setStatus(RpcUtils.getStatus(TSStatusCode.EXECUTE_STATEMENT_ERROR, CONNECTERROR));
-      } finally {
-        if (status == null) {
-          status = new TPermissionInfoResp();
-        }
-      }
-      if (status.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        if (acceptCache) {
-          iAuthorCache.putUserCache(username, cacheUser(status));
-        }
-        return status.getStatus();
-      } else {
-        return status.getStatus();
-      }
+      return RpcUtils.getStatus(TSStatusCode.WRONG_LOGIN_PASSWORD, "Authentication failed.");
+    }
+  }
+
+  @Override
+  public TSStatus checkSessionNumOnConnect(Map<String, Integer> currentSessionInfo) {
+    TSStatus status = null;
+    IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
+    int rpcMaxConcurrentClientNum = config.getRpcMaxConcurrentClientNum();
+    try (ConfigNodeClient configNodeClient =
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      // Send request to some API server
+      TCheckSessionNumReq req = new TCheckSessionNumReq();
+      req.setCurrentSessionInfo(currentSessionInfo);
+      req.setIsConnection(true);
+      req.setRpcMaxConcurrentClientNum(rpcMaxConcurrentClientNum);
+      status = configNodeClient.checkSessionNum(req);
+    } catch (ClientManagerException | TException e) {
+      LOGGER.error(CONNECTERROR);
+      return RpcUtils.getStatus(TSStatusCode.EXECUTE_STATEMENT_ERROR, CONNECTERROR);
+    }
+    return status;
+  }
+
+  @Override
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
+    TCheckMaxClientNumResp status = new TCheckMaxClientNumResp();
+    try (ConfigNodeClient configNodeClient =
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      // Send request to some API server
+      status = configNodeClient.checkMaxClientNumValid(maxConcurrentClientNum);
+    } catch (ClientManagerException | TException e) {
+      LOGGER.error("Failed to verify paramter dn_rpc_max_concurrent_client_num.");
+      status.setStatus(
+          RpcUtils.getStatus(
+              TSStatusCode.CONFIGURATION_ERROR,
+              "Failed to verify paramter dn_rpc_max_concurrent_client_num."));
+    }
+    return status;
+  }
+
+  public User getCacheUser(String userName) {
+    checkCacheAvailable();
+    User user = iAuthorCache.getUserCache(userName);
+    if (user != null) {
+      return user;
+    } else {
+      return null;
     }
   }
 
@@ -698,6 +724,8 @@ public class ClusterAuthorityFetcher implements IAuthorityFetcher {
         tPermissionInfoResp.getUserInfo().getPermissionInfo().getPrivilegeList();
     user.setName(tPermissionInfoResp.getUserInfo().getPermissionInfo().getName());
     user.setPassword(tPermissionInfoResp.getUserInfo().getPassword());
+    user.setMaxSessionPerUser(tPermissionInfoResp.getMaxSessionPerUser());
+    user.setMinSessionPerUser(tPermissionInfoResp.getMinSessionPerUser());
     user.loadDatabaseAndTablePrivilegeInfo(
         tPermissionInfoResp.getUserInfo().getPermissionInfo().getDbPrivilegeMap());
     user.setAnyScopePrivilegeSetInt(
@@ -746,33 +774,41 @@ public class ClusterAuthorityFetcher implements IAuthorityFetcher {
     if (authorStatement.getAuthorType() == null) {
       authorStatement.setNodeNameList(new ArrayList<>());
     }
-    return new TAuthorizerReq(
-        authorStatement.getAuthorType().ordinal(),
-        authorStatement.getUserName() == null ? "" : authorStatement.getUserName(),
-        authorStatement.getRoleName() == null ? "" : authorStatement.getRoleName(),
-        authorStatement.getPassWord() == null ? "" : authorStatement.getPassWord(),
-        authorStatement.getNewPassword() == null ? "" : authorStatement.getNewPassword(),
-        AuthUtils.strToPermissions(authorStatement.getPrivilegeList()),
-        authorStatement.getGrantOpt(),
-        AuthUtils.serializePartialPathList(authorStatement.getNodeNameList()),
-        authorStatement.getExecutedByUserId(),
-        authorStatement.getNewUsername());
+    TAuthorizerReq req =
+        new TAuthorizerReq(
+            authorStatement.getAuthorType().serialize(),
+            authorStatement.getUserName() == null ? "" : authorStatement.getUserName(),
+            authorStatement.getRoleName() == null ? "" : authorStatement.getRoleName(),
+            authorStatement.getPassWord() == null ? "" : authorStatement.getPassWord(),
+            authorStatement.getNewPassword() == null ? "" : authorStatement.getNewPassword(),
+            AuthUtils.strToPermissions(authorStatement.getPrivilegeList()),
+            authorStatement.getGrantOpt(),
+            AuthUtils.serializePartialPathList(authorStatement.getNodeNameList()),
+            authorStatement.getExecutedByUserId(),
+            authorStatement.getNewUsername());
+    req.setMaxSessionPerUser(authorStatement.getMaxSessionPerUser());
+    req.setMinSessionPerUser(authorStatement.getMinSessionPerUser());
+    return req;
   }
 
   private TAuthorizerRelationalReq statementToAuthorizerReq(
       RelationalAuthorStatement authorStatement) {
-    return new TAuthorizerRelationalReq(
-        authorStatement.getAuthorType().ordinal(),
-        authorStatement.getUserName() == null ? "" : authorStatement.getUserName(),
-        authorStatement.getRoleName() == null ? "" : authorStatement.getRoleName(),
-        authorStatement.getPassword() == null ? "" : authorStatement.getPassword(),
-        authorStatement.getDatabase() == null ? "" : authorStatement.getDatabase(),
-        authorStatement.getTableName() == null ? "" : authorStatement.getTableName(),
-        authorStatement.getPrivilegeTypes() == null
-            ? Collections.emptySet()
-            : authorStatement.getPrivilegeIds(),
-        authorStatement.isGrantOption(),
-        authorStatement.getExecutedByUserId(),
-        authorStatement.getNewUsername());
+    TAuthorizerRelationalReq req =
+        new TAuthorizerRelationalReq(
+            authorStatement.getAuthorType().ordinal(),
+            authorStatement.getUserName() == null ? "" : authorStatement.getUserName(),
+            authorStatement.getRoleName() == null ? "" : authorStatement.getRoleName(),
+            authorStatement.getPassword() == null ? "" : authorStatement.getPassword(),
+            authorStatement.getDatabase() == null ? "" : authorStatement.getDatabase(),
+            authorStatement.getTableName() == null ? "" : authorStatement.getTableName(),
+            authorStatement.getPrivilegeTypes() == null
+                ? Collections.emptySet()
+                : authorStatement.getPrivilegeIds(),
+            authorStatement.isGrantOption(),
+            authorStatement.getExecutedByUserId(),
+            authorStatement.getNewUsername());
+    req.setMaxSessionPerUser(authorStatement.getMaxSessionPerUser());
+    req.setMinSessionPerUser(authorStatement.getMinSessionPerUser());
+    return req;
   }
 }

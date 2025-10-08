@@ -616,6 +616,12 @@ public class IoTDBConnection implements Connection {
                 params.getJdbcUriString(), e.getMessage()),
             e);
       }
+      if (e.getMessage().contains("Connection reset")) {
+        throw new SQLException(
+            String.format(
+                "There are not enough connection resources available: %s", e.getMessage()),
+            e);
+      }
       throw new SQLException(
           "Check whether the server exists or is alive, or whether the server IP address is correct, or whether the client IP address is in the whitelist or not in the blacklist.");
     } catch (StatementExecutionException e) {

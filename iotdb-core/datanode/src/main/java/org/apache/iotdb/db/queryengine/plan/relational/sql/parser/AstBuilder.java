@@ -1803,6 +1803,28 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   }
 
   @Override
+  public Node visitAlterUserMaxSessionStatement(
+      RelationalSqlParser.AlterUserMaxSessionStatementContext ctx) {
+    RelationalAuthorStatement stmt =
+        new RelationalAuthorStatement(AuthorRType.UPDATE_MAX_USER_SESSION);
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
+    int sessionPerUser = Integer.parseInt(ctx.max_session_per_user.getText());
+    stmt.setMaxSessionPerUser(sessionPerUser);
+    return stmt;
+  }
+
+  @Override
+  public Node visitAlterUserMinSessionStatement(
+      RelationalSqlParser.AlterUserMinSessionStatementContext ctx) {
+    RelationalAuthorStatement stmt =
+        new RelationalAuthorStatement(AuthorRType.UPDATE_MIN_USER_SESSION);
+    stmt.setUserName(((Identifier) visit(ctx.userName)).getValue());
+    int sessionPerUser = Integer.parseInt(ctx.min_session_per_user.getText());
+    stmt.setMinSessionPerUser(sessionPerUser);
+    return stmt;
+  }
+
+  @Override
   public Node visitGrantUserRoleStatement(RelationalSqlParser.GrantUserRoleStatementContext ctx) {
     RelationalAuthorStatement stmt = new RelationalAuthorStatement(AuthorRType.GRANT_USER_ROLE);
     stmt.setUserName(parseUsernameWithRoot(ctx.userName));

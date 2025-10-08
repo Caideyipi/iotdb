@@ -33,6 +33,9 @@ import java.util.List;
  */
 public abstract class Statement extends StatementNode {
   protected StatementType statementType = StatementType.NULL;
+  private String userName;
+  private int minSessionPerUser;
+  private int maxSessionPerUser;
 
   protected boolean isDebug;
 
@@ -44,6 +47,18 @@ public abstract class Statement extends StatementNode {
 
   public StatementType getType() {
     return statementType;
+  }
+
+  public String getUserName() {
+    return userName;
+  }
+
+  public int getMinSessionPerUser() {
+    return minSessionPerUser;
+  }
+
+  public int getMaxSessionPerUser() {
+    return maxSessionPerUser;
   }
 
   public boolean isDebug() {

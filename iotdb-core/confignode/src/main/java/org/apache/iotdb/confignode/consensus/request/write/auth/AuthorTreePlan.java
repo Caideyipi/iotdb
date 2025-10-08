@@ -52,42 +52,6 @@ public class AuthorTreePlan extends AuthorPlan {
    * @param password password
    * @param permissions permissions
    * @param grantOpt with grant option, only grant statement can set grantOpt = true
-   * @param maxSessioPerUser maxSessionPerUser of user
-   * @param minSessionPerUser minSessionPerUser of user
-   */
-  public AuthorTreePlan(
-      final ConfigPhysicalPlanType authorType,
-      final String userName,
-      final String roleName,
-      final String password,
-      final String newPassword,
-      final Set<Integer> permissions,
-      final boolean grantOpt,
-      final List<PartialPath> nodeNameList,
-      final Integer maxSessioPerUser,
-      final Integer minSessionPerUser) {
-    super(
-        authorType,
-        userName,
-        roleName,
-        password,
-        newPassword,
-        grantOpt,
-        maxSessioPerUser,
-        minSessionPerUser);
-    this.permissions = permissions;
-    this.nodeNameList = nodeNameList;
-  }
-
-  /**
-   * {@link AuthorTreePlan} Constructor.
-   *
-   * @param authorType author type
-   * @param userName user name
-   * @param roleName role name
-   * @param password password
-   * @param permissions permissions
-   * @param grantOpt with grant option, only grant statement can set grantOpt = true
    * @param nodeNameList node name in Path structure
    */
   public AuthorTreePlan(
@@ -108,8 +72,10 @@ public class AuthorTreePlan extends AuthorPlan {
         permissions,
         grantOpt,
         nodeNameList,
-        0,
-        "");
+        -1,
+        "",
+        -1,
+        -1);
   }
 
   public AuthorTreePlan(
@@ -122,8 +88,18 @@ public class AuthorTreePlan extends AuthorPlan {
       final boolean grantOpt,
       final List<PartialPath> nodeNameList,
       final long executedByUserId,
-      final String newUsername) {
-    super(authorType, userName, roleName, password, newPassword, grantOpt, -1, -1);
+      final String newUsername,
+      final int maxSessioPerUser,
+      final int minSessionPerUser) {
+    super(
+        authorType,
+        userName,
+        roleName,
+        password,
+        newPassword,
+        grantOpt,
+        maxSessioPerUser,
+        minSessionPerUser);
     this.permissions = permissions;
     this.nodeNameList = nodeNameList;
     this.executedByUserId = executedByUserId;

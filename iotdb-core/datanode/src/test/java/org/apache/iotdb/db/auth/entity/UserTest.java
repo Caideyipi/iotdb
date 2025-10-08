@@ -40,13 +40,13 @@ public class UserTest {
         new PartialPath("root.ln"), Collections.singleton(PrivilegeType.WRITE_DATA));
     Assert.assertEquals(
         "User{id=-1, name='user', pathPrivilegeList=[root.ln : WRITE_DATA], "
-            + "sysPrivilegeSet=[], AnyScopePrivilegeMap=[], objectPrivilegeMap={}, roleList=[], isOpenIdUser=false}",
+            + "sysPrivilegeSet=[], AnyScopePrivilegeMap=[], objectPrivilegeMap={}, roleList=[], isOpenIdUser=false, maxSessionPerUser=-1, minSessionPerUser=-1}",
         user.toString());
     User user1 = new User("user1", "password1");
     user1.deserialize(user.serialize());
     Assert.assertEquals(
         "User{id=-1, name='user', pathPrivilegeList=[root.ln : WRITE_DATA], "
-            + "sysPrivilegeSet=[], AnyScopePrivilegeMap=[], objectPrivilegeMap={}, roleList=[], isOpenIdUser=false}",
+            + "sysPrivilegeSet=[], AnyScopePrivilegeMap=[], objectPrivilegeMap={}, roleList=[], isOpenIdUser=false, maxSessionPerUser=-1, minSessionPerUser=-1}",
         user1.toString());
     Assert.assertEquals(user1, user);
   }

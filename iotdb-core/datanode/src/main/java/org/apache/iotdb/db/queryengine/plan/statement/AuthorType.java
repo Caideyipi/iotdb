@@ -38,7 +38,8 @@ public enum AuthorType {
   ACCOUNT_UNLOCK,
   // Remind to renew the convert codes in ConfigNodeRPCServiceProcessor
   RENAME_USER,
-  ;
+  UPDATE_USER_MAX_SESSION,
+  UPDATE_USER_MIN_SESSION;
 
   /**
    * deserialize short number.
@@ -82,6 +83,10 @@ public enum AuthorType {
         return RENAME_USER;
       case 16:
         return ACCOUNT_UNLOCK;
+      case 18:
+        return UPDATE_USER_MAX_SESSION;
+      case 19:
+        return UPDATE_USER_MIN_SESSION;
       default:
         return null;
     }
@@ -128,6 +133,10 @@ public enum AuthorType {
         return 15;
       case ACCOUNT_UNLOCK:
         return 16;
+      case UPDATE_USER_MAX_SESSION:
+        return 18;
+      case UPDATE_USER_MIN_SESSION:
+        return 19;
       default:
         return -1;
     }

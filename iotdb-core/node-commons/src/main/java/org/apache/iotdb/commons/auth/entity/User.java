@@ -250,6 +250,10 @@ public class User extends Role {
         + roleSet
         + ", isOpenIdUser="
         + isOpenIdUser
+        + ", maxSessionPerUser="
+        + maxSessionPerUser
+        + ", minSessionPerUser="
+        + minSessionPerUser
         + '}';
   }
 }

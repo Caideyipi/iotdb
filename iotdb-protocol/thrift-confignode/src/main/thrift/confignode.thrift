@@ -356,6 +356,8 @@ struct TAuthorizerReq {
   8: required binary nodeNameList
   9: required i64 executedByUserID
   10: required string newUsername
+  11: optional i32 maxSessionPerUser
+  12: optional i32 minSessionPerUser
 }
 
 struct TAuthorizerRelationalReq {
@@ -369,6 +371,8 @@ struct TAuthorizerRelationalReq {
    8: required bool grantOpt
    9: required i64 executedByUserID
    10: required string newUsername
+   11: optional i32 maxSessionPerUser
+   12: optional i32 minSessionPerUser
 }
 
 struct TAuthorizerResp {
@@ -428,6 +432,8 @@ struct TPermissionInfoResp {
   2: optional list<i32> failPos
   3: optional TUserResp userInfo
   4: optional map<string, TRoleResp> roleInfo
+  5: optional i32 maxSessionPerUser
+  6: optional i32 minSessionPerUser
 }
 
 struct TAuthizedPatternTreeResp {
@@ -441,6 +447,25 @@ struct TAuthizedPatternTreeResp {
 struct TLoginReq {
   1: required string userrname
   2: required string password
+}
+
+struct TCheckSessionNumResp {
+  1: required common.TSStatus status
+  2: required i32 idleNum
+  3: required i32 oldMinSessionValue
+}
+
+struct TCheckSessionNumReq {
+  1: required map<string, i32> currentSessionInfo
+  2: required i32 rpcMaxConcurrentClientNum
+  3: required bool isConnection
+  4: optional string username
+  5: optional i32 newMinSessionPerUser
+}
+
+struct TCheckMaxClientNumResp {
+  1: required common.TSStatus status
+  2: required i32 minSessionsSum
 }
 
 // reqtype : tree, relational, system
@@ -1571,6 +1596,22 @@ service IConfigNodeRPCService {
    *         WRONG_LOGIN_PASSWORD_ERROR if the user enters the wrong username or password
    */
   TPermissionInfoResp login(TLoginReq req)
+
+    /**
+     * Authenticate user session resources
+     *
+     * @return SUCCESS_STATUS if the user  session resources are enough
+     *         SESSION_NUMS_EXCEEDED if user  session resources are not enough
+     */
+  common.TSStatus checkSessionNum(TCheckSessionNumReq req)
+
+      /**
+       * Verify the validity of parameter dn_rpc_max_comput_cient_num
+       *
+       * @return SUCCESS_STATUS if the parameter dn_rpc_max_comput_cient_num is valid
+       *         SESSION_NUMS_EXCEEDED if the parameter dn_rpc_max_comput_cient_num is invalid
+       */
+   TCheckMaxClientNumResp checkMaxClientNumValid(i32 maxConcurrentClientNum)
 
   /**
    * Permission checking for user operations

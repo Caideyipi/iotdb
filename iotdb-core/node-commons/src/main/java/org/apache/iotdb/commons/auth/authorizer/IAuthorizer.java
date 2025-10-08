@@ -47,6 +47,29 @@ public interface IAuthorizer extends SnapshotProcessor {
   boolean login(String username, String password) throws AuthException;
 
   /**
+   * check session resource for a user to alter min_session_per_user.
+   *
+   * @param currentSessionInfo current session number for each user.
+   * @return Return the number of unoccupied connection resources。
+   */
+  int getIdleSessionNumOnAlter(
+      String username,
+      Map<String, Integer> currentSessionInfo,
+      int rpcMaxConcurrentClientNum,
+      int newSessionPerUser)
+      throws AuthException;
+
+  /**
+   * check session resource for a user to login.
+   *
+   * @param currentSessionInfo current session number for each user.
+   * @param rpcMaxConcurrentClientNum The maximum number of connections per datanode.
+   * @return Return the number of unoccupied connection resources.
+   */
+  int getIdleSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) throws AuthException;
+
+  /**
    * Login for a user in pipe.
    *
    * @param username The username of the user.
@@ -177,6 +200,24 @@ public interface IAuthorizer extends SnapshotProcessor {
   void renameUser(String username, String newUsername) throws AuthException;
 
   /**
+   * Modify the maxSessionPerUser of a user.
+   *
+   * @param userName The user whose maxSessionPerUser is to be modified.
+   * @param maxSessionPerUser The new maxSessionPerUser.
+   * @throws AuthException If the user does not exist or the new maxSessionPerUser is illegal.
+   */
+  void updateUserMaxSession(String userName, int maxSessionPerUser) throws AuthException;
+
+  /**
+   * Modify the MinSessionPerUser of a user.
+   *
+   * @param userName The user whose minSessionPerUser is to be modified.
+   * @param minSessionPerUser The new minSessionPerUser.
+   * @throws AuthException If the user does not exist or the new minSessionPerUser is illegal.
+   */
+  void updateUserMinSession(String userName, int minSessionPerUser) throws AuthException;
+
+  /**
    * Check if the user have the privilege or grant option on the target.
    *
    * @param userName The name of the user whose privileges are checked.
@@ -205,6 +246,20 @@ public interface IAuthorizer extends SnapshotProcessor {
   List<TListUserInfo> listAllUsersInfo();
 
   /**
+   * map existing maxSessionPerUser of each user in the database.
+   *
+   * @return A map containing all usernames and their corresponding maxSessionPerUser values.
+   */
+  Map<String, Integer> listMaxSessionPerUsers();
+
+  /**
+   * map existing minSessionPerUser of each user in the database.
+   *
+   * @return A map containing all usernames and their corresponding minSessionPerUser values.
+   */
+  Map<String, Integer> listMinSessionPerUsers();
+
+  /**
    * List existing roles in the database.
    *
    * @return A list contains all roleNames.
@@ -226,6 +281,8 @@ public interface IAuthorizer extends SnapshotProcessor {
    * @return A user whose name is username or null if such user does not exist.
    */
   User getUser(String username) throws AuthException;
+
+  int getMinSessionSum() throws AuthException;
 
   /**
    * Find a user by its userId.

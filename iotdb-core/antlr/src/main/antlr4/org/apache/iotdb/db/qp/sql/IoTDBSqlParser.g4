@@ -83,7 +83,7 @@ dmlStatement
     ;
 
 dclStatement
-    : createUser | createRole | alterUser | renameUser | grantUser | grantRole | grantRoleToUser | alterUserAccountUnlock
+    : createUser | createRole | alterUser | alterUserMaxSession | alterUserMinSession | renameUser | grantUser | grantRole | grantRoleToUser | alterUserAccountUnlock
     | revokeUser |  revokeRole | revokeRoleFromUser | dropUser | dropRole
     | listUser | listRole | listPrivilegesUser | listPrivilegesRole
     ;
@@ -1090,6 +1090,16 @@ renameUser
 // ---- Alter User Account Unlock
 alterUserAccountUnlock
     : ALTER USER userName=usernameWithRootWithOptionalHost ACCOUNT UNLOCK
+    ;
+
+// Alter User Max Session
+alterUserMaxSession
+    : ALTER USER userName=usernameWithRoot SET MAX_SESSION_PER_USER max_session_per_user=signedIntegerLiteral
+    ;
+
+// Alter User Min Session
+alterUserMinSession
+    : ALTER USER userName=usernameWithRoot SET MIN_SESSION_PER_USER min_session_per_user=signedIntegerLiteral
     ;
 
 // Grant User Privileges

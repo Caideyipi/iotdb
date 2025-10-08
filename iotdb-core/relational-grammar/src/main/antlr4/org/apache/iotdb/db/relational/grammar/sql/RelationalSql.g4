@@ -164,6 +164,8 @@ statement
     | alterUserStatement
     | alterUserAccountUnlockStatement
     | renameUserStatement
+    | alterUserMaxSessionStatement
+    | alterUserMinSessionStatement
     | listUserPrivilegeStatement
     | listRolePrivilegeStatement
     | listUserStatement
@@ -742,6 +744,14 @@ usernameWithRootWithOptionalHost
 
 renameUserStatement
     : ALTER USER username=usernameWithRoot RENAME TO newUsername=usernameWithRoot
+    ;
+
+alterUserMaxSessionStatement
+    : ALTER USER userName=identifier SET MAX_SESSION_PER_USER max_session_per_user=number
+    ;
+
+alterUserMinSessionStatement
+    : ALTER USER userName=identifier SET MIN_SESSION_PER_USER min_session_per_user=number
     ;
 
 grantUserRoleStatement
@@ -1754,6 +1764,8 @@ SEEK: 'SEEK';
 SELECT: 'SELECT';
 SERIALIZABLE: 'SERIALIZABLE';
 SESSION: 'SESSION';
+MAX_SESSION_PER_USER: 'MAX_SESSION_PER_USER';
+MIN_SESSION_PER_USER: 'MIN_SESSION_PER_USER';
 SET: 'SET';
 SETS: 'SETS';
 SHOW: 'SHOW';

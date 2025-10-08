@@ -202,6 +202,22 @@ public class AuthUtils {
   }
 
   /**
+   * Validate sessionPerUser
+   *
+   * @param sessionPerUser sessionPerUser
+   * @throws AuthException contains message why sessionPerUser is invalid
+   */
+  public static Boolean validateSessionPerUser(int sessionPerUser, int rpcMaxConcurrentClientNum) {
+    if (sessionPerUser < 0 && sessionPerUser != -1) {
+      return false;
+    }
+    if (sessionPerUser > rpcMaxConcurrentClientNum) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Validate path
    *
    * @param path series path

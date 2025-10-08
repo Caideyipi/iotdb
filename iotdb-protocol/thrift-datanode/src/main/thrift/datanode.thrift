@@ -791,6 +791,11 @@ struct TFetchIoTConsensusProgressResp {
   1: required bool isAllSearchIndexSafelyDeleted
 }
 
+struct TFetchSessionsNumInfo {
+  1: required map<string, i32> currentSessionInfo
+  2: required i32 rpcMaxConcurrentClientNum
+}
+
 service IDataNodeRPCService {
 
   // -----------------------------------For Data Node-----------------------------------------------
@@ -1194,6 +1199,11 @@ service IDataNodeRPCService {
   * Update Table Cache
   */
   common.TSStatus updateTable(TUpdateTableReq req)
+
+    /**
+    * Fetch Sessions Number Info
+    */
+  TFetchSessionsNumInfo fetchSessionsInfo()
 
   /**
   * Delete data for drop table, this database is without "root"

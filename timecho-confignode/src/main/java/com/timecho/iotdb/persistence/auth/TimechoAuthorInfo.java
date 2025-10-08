@@ -21,6 +21,7 @@ package com.timecho.iotdb.persistence.auth;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.auth.AuthException;
+import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.persistence.auth.AuthorInfo;
 import org.apache.iotdb.confignode.persistence.auth.StrictAuthorPlanExecutor;
 import org.apache.iotdb.rpc.RpcUtils;
@@ -35,6 +36,10 @@ public class TimechoAuthorInfo extends AuthorInfo {
       "separation_of_admin_power_info.bin";
 
   private volatile boolean separationOfPowersEnabled = false;
+
+  public TimechoAuthorInfo(ConfigManager configManager) {
+    super(configManager);
+  }
 
   public TSStatus enableSeparationOfAdminPowers(
       String systemAdminUsername, String securityAdminUsername, String auditAdminUsername) {

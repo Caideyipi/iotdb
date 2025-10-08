@@ -128,6 +128,70 @@ public abstract class BasicAuthorizer implements IAuthorizer, IService {
   }
 
   @Override
+  public int getIdleSessionNumOnAlter(
+      String username,
+      Map<String, Integer> currentSessionInfo,
+      int rpcMaxConcurrentClientNum,
+      int newSessionPerUser)
+      throws AuthException {
+    return calculateIdleConnNum(
+        username, currentSessionInfo, rpcMaxConcurrentClientNum, newSessionPerUser);
+  }
+
+  private int calculateIdleConnNum(
+      String username,
+      Map<String, Integer> currentSessionInfo,
+      int rpcMaxConcurrentClientNum,
+      int newSessionPerUser)
+      throws AuthException {
+
+    int compititivePoolUsed = 0;
+    User currentUser = userManager.getEntity(username);
+    int currentSessionNum = currentSessionInfo.getOrDefault(username, 0);
+    if (newSessionPerUser <= currentSessionNum) {
+      return 1;
+    }
+    int oldMinSessionPerUser = currentUser.getMinSessionPerUser();
+    oldMinSessionPerUser = oldMinSessionPerUser == -1 ? 0 : oldMinSessionPerUser;
+    int minSessionSum = getMinSessionSum() - oldMinSessionPerUser;
+    for (Map.Entry<String, Integer> e : currentSessionInfo.entrySet()) {
+      User user = userManager.getEntity(e.getKey());
+      if (user.getName().equals(username)) {
+        continue;
+      }
+      if (user.getMinSessionPerUser() == -1) {
+        compititivePoolUsed += e.getValue();
+        continue;
+      }
+      if (user.getMinSessionPerUser() < e.getValue()) {
+        compititivePoolUsed += e.getValue() - user.getMinSessionPerUser();
+      }
+    }
+    return (rpcMaxConcurrentClientNum - minSessionSum - newSessionPerUser - compititivePoolUsed);
+  }
+
+  @Override
+  public int getIdleSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) throws AuthException {
+    int compititivePoolUsed = 0;
+    int minSessionSum = getMinSessionSum();
+    for (Map.Entry<String, Integer> e : currentSessionInfo.entrySet()) {
+      if (e.getKey().equals("__internal_auditor")) {
+        continue;
+      }
+      User user = userManager.getEntity(e.getKey());
+      if (user.getMinSessionPerUser() == -1) {
+        compititivePoolUsed += e.getValue();
+        continue;
+      }
+      if (user.getMinSessionPerUser() < e.getValue()) {
+        compititivePoolUsed += e.getValue() - user.getMinSessionPerUser();
+      }
+    }
+    return (rpcMaxConcurrentClientNum - minSessionSum - compititivePoolUsed);
+  }
+
+  @Override
   public String login4Pipe(final String username, final String password) {
     final User user = userManager.getEntity(username);
     if (Objects.isNull(password)) {
@@ -332,6 +396,22 @@ public abstract class BasicAuthorizer implements IAuthorizer, IService {
   }
 
   @Override
+  public void updateUserMaxSession(String userName, int maxSessionPerUser) throws AuthException {
+    if (!userManager.updateUserMaxSession(userName, maxSessionPerUser)) {
+      throw new AuthException(
+          TSStatusCode.ILLEGAL_PARAMETER, "maxSessionPerUser " + maxSessionPerUser + " is illegal");
+    }
+  }
+
+  @Override
+  public void updateUserMinSession(String userName, int minSessionPerUser) throws AuthException {
+    if (!userManager.updateUserMinSession(userName, minSessionPerUser)) {
+      throw new AuthException(
+          TSStatusCode.ILLEGAL_PARAMETER, "minSessionPerUser " + minSessionPerUser + " is illegal");
+    }
+  }
+
+  @Override
   public boolean checkUserPrivileges(String userName, PrivilegeUnion union) throws AuthException {
     if (isAdmin(userName)) {
       return true;
@@ -415,6 +495,38 @@ public abstract class BasicAuthorizer implements IAuthorizer, IService {
   }
 
   @Override
+  public Map<String, Integer> listMaxSessionPerUsers() {
+    Map<String, Integer> sessionPerUsers = new HashMap<>();
+    List<String> userNames = listAllUsers();
+    for (String userName : userNames) {
+      try {
+        int sessionPerUser = getUser(userName).getMaxSessionPerUser();
+        sessionPerUsers.put(userName, sessionPerUser);
+
+      } catch (AuthException e) {
+        LOGGER.error("get all maxSessionPerUsers failed, No such user: {}", userName);
+      }
+    }
+    return sessionPerUsers;
+  }
+
+  @Override
+  public Map<String, Integer> listMinSessionPerUsers() {
+    Map<String, Integer> sessionPerUsers = new HashMap<>();
+    List<String> userNames = listAllUsers();
+    for (String userName : userNames) {
+      try {
+        int sessionPerUser = getUser(userName).getMinSessionPerUser();
+        sessionPerUsers.put(userName, sessionPerUser);
+
+      } catch (AuthException e) {
+        LOGGER.error("get all minSessionPerUsers failed, No such user: {}", userName);
+      }
+    }
+    return sessionPerUsers;
+  }
+
+  @Override
   public Map<String, Role> getAllRoles() {
     Map<String, Role> allRoles = new HashMap<>();
     List<String> roleNames = listAllRoles();
@@ -480,6 +592,10 @@ public abstract class BasicAuthorizer implements IAuthorizer, IService {
   @Override
   public User getUser(long userId) throws AuthException {
     return userManager.getEntity(userId);
+  }
+
+  public int getMinSessionSum() throws AuthException {
+    return userManager.getMinSessionSum();
   }
 
   @Override

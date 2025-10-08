@@ -94,6 +94,7 @@ import org.apache.iotdb.consensus.exception.ConsensusGroupAlreadyExistException;
 import org.apache.iotdb.consensus.exception.ConsensusGroupNotExistException;
 import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.auth.AuthorityChecker;
+import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.consensus.DataRegionConsensusImpl;
 import org.apache.iotdb.db.consensus.SchemaRegionConsensusImpl;
@@ -253,6 +254,7 @@ import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchLeaderRemoteReplicaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListResp;
+import org.apache.iotdb.mpp.rpc.thrift.TFetchSessionsNumInfo;
 import org.apache.iotdb.mpp.rpc.thrift.TFireTriggerReq;
 import org.apache.iotdb.mpp.rpc.thrift.TFireTriggerResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFragmentInstanceInfoResp;
@@ -3072,5 +3074,15 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
   public void handleClientExit() {
     // Do nothing
+  }
+
+  @Override
+  public TFetchSessionsNumInfo fetchSessionsInfo() {
+    TFetchSessionsNumInfo resp = new TFetchSessionsNumInfo();
+    IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
+    int rpcMaxConcurrentClientNum = config.getRpcMaxConcurrentClientNum();
+    resp.setCurrentSessionInfo(SessionManager.getInstance().getSessionsNumInfo());
+    resp.setRpcMaxConcurrentClientNum(rpcMaxConcurrentClientNum);
+    return resp;
   }
 }

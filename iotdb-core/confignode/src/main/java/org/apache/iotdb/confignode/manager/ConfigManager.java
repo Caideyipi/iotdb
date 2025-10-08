@@ -148,6 +148,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TAlterOrDropTableReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAlterSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCloseConsumerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TClusterParameters;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeRegisterReq;
@@ -444,7 +445,7 @@ public class ConfigManager implements IManager {
   }
 
   protected AuthorInfo createAuthorInfo() {
-    return new AuthorInfo();
+    return new AuthorInfo(this);
   }
 
   protected void setNodeManager(NodeInfo nodeInfo) {
@@ -1357,6 +1358,18 @@ public class ConfigManager implements IManager {
   }
 
   @Override
+  public TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
+    TSStatus status = confirmLeader();
+    if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      return permissionManager.checkSessionNumOnConnect(
+          currentSessionInfo, rpcMaxConcurrentClientNum);
+    } else {
+      return status;
+    }
+  }
+
+  @Override
   public TPermissionInfoResp checkUserPrivileges(String username, PrivilegeUnion union) {
     TSStatus status = confirmLeader();
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
@@ -1426,6 +1439,23 @@ public class ConfigManager implements IManager {
     if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       try {
         resp = permissionManager.getUser(userName);
+      } catch (AuthException e) {
+        status.setCode(e.getCode().getStatusCode()).setMessage(e.getMessage());
+        resp.setStatus(status);
+        return resp;
+      }
+    } else {
+      resp.setStatus(status);
+    }
+    return resp;
+  }
+
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
+    TSStatus status = confirmLeader();
+    TCheckMaxClientNumResp resp = new TCheckMaxClientNumResp();
+    if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      try {
+        resp = permissionManager.checkMaxClientNumValid(maxConcurrentClientNum);
       } catch (AuthException e) {
         status.setCode(e.getCode().getStatusCode()).setMessage(e.getMessage());
         resp.setStatus(status);

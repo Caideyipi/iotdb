@@ -99,6 +99,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerRelationalReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckSessionNumReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckUserPrivilegesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCloseConsumerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
@@ -635,11 +637,11 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TSStatus operatePermission(final TAuthorizerReq req) {
-    if (req.getAuthorType() < 0 || req.getAuthorType() >= AuthorType.values().length) {
+    if (req.getAuthorType() < 0) {
       throw new IndexOutOfBoundsException("Invalid Author Type ordinal");
     }
     ConfigPhysicalPlanType configPhysicalPlanType;
-    if (req.getAuthorType() == AuthorType.RENAME_USER.ordinal()) {
+    if (req.getAuthorType() == AuthorType.RENAME_USER.serialize()) {
       configPhysicalPlanType = ConfigPhysicalPlanType.RenameUser;
     } else {
       configPhysicalPlanType =
@@ -665,7 +667,9 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
             req.isGrantOpt(),
             AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getNodeNameList())),
             req.getExecutedByUserID(),
-            req.getNewUsername()));
+            req.getNewUsername(),
+            req.getMaxSessionPerUser(),
+            req.getMinSessionPerUser()));
   }
 
   @Override
@@ -687,7 +691,9 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
                     req.isGrantOpt(),
                     AuthUtils.deserializePartialPathList(ByteBuffer.wrap(req.getNodeNameList())),
                     req.getExecutedByUserID(),
-                    req.getNewUsername()));
+                    req.getNewUsername(),
+                    req.getMaxSessionPerUser(),
+                    req.getMinSessionPerUser()));
     final TAuthorizerResp resp = new TAuthorizerResp(dataSet.getStatus());
     resp.setMemberInfo(dataSet.getMemberList());
     resp.setPermissionInfo(dataSet.getPermissionInfoResp());
@@ -728,7 +734,9 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
             req.isGrantOpt(),
             req.getPassword(),
             req.getExecutedByUserID(),
-            req.getNewUsername()));
+            req.getNewUsername(),
+            req.getMaxSessionPerUser(),
+            req.getMinSessionPerUser()));
   }
 
   @Override
@@ -750,7 +758,9 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
                     req.isGrantOpt(),
                     req.getPassword(),
                     req.getExecutedByUserID(),
-                    ""));
+                    "",
+                    req.getMaxSessionPerUser(),
+                    req.getMinSessionPerUser()));
     final TAuthorizerResp resp = new TAuthorizerResp(dataSet.getStatus());
     resp.setMemberInfo(dataSet.getMemberList());
     resp.setPermissionInfo(dataSet.getPermissionInfoResp());
@@ -762,6 +772,12 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   @Override
   public TPermissionInfoResp login(TLoginReq req) {
     return configManager.login(req.getUserrname(), req.getPassword());
+  }
+
+  @Override
+  public TSStatus checkSessionNum(TCheckSessionNumReq req) {
+    return configManager.checkSessionNumOnConnect(
+        req.getCurrentSessionInfo(), req.getRpcMaxConcurrentClientNum());
   }
 
   @Override
@@ -812,6 +828,11 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
   @Override
   public TPermissionInfoResp getUser(String userName) {
     return configManager.getUser(userName);
+  }
+
+  @Override
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
+    return configManager.checkMaxClientNumValid(maxConcurrentClientNum);
   }
 
   @Override
