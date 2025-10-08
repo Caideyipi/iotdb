@@ -684,4 +684,18 @@ public class MppSharedCommonConfig implements CommonConfig {
     cnConfig.setAuditableOperationResult(auditableOperationResult);
     return this;
   }
+
+  @Override
+  public CommonConfig setEnableEncryptConfigFile(boolean enableEncryptConfigFile) {
+    dnConfig.setEnableEncryptConfigFile(enableEncryptConfigFile);
+    cnConfig.setEnableEncryptConfigFile(enableEncryptConfigFile);
+    return this;
+  }
+
+  @Override
+  public CommonConfig setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile) {
+    dnConfig.setEnableEncryptConfigFile(enableEncryptPermissionFile);
+    cnConfig.setEnableEncryptConfigFile(enableEncryptPermissionFile);
+    return this;
+  }
 }

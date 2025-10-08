@@ -19,6 +19,9 @@
 package com.timecho.iotdb;
 
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
+import org.apache.iotdb.commons.conf.CommonConfig;
+import org.apache.iotdb.commons.conf.CommonDescriptor;
+import org.apache.iotdb.commons.conf.ConfigurationFileUtils;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.confignode.rpc.thrift.TRuntimeConfiguration;
 import org.apache.iotdb.confignode.rpc.thrift.TSystemConfigurationResp;
@@ -27,6 +30,7 @@ import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthCheckerImpl;
 import org.apache.iotdb.db.schemaengine.schemaregion.mtree.loader.MNodeFactoryLoader;
+import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 
 import com.timecho.iotdb.auth.StrictAccessControlImpl;
 import com.timecho.iotdb.auth.StrictTreeAccessCheckVisitor;
@@ -43,7 +47,9 @@ import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.UUID;
@@ -150,6 +156,50 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
   protected void loadHardwareCode() throws IOException {
     SecretKey.getInstance()
         .loadHardwareCodeFromFile(IoTDBDescriptor.getInstance().getConfig().getSystemDir());
+  }
+
+  @Override
+  protected void initEncryptProps() {
+    SecretKey.getInstance()
+        .initEncryptProps(CommonDescriptor.getInstance().getConfig().getFileEncryptType());
+  }
+
+  // Scan all files in the scope if exist the encrypted files.
+  @Override
+  protected void initSecretKey() throws IOException {
+    URL configFileUrl =
+        IoTDBDescriptor.getPropsUrl(
+            SecretKey.FILE_ENCRYPTED_PREFIX
+                + CommonConfig.SYSTEM_CONFIG_NAME
+                + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    if ((configFileUrl == null || !(new File(configFileUrl.getPath()).exists()))
+        && WALManager.existsEncryptedFile()) {
+      saveSecretKey();
+      saveHardwareCode();
+    } else {
+      throw new IOException(
+          "Can't start DataNode, because encrypted file is found, no way to resolve that secret key file is lost.");
+    }
+  }
+
+  @Override
+  protected void encryptConfigFile() {
+    // Encrypt config file first time
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile()) {
+      URL systemConfigUrl = IoTDBDescriptor.getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+      if (systemConfigUrl != null) {
+        File systemConfigFile = new File(systemConfigUrl.getPath());
+        if (systemConfigFile.exists()) {
+          ConfigurationFileUtils.encryptConfigFile(
+              systemConfigUrl,
+              systemConfigFile.getParentFile().getPath()
+                  + File.separator
+                  + SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+        }
+      }
+    }
   }
 
   private static class DataNodeNewHolder {

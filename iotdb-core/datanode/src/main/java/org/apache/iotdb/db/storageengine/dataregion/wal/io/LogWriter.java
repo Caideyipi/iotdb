@@ -24,8 +24,12 @@ import org.apache.iotdb.db.service.metrics.WritingMetrics;
 import org.apache.iotdb.db.storageengine.dataregion.wal.buffer.WALEntry;
 import org.apache.iotdb.db.storageengine.dataregion.wal.checkpoint.Checkpoint;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.apache.tsfile.compress.ICompressor;
+import org.apache.tsfile.encrypt.EncryptUtils;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
+import org.apache.tsfile.file.metadata.enums.EncryptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,10 +126,23 @@ public abstract class LogWriter implements ILogWriter {
     try {
       headerBuffer.flip();
       logChannel.write(headerBuffer);
-      logChannel.write(buffer);
+      if (!TSFileDescriptor.getInstance()
+              .getConfig()
+              .getEncryptType()
+              .equals(EncryptionType.UNENCRYPTED.getExtension())
+          && logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+        ByteBuffer slice = buffer.slice();
+        byte[] data = new byte[slice.remaining()];
+        slice.get(data);
+        byte[] encryptedByte = EncryptUtils.getEncrypt().getEncryptor().encrypt(data);
+        logChannel.write(ByteBuffer.wrap(encryptedByte));
+      } else {
+        logChannel.write(buffer);
+      }
     } catch (ClosedChannelException e) {
       logger.warn("Cannot write to {}", logFile, e);
     }
+
     WritingMetrics.getInstance()
         .recordWroteWALBuffer(uncompressedSize, bufferSize, System.nanoTime() - startTime);
 

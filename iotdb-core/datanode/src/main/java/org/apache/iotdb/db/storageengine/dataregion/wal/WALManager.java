@@ -22,6 +22,7 @@ package org.apache.iotdb.db.storageengine.dataregion.wal;
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
 import org.apache.iotdb.commons.concurrent.ThreadName;
 import org.apache.iotdb.commons.concurrent.threadpool.ScheduledExecutorUtil;
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.exception.StartupException;
 import org.apache.iotdb.commons.service.IService;
@@ -38,14 +39,17 @@ import org.apache.iotdb.db.storageengine.dataregion.wal.allocation.RoundRobinStr
 import org.apache.iotdb.db.storageengine.dataregion.wal.node.IWALNode;
 import org.apache.iotdb.db.storageengine.dataregion.wal.node.WALFakeNode;
 import org.apache.iotdb.db.storageengine.dataregion.wal.node.WALNode;
+import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALFileUtils;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -141,6 +145,19 @@ public class WALManager implements IService {
         .deleteUniqueIdAndMayDeleteWALNode(getApplicantUniqueId(dataRegionName, true));
     ((ElasticStrategy) walNodesManager)
         .deleteUniqueIdAndMayDeleteWALNode(getApplicantUniqueId(dataRegionName, false));
+  }
+
+  public static boolean existsEncryptedFile() {
+    String[] walDirs = CommonDescriptor.getInstance().getConfig().getWalDirs();
+    for (String walDirPath : walDirs) {
+      File walDir = new File(walDirPath);
+      for (File file : Objects.requireNonNull(walDir.listFiles())) {
+        if (WALFileUtils.listAllEncryptedWALFiles(file).length > 0) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @Override

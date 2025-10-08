@@ -68,6 +68,8 @@ import org.apache.iotdb.metrics.utils.NodeType;
 import org.apache.iotdb.rpc.DeepCopyRpcTransportFactory;
 import org.apache.iotdb.rpc.ZeroCopyRpcTransportFactory;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
 import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
@@ -77,6 +79,10 @@ import org.apache.tsfile.utils.FilePathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -124,6 +130,18 @@ public class IoTDBDescriptor {
     URL dataNodeUrl = getPropsUrl(CommonConfig.OLD_DATA_NODE_CONFIG_NAME);
     URL commonConfigUrl = getPropsUrl(CommonConfig.OLD_COMMON_CONFIG_NAME);
     try {
+      if (systemConfigUrl == null || !(new File(systemConfigUrl.getPath()).exists())) {
+        URL encryptedSystemConfigUrl =
+            getPropsUrl(
+                SecretKey.FILE_ENCRYPTED_PREFIX
+                    + CommonConfig.SYSTEM_CONFIG_NAME
+                    + SecretKey.FILE_ENCRYPTED_SUFFIX);
+        if (encryptedSystemConfigUrl == null
+            || !(new File(encryptedSystemConfigUrl.getPath()).exists())) {
+          throw new IOException("The system config file is lost in the DataNode.");
+        }
+        systemConfigUrl = encryptedSystemConfigUrl;
+      }
       ConfigurationFileUtils.checkAndMayUpdate(
           systemConfigUrl, configNodeUrl, dataNodeUrl, commonConfigUrl);
     } catch (Exception e) {
@@ -218,19 +236,64 @@ public class IoTDBDescriptor {
     }
   }
 
+  public static String getIotDBHomeDir() {
+    String urlString = commonDescriptor.getConfDir();
+    if (urlString == null) {
+      return null;
+    }
+    return new File(urlString).getParent();
+  }
+
   /** load a property file and set TsfileDBConfig variables. */
   @SuppressWarnings("squid:S3776") // Suppress high Cognitive Complexity warning
   private void loadProps() {
     TrimProperties commonProperties = new TrimProperties();
     // if new properties file exist, skip old properties files
     URL url = getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+    if (url == null || !(new File(url.getPath()).exists())) {
+      url =
+          getPropsUrl(
+              SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
     if (url != null) {
       try (InputStream inputStream = url.openStream()) {
         LOGGER.info("Start to read config file {}", url);
         Properties properties = new Properties();
-        properties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        commonProperties.putAll(properties);
-        loadProperties(commonProperties);
+        if (url.getPath().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          String systemDir = getIotDBHomeDir() + File.separator + getConfig().getSystemDir();
+          if (!(new File(systemDir)).exists()) {
+            systemDir = getConfig().getSystemDir();
+          }
+          SecretKey.getInstance().loadSecretKeyFromFile(systemDir);
+          SecretKey.getInstance().loadHardwareCodeFromFile(systemDir);
+          SecretKey.getInstance()
+              .initEncryptProps(CommonDescriptor.getInstance().getConfig().getFileEncryptType());
+
+          try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+              ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+              byteOutputStream.write(buffer, 0, bytesRead);
+            }
+
+            try (ByteArrayInputStream byteInputStream =
+                    new ByteArrayInputStream(
+                        FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+                DataInputStream dataInputStream =
+                    new DataInputStream(new BufferedInputStream(byteInputStream))) {
+              properties.load(new InputStreamReader(dataInputStream, StandardCharsets.UTF_8));
+              commonProperties.putAll(properties);
+              loadProperties(commonProperties);
+            }
+          }
+        } else {
+          properties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+          commonProperties.putAll(properties);
+          loadProperties(commonProperties);
+        }
       } catch (FileNotFoundException e) {
         LOGGER.error("Fail to find config file {}, reject DataNode startup.", url, e);
         System.exit(-1);
@@ -1006,6 +1069,9 @@ public class IoTDBDescriptor {
         .setKerberosPrincipal(
             properties.getProperty("kerberos_principal", conf.getKerberosPrincipal()));
     TSFileDescriptor.getInstance().getConfig().setBatchSize(conf.getBatchSize());
+    TSFileDescriptor.getInstance()
+        .getConfig()
+        .setEncryptKeyFromToken(System.getenv("user_encrypt_token"));
 
     conf.setCoordinatorReadExecutorSize(
         Integer.parseInt(
@@ -1081,6 +1147,8 @@ public class IoTDBDescriptor {
 
     // Thrift ssl
     commonDescriptor.initThriftSSL(properties);
+
+    commonDescriptor.initFileEncrypt(properties);
 
     // Trigger
     loadTriggerProps(properties);
@@ -2545,6 +2613,13 @@ public class IoTDBDescriptor {
 
   public synchronized void loadHotModifiedProps() throws QueryProcessException {
     URL url = getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+    if (url == null || !(new File(url.getPath()).exists())) {
+      url =
+          getPropsUrl(
+              SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
     if (url == null) {
       LOGGER.warn("Couldn't load the configuration from any of the known sources.");
       return;
@@ -2553,9 +2628,30 @@ public class IoTDBDescriptor {
     TrimProperties commonProperties = new TrimProperties();
     try (InputStream inputStream = url.openStream()) {
       LOGGER.info("Start to reload config file {}", url);
-      commonProperties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-      ConfigurationFileUtils.loadConfigurationDefaultValueFromTemplate();
-      loadHotModifiedProps(commonProperties);
+      if (url.getPath().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+            ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+          byte[] buffer = new byte[1024];
+          int bytesRead;
+          while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+            byteOutputStream.write(buffer, 0, bytesRead);
+          }
+
+          try (ByteArrayInputStream byteInputStream =
+                  new ByteArrayInputStream(
+                      FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+              DataInputStream dataInputStream =
+                  new DataInputStream(new BufferedInputStream(byteInputStream))) {
+            commonProperties.load(new InputStreamReader(dataInputStream, StandardCharsets.UTF_8));
+            ConfigurationFileUtils.loadConfigurationDefaultValueFromTemplate();
+            loadHotModifiedProps(commonProperties);
+          }
+        }
+      } else {
+        commonProperties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        ConfigurationFileUtils.loadConfigurationDefaultValueFromTemplate();
+        loadHotModifiedProps(commonProperties);
+      }
     } catch (Exception e) {
       LOGGER.warn("Fail to reload config file {}", url, e);
       throw new QueryProcessException(

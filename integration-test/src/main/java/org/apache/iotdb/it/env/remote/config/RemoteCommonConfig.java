@@ -477,4 +477,14 @@ public class RemoteCommonConfig implements CommonConfig {
   public CommonConfig setAuditableOperationResult(String auditableOperationResult) {
     return this;
   }
+
+  @Override
+  public CommonConfig setEnableEncryptConfigFile(boolean enableEncryptConfigFile) {
+    return this;
+  }
+
+  @Override
+  public CommonConfig setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile) {
+    return this;
+  }
 }

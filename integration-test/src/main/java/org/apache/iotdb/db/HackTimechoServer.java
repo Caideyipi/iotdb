@@ -32,7 +32,6 @@ import com.timecho.iotdb.schemaregion.mtree.EnterpriseMemMNodeFactory;
 
 /** This class is used to run integration test using timecho-server without license. */
 public class HackTimechoServer extends DataNode {
-
   private static final int CPU_CORE_NUM_FOR_TEST = 1;
   private static final long TOTAL_MEMORY_FOR_TEST = 8000000000L;
 

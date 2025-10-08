@@ -22,18 +22,23 @@ import org.apache.iotdb.commons.auth.entity.PathPrivilege;
 import org.apache.iotdb.commons.auth.entity.Role;
 import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.auth.role.LocalFileRoleAccessor;
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.file.SystemFileFactory;
 import org.apache.iotdb.commons.utils.FileUtils;
 import org.apache.iotdb.commons.utils.IOUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -113,28 +118,60 @@ public class LocalFileUserAccessor extends LocalFileRoleAccessor {
                 + ROLE_SUFFIX
                 + IoTDBConstant.PROFILE_SUFFIX
                 + TEMP_SUFFIX);
-    try (FileOutputStream fileOutputStream = new FileOutputStream(roleProfile);
-        BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
-      for (String roleName : user.getRoleSet()) {
-        IOUtils.writeString(outputStream, roleName, STRING_ENCODING, encodingBufferLocal);
-      }
-      outputStream.flush();
-      fileOutputStream.getFD().sync();
-    } catch (Exception e) {
-      LOGGER.warn("Get Exception when save user {}'s roles", user.getName(), e);
-      throw new IOException(e);
-    } finally {
-      encodingBufferLocal.remove();
-    }
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptPermissionFile()) {
+      try (ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+          BufferedOutputStream memoryStream = new BufferedOutputStream(byteOutputStream)) {
+        for (String roleName : user.getRoleSet()) {
+          IOUtils.writeString(memoryStream, roleName, STRING_ENCODING, encodingBufferLocal);
+        }
+        memoryStream.flush();
 
-    File oldURoleFile =
-        SystemFileFactory.INSTANCE.getFile(
-            entityDirPath
-                + File.separator
-                + user.getUserId()
-                + ROLE_SUFFIX
-                + IoTDBConstant.PROFILE_SUFFIX);
-    IOUtils.replaceFile(roleProfile, oldURoleFile);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(roleProfile);
+            BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+          outputStream.write(FileEncryptUtils.encrypt(byteOutputStream.toByteArray()));
+          outputStream.flush();
+          fileOutputStream.getFD().sync();
+        }
+      } catch (Exception e) {
+        LOGGER.warn("Get Exception when save user {}'s roles", user.getName(), e);
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldURoleFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + user.getUserId()
+                  + ROLE_SUFFIX
+                  + IoTDBConstant.PROFILE_SUFFIX
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      IOUtils.replaceFile(roleProfile, oldURoleFile);
+    } else {
+      try (FileOutputStream fileOutputStream = new FileOutputStream(roleProfile);
+          BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+        for (String roleName : user.getRoleSet()) {
+          IOUtils.writeString(outputStream, roleName, STRING_ENCODING, encodingBufferLocal);
+        }
+        outputStream.flush();
+        fileOutputStream.getFD().sync();
+      } catch (Exception e) {
+        LOGGER.warn("Get Exception when save user {}'s roles", user.getName(), e);
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldURoleFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + user.getUserId()
+                  + ROLE_SUFFIX
+                  + IoTDBConstant.PROFILE_SUFFIX);
+      IOUtils.replaceFile(roleProfile, oldURoleFile);
+    }
   }
 
   /**
@@ -150,55 +187,133 @@ public class LocalFileUserAccessor extends LocalFileRoleAccessor {
       return null;
     }
     FileInputStream inputStream = new FileInputStream(entityFile);
-    try (DataInputStream dataInputStream =
-        new DataInputStream(new BufferedInputStream(inputStream))) {
-      int tag = dataInputStream.readInt();
-      User user = new User();
-      if (tag < 0) {
-        String name =
-            IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal, -1 * tag);
-        user.setName(name);
-        user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
-        user.setSysPrivilegesWithMask(dataInputStream.readInt());
-        List<PathPrivilege> pathPrivilegeList = new ArrayList<>();
-        for (int i = 0; dataInputStream.available() != 0; i++) {
-          pathPrivilegeList.add(
-              IOUtils.readPathPrivilege(dataInputStream, STRING_ENCODING, strBufferLocal));
+    if (entityFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+      try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+          ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+          byteOutputStream.write(buffer, 0, bytesRead);
         }
-        user.setPrivilegeList(pathPrivilegeList);
-      } else if (tag == 1) {
-        user.setName(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
-        user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
-        loadPrivileges(dataInputStream, user);
-      } else {
-        assert (tag == VERSION);
-        user.setUserId(dataInputStream.readLong());
-        user.setName(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
-        user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
-        user.setMaxSessionPerUser(dataInputStream.readInt());
-        user.setMinSessionPerUser(dataInputStream.readInt());
-        loadPrivileges(dataInputStream, user);
-      }
 
-      File roleOfUser = checkFileAvailable(entityName, "_role");
-      Set<String> roleSet = new HashSet<>();
-      if (roleOfUser != null && roleOfUser.exists()) {
-        inputStream = new FileInputStream(roleOfUser);
-        try (DataInputStream roleInputStream =
-            new DataInputStream(new BufferedInputStream(inputStream))) {
-          for (int i = 0; roleInputStream.available() != 0; i++) {
-            String roleName = IOUtils.readString(roleInputStream, STRING_ENCODING, strBufferLocal);
-            roleSet.add(roleName);
+        try (ByteArrayInputStream byteInputStream =
+                new ByteArrayInputStream(FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+            DataInputStream dataInputStream =
+                new DataInputStream(new BufferedInputStream(byteInputStream))) {
+          int tag = dataInputStream.readInt();
+          User user = new User();
+          if (tag < 0) {
+            String name =
+                IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal, -1 * tag);
+            user.setName(name);
+            user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+            user.setSysPrivilegesWithMask(dataInputStream.readInt());
+            List<PathPrivilege> pathPrivilegeList = new ArrayList<>();
+            for (int i = 0; dataInputStream.available() != 0; i++) {
+              pathPrivilegeList.add(
+                  IOUtils.readPathPrivilege(dataInputStream, STRING_ENCODING, strBufferLocal));
+            }
+            user.setPrivilegeList(pathPrivilegeList);
+          } else if (tag == 1) {
+            user.setName(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+            user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+            loadPrivileges(dataInputStream, user);
+          } else {
+            assert (tag == VERSION);
+            user.setUserId(dataInputStream.readLong());
+            user.setName(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+            user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+            user.setMaxSessionPerUser(dataInputStream.readInt());
+            user.setMinSessionPerUser(dataInputStream.readInt());
+            loadPrivileges(dataInputStream, user);
+          }
+
+          File roleOfUser = checkFileAvailable(entityName, "_role");
+          Set<String> roleSet = new HashSet<>();
+          if (roleOfUser != null && roleOfUser.exists()) {
+            inputStream = new FileInputStream(roleOfUser);
+            try (BufferedInputStream roleBufferedInputStream =
+                    new BufferedInputStream(inputStream);
+                ByteArrayOutputStream roleByteOutputStream = new ByteArrayOutputStream()) {
+              byte[] roleBuffer = new byte[1024];
+              int roleBytesRead;
+              while ((roleBytesRead = roleBufferedInputStream.read(roleBuffer)) != -1) {
+                roleByteOutputStream.write(roleBuffer, 0, roleBytesRead);
+              }
+
+              try (ByteArrayInputStream roleByteInputStream =
+                      new ByteArrayInputStream(
+                          FileEncryptUtils.decrypt(roleByteOutputStream.toByteArray()));
+                  DataInputStream roleInputStream =
+                      new DataInputStream(new BufferedInputStream(roleByteInputStream))) {
+                for (int i = 0; roleInputStream.available() != 0; i++) {
+                  String roleName =
+                      IOUtils.readString(roleInputStream, STRING_ENCODING, strBufferLocal);
+                  roleSet.add(roleName);
+                }
+              }
+            }
+            user.setRoleSet(roleSet);
+          }
+          return user;
+        }
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        strBufferLocal.remove();
+      }
+    } else {
+      try (DataInputStream dataInputStream =
+          new DataInputStream(new BufferedInputStream(inputStream))) {
+        int tag = dataInputStream.readInt();
+        User user = new User();
+        if (tag < 0) {
+          String name =
+              IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal, -1 * tag);
+          user.setName(name);
+          user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+          user.setSysPrivilegesWithMask(dataInputStream.readInt());
+          List<PathPrivilege> pathPrivilegeList = new ArrayList<>();
+          for (int i = 0; dataInputStream.available() != 0; i++) {
+            pathPrivilegeList.add(
+                IOUtils.readPathPrivilege(dataInputStream, STRING_ENCODING, strBufferLocal));
+          }
+          user.setPrivilegeList(pathPrivilegeList);
+        } else if (tag == 1) {
+          user.setName(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+          user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+          loadPrivileges(dataInputStream, user);
+        } else {
+          assert (tag == VERSION);
+          user.setUserId(dataInputStream.readLong());
+          user.setName(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+          user.setPassword(IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal));
+          user.setMaxSessionPerUser(dataInputStream.readInt());
+          user.setMinSessionPerUser(dataInputStream.readInt());
+          loadPrivileges(dataInputStream, user);
+        }
+
+        File roleOfUser = checkFileAvailable(entityName, "_role");
+        Set<String> roleSet = new HashSet<>();
+        if (roleOfUser != null && roleOfUser.exists()) {
+          inputStream = new FileInputStream(roleOfUser);
+          try (DataInputStream roleInputStream =
+              new DataInputStream(new BufferedInputStream(inputStream))) {
+            for (int i = 0; roleInputStream.available() != 0; i++) {
+              String roleName =
+                  IOUtils.readString(roleInputStream, STRING_ENCODING, strBufferLocal);
+              roleSet.add(roleName);
+            }
           }
         }
-      }
-      user.setRoleSet(roleSet);
-      return user;
+        user.setRoleSet(roleSet);
+        return user;
 
-    } catch (Exception e) {
-      throw new IOException(e);
-    } finally {
-      strBufferLocal.remove();
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        strBufferLocal.remove();
+      }
     }
   }
 
@@ -226,11 +341,20 @@ public class LocalFileUserAccessor extends LocalFileRoleAccessor {
                 + ROLE_SUFFIX
                 + IoTDBConstant.PROFILE_SUFFIX
                 + TEMP_SUFFIX);
-    if (!uRoleProfile.exists() && !backProfile.exists()) {
+    File encryptedProfile =
+        SystemFileFactory.INSTANCE.getFile(
+            entityDirPath
+                + File.separator
+                + username
+                + ROLE_SUFFIX
+                + IoTDBConstant.PROFILE_SUFFIX
+                + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    if (!uRoleProfile.exists() && !backProfile.exists() && !encryptedProfile.exists()) {
       return true;
     }
     if ((uRoleProfile.exists() && !uRoleProfile.delete())
-        || (backProfile.exists() && !backProfile.delete())) {
+        || (backProfile.exists() && !backProfile.delete())
+        || (encryptedProfile.exists() && !encryptedProfile.delete())) {
       throw new IOException(String.format("Catch error when delete %s 's role", username));
     }
     return true;
@@ -245,8 +369,12 @@ public class LocalFileUserAccessor extends LocalFileRoleAccessor {
                 (name.endsWith(IoTDBConstant.PROFILE_SUFFIX)
                         && !name.endsWith(ROLE_SUFFIX + IoTDBConstant.PROFILE_SUFFIX))
                     || (name.endsWith(TEMP_SUFFIX)
+                        && !name.endsWith(ROLE_SUFFIX + IoTDBConstant.PROFILE_SUFFIX + TEMP_SUFFIX))
+                    || (name.endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)
                         && !name.endsWith(
-                            ROLE_SUFFIX + IoTDBConstant.PROFILE_SUFFIX + TEMP_SUFFIX)));
+                            ROLE_SUFFIX
+                                + IoTDBConstant.PROFILE_SUFFIX
+                                + SecretKey.FILE_ENCRYPTED_SUFFIX)));
     return getEntityStrings(names);
   }
 
@@ -281,34 +409,74 @@ public class LocalFileUserAccessor extends LocalFileRoleAccessor {
                 + IoTDBConstant.PROFILE_SUFFIX
                 + TEMP_SUFFIX);
 
-    try (FileOutputStream fileOutputStream = new FileOutputStream(userProfile);
-        BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
-      // for IoTDB 1.3, the username's length will be stored as a negative number.
-      byte[] strBuffer = user.getName().getBytes(STRING_ENCODING);
-      IOUtils.writeInt(outputStream, -1 * strBuffer.length, encodingBufferLocal);
-      outputStream.write(strBuffer);
-      IOUtils.writeString(outputStream, user.getPassword(), STRING_ENCODING, encodingBufferLocal);
-      IOUtils.writeInt(outputStream, user.getAllSysPrivileges(), encodingBufferLocal);
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptPermissionFile()) {
+      try (ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+          BufferedOutputStream memoryStream = new BufferedOutputStream(byteOutputStream)) {
+        // for IoTDB 1.3, the username's length will be stored as a negative number.
+        byte[] strBuffer = user.getName().getBytes(STRING_ENCODING);
+        IOUtils.writeInt(memoryStream, -1 * strBuffer.length, encodingBufferLocal);
+        memoryStream.write(strBuffer);
+        IOUtils.writeString(memoryStream, user.getPassword(), STRING_ENCODING, encodingBufferLocal);
+        IOUtils.writeInt(memoryStream, user.getAllSysPrivileges(), encodingBufferLocal);
 
-      int privilegeNum = user.getPathPrivilegeList().size();
-      for (int i = 0; i < privilegeNum; i++) {
-        PathPrivilege pathPrivilege = user.getPathPrivilegeList().get(i);
-        IOUtils.writePathPrivilege(
-            outputStream, pathPrivilege, STRING_ENCODING, encodingBufferLocal);
+        int privilegeNum = user.getPathPrivilegeList().size();
+        for (int i = 0; i < privilegeNum; i++) {
+          PathPrivilege pathPrivilege = user.getPathPrivilegeList().get(i);
+          IOUtils.writePathPrivilege(
+              memoryStream, pathPrivilege, STRING_ENCODING, encodingBufferLocal);
+        }
+        memoryStream.flush();
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(userProfile);
+            BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+          outputStream.write(FileEncryptUtils.encrypt(byteOutputStream.toByteArray()));
+          outputStream.flush();
+          fileOutputStream.getFD().sync();
+        }
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
       }
-      outputStream.flush();
-      fileOutputStream.getFD().sync();
 
-    } catch (Exception e) {
-      throw new IOException(e);
-    } finally {
-      encodingBufferLocal.remove();
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + user.getName()
+                  + IoTDBConstant.PROFILE_SUFFIX
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      IOUtils.replaceFile(userProfile, oldFile);
+    } else {
+      try (FileOutputStream fileOutputStream = new FileOutputStream(userProfile);
+          BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+        // for IoTDB 1.3, the username's length will be stored as a negative number.
+        byte[] strBuffer = user.getName().getBytes(STRING_ENCODING);
+        IOUtils.writeInt(outputStream, -1 * strBuffer.length, encodingBufferLocal);
+        outputStream.write(strBuffer);
+        IOUtils.writeString(outputStream, user.getPassword(), STRING_ENCODING, encodingBufferLocal);
+        IOUtils.writeInt(outputStream, user.getAllSysPrivileges(), encodingBufferLocal);
+
+        int privilegeNum = user.getPathPrivilegeList().size();
+        for (int i = 0; i < privilegeNum; i++) {
+          PathPrivilege pathPrivilege = user.getPathPrivilegeList().get(i);
+          IOUtils.writePathPrivilege(
+              outputStream, pathPrivilege, STRING_ENCODING, encodingBufferLocal);
+        }
+        outputStream.flush();
+        fileOutputStream.getFD().sync();
+
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath + File.separator + user.getName() + IoTDBConstant.PROFILE_SUFFIX);
+      IOUtils.replaceFile(userProfile, oldFile);
     }
-
-    File oldFile =
-        SystemFileFactory.INSTANCE.getFile(
-            entityDirPath + File.separator + user.getName() + IoTDBConstant.PROFILE_SUFFIX);
-    IOUtils.replaceFile(userProfile, oldFile);
   }
 
   @TestOnly
@@ -321,24 +489,56 @@ public class LocalFileUserAccessor extends LocalFileRoleAccessor {
                 + IoTDBConstant.PROFILE_SUFFIX
                 + TEMP_SUFFIX);
 
-    try (FileOutputStream fileOutputStream = new FileOutputStream(userProfile);
-        BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
-      // test for version1
-      IOUtils.writeInt(outputStream, 1, encodingBufferLocal);
-      IOUtils.writeString(outputStream, user.getName(), STRING_ENCODING, encodingBufferLocal);
-      IOUtils.writeString(outputStream, user.getPassword(), STRING_ENCODING, encodingBufferLocal);
-      savePrivileges(outputStream, user);
-      outputStream.flush();
-      fileOutputStream.getFD().sync();
-    } catch (Exception e) {
-      throw new IOException(e);
-    } finally {
-      encodingBufferLocal.remove();
-    }
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptPermissionFile()) {
+      try (ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+          BufferedOutputStream memoryStream = new BufferedOutputStream(byteOutputStream)) {
+        // test for version1
+        IOUtils.writeInt(memoryStream, 1, encodingBufferLocal);
+        IOUtils.writeString(memoryStream, user.getName(), STRING_ENCODING, encodingBufferLocal);
+        IOUtils.writeString(memoryStream, user.getPassword(), STRING_ENCODING, encodingBufferLocal);
+        savePrivileges(memoryStream, user);
+        memoryStream.flush();
 
-    File oldFile =
-        SystemFileFactory.INSTANCE.getFile(
-            entityDirPath + File.separator + user.getName() + IoTDBConstant.PROFILE_SUFFIX);
-    IOUtils.replaceFile(userProfile, oldFile);
+        try (FileOutputStream fileOutputStream = new FileOutputStream(userProfile);
+            BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+          outputStream.write(FileEncryptUtils.encrypt(byteOutputStream.toByteArray()));
+          outputStream.flush();
+          fileOutputStream.getFD().sync();
+        }
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + user.getName()
+                  + IoTDBConstant.PROFILE_SUFFIX
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      IOUtils.replaceFile(userProfile, oldFile);
+    } else {
+      try (FileOutputStream fileOutputStream = new FileOutputStream(userProfile);
+          BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+        // test for version1
+        IOUtils.writeInt(outputStream, 1, encodingBufferLocal);
+        IOUtils.writeString(outputStream, user.getName(), STRING_ENCODING, encodingBufferLocal);
+        IOUtils.writeString(outputStream, user.getPassword(), STRING_ENCODING, encodingBufferLocal);
+        savePrivileges(outputStream, user);
+        outputStream.flush();
+        fileOutputStream.getFD().sync();
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath + File.separator + user.getName() + IoTDBConstant.PROFILE_SUFFIX);
+      IOUtils.replaceFile(userProfile, oldFile);
+    }
   }
 }

@@ -35,9 +35,15 @@ import org.apache.iotdb.confignode.manager.partition.RegionGroupExtensionPolicy;
 import org.apache.iotdb.metrics.config.MetricConfigDescriptor;
 import org.apache.iotdb.metrics.utils.NodeType;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,6 +68,18 @@ public class ConfigNodeDescriptor {
     URL dataNodeUrl = getPropsUrl(CommonConfig.OLD_DATA_NODE_CONFIG_NAME);
     URL commonConfigUrl = getPropsUrl(CommonConfig.OLD_COMMON_CONFIG_NAME);
     try {
+      if (systemConfigUrl == null || !(new File(systemConfigUrl.getPath()).exists())) {
+        URL encryptedSystemConfigUrl =
+            getPropsUrl(
+                SecretKey.FILE_ENCRYPTED_PREFIX
+                    + CommonConfig.SYSTEM_CONFIG_NAME
+                    + SecretKey.FILE_ENCRYPTED_SUFFIX);
+        if (encryptedSystemConfigUrl == null
+            || !(new File(encryptedSystemConfigUrl.getPath()).exists())) {
+          throw new IOException("The system config file is lost in the ConfigNode.");
+        }
+        systemConfigUrl = encryptedSystemConfigUrl;
+      }
       ConfigurationFileUtils.checkAndMayUpdate(
           systemConfigUrl, configNodeUrl, dataNodeUrl, commonConfigUrl);
     } catch (InterruptedException e) {
@@ -118,14 +136,62 @@ public class ConfigNodeDescriptor {
     }
   }
 
+  public static String getIotDBHomeDir() {
+    String urlString = System.getProperty(ConfigNodeConstant.CONFIGNODE_CONF, null);
+    if (urlString == null) {
+      urlString = System.getProperty(ConfigNodeConstant.CONFIGNODE_HOME, null);
+      if (urlString == null) {
+        return null;
+      }
+    }
+    return new File(urlString).getParent();
+  }
+
   private void loadProps() {
     TrimProperties trimProperties = new TrimProperties();
     URL url = getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+    if (url == null || !(new File(url.getPath()).exists())) {
+      url =
+          getPropsUrl(
+              SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
     if (url != null) {
       try (InputStream inputStream = url.openStream()) {
-        LOGGER.info("start reading ConfigNode conf file: {}", url);
-        trimProperties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        loadProperties(trimProperties);
+        if (url.getPath().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          String systemDir = getIotDBHomeDir() + File.separator + getConf().getSystemDir();
+          if (!(new File(systemDir)).exists()) {
+            systemDir = getConf().getSystemDir();
+          }
+          SecretKey.getInstance().loadSecretKeyFromFile(systemDir);
+          SecretKey.getInstance().loadHardwareCodeFromFile(systemDir);
+          SecretKey.getInstance()
+              .initEncryptProps(CommonDescriptor.getInstance().getConfig().getFileEncryptType());
+
+          try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+              ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+              byteOutputStream.write(buffer, 0, bytesRead);
+            }
+
+            try (ByteArrayInputStream byteInputStream =
+                    new ByteArrayInputStream(
+                        FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+                DataInputStream dataInputStream =
+                    new DataInputStream(new BufferedInputStream(byteInputStream))) {
+              LOGGER.info("start reading ConfigNode conf file: {}", url);
+              trimProperties.load(new InputStreamReader(dataInputStream, StandardCharsets.UTF_8));
+              loadProperties(trimProperties);
+            }
+          }
+        } else {
+          LOGGER.info("start reading ConfigNode conf file: {}", url);
+          trimProperties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+          loadProperties(trimProperties);
+        }
       } catch (IOException | BadNodeUrlException e) {
         LOGGER.error("Couldn't load ConfigNode conf file, reject ConfigNode startup.", e);
         System.exit(-1);
@@ -378,6 +444,7 @@ public class ConfigNodeDescriptor {
     commonDescriptor.loadCommonProps(properties);
     commonDescriptor.initCommonConfigDir(conf.getSystemDir());
     commonDescriptor.initThriftSSL(properties);
+    commonDescriptor.initFileEncrypt(properties);
 
     commonDescriptor
         .getConfig()

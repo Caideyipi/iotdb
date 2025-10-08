@@ -528,4 +528,19 @@ public class CommonDescriptor {
         properties.getProperty("trust_store_path", config.getTrustStorePath()));
     config.setTrustStorePwd(properties.getProperty("trust_store_pwd", config.getTrustStorePwd()));
   }
+
+  public void initFileEncrypt(TrimProperties properties) {
+    config.setFileEncryptType(
+        properties.getProperty("file_encrypt_type", config.getFileEncryptType()));
+    config.setEnableEncryptConfigFile(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_encrypt_config_file",
+                Boolean.toString(config.isEnableEncryptConfigFile()))));
+    config.setEnableEncryptPermissionFile(
+        Boolean.parseBoolean(
+            properties.getProperty(
+                "enable_encrypt_permission_file",
+                Boolean.toString(config.isEnableEncryptPermissionFile()))));
+  }
 }

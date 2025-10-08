@@ -22,7 +22,9 @@ import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.db.service.metrics.WritingMetrics;
 import org.apache.iotdb.db.utils.MmapUtil;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
 import org.apache.tsfile.compress.IUnCompressor;
+import org.apache.tsfile.encrypt.EncryptUtils;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,10 @@ public class WALInputStream extends InputStream implements AutoCloseable {
   WALFileVersion version;
 
   public WALInputStream(File logFile) throws IOException {
+    File encryptedLogFile = new File(logFile.getAbsoluteFile() + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    if (encryptedLogFile.exists()) {
+      logFile = encryptedLogFile;
+    }
     channel = FileChannel.open(logFile.toPath());
     this.logFile = logFile;
     try {
@@ -244,7 +250,22 @@ public class WALInputStream extends InputStream implements AutoCloseable {
         }
         compressedBuffer.flip();
         IUnCompressor unCompressor = IUnCompressor.getUnCompressor(segmentInfo.compressionType);
-        uncompressWALBuffer(compressedBuffer, dataBuffer, unCompressor);
+        if (logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          ByteBuffer slice = compressedBuffer.slice();
+          byte[] data = new byte[slice.remaining()];
+          slice.get(data);
+          byte[] decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+          ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
+          if (Objects.isNull(dataBuffer)
+              || dataBuffer.capacity() < decryptedBuffer.capacity()
+              || dataBuffer.capacity() > decryptedBuffer.capacity() * 2) {
+            MmapUtil.clean(dataBuffer);
+            dataBuffer = ByteBuffer.allocateDirect(decryptedBuffer.capacity());
+          }
+          uncompressWALBuffer(decryptedBuffer, dataBuffer, unCompressor);
+        } else {
+          uncompressWALBuffer(compressedBuffer, dataBuffer, unCompressor);
+        }
       } else {
         // An uncompressed segment
         if (Objects.isNull(dataBuffer)
@@ -256,6 +277,21 @@ public class WALInputStream extends InputStream implements AutoCloseable {
         dataBuffer.clear();
         // limit the buffer to prevent it from reading too much byte than expected
         dataBuffer.limit(segmentInfo.dataInDiskSize);
+
+        if (logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          ByteBuffer slice = dataBuffer.slice();
+          byte[] data = new byte[slice.remaining()];
+          slice.get(data);
+          byte[] decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+          ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
+          if (Objects.isNull(dataBuffer)
+              || dataBuffer.capacity() < decryptedBuffer.capacity()
+              || dataBuffer.capacity() > decryptedBuffer.capacity() * 2) {
+            MmapUtil.clean(dataBuffer);
+            dataBuffer = ByteBuffer.allocateDirect(decryptedBuffer.capacity());
+          }
+          dataBuffer.put(decryptedBuffer);
+        }
 
         if (readWALBufferFromChannel(dataBuffer) != segmentInfo.dataInDiskSize) {
           throw new IOException("Unexpected end of file");

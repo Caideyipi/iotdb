@@ -21,6 +21,8 @@ package org.apache.iotdb.commons.conf;
 
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,8 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -133,18 +137,55 @@ public class ConfigurationFileUtils {
       if (systemFile.exists()) {
         return;
       }
-      try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw")) {
-        raf.write(license.getBytes());
+      try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw");
+          FileChannel channel = raf.getChannel()) {
         String configNodeContent = readConfigLinesWithoutLicense(configNodeFile);
-        raf.write(configNodeContent.getBytes());
         String dataNodeContent = readConfigLinesWithoutLicense(dataNodeFile);
-        raf.write(dataNodeContent.getBytes());
         String commonContent = readConfigLinesWithoutLicense(commonFile);
-        raf.write(commonContent.getBytes());
+        if (systemFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          int capacity =
+              license.getBytes().length
+                  + configNodeContent.getBytes().length
+                  + dataNodeContent.getBytes().length
+                  + commonContent.getBytes().length;
+          ByteBuffer buffer = ByteBuffer.allocate(capacity);
+          buffer.put(license.getBytes());
+          buffer.put(configNodeContent.getBytes());
+          buffer.put(dataNodeContent.getBytes());
+          buffer.put(commonContent.getBytes());
+          buffer.flip();
+
+          byte[] encryptedData = FileEncryptUtils.encrypt(buffer.array());
+          ByteBuffer encryptedBuffer = ByteBuffer.wrap(encryptedData);
+          channel.write(encryptedBuffer);
+        } else {
+          raf.write(license.getBytes());
+          raf.write(configNodeContent.getBytes());
+          raf.write(dataNodeContent.getBytes());
+          raf.write(commonContent.getBytes());
+        }
       }
       Files.move(lockFile.toPath(), systemFile.toPath());
     } finally {
       releaseFileLock(lockFile);
+    }
+  }
+
+  public static void encryptConfigFile(URL systemConfigUrl, String targetFilePath) {
+    if (systemConfigUrl != null) {
+      File file = new File(systemConfigUrl.getPath());
+      try {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+          String content = readConfigFileContent(systemConfigUrl);
+          if (!content.isEmpty()) {
+            raf.write(FileEncryptUtils.encrypt(content));
+          }
+        }
+        Files.move(file.toPath(), new File(targetFilePath).toPath());
+      } catch (IOException e) {
+        logger.warn("Failed to encrypt config file", e);
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -322,6 +363,9 @@ public class ConfigurationFileUtils {
       return "";
     }
     byte[] bytes = Files.readAllBytes(file.toPath());
+    if (file.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+      bytes = FileEncryptUtils.decrypt(bytes);
+    }
     String content = new String(bytes);
     return lineSeparator + content.replace(license, "");
   }
@@ -331,6 +375,9 @@ public class ConfigurationFileUtils {
       return "";
     }
     byte[] bytes = Files.readAllBytes(file.toPath());
+    if (file.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+      bytes = FileEncryptUtils.decrypt(bytes);
+    }
     return new String(bytes);
   }
 

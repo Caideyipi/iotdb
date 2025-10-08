@@ -473,6 +473,11 @@ public class CommonConfig {
 
   private String auditableOperationResult = "SUCCESS, FAIL";
 
+  private String fileEncryptType = "com.timecho.iotdb.commons.encrypt.AES128.AES128";
+
+  private boolean enableEncryptConfigFile = false;
+  private boolean enableEncryptPermissionFile = false;
+
   CommonConfig() {
     // Empty constructor
   }
@@ -2780,5 +2785,29 @@ public class CommonConfig {
 
   public void setPasswordStaleWarningDays(long passwordStaleWarningDays) {
     this.passwordStaleWarningDays = passwordStaleWarningDays;
+  }
+
+  public String getFileEncryptType() {
+    return fileEncryptType;
+  }
+
+  public void setFileEncryptType(String fileEncryptType) {
+    this.fileEncryptType = fileEncryptType;
+  }
+
+  public boolean isEnableEncryptConfigFile() {
+    return enableEncryptConfigFile;
+  }
+
+  public void setEnableEncryptConfigFile(boolean enableEncryptConfigFile) {
+    this.enableEncryptConfigFile = enableEncryptConfigFile;
+  }
+
+  public boolean isEnableEncryptPermissionFile() {
+    return enableEncryptPermissionFile;
+  }
+
+  public void setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile) {
+    this.enableEncryptPermissionFile = enableEncryptPermissionFile;
   }
 }

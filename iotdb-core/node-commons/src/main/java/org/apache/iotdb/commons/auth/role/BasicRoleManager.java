@@ -251,4 +251,8 @@ public abstract class BasicRoleManager implements IEntityManager, SnapshotProces
     rtlist.sort(Comparator.comparingLong(TListUserInfo::getUserId));
     return rtlist;
   }
+
+  public boolean existsEncryptedFile() {
+    return accessor.existsEncryptedFile();
+  }
 }

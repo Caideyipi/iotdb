@@ -19,10 +19,15 @@
 
 package org.apache.iotdb.db.storageengine.dataregion.wal.io;
 
+import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.db.storageengine.dataregion.wal.buffer.WALEntry;
 import org.apache.iotdb.db.storageengine.dataregion.wal.buffer.WALEntryType;
 import org.apache.iotdb.db.storageengine.dataregion.wal.buffer.WALSignalEntry;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALFileStatus;
+
+import com.timecho.iotdb.commons.secret.SecretKey;
+import org.apache.tsfile.common.conf.TSFileDescriptor;
+import org.apache.tsfile.file.metadata.enums.EncryptionType;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,8 +47,19 @@ public class WALWriter extends LogWriter {
   }
 
   public WALWriter(File logFile, WALFileVersion version) throws IOException {
-    super(logFile, version);
+    super(getFinalFile(logFile), version);
     this.version = version;
+  }
+
+  private static File getFinalFile(File logFile) {
+    if (!TSFileDescriptor.getInstance()
+            .getConfig()
+            .getEncryptType()
+            .equals(EncryptionType.UNENCRYPTED.getExtension())
+        && !logFile.getName().endsWith(IoTDBConstant.WAL_CHECKPOINT_FILE_SUFFIX)) {
+      logFile = new File(logFile.getAbsoluteFile() + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
+    return logFile;
   }
 
   /**

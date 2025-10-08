@@ -19,13 +19,21 @@
 package org.apache.iotdb.db.conf.rest;
 
 import org.apache.iotdb.commons.conf.CommonConfig;
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.conf.TrimProperties;
 import org.apache.iotdb.db.conf.IoTDBConfig;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -42,6 +50,18 @@ public class IoTDBRestServiceDescriptor {
 
   protected IoTDBRestServiceDescriptor() {
     URL systemConfig = getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+    if (systemConfig == null || !(new File(systemConfig.getPath()).exists())) {
+      URL encryptedSystemConfig =
+          getPropsUrl(
+              SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      if (encryptedSystemConfig == null || !(new File(encryptedSystemConfig.getPath()).exists())) {
+        //        throw new IOException("The system config file is lost in the DataNode.");
+        logger.error("The system config file is lost in the DataNode.");
+      }
+      systemConfig = encryptedSystemConfig;
+    }
     if (systemConfig != null) {
       TrimProperties trimProperties = loadProps(CommonConfig.SYSTEM_CONFIG_NAME);
       if (trimProperties != null) {
@@ -58,6 +78,13 @@ public class IoTDBRestServiceDescriptor {
   @SuppressWarnings("squid:S3776") // Suppress high Cognitive Complexity warning
   private TrimProperties loadProps(String configName) {
     URL url = getPropsUrl(configName);
+    if (url == null || !(new File(url.getPath()).exists())) {
+      url =
+          getPropsUrl(
+              SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
     if (url == null) {
       logger.warn("Couldn't load the REST Service configuration from any of the known sources.");
       return null;
@@ -65,7 +92,38 @@ public class IoTDBRestServiceDescriptor {
     try (InputStream inputStream = url.openStream()) {
       logger.info("Start to read config file {}", url);
       TrimProperties trimProperties = new TrimProperties();
-      trimProperties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+      if (url.getPath().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+        String systemDir =
+            getIotDBHomeDir()
+                + File.separator
+                + IoTDBDescriptor.getInstance().getConfig().getSystemDir();
+        if (!(new File(systemDir)).exists()) {
+          systemDir = IoTDBDescriptor.getInstance().getConfig().getSystemDir();
+        }
+        SecretKey.getInstance().loadSecretKeyFromFile(systemDir);
+        SecretKey.getInstance().loadHardwareCodeFromFile(systemDir);
+        SecretKey.getInstance()
+            .initEncryptProps(CommonDescriptor.getInstance().getConfig().getFileEncryptType());
+
+        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+            ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+          byte[] buffer = new byte[1024];
+          int bytesRead;
+          while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+            byteOutputStream.write(buffer, 0, bytesRead);
+          }
+
+          try (ByteArrayInputStream byteInputStream =
+                  new ByteArrayInputStream(
+                      FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+              DataInputStream dataInputStream =
+                  new DataInputStream(new BufferedInputStream(byteInputStream))) {
+            trimProperties.load(new InputStreamReader(dataInputStream, StandardCharsets.UTF_8));
+          }
+        }
+      } else {
+        trimProperties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+      }
       return trimProperties;
     } catch (FileNotFoundException e) {
       logger.warn("REST service fail to find config file {}", url, e);
@@ -168,6 +226,18 @@ public class IoTDBRestServiceDescriptor {
       logger.warn("get url failed", e);
       return null;
     }
+  }
+
+  public static String getIotDBHomeDir() {
+    String urlString = System.getProperty(IoTDBConstant.IOTDB_CONF, null);
+    // If it wasn't, check if a home directory was provided (This usually contains a config)
+    if (urlString == null) {
+      urlString = System.getProperty(IoTDBConstant.IOTDB_HOME, null);
+      if (urlString == null) {
+        return null;
+      }
+    }
+    return new File(urlString).getParent();
   }
 
   public IoTDBRestServiceConfig getConfig() {

@@ -22,13 +22,9 @@ source "$(dirname "$0")/../conf/iotdb-common.sh"
 DATANODE_CONF="`dirname "$0"`/../conf"
 
 if [ -f "${DATANODE_CONF}/iotdb-system.properties" ]; then
-    dn_rpc_port=`sed '/^dn_rpc_port=/!d;s/.*=//' ${DATANODE_CONF}/iotdb-system.properties`
-    # trim the port
-    dn_rpc_port=$(echo "$dn_rpc_port" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    dn_rpc_port=6667
 else
-    dn_rpc_port=`sed '/^dn_rpc_port=/!d;s/.*=//' ${DATANODE_CONF}/iotdb-datanode.properties`
-    # trim the port
-    dn_rpc_port=$(echo "$dn_rpc_port" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    dn_rpc_port=6667
 fi
 
 if [ -z "$dn_rpc_port" ]; then

@@ -41,7 +41,7 @@ public class AES128Decryptor implements IDecryptor {
 
   private final IvParameterSpec ivParameterSpec;
 
-  AES128Decryptor(byte[] key) {
+  public AES128Decryptor(byte[] key) {
     if (key.length != 16) {
       throw new EncryptKeyLengthNotMatchException(16, key.length);
     }

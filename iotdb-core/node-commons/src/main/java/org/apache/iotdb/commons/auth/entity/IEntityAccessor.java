@@ -74,6 +74,8 @@ public interface IEntityAccessor extends SnapshotProcessor {
    */
   List<String> listAllEntities();
 
+  boolean existsEncryptedFile();
+
   /** Delete entities' folders. */
   void cleanEntityFolder();
 

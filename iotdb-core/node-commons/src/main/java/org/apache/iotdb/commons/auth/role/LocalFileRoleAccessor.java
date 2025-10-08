@@ -30,6 +30,8 @@ import org.apache.iotdb.commons.file.SystemFileFactory;
 import org.apache.iotdb.commons.utils.FileUtils;
 import org.apache.iotdb.commons.utils.IOUtils;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.apache.thrift.TException;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 import org.slf4j.Logger;
@@ -37,6 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,6 +52,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -166,6 +171,16 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
         SystemFileFactory.INSTANCE.getFile(
             entityDirPath + File.separator + entityName + suffix + IoTDBConstant.PROFILE_SUFFIX);
     if (!userProfile.exists() || !userProfile.isFile()) {
+      userProfile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + entityName
+                  + suffix
+                  + IoTDBConstant.PROFILE_SUFFIX
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
+    if (!userProfile.exists() || !userProfile.isFile()) {
       // System may crush before a newer file is renamed.
       File newProfile =
           SystemFileFactory.INSTANCE.getFile(
@@ -195,39 +210,85 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
     }
 
     FileInputStream inputStream = new FileInputStream(entityFile);
-    try (DataInputStream dataInputStream =
-        new DataInputStream(new BufferedInputStream(inputStream))) {
-      int tag = dataInputStream.readInt();
-
-      if (tag < 0) {
-        String name =
-            IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal, -1 * tag);
-        Role role = new Role(name);
-        role.setSysPrivilegesWithMask(dataInputStream.readInt());
-        List<PathPrivilege> pathPrivilegeList = new ArrayList<>();
-        for (int i = 0; dataInputStream.available() != 0; i++) {
-          pathPrivilegeList.add(
-              IOUtils.readPathPrivilege(dataInputStream, STRING_ENCODING, strBufferLocal));
+    if (entityFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+      try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+          ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+          byteOutputStream.write(buffer, 0, bytesRead);
         }
-        role.setPrivilegeList(pathPrivilegeList);
-        return role;
-      } else if (tag == 1) {
-        entityName = IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal);
-        Role role = new Role(entityName);
-        loadPrivileges(dataInputStream, role);
-        return role;
-      } else {
-        assert tag == VERSION;
-        entityName = IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal);
-        Role role = new Role(entityName);
-        loadPrivileges(dataInputStream, role);
-        return role;
-      }
 
-    } catch (Exception e) {
-      throw new IOException(e);
-    } finally {
-      strBufferLocal.remove();
+        try (ByteArrayInputStream byteInputStream =
+                new ByteArrayInputStream(FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+            DataInputStream dataInputStream =
+                new DataInputStream(new BufferedInputStream(byteInputStream))) {
+          int tag = dataInputStream.readInt();
+
+          if (tag < 0) {
+            String name =
+                IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal, -1 * tag);
+            Role role = new Role(name);
+            role.setSysPrivilegesWithMask(dataInputStream.readInt());
+            List<PathPrivilege> pathPrivilegeList = new ArrayList<>();
+            for (int i = 0; dataInputStream.available() != 0; i++) {
+              pathPrivilegeList.add(
+                  IOUtils.readPathPrivilege(dataInputStream, STRING_ENCODING, strBufferLocal));
+            }
+            role.setPrivilegeList(pathPrivilegeList);
+            return role;
+          } else if (tag == 1) {
+            entityName = IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal);
+            Role role = new Role(entityName);
+            loadPrivileges(dataInputStream, role);
+            return role;
+          } else {
+            assert tag == VERSION;
+            entityName = IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal);
+            Role role = new Role(entityName);
+            loadPrivileges(dataInputStream, role);
+            return role;
+          }
+        }
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        strBufferLocal.remove();
+      }
+    } else {
+      try (DataInputStream dataInputStream =
+          new DataInputStream(new BufferedInputStream(inputStream))) {
+        int tag = dataInputStream.readInt();
+
+        if (tag < 0) {
+          String name =
+              IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal, -1 * tag);
+          Role role = new Role(name);
+          role.setSysPrivilegesWithMask(dataInputStream.readInt());
+          List<PathPrivilege> pathPrivilegeList = new ArrayList<>();
+          for (int i = 0; dataInputStream.available() != 0; i++) {
+            pathPrivilegeList.add(
+                IOUtils.readPathPrivilege(dataInputStream, STRING_ENCODING, strBufferLocal));
+          }
+          role.setPrivilegeList(pathPrivilegeList);
+          return role;
+        } else if (tag == 1) {
+          entityName = IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal);
+          Role role = new Role(entityName);
+          loadPrivileges(dataInputStream, role);
+          return role;
+        } else {
+          assert tag == VERSION;
+          entityName = IOUtils.readString(dataInputStream, STRING_ENCODING, strBufferLocal);
+          Role role = new Role(entityName);
+          loadPrivileges(dataInputStream, role);
+          return role;
+        }
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        strBufferLocal.remove();
+      }
     }
   }
 
@@ -238,14 +299,37 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
       return -1;
     }
     FileInputStream inputStream = new FileInputStream(userIdFile);
-    try (DataInputStream dataInputStream =
-        new DataInputStream(new BufferedInputStream(inputStream))) {
-      dataInputStream.readInt(); // read version
-      return dataInputStream.readLong();
-    } catch (Exception e) {
-      throw new IOException(e);
-    } finally {
-      strBufferLocal.remove();
+    if (userIdFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+      try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+          ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+          byteOutputStream.write(buffer, 0, bytesRead);
+        }
+
+        try (ByteArrayInputStream byteInputStream =
+                new ByteArrayInputStream(FileEncryptUtils.decrypt(byteOutputStream.toByteArray()));
+            DataInputStream dataInputStream =
+                new DataInputStream(new BufferedInputStream(byteInputStream))) {
+          dataInputStream.readInt(); // read version
+          return dataInputStream.readLong();
+        }
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        strBufferLocal.remove();
+      }
+    } else {
+      try (DataInputStream dataInputStream =
+          new DataInputStream(new BufferedInputStream(inputStream))) {
+        dataInputStream.readInt(); // read version
+        return dataInputStream.readLong();
+      } catch (Exception e) {
+        throw new IOException(e);
+      } finally {
+        strBufferLocal.remove();
+      }
     }
   }
 
@@ -269,25 +353,58 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
       LOGGER.error("Failed to create role dir {}", entityDirPath);
     }
 
-    try (FileOutputStream fileOutputStream = new FileOutputStream(roleProfile);
-        BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
-      saveEntityVersion(outputStream);
-      saveEntityName(outputStream, entity);
-      saveSessionPerUser(outputStream, entity);
-      savePrivileges(outputStream, entity);
-      outputStream.flush();
-      fileOutputStream.getFD().sync();
-    } catch (Exception e) {
-      LOGGER.warn("meet error when save role: {}", entity.getName());
-      throw new IOException(e);
-    } finally {
-      encodingBufferLocal.remove();
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptPermissionFile()) {
+      try (ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+          BufferedOutputStream memoryStream = new BufferedOutputStream(byteOutputStream)) {
+        saveEntityVersion(memoryStream);
+        saveEntityName(memoryStream, entity);
+        saveSessionPerUser(memoryStream, entity);
+        savePrivileges(memoryStream, entity);
+        memoryStream.flush();
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(roleProfile);
+            BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+          outputStream.write(FileEncryptUtils.encrypt(byteOutputStream.toByteArray()));
+          outputStream.flush();
+          fileOutputStream.getFD().sync();
+        }
+      } catch (Exception e) {
+        LOGGER.warn("meet error when save role: {}", entity.getName());
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + prefixName
+                  + IoTDBConstant.PROFILE_SUFFIX
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      IOUtils.replaceFile(roleProfile, oldFile);
+    } else {
+      try (FileOutputStream fileOutputStream = new FileOutputStream(roleProfile);
+          BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+        saveEntityVersion(outputStream);
+        saveEntityName(outputStream, entity);
+        saveSessionPerUser(outputStream, entity);
+        savePrivileges(outputStream, entity);
+        outputStream.flush();
+        fileOutputStream.getFD().sync();
+      } catch (Exception e) {
+        LOGGER.warn("meet error when save role: {}", entity.getName());
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath + File.separator + prefixName + IoTDBConstant.PROFILE_SUFFIX);
+      IOUtils.replaceFile(roleProfile, oldFile);
     }
 
-    File oldFile =
-        SystemFileFactory.INSTANCE.getFile(
-            entityDirPath + File.separator + prefixName + IoTDBConstant.PROFILE_SUFFIX);
-    IOUtils.replaceFile(roleProfile, oldFile);
     saveRoles(entity);
   }
 
@@ -303,11 +420,19 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
                 + entityName
                 + IoTDBConstant.PROFILE_SUFFIX
                 + TEMP_SUFFIX);
-    if (!roleProfile.exists() && !backFile.exists()) {
+    File encryptedProfile =
+        SystemFileFactory.INSTANCE.getFile(
+            entityDirPath
+                + File.separator
+                + entityName
+                + IoTDBConstant.PROFILE_SUFFIX
+                + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    if (!roleProfile.exists() && !backFile.exists() && !encryptedProfile.exists()) {
       return false;
     }
     if ((roleProfile.exists() && !roleProfile.delete())
-        || (backFile.exists() && !backFile.delete())) {
+        || (backFile.exists() && !backFile.delete())
+        || (encryptedProfile.exists() && !encryptedProfile.delete())) {
       throw new IOException(String.format("Cannot delete role file of %s", entityName));
     }
     return true;
@@ -319,8 +444,21 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
     String[] names =
         roleDir.list(
             (dir, name) ->
-                name.endsWith(IoTDBConstant.PROFILE_SUFFIX) || name.endsWith(TEMP_SUFFIX));
+                name.endsWith(IoTDBConstant.PROFILE_SUFFIX)
+                    || name.endsWith(TEMP_SUFFIX)
+                    || name.endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX));
     return getEntityStrings(names);
+  }
+
+  @Override
+  public boolean existsEncryptedFile() {
+    File roleDir = SystemFileFactory.INSTANCE.getFile(entityDirPath);
+    for (File file : Objects.requireNonNull(roleDir.listFiles())) {
+      if (file.isFile() && file.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static List<String> getEntityStrings(String[] names) {
@@ -330,7 +468,11 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
       // so a set is used to deduplicate
       Set<String> set = new HashSet<>();
       for (String fileName : names) {
-        set.add(fileName.replace(IoTDBConstant.PROFILE_SUFFIX, "").replace(TEMP_SUFFIX, ""));
+        set.add(
+            fileName
+                .replace(IoTDBConstant.PROFILE_SUFFIX, "")
+                .replace(TEMP_SUFFIX, "")
+                .replace(SecretKey.FILE_ENCRYPTED_SUFFIX, ""));
       }
       retList.addAll(set);
     }
@@ -427,21 +569,50 @@ public class LocalFileRoleAccessor implements IEntityAccessor {
       LOGGER.error("Failed to create user dir {}", entityDirPath);
     }
 
-    try (FileOutputStream fileOutputStream = new FileOutputStream(userInfoProfile);
-        BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
-      IOUtils.writeInt(outputStream, VERSION, encodingBufferLocal);
-      IOUtils.writeLong(outputStream, nextUserId, encodingBufferLocal);
-      outputStream.flush();
-      fileOutputStream.getFD().sync();
-    } catch (Exception e) {
-      LOGGER.warn("meet error when save userId: {}", nextUserId);
-      throw new IOException(e);
-    } finally {
-      encodingBufferLocal.remove();
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptPermissionFile()) {
+      try (ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+          BufferedOutputStream memoryStream = new BufferedOutputStream(byteOutputStream)) {
+        IOUtils.writeInt(memoryStream, VERSION, encodingBufferLocal);
+        IOUtils.writeLong(memoryStream, nextUserId, encodingBufferLocal);
+        memoryStream.flush();
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(userInfoProfile);
+            BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+          outputStream.write(FileEncryptUtils.encrypt(byteOutputStream.toByteArray()));
+          outputStream.flush();
+          fileOutputStream.getFD().sync();
+        }
+      } catch (Exception e) {
+        LOGGER.warn("meet error when save userId: {}", nextUserId);
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath
+                  + File.separator
+                  + "user_id"
+                  + IoTDBConstant.PROFILE_SUFFIX
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      IOUtils.replaceFile(userInfoProfile, oldFile);
+    } else {
+      try (FileOutputStream fileOutputStream = new FileOutputStream(userInfoProfile);
+          BufferedOutputStream outputStream = new BufferedOutputStream(fileOutputStream)) {
+        IOUtils.writeInt(outputStream, VERSION, encodingBufferLocal);
+        IOUtils.writeLong(outputStream, nextUserId, encodingBufferLocal);
+        outputStream.flush();
+        fileOutputStream.getFD().sync();
+      } catch (Exception e) {
+        LOGGER.warn("meet error when save userId: {}", nextUserId);
+        throw new IOException(e);
+      } finally {
+        encodingBufferLocal.remove();
+      }
+      File oldFile =
+          SystemFileFactory.INSTANCE.getFile(
+              entityDirPath + File.separator + "user_id" + IoTDBConstant.PROFILE_SUFFIX);
+      IOUtils.replaceFile(userInfoProfile, oldFile);
     }
-    File oldFile =
-        SystemFileFactory.INSTANCE.getFile(
-            entityDirPath + File.separator + "user_id" + IoTDBConstant.PROFILE_SUFFIX);
-    IOUtils.replaceFile(userInfoProfile, oldFile);
   }
 }

@@ -19,6 +19,12 @@
 
 package com.timecho.iotdb.service;
 
+import org.apache.iotdb.commons.auth.AuthException;
+import org.apache.iotdb.commons.auth.role.LocalFileRoleManager;
+import org.apache.iotdb.commons.auth.user.LocalFileUserManager;
+import org.apache.iotdb.commons.conf.CommonConfig;
+import org.apache.iotdb.commons.conf.CommonDescriptor;
+import org.apache.iotdb.commons.conf.ConfigurationFileUtils;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
 import org.apache.iotdb.confignode.conf.ConfigNodeConstant;
@@ -33,7 +39,9 @@ import com.timecho.iotdb.service.thrift.TimechoConfigNodeRPCServiceProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.UUID;
 
@@ -117,5 +125,54 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
   protected void loadHardwareCode() throws IOException {
     SecretKey.getInstance()
         .loadHardwareCodeFromFile(ConfigNodeDescriptor.getInstance().getConf().getSystemDir());
+  }
+
+  @Override
+  protected void initEncryptProps() {
+    SecretKey.getInstance()
+        .initEncryptProps(CommonDescriptor.getInstance().getConfig().getFileEncryptType());
+  }
+
+  // Scan all files in the scope if exist the encrypted files.
+  @Override
+  protected void initSecretKey() throws AuthException, IOException {
+    URL configFileUrl =
+        ConfigNodeDescriptor.getPropsUrl(
+            SecretKey.FILE_ENCRYPTED_PREFIX
+                + CommonConfig.SYSTEM_CONFIG_NAME
+                + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    LocalFileUserManager userManager =
+        new LocalFileUserManager(CommonDescriptor.getInstance().getConfig().getUserFolder());
+    LocalFileRoleManager roleManager =
+        new LocalFileRoleManager(CommonDescriptor.getInstance().getConfig().getRoleFolder());
+    if ((configFileUrl == null || !(new File(configFileUrl.getPath()).exists()))
+        && !userManager.existsEncryptedFile()
+        && !roleManager.existsEncryptedFile()) {
+      saveSecretKey();
+      saveHardwareCode();
+    } else {
+      throw new IOException(
+          "Can't start ConfigNode, because encrypted file is found, no way to resolve that secret key file is lost.");
+    }
+  }
+
+  @Override
+  protected void encryptConfigFile() {
+    // Encrypt config file first time
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile()) {
+      URL systemConfigUrl = ConfigNodeDescriptor.getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+      if (systemConfigUrl != null) {
+        File systemConfigFile = new File(systemConfigUrl.getPath());
+        if (systemConfigFile.exists()) {
+          ConfigurationFileUtils.encryptConfigFile(
+              systemConfigUrl,
+              systemConfigFile.getParentFile().getPath()
+                  + File.separator
+                  + SecretKey.FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+        }
+      }
+    }
   }
 }

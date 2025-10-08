@@ -28,7 +28,7 @@ public class SM4128Encryptor implements IEncryptor {
 
   private final SM4Utils sm4;
 
-  SM4128Encryptor(byte[] key) {
+  public SM4128Encryptor(byte[] key) {
     if (key.length != 16) {
       throw new EncryptKeyLengthNotMatchException(16, key.length);
     }

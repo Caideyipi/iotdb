@@ -651,6 +651,18 @@ public class MppCommonConfig extends MppBaseConfig implements CommonConfig {
     return this;
   }
 
+  @Override
+  public CommonConfig setEnableEncryptConfigFile(boolean enableEncryptConfigFile) {
+    setProperty("enable_encrypt_config_file", String.valueOf(enableEncryptConfigFile));
+    return this;
+  }
+
+  @Override
+  public CommonConfig setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile) {
+    setProperty("enable_encrypt_permission_file", String.valueOf(enableEncryptPermissionFile));
+    return this;
+  }
+
   // For part of the log directory
   public String getClusterConfigStr() {
     return fromConsensusFullNameToAbbr(properties.getProperty(CONFIG_NODE_CONSENSUS_PROTOCOL_CLASS))

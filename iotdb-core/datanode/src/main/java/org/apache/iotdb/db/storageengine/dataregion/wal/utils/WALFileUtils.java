@@ -19,6 +19,8 @@
 
 package org.apache.iotdb.db.storageengine.dataregion.wal.utils;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
@@ -72,6 +74,11 @@ public class WALFileUtils {
   /** List all .wal files in the directory. */
   public static File[] listAllWALFiles(File dir) {
     return dir.listFiles(WALFileUtils::walFilenameFilter);
+  }
+
+  public static File[] listAllEncryptedWALFiles(File dir) {
+    return dir.listFiles(
+        (file, name) -> name.toLowerCase().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX));
   }
 
   /** Get the .wal file starts with the specified version id in the directory. */
