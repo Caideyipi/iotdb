@@ -53,6 +53,9 @@ public class AuthorStatement extends Statement implements IConfigStatement {
   private int maxSessionPerUser;
   private int minSessionPerUser;
 
+  // the id of userName
+  private long associatedUsedId = -1;
+
   /**
    * Constructor with AuthorType.
    *
@@ -153,6 +156,9 @@ public class AuthorStatement extends Statement implements IConfigStatement {
 
   public void setUserName(String userName) {
     this.userName = userName;
+    if (authorType != AuthorType.CREATE_USER) {
+      this.associatedUsedId = AuthorityChecker.getUserId(userName).orElse(-1L);
+    }
   }
 
   public void setMaxSessionPerUser(int maxSessionPerUser) {
@@ -295,11 +301,12 @@ public class AuthorStatement extends Statement implements IConfigStatement {
   }
 
   private TSStatus onCreateUserSuccess() {
+    associatedUsedId = AuthorityChecker.getUserId(userName).orElse(-1L);
     // the old password is expected to be encrypted during updates, so we also encrypt it here to
     // keep consistency
     TSStatus tsStatus =
         DataNodeAuthUtils.recordPasswordHistory(
-            userName,
+            associatedUsedId,
             password,
             AuthUtils.encryptPassword(password),
             CommonDateTimeUtils.currentTime());
@@ -314,7 +321,7 @@ public class AuthorStatement extends Statement implements IConfigStatement {
   private TSStatus onUpdateUserSuccess() {
     TSStatus tsStatus =
         DataNodeAuthUtils.recordPasswordHistory(
-            userName, newPassword, password, CommonDateTimeUtils.currentTime());
+            associatedUsedId, newPassword, password, CommonDateTimeUtils.currentTime());
     try {
       RpcUtils.verifySuccess(tsStatus);
     } catch (StatementExecutionException e) {
@@ -324,7 +331,7 @@ public class AuthorStatement extends Statement implements IConfigStatement {
   }
 
   private TSStatus onDropUserSuccess() {
-    TSStatus tsStatus = DataNodeAuthUtils.deletePasswordHistory(userName);
+    TSStatus tsStatus = DataNodeAuthUtils.deletePasswordHistory(associatedUsedId);
     try {
       RpcUtils.verifySuccess(tsStatus);
     } catch (StatementExecutionException e) {
@@ -362,5 +369,9 @@ public class AuthorStatement extends Statement implements IConfigStatement {
         break;
     }
     return RpcUtils.SUCCESS_STATUS;
+  }
+
+  public long getAssociatedUsedId() {
+    return associatedUsedId;
   }
 }

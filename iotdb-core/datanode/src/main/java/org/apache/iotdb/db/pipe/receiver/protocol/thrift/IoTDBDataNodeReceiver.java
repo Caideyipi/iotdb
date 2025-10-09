@@ -103,6 +103,7 @@ import org.apache.iotdb.db.storageengine.rescon.disk.FolderManager;
 import org.apache.iotdb.db.storageengine.rescon.disk.strategy.DirectoryStrategyType;
 import org.apache.iotdb.db.tools.schema.SRStatementGenerator;
 import org.apache.iotdb.db.tools.schema.SchemaRegionSnapshotParser;
+import org.apache.iotdb.db.utils.DataNodeAuthUtils;
 import org.apache.iotdb.pipe.api.exception.PipeException;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -936,8 +937,9 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
       return RpcUtils.getStatus(openSessionResp.getCode(), openSessionResp.getMessage());
     }
 
+    long userId = AuthorityChecker.getUserId(username).orElse(-1L);
     Pair<Long, Long> expirationAndModifiedTime =
-        SESSION_MANAGER.checkPasswordExpiration(username, password);
+        DataNodeAuthUtils.checkPasswordExpiration(userId, password);
     if (expirationAndModifiedTime != null
         && expirationAndModifiedTime.getLeft() <= System.currentTimeMillis()) {
       return RpcUtils.getStatus(
