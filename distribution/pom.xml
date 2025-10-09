@@ -332,10 +332,6 @@
                             <proguardVersion>7.7.0</proguardVersion>
                             <assembly>
                                 <inclusions>
-                                    <!-- <inclusion>
-                                        <groupId>org.apache.tsfile</groupId>
-                                        <artifactId>common</artifactId>
-                                    </inclusion> -->
                                     <inclusion>
                                         <groupId>org.apache.tsfile</groupId>
                                         <artifactId>tsfile</artifactId>
@@ -343,16 +339,14 @@
                                     <inclusion>
                                         <groupId>org.apache.iotdb</groupId>
                                         <artifactId>*</artifactId>
-                                        <!-- <filter>!META-INF/**</filter> -->
                                     </inclusion>
                                     <inclusion>
                                         <groupId>com.timecho.iotdb</groupId>
                                         <artifactId>*</artifactId>
-                                        <!-- <filter>!META-INF/**</filter> -->
                                     </inclusion>
                                 </inclusions>
                             </assembly>
-                            <inLibsFilter>!META-INF/**</inLibsFilter>
+                            <!-- <inLibsFilter>!META-INF/**</inLibsFilter>-->
                             <generateTemporaryConfigurationFile>true</generateTemporaryConfigurationFile>
                             <outputDirectory>${project.basedir}/target</outputDirectory>
                             <outjar>timechodb-server-${project.version}.jar</outjar>
@@ -367,6 +361,8 @@
                                 <option>-printusage ${project.basedir}/target/obfuscation-usage.txt</option>
                                 <option>-printconfiguration ${project.basedir}/target/obfuscation-configuration.txt</option>
                             </options>
+                            <addManifest>true</addManifest>
+                            <addMavenDescriptor>true</addMavenDescriptor>
                         </configuration>
                     </execution>
                 </executions>
@@ -551,11 +547,11 @@
                                         <include>timechodb-${project.version}-bin.zip</include>
                                     </includes>
                                 </fileSet>
-                                <!--security-bin-->
+                                <!--safe-bin-->
                                 <fileSet>
                                     <directory>${project.build.directory}</directory>
                                     <includes>
-                                        <include>timechodb-${project.version}-security-bin.zip</include>
+                                        <include>timechodb-${project.version}-safe-bin.zip</include>
                                     </includes>
                                 </fileSet>
                                 <!--security-file-->
