@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.timecho.iotdb.fuzzy.auth;
+package com.timecho.iotdb.auth;
 
 import org.apache.iotdb.isession.ISession;
 import org.apache.iotdb.isession.ITableSession;
