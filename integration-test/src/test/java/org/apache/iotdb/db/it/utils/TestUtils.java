@@ -401,6 +401,27 @@ public class TestUtils {
     }
   }
 
+  public static void tableFuzzyTestVerify(String sql, String database) {
+    try (Connection connection =
+        EnvFactory.getEnv()
+            .getConnection(
+                SessionConfig.DEFAULT_USER,
+                SessionConfig.DEFAULT_PASSWORD,
+                BaseEnv.TABLE_SQL_DIALECT)) {
+      connection.setClientInfo("time_zone", "+00:00");
+      try (Statement statement = connection.createStatement()) {
+        statement.execute("use " + database);
+        try (ResultSet resultSet = statement.executeQuery(sql)) {
+          while (resultSet.next()) {
+            // do nothing
+          }
+        }
+      }
+    } catch (SQLException e) {
+      fail(e.getMessage());
+    }
+  }
+
   public static void tableQueryNoVerifyResultTest(
       String sql, String[] expectedHeader, String userName, String password) {
     try (Connection connection =
@@ -416,7 +437,6 @@ public class TestUtils {
         }
       }
     } catch (SQLException e) {
-      e.printStackTrace();
       fail(e.getMessage());
     }
   }

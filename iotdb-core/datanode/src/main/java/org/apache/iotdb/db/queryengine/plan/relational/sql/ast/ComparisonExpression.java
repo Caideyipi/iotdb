@@ -19,6 +19,8 @@
 
 package org.apache.iotdb.db.queryengine.plan.relational.sql.ast;
 
+import org.apache.iotdb.commons.utils.TestOnly;
+
 import com.google.common.collect.ImmutableList;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 
@@ -96,8 +98,8 @@ public class ComparisonExpression extends Expression {
   }
 
   private final Operator operator;
-  private final Expression left;
-  private final Expression right;
+  private Expression left;
+  private Expression right;
 
   public ComparisonExpression(Operator operator, Expression left, Expression right) {
     super(null);
@@ -132,6 +134,16 @@ public class ComparisonExpression extends Expression {
 
   public Expression getRight() {
     return right;
+  }
+
+  @TestOnly
+  public void setLeft(Expression left) {
+    this.left = left;
+  }
+
+  @TestOnly
+  public void setRight(Expression right) {
+    this.right = right;
   }
 
   @Override
