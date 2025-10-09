@@ -26,6 +26,7 @@ import org.apache.iotdb.commons.concurrent.threadpool.WrappedThreadPoolExecutor;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.StartupException;
+import org.apache.iotdb.commons.pipe.config.constant.SystemConstant;
 import org.apache.iotdb.commons.service.IService;
 import org.apache.iotdb.commons.service.ServiceType;
 import org.apache.iotdb.commons.service.metric.MetricService;
@@ -111,8 +112,17 @@ public class MigrationTaskManager implements IService, IMigrationManager {
     /** Tiers are disk-full, cannot migrate data to these tiers */
     private final Set<Integer> spaceWarningTiers = new HashSet<>();
 
-    /** TsFiles of all data region */
+    /** TsFiles of all data region except for audit */
     private final List<TsFileResource> tsfiles = new ArrayList<>();
+
+    /** TsFiles of all data region for audit */
+    private final List<TsFileResource> auditTsFiles = new ArrayList<>();
+
+    /** Audit TsFiles Total Space */
+    private long auditTsFilesTotalSpaceInBytes = 0L;
+
+    /** Audit TsFiles Max Space */
+    private final double auditTsFilesMaxSpaceInGB = commonConfig.getAuditLogSpaceTlInGB();
 
     public MigrationScheduleTask() {
       for (int i = 0; i < tierManager.getTiersNum(); i++) {
@@ -147,13 +157,54 @@ public class MigrationTaskManager implements IService, IMigrationManager {
 
     private void schedule() {
       for (DataRegion dataRegion : StorageEngine.getInstance().getAllDataRegions()) {
+        if (dataRegion.getDatabaseName().startsWith(SystemConstant.AUDIT_DATABASE)) {
+          auditTsFiles.addAll(dataRegion.getSequenceFileList());
+          auditTsFiles.addAll(dataRegion.getUnSequenceFileList());
+          continue;
+        }
         tsfiles.addAll(dataRegion.getSequenceFileList());
         tsfiles.addAll(dataRegion.getUnSequenceFileList());
       }
+      scheduleAuditDeletion();
       if (TierFullPolicy.valueOf(iotdbConfig.getTierFullPolicy()) == TierFullPolicy.DELETE) {
         scheduleDeletion();
       }
       scheduleMigration();
+    }
+
+    private void scheduleAuditDeletion() {
+      if (auditTsFilesMaxSpaceInGB == Double.MAX_VALUE) {
+        return;
+      }
+      if (auditTsFiles.isEmpty()) {
+        return;
+      }
+      // calculate audit TsFiles total space
+      for (TsFileResource tsFileResource : auditTsFiles) {
+        if (tsFileResource.getStatus() == TsFileResourceStatus.NORMAL) {
+          auditTsFilesTotalSpaceInBytes += tsFileResource.getTsFileSize();
+        }
+      }
+
+      // if audit TsFiles total space is under threshold, return
+      if (auditTsFilesTotalSpaceInBytes * 1.0 / (1024L * 1024L * 1024L)
+          <= auditTsFilesMaxSpaceInGB) {
+        return;
+      }
+
+      List<TsFileResource> deleteCandidates =
+          auditTsFiles.stream()
+              .filter(f -> f.getStatus() == TsFileResourceStatus.NORMAL)
+              .sorted(this::compareDeletePriority)
+              .collect(Collectors.toList());
+      // submit delete tasks
+      for (TsFileResource tsfile : deleteCandidates) {
+        if (auditTsFilesTotalSpaceInBytes * 1.0 / (1024L * 1024L * 1024L)
+            <= auditTsFilesMaxSpaceInGB) {
+          return;
+        }
+        trySubmitAuditDeleteTask(tsfile.getTierLevel(), tsfile);
+      }
     }
 
     private void scheduleDeletion() {
@@ -181,6 +232,15 @@ public class MigrationTaskManager implements IService, IMigrationManager {
         return;
       }
       releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
+      workers.submit(new DeleteTask(sourceTsFile));
+    }
+
+    private void trySubmitAuditDeleteTask(int tierLevel, TsFileResource sourceTsFile) {
+      if (!sourceTsFile.setStatus(TsFileResourceStatus.MIGRATING)) {
+        return;
+      }
+      releaseDiskUsage(tierLevel, sourceTsFile.getTsFileSize());
+      auditTsFilesTotalSpaceInBytes -= sourceTsFile.getTsFileSize();
       workers.submit(new DeleteTask(sourceTsFile));
     }
 

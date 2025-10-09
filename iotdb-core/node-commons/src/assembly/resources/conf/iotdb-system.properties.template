@@ -2314,6 +2314,16 @@ auditable_operation_level=global
 # effectiveMode: restart
 auditable_operation_result=success, fail
 
+# max space threshold of audit log file, default value is 1.0 GB
+# Datatype: double
+# effectiveMode: restart
+audit_log_space_tl_in_GB=1.0
+
+# max time threshold of audit log file, default value is -1.0, means audit log file will never be deleted according to time
+# Datatype: double
+# effectiveMode: restart
+audit_log_ttl_in_days=-1.0
+
 ####################
 ### White and Black ip list Configuration
 ####################

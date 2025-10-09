@@ -473,6 +473,10 @@ public class CommonConfig {
 
   private String auditableOperationResult = "SUCCESS, FAIL";
 
+  private double auditLogSpaceTlInGB = 1.0;
+
+  private double auditLogTtlInDays = -1.0; // -1 means forever
+
   private String fileEncryptType = "com.timecho.iotdb.commons.encrypt.AES128.AES128";
 
   private boolean enableEncryptConfigFile = false;
@@ -2809,5 +2813,21 @@ public class CommonConfig {
 
   public void setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile) {
     this.enableEncryptPermissionFile = enableEncryptPermissionFile;
+  }
+
+  public double getAuditLogSpaceTlInGB() {
+    return auditLogSpaceTlInGB;
+  }
+
+  public void setAuditLogSpaceTlInGB(double auditLogSpaceTlInGB) {
+    this.auditLogSpaceTlInGB = auditLogSpaceTlInGB;
+  }
+
+  public double getAuditLogTtlInDays() {
+    return auditLogTtlInDays;
+  }
+
+  public void setAuditLogTtlInDays(double auditLogTtlInDays) {
+    this.auditLogTtlInDays = auditLogTtlInDays;
   }
 }
