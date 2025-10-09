@@ -210,15 +210,12 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
             if (statement.getGrantOpt()) {
               return AuthorityChecker.getTSStatus(
                   false,
-                  "Admin privileges do not support grant options when separation of admin power is enable.");
+                  "Admin privileges do not support grant options when separation of admin power is enabled.");
             }
             if (!AuthorityChecker.checkSystemPermissionGrantOption(
                 context.getUsername(), privilegeType)) {
               return AuthorityChecker.getTSStatus(
-                  false,
-                  "Has no permission to execute "
-                      + authorType
-                      + ", please ensure you have these privileges and the grant option is TRUE when granted.");
+                  false, "Only the builtin admin can grant/revoke admin permissions");
             }
           } else if (privilegeType.isPathPrivilege()) {
             if (authorType == AuthorType.REVOKE_USER) {

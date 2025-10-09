@@ -182,6 +182,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
           Set<Integer> permissions = authorPlan.getPermissions();
           String userName = authorPlan.getUserName();
           User user = authorizer.getUser(userName);
+          if (user == null) {
+            return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+          }
           // check user other admin permissions
           if (isGrantingDifferentAdminPowerToAdmin(user, permissions)) {
             return RpcUtils.getStatus(
@@ -262,9 +265,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       }
 
       if (isSecurityAdmin(userToUpdate.getUserId())) {
-        if (!isBuiltinSecurityAdmin(userToUpdate.getUserId())) {
+        if (!isBuiltinSecurityAdmin(executedByUser.getUserId())) {
           return RpcUtils.getStatus(
-              TSStatusCode.NO_PERMISSION, "No permission to update audit admin.");
+              TSStatusCode.NO_PERMISSION, "No permission to update security admin.");
         }
         authorizer.updateUserPassword(userName, password);
         return RpcUtils.SUCCESS_STATUS;

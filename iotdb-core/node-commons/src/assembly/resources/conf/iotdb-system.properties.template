@@ -1847,10 +1847,12 @@ openID_url=
 
 # encryption provider class
 # effectiveMode: first_start
+# Privilege: SECURITY
 iotdb_server_encrypt_decrypt_provider=org.apache.iotdb.commons.security.encrypt.MessageDigestEncrypt
 
 # encryption provided class parameter
 # effectiveMode: first_start
+# Privilege: SECURITY
 iotdb_server_encrypt_decrypt_provider_parameter=
 
 # Cache size of user and role
@@ -1897,6 +1899,7 @@ password_reuse_interval_days=-1
 # The number of days since last password change to trigger a warning
 # Options: any positive integer(minimum 1), -1 means disabled (no warning)
 # effectiveMode: hot_reload
+# Privilege: SECURITY
 # Datatype: Integer
 password_stale_warning_days=30
 
@@ -2290,6 +2293,7 @@ mqtt_max_message_size=1048576
 # whether to enable the audit log.
 # effectiveMode: restart
 # Datatype: Boolean
+# Privilege: AUDIT
 enable_audit_log=false
 
 # whether enable audit log for DML operation of data
@@ -2298,6 +2302,7 @@ enable_audit_log=false
 # whether enable audit log for system's CONTROL operation
 # Datatype: String
 # effectiveMode: restart
+# Privilege: AUDIT
 auditable_operation_type=DML,DDL,QUERY,CONTROL
 
 # the level of auditable operation, including global, object
@@ -2305,6 +2310,7 @@ auditable_operation_type=DML,DDL,QUERY,CONTROL
 # object: audit log for operations on specified objects, e.g., database, time series, table
 # Datatype: String
 # effectiveMode: restart
+# Privilege: AUDIT
 auditable_operation_level=global
 
 # the result of auditable operation, including success, fail
@@ -2312,16 +2318,19 @@ auditable_operation_level=global
 # fail: audit log for failed operations
 # Datatype: String
 # effectiveMode: restart
+# Privilege: AUDIT
 auditable_operation_result=success, fail
 
 # max space threshold of audit log file, default value is 1.0 GB
 # Datatype: double
 # effectiveMode: restart
+# Privilege: AUDIT
 audit_log_space_tl_in_GB=1.0
 
 # max time threshold of audit log file, default value is -1.0, means audit log file will never be deleted according to time
 # Datatype: double
 # effectiveMode: restart
+# Privilege: AUDIT
 audit_log_ttl_in_days=-1.0
 
 ####################

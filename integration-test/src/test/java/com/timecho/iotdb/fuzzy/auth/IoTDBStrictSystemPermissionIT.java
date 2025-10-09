@@ -17,15 +17,14 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.it.auth;
+package com.timecho.iotdb.fuzzy.auth;
 
 import org.apache.iotdb.isession.ISession;
-import org.apache.iotdb.isession.ITableSession;
 import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.TableClusterIT;
-import org.apache.iotdb.itbase.category.TableLocalStandaloneIT;
+import org.apache.iotdb.itbase.category.ClusterIT;
+import org.apache.iotdb.itbase.category.LocalStandaloneIT;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 
@@ -43,12 +42,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.apache.iotdb.db.it.utils.TestUtils.assertTableNonQueryTestFail;
-import static org.apache.iotdb.db.it.utils.TestUtils.executeTableNonQuery;
+import static org.apache.iotdb.db.it.utils.TestUtils.assertNonQueryTestFail;
+import static org.apache.iotdb.db.it.utils.TestUtils.executeNonQuery;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({TableLocalStandaloneIT.class, TableClusterIT.class})
-public class IoTDBRelationalStrictSystemPermissionIT {
+@Category({LocalStandaloneIT.class, ClusterIT.class})
+public class IoTDBStrictSystemPermissionIT {
 
   private Set<String> createdUsers;
   private Set<String> createdRoles;
@@ -57,8 +56,7 @@ public class IoTDBRelationalStrictSystemPermissionIT {
   public static void setUpBeforeClass() throws Exception {
     EnvFactory.getEnv().getConfig().getCommonConfig().setEnforceStrongPassword(false);
     EnvFactory.getEnv().initClusterEnvironment();
-    executeTableNonQuery(
-        "set configuration enable_separation_of_powers='true'", "root", "TimechoDB@2021");
+    executeNonQuery("set configuration 'enable_separation_of_powers'='true'");
   }
 
   @AfterClass
@@ -109,7 +107,7 @@ public class IoTDBRelationalStrictSystemPermissionIT {
             Arrays.asList("root", "sys_admin", "security_admin", "audit_admin", "user1", "user2")),
         executeListUserWithSpecifiedUser("security_admin"));
 
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("user1"), executeListUserWithSpecifiedUser("user1"));
     Assert.assertEquals(
         new HashSet<>(Arrays.asList("sys_admin", "root", "user1")),
@@ -121,9 +119,9 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         new HashSet<>(Arrays.asList("audit_admin", "root")),
         executeListUserWithSpecifiedUser("audit_admin"));
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
 
-    executeTableNonQuery("grant audit to user user1", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant audit on root.** to user user1", "audit_admin", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("user1"), executeListUserWithSpecifiedUser("user1"));
     Assert.assertEquals(
         new HashSet<>(Arrays.asList("sys_admin", "root")),
@@ -135,9 +133,9 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         new HashSet<>(Arrays.asList("audit_admin", "root", "user1")),
         executeListUserWithSpecifiedUser("audit_admin"));
-    executeTableNonQuery("revoke audit from user user1", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user1", "audit_admin", "TimechoDB@2021");
 
-    executeTableNonQuery("grant security to user user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant security on root.** to user user1", "security_admin", "TimechoDB@2021");
     Assert.assertEquals(
         new HashSet<>(
             Arrays.asList("root", "sys_admin", "security_admin", "audit_admin", "user1", "user2")),
@@ -152,7 +150,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         new HashSet<>(Arrays.asList("audit_admin", "root")),
         executeListUserWithSpecifiedUser("audit_admin"));
-    executeTableNonQuery("revoke security from user user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "revoke security on root.** from user user1", "security_admin", "TimechoDB@2021");
   }
 
   @Test
@@ -172,7 +171,7 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         Collections.emptySet(), executeListUserOfRoleWithSpecifiedUser("role1", "user1"));
 
-    executeTableNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
     Assert.assertEquals(
         Collections.emptySet(), executeListUserOfRoleWithSpecifiedUser("role1", "sys_admin"));
     Assert.assertEquals(
@@ -185,11 +184,11 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         Collections.emptySet(), executeListUserOfRoleWithSpecifiedUser("role1", "user2"));
 
-    executeTableNonQuery("grant role role1 to user2", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant role role1 to user3", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant system to user user2", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user3", "audit_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant security to user user4", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role1 to user2", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role1 to user3", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user2", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("grant audit on root.** to user user3", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant security on root.** to user user4", "security_admin", "TimechoDB@2021");
     Assert.assertEquals(
         Collections.singleton("user2"),
         executeListUserOfRoleWithSpecifiedUser("role1", "sys_admin"));
@@ -208,38 +207,37 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         new HashSet<>(Arrays.asList("user1", "user2", "user3")),
         executeListUserOfRoleWithSpecifiedUser("role1", "user4"));
-    executeTableNonQuery("revoke system from user user2", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("revoke audit from user user3", "audit_admin", "TimechoDB@2021");
-    executeTableNonQuery("revoke security from user user4", "security_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user2", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user3", "audit_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "revoke security on root.** from user user4", "security_admin", "TimechoDB@2021");
   }
 
   @Test
   public void updateUser() {
     createUser("user1", "TimechoDB@2021");
 
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
         "alter user user1 set password 'TimechoDB@2022'",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "alter user user1 set password 'TimechoDB@2022'",
         "803: No permission to update system admin.",
         "security_admin",
         "TimechoDB@2021");
-    executeTableNonQuery(
-        "alter user user1 set password 'TimechoDB@2022'", "user1", "TimechoDB@2021");
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    executeNonQuery("alter user user1 set password 'TimechoDB@2022'", "user1", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
         "alter user user1 set password 'TimechoDB@2022'",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
-    executeTableNonQuery(
+    executeNonQuery(
         "alter user user1 set password 'TimechoDB@2022'", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery(
-        "alter user user1 set password 'TimechoDB@2021'", "user1", "TimechoDB@2022");
+    executeNonQuery("alter user user1 set password 'TimechoDB@2021'", "user1", "TimechoDB@2022");
   }
 
   @Test
@@ -247,53 +245,53 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createUser("user1", "TimechoDB@2021");
     createUser("user2", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "drop user user1",
-        "803: Access Denied: Cannot drop admin user or yourself",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user1",
         "TimechoDB@2021");
-    executeTableNonQuery("grant security to user user1", "security_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    executeNonQuery("grant security on root.** to user user1", "security_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
         "drop user user1", "Cannot drop admin user or yourself", "user1", "TimechoDB@2021");
-    executeTableNonQuery("drop user user2", "user1", "TimechoDB@2021");
+    executeNonQuery("drop user user2", "user1", "TimechoDB@2021");
 
     createUser("user2", "TimechoDB@2021");
-    executeTableNonQuery("grant system to user user2", "sys_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    executeNonQuery("grant system on root.** to user user2", "sys_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
         "drop user user2", "803: No permission to drop system admin.", "user1", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "drop user user2",
         "803: No permission to drop system admin.",
         "security_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "drop user user2",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
 
-    executeTableNonQuery("revoke system from user user2", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("drop user user2", "user1", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user2", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("drop user user2", "user1", "TimechoDB@2021");
 
     createUser("user2", "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user2", "audit_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    executeNonQuery("grant audit on root.** to user user2", "audit_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
         "drop user user2", "803: No permission to drop audit admin.", "user1", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "drop user user2",
         "803: No permission to drop audit admin.",
         "security_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "drop user user2",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "audit_admin",
         "TimechoDB@2021");
 
-    executeTableNonQuery("revoke audit from user user2", "audit_admin", "TimechoDB@2021");
-    executeTableNonQuery("drop user user2", "user1", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("drop user user2", "user1", "TimechoDB@2021");
 
-    executeTableNonQuery("drop user user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("drop user user1", "security_admin", "TimechoDB@2021");
 
     createdUsers.clear();
   }
@@ -305,8 +303,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createRole("role1");
     createRole("role2");
 
-    executeTableNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant role role2 to user2", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role2 to user2", "security_admin", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("role1"), executeListRoleWithSpecifiedUser("user1"));
     Assert.assertEquals(Collections.singleton("role2"), executeListRoleWithSpecifiedUser("user2"));
     Assert.assertEquals(Collections.emptySet(), executeListRoleWithSpecifiedUser("sys_admin"));
@@ -315,8 +313,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
         executeListRoleWithSpecifiedUser("security_admin"));
     Assert.assertEquals(Collections.emptySet(), executeListRoleWithSpecifiedUser("audit_admin"));
 
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("grant audit on root.** to user user2", "audit_admin", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("role1"), executeListRoleWithSpecifiedUser("user1"));
     Assert.assertEquals(Collections.singleton("role2"), executeListRoleWithSpecifiedUser("user2"));
     Assert.assertEquals(
@@ -327,14 +325,14 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         Collections.singleton("role2"), executeListRoleWithSpecifiedUser("audit_admin"));
 
-    executeTableNonQuery("revoke audit from user user2", "audit_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant system to user user2", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user2", "sys_admin", "TimechoDB@2021");
 
     Assert.assertEquals(Collections.singleton("role1"), executeListRoleWithSpecifiedUser("user1"));
     Assert.assertEquals(Collections.singleton("role2"), executeListRoleWithSpecifiedUser("user2"));
 
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("revoke system from user user2", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user2", "sys_admin", "TimechoDB@2021");
   }
 
   @Test
@@ -344,12 +342,12 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createRole("role1");
     createRole("role2");
 
-    executeTableNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant role role2 to user2", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role2 to user2", "security_admin", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list role of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
     Assert.assertEquals(
@@ -358,19 +356,19 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         Collections.singleton("role2"),
         executeListRoleOfUserWithSpecifiedUser("user2", "security_admin"));
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list role of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "audit_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list role of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user2",
         "TimechoDB@2021");
 
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("grant audit on root.** to user user2", "audit_admin", "TimechoDB@2021");
     Assert.assertEquals(
         Collections.singleton("role1"),
         executeListRoleOfUserWithSpecifiedUser("user1", "sys_admin"));
@@ -380,18 +378,18 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         Collections.singleton("role2"),
         executeListRoleOfUserWithSpecifiedUser("user2", "security_admin"));
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list role of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user2",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list role of user user2",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user1",
         "TimechoDB@2021");
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("revoke audit from user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user2", "audit_admin", "TimechoDB@2021");
   }
 
   @Test
@@ -400,69 +398,70 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createUser("user2", "TimechoDB@2021");
     createUser("user3", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
-        "grant system to user user1 with grant option",
-        "803: Access Denied: Admin privileges do not support grant options when separation of admin power is enable.",
+    assertNonQueryTestFail(
+        "grant system on root.** to user user1 with grant option",
+        "803: Admin privileges do not support grant options when separation of admin power is enabled.",
         "sys_admin",
         "TimechoDB@2021");
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant security to user user1",
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
+        "grant security on root.** to user user1",
         "803: When enabling separation of admin powers, an admin is not allowed to be granted other admin permissions.",
         "security_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant audit to user user1",
+    assertNonQueryTestFail(
+        "grant audit on root.** to user user1",
         "803: When enabling separation of admin powers, an admin is not allowed to be granted other admin permissions.",
         "audit_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "revoke system from user user1",
-        "803: Access Denied: No permissions for this operation, please add grant option to privilege SYSTEM",
+    assertNonQueryTestFail(
+        "revoke system on root.** from user user1",
+        "803: Only the builtin admin can grant/revoke admin permissions",
         "audit_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "revoke system from user user1",
-        "803: Access Denied: No permissions for this operation, please add grant option to privilege SYSTEM",
+    assertNonQueryTestFail(
+        "revoke system on root.** from user user1",
+        "803: Only the builtin admin can grant/revoke admin permissions",
         "security_admin",
         "TimechoDB@2021");
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
-        "grant security to user user2 with grant option",
-        "803: Access Denied: Admin privileges do not support grant options when separation of admin power is enable.",
+    assertNonQueryTestFail(
+        "grant security on root.** to user user2 with grant option",
+        "803: Admin privileges do not support grant options when separation of admin power is enabled.",
         "security_admin",
         "TimechoDB@2021");
-    executeTableNonQuery("grant security to user user2", "security_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant system to user user2",
+    executeNonQuery("grant security on root.** to user user2", "security_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
+        "grant system on root.** to user user2",
         "803: When enabling separation of admin powers, an admin is not allowed to be granted other admin permissions.",
         "sys_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant audit to user user2",
+    assertNonQueryTestFail(
+        "grant audit on root.** to user user2",
         "803: When enabling separation of admin powers, an admin is not allowed to be granted other admin permissions.",
         "audit_admin",
         "TimechoDB@2021");
-    executeTableNonQuery("revoke security from user user2", "security_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "revoke security on root.** from user user2", "security_admin", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
-        "grant audit to user user3 with grant option",
-        "803: Access Denied: Admin privileges do not support grant options when separation of admin power is enable.",
+    assertNonQueryTestFail(
+        "grant audit on root.** to user user3 with grant option",
+        "803: Admin privileges do not support grant options when separation of admin power is enabled.",
         "audit_admin",
         "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user3", "audit_admin", "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant system to user user3",
+    executeNonQuery("grant audit on root.** to user user3", "audit_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
+        "grant system on root.** to user user3",
         "803: When enabling separation of admin powers, an admin is not allowed to be granted other admin permissions.",
         "sys_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant security to user user3",
+    assertNonQueryTestFail(
+        "grant security on root.** to user user3",
         "803: When enabling separation of admin powers, an admin is not allowed to be granted other admin permissions.",
         "security_admin",
         "TimechoDB@2021");
-    executeTableNonQuery("revoke audit from user user3", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user3", "audit_admin", "TimechoDB@2021");
   }
 
   @Test
@@ -470,41 +469,43 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createUser("user1", "TimechoDB@2021");
     createUser("user2", "TimechoDB@2021");
 
-    executeTableNonQuery(
-        "grant select on any to user user1 with grant option", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery(
-        "grant select on any to user user2 with grant option", "user1", "TimechoDB@2021");
+    executeNonQuery(
+        "grant read_schema on root.** to user user1 with grant option",
+        "security_admin",
+        "TimechoDB@2021");
+    executeNonQuery(
+        "grant read_schema on root.** to user user2 with grant option", "user1", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
-        "revoke select on any from user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+    assertNonQueryTestFail(
+        "revoke read_schema on root.** from user user1",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user2",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "revoke select on any from user user2",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+    assertNonQueryTestFail(
+        "revoke read_schema on root.** from user user2",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user1",
         "TimechoDB@2021");
-    executeTableNonQuery(
-        "revoke select on any from user user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "revoke read_schema on root.** from user user1", "security_admin", "TimechoDB@2021");
   }
 
   @Test
   public void grantAdminPowerToRole() {
     createRole("role1");
-    assertTableNonQueryTestFail(
-        "grant system to role role1",
-        "803: Access Denied: Grant admin privileges to roles is not allowed when separation of admin powers is enabled",
+    assertNonQueryTestFail(
+        "grant system on root.** to role role1",
+        "803: Admin privileges can not be granted to roles when separation of admin power is enabled.",
         "sys_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant security to role role1",
-        "803: Access Denied: Grant admin privileges to roles is not allowed when separation of admin powers is enabled",
+    assertNonQueryTestFail(
+        "grant security on root.** to role role1",
+        "803: Admin privileges can not be granted to roles when separation of admin power is enabled.",
         "security_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
-        "grant audit to role role1",
-        "803: Access Denied: Grant admin privileges to roles is not allowed when separation of admin powers is enabled",
+    assertNonQueryTestFail(
+        "grant audit on root.** to role role1",
+        "803: Admin privileges can not be granted to roles when separation of admin power is enabled.",
         "audit_admin",
         "TimechoDB@2021");
   }
@@ -514,19 +515,19 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createUser("user1", "TimechoDB@2021");
     createUser("user2", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user2",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of user user1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "audit_admin",
         "TimechoDB@2021");
     Assert.assertEquals(
@@ -535,8 +536,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
         Collections.emptySet(),
         executeListPrivilegesOfUserWithSpecifiedUser("user1", "security_admin"));
 
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("grant audit on root.** to user user2", "audit_admin", "TimechoDB@2021");
     Assert.assertEquals(
         Collections.singleton("SYSTEM"),
         executeListPrivilegesOfUserWithSpecifiedUser("user1", "user1"));
@@ -555,8 +556,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     Assert.assertEquals(
         Collections.singleton("AUDIT"),
         executeListPrivilegesOfUserWithSpecifiedUser("user2", "security_admin"));
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("revoke audit from user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user2", "audit_admin", "TimechoDB@2021");
   }
 
   @Test
@@ -566,67 +567,69 @@ public class IoTDBRelationalStrictSystemPermissionIT {
     createUser("user1", "TimechoDB@2021");
     createUser("user2", "TimechoDB@2021");
 
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of role role1",
         "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of role role1",
-        "803: Access Denied: No permissions for this operation, please add privilege SECURITY",
+        "803: No permissions for this operation, please add privilege SECURITY",
         "user1",
         "TimechoDB@2021");
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of role role1",
         "803: No permissions for this operation, please add privilege SECURITY",
         "audit_admin",
         "TimechoDB@2021");
 
-    executeTableNonQuery("grant system to user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant audit to user user2", "audit_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant role role2 to user2", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant select on any to role role1", "security_admin", "TimechoDB@2021");
-    executeTableNonQuery("grant select on any to role role2", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("grant audit on root.** to user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role1 to user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("grant role role2 to user2", "security_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "grant read_schema on root.** to role role1", "security_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "grant read_schema on root.** to role role2", "security_admin", "TimechoDB@2021");
 
     Assert.assertEquals(
-        Collections.singleton("SELECT"),
+        Collections.singleton("READ_SCHEMA"),
         executeListPrivilegesOfRoleWithSpecifiedUser("role1", "user1"));
     Assert.assertEquals(
-        Collections.singleton("SELECT"),
+        Collections.singleton("READ_SCHEMA"),
         executeListPrivilegesOfRoleWithSpecifiedUser("role1", "sys_admin"));
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of role role1",
         "803: No permissions for this operation, please add privilege SECURITY",
         "audit_admin",
         "TimechoDB@2021");
     Assert.assertEquals(
-        Collections.singleton("SELECT"),
+        Collections.singleton("READ_SCHEMA"),
         executeListPrivilegesOfRoleWithSpecifiedUser("role1", "security_admin"));
     Assert.assertEquals(
-        Collections.singleton("SELECT"),
+        Collections.singleton("READ_SCHEMA"),
         executeListPrivilegesOfRoleWithSpecifiedUser("role2", "user2"));
     Assert.assertEquals(
-        Collections.singleton("SELECT"),
+        Collections.singleton("READ_SCHEMA"),
         executeListPrivilegesOfRoleWithSpecifiedUser("role2", "audit_admin"));
     Assert.assertEquals(
-        Collections.singleton("SELECT"),
+        Collections.singleton("READ_SCHEMA"),
         executeListPrivilegesOfRoleWithSpecifiedUser("role2", "security_admin"));
-    assertTableNonQueryTestFail(
+    assertNonQueryTestFail(
         "list privileges of role role2",
         "803: No permissions for this operation, please add privilege SECURITY",
         "sys_admin",
         "TimechoDB@2021");
 
-    executeTableNonQuery("revoke system from user user1", "sys_admin", "TimechoDB@2021");
-    executeTableNonQuery("revoke audit from user user2", "audit_admin", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
+    executeNonQuery("revoke audit on root.** from user user2", "audit_admin", "TimechoDB@2021");
   }
 
   private Set<String> executeListUserWithSpecifiedUser(String executedByUsername)
       throws IoTDBConnectionException, StatementExecutionException {
     Set<String> users = new HashSet<>();
-    try (ITableSession session =
-        EnvFactory.getEnv().getTableSessionConnection(executedByUsername, "TimechoDB@2021")) {
+    try (ISession session =
+        EnvFactory.getEnv().getSessionConnection(executedByUsername, "TimechoDB@2021")) {
       SessionDataSet sessionDataSet = session.executeQueryStatement("list user");
       SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
       while (iterator.next()) {
@@ -640,8 +643,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
   private Set<String> executeListUserOfRoleWithSpecifiedUser(String role, String executedByUsername)
       throws IoTDBConnectionException, StatementExecutionException {
     Set<String> users = new HashSet<>();
-    try (ITableSession session =
-        EnvFactory.getEnv().getTableSessionConnection(executedByUsername, "TimechoDB@2021")) {
+    try (ISession session =
+        EnvFactory.getEnv().getSessionConnection(executedByUsername, "TimechoDB@2021")) {
       SessionDataSet sessionDataSet = session.executeQueryStatement("list user of role " + role);
       SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
       while (iterator.next()) {
@@ -655,8 +658,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
   private Set<String> executeListRoleWithSpecifiedUser(String executedByUsername)
       throws IoTDBConnectionException, StatementExecutionException {
     Set<String> roles = new HashSet<>();
-    try (ITableSession session =
-        EnvFactory.getEnv().getTableSessionConnection(executedByUsername, "TimechoDB@2021")) {
+    try (ISession session =
+        EnvFactory.getEnv().getSessionConnection(executedByUsername, "TimechoDB@2021")) {
       SessionDataSet sessionDataSet = session.executeQueryStatement("list role");
       SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
       while (iterator.next()) {
@@ -671,8 +674,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
       String username, String executedByUsername)
       throws IoTDBConnectionException, StatementExecutionException {
     Set<String> roles = new HashSet<>();
-    try (ITableSession session =
-        EnvFactory.getEnv().getTableSessionConnection(executedByUsername, "TimechoDB@2021")) {
+    try (ISession session =
+        EnvFactory.getEnv().getSessionConnection(executedByUsername, "TimechoDB@2021")) {
       SessionDataSet sessionDataSet =
           session.executeQueryStatement("list role of user " + username);
       SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
@@ -688,8 +691,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
       String username, String executedByUsername)
       throws IoTDBConnectionException, StatementExecutionException {
     Set<String> privileges = new HashSet<>();
-    try (ITableSession session =
-        EnvFactory.getEnv().getTableSessionConnection(executedByUsername, "TimechoDB@2021")) {
+    try (ISession session =
+        EnvFactory.getEnv().getSessionConnection(executedByUsername, "TimechoDB@2021")) {
       SessionDataSet sessionDataSet =
           session.executeQueryStatement("list privileges of user " + username);
       SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
@@ -705,8 +708,8 @@ public class IoTDBRelationalStrictSystemPermissionIT {
       String role, String executedByUsername)
       throws IoTDBConnectionException, StatementExecutionException {
     Set<String> privileges = new HashSet<>();
-    try (ITableSession session =
-        EnvFactory.getEnv().getTableSessionConnection(executedByUsername, "TimechoDB@2021")) {
+    try (ISession session =
+        EnvFactory.getEnv().getSessionConnection(executedByUsername, "TimechoDB@2021")) {
       SessionDataSet sessionDataSet =
           session.executeQueryStatement("list privileges of role " + role);
       SessionDataSet.DataIterator iterator = sessionDataSet.iterator();
@@ -719,26 +722,26 @@ public class IoTDBRelationalStrictSystemPermissionIT {
   }
 
   private void createUser(String userName, String password) {
-    executeTableNonQuery(
+    executeNonQuery(
         "create user " + userName + " '" + password + "'", "security_admin", "TimechoDB@2021");
     createdUsers.add(userName);
   }
 
   private void createRole(String roleName) {
-    executeTableNonQuery("create role " + roleName, "security_admin", "TimechoDB@2021");
+    executeNonQuery("create role " + roleName, "security_admin", "TimechoDB@2021");
     createdRoles.add(roleName);
   }
 
   private void dropUser(String userName) {
     try {
-      executeTableNonQuery("drop user " + userName, "security_admin", "TimechoDB@2021");
+      executeNonQuery("drop user " + userName, "security_admin", "TimechoDB@2021");
     } catch (Throwable ignored) {
     }
   }
 
   private void dropRole(String roleName) {
     try {
-      executeTableNonQuery("drop role " + roleName, "security_admin", "TimechoDB@2021");
+      executeNonQuery("drop role " + roleName, "security_admin", "TimechoDB@2021");
     } catch (Throwable ignored) {
     }
   }

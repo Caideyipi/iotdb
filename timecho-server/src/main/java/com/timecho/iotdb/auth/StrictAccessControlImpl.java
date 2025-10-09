@@ -262,7 +262,7 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         for (PrivilegeType privilegeType : statement.getPrivilegeTypes()) {
           if (statement.isGrantOption()) {
             throw new AccessDeniedException(
-                "Admin privileges do not support grant options when separation of admin power is enable.");
+                "Admin privileges do not support grant options when separation of admin power is enabled.");
           }
           if (type == AuthorRType.REVOKE_USER_SYS) {
             if (auditEntity.getUserId() == User.INTERNAL_SECURITY_ADMIN
@@ -284,8 +284,7 @@ public class StrictAccessControlImpl extends AccessControlImpl {
                   "Can not revoke AUDIT power from builtin audit admin");
             }
           }
-          authChecker.checkGlobalPrivilegeGrantOption(
-              userName, TableModelPrivilege.getTableModelType(privilegeType), auditEntity);
+          checkGrantOrRevokeAdminPrivilege(userName, privilegeType, auditEntity);
         }
         break;
     }
@@ -313,5 +312,27 @@ public class StrictAccessControlImpl extends AccessControlImpl {
           "SUPER USER is not allowed to login when separation of admin powers is enabled.");
     }
     return RpcUtils.SUCCESS_STATUS;
+  }
+
+  private void checkGrantOrRevokeAdminPrivilege(
+      String userName, PrivilegeType privilege, IAuditEntity auditEntity) {
+    TSStatus result =
+        AuthorityChecker.getGrantOptTSStatus(
+            AuthorityChecker.checkSystemPermissionGrantOption(userName, privilege), privilege);
+    if (result.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      ITableAuthCheckerImpl.recordAuditLog(
+          auditEntity
+              .setAuditLogOperation(privilege.getAuditLogOperation())
+              .setPrivilegeType(privilege)
+              .setResult(false),
+          () -> AuthorityChecker.ANY_SCOPE);
+      throw new AccessDeniedException("Only the builtin admin can grant/revoke admin permissions");
+    }
+    ITableAuthCheckerImpl.recordAuditLog(
+        auditEntity
+            .setAuditLogOperation(privilege.getAuditLogOperation())
+            .setPrivilegeType(privilege)
+            .setResult(true),
+        () -> AuthorityChecker.ANY_SCOPE);
   }
 }
