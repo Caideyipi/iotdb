@@ -21,6 +21,7 @@ package com.timecho.iotdb.service;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.db.auth.AuthorityChecker;
+import org.apache.iotdb.db.protocol.session.SessionManager;
 import org.apache.iotdb.db.protocol.thrift.impl.DataNodeInternalRPCServiceImpl;
 import org.apache.iotdb.db.queryengine.plan.relational.security.AccessControlImpl;
 import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthCheckerImpl;
@@ -64,6 +65,8 @@ public class DataNodeInternalRPCServiceImplNew extends DataNodeInternalRPCServic
           AuthorityChecker.setAccessControl(
               new StrictAccessControlImpl(
                   new ITableAuthCheckerImpl(), new StrictTreeAccessCheckVisitor()));
+          SessionManager.getInstance()
+              .removeSessions(session -> session.getUserId() == AuthorityChecker.SUPER_USER_ID);
         }
       }
     }
@@ -76,6 +79,9 @@ public class DataNodeInternalRPCServiceImplNew extends DataNodeInternalRPCServic
       AuthorityChecker.setAccessControl(
           new StrictAccessControlImpl(
               new ITableAuthCheckerImpl(), new StrictTreeAccessCheckVisitor()));
+
+      SessionManager.getInstance()
+          .removeSessions(session -> session.getUserId() == AuthorityChecker.SUPER_USER_ID);
     }
     return RpcUtils.SUCCESS_STATUS;
   }

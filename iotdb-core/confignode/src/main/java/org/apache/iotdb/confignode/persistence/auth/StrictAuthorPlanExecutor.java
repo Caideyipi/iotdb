@@ -143,6 +143,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       case UpdateUserV2:
         return updateUser(authorPlan);
 
+      case RenameUser:
+        return renameUser(authorPlan);
+
       default:
         return RpcUtils.getStatus(TSStatusCode.SEMANTIC_ERROR, "Unsupported author type.");
     }
@@ -200,6 +203,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
 
       case RDropUserV2:
         return dropUser(authorPlan);
+
+      case RRenameUser:
+        return renameUser(authorPlan);
 
       default:
         return RpcUtils.getStatus(TSStatusCode.SEMANTIC_ERROR, "Unsupported author type.");
@@ -277,6 +283,49 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
         return RpcUtils.getStatus(TSStatusCode.NO_PERMISSION, "No permission to update user.");
       }
       authorizer.updateUserPassword(userName, password);
+    } catch (AuthException e) {
+      return RpcUtils.getStatus(e.getCode(), e.getMessage());
+    }
+    return RpcUtils.SUCCESS_STATUS;
+  }
+
+  private TSStatus renameUser(AuthorPlan authorPlan) {
+    String userName = authorPlan.getUserName();
+    String newUserName = authorPlan.getNewUsername();
+    try {
+      User executedByUser = authorizer.getUser(authorPlan.getExecutedByUserId());
+      User userToUpdate = authorizer.getUser(userName);
+      if (userToUpdate == null) {
+        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+      }
+      if (userToUpdate.getUserId() == executedByUser.getUserId()) {
+        authorizer.renameUser(userName, newUserName);
+        return RpcUtils.SUCCESS_STATUS;
+      }
+
+      if (isSystemAdmin(userToUpdate.getUserId())) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION, "No permission to update system admin.");
+      }
+
+      if (isAuditAdmin(userToUpdate.getUserId())) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION, "No permission to update audit admin.");
+      }
+
+      if (isSecurityAdmin(userToUpdate.getUserId())) {
+        if (!isBuiltinSecurityAdmin(executedByUser.getUserId())) {
+          return RpcUtils.getStatus(
+              TSStatusCode.NO_PERMISSION, "No permission to update security admin.");
+        }
+        authorizer.renameUser(userName, newUserName);
+        return RpcUtils.SUCCESS_STATUS;
+      }
+
+      if (!isSecurityAdmin(executedByUser.getUserId())) {
+        return RpcUtils.getStatus(TSStatusCode.NO_PERMISSION, "No permission to update user.");
+      }
+      authorizer.renameUser(userName, newUserName);
     } catch (AuthException e) {
       return RpcUtils.getStatus(e.getCode(), e.getMessage());
     }

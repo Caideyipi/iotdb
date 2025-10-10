@@ -241,6 +241,37 @@ public class IoTDBStrictSystemPermissionIT {
   }
 
   @Test
+  public void renameUser() {
+    createUser("user1", "TimechoDB@2021");
+
+    executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
+        "alter user user1 rename to user2",
+        "803: No permissions for this operation, please add privilege SECURITY",
+        "sys_admin",
+        "TimechoDB@2021");
+    assertNonQueryTestFail(
+        "alter user user1 rename to user2",
+        "803: No permission to update system admin.",
+        "security_admin",
+        "TimechoDB@2021");
+    executeNonQuery("alter user user1 rename to user2", "user1", "TimechoDB@2021");
+    executeNonQuery(
+        "alter user security_admin rename to security_admin1", "security_admin", "TimechoDB@2021");
+    executeNonQuery(
+        "alter user security_admin1 rename to security_admin", "security_admin1", "TimechoDB@2021");
+    executeNonQuery("revoke system on root.** from user user2", "sys_admin", "TimechoDB@2021");
+    assertNonQueryTestFail(
+        "alter user user2 rename to user1",
+        "803: No permissions for this operation, please add privilege SECURITY",
+        "sys_admin",
+        "TimechoDB@2021");
+    executeNonQuery("alter user user2 rename to user1", "security_admin", "TimechoDB@2021");
+    executeNonQuery("alter user user1 rename to user2", "user1", "TimechoDB@2021");
+    executeNonQuery("alter user user2 rename to user1", "user2", "TimechoDB@2021");
+  }
+
+  @Test
   public void dropUser() throws IoTDBConnectionException, StatementExecutionException {
     createUser("user1", "TimechoDB@2021");
     createUser("user2", "TimechoDB@2021");
