@@ -169,7 +169,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
   protected void initSecretKey() throws IOException {
     URL configFileUrl =
         IoTDBDescriptor.getPropsUrl(
-            SecretKey.FILE_ENCRYPTED_PREFIX
+            SecretKey.DN_FILE_ENCRYPTED_PREFIX
                 + CommonConfig.SYSTEM_CONFIG_NAME
                 + SecretKey.FILE_ENCRYPTED_SUFFIX);
     if ((configFileUrl == null || !(new File(configFileUrl.getPath()).exists()))
@@ -194,7 +194,7 @@ public class DataNode extends org.apache.iotdb.db.service.DataNode {
               systemConfigUrl,
               systemConfigFile.getParentFile().getPath()
                   + File.separator
-                  + SecretKey.FILE_ENCRYPTED_PREFIX
+                  + SecretKey.DN_FILE_ENCRYPTED_PREFIX
                   + CommonConfig.SYSTEM_CONFIG_NAME
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
         }

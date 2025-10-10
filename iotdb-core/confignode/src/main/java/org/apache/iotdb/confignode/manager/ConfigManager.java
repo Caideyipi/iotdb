@@ -270,6 +270,7 @@ import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.TPipeTransferReq;
 import org.apache.iotdb.service.rpc.thrift.TPipeTransferResp;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
 import org.apache.tsfile.file.metadata.IDeviceID;
 import org.apache.tsfile.utils.Pair;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
@@ -1787,6 +1788,15 @@ public class ConfigManager implements IManager {
     }
     if (currentNodeId == req.getNodeId() || req.getNodeId() < 0) {
       URL url = ConfigNodeDescriptor.getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+      if (CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile()
+          || url == null
+          || !(new File(url.getFile()).exists())) {
+        url =
+            ConfigNodeDescriptor.getPropsUrl(
+                SecretKey.CN_FILE_ENCRYPTED_PREFIX
+                    + CommonConfig.SYSTEM_CONFIG_NAME
+                    + SecretKey.FILE_ENCRYPTED_SUFFIX);
+      }
       boolean configurationFileFound = (url != null && new File(url.getFile()).exists());
       TrimProperties properties = new TrimProperties();
       properties.putAll(req.getConfigs());

@@ -133,7 +133,7 @@ public class IoTDBDescriptor {
       if (systemConfigUrl == null || !(new File(systemConfigUrl.getPath()).exists())) {
         URL encryptedSystemConfigUrl =
             getPropsUrl(
-                SecretKey.FILE_ENCRYPTED_PREFIX
+                SecretKey.DN_FILE_ENCRYPTED_PREFIX
                     + CommonConfig.SYSTEM_CONFIG_NAME
                     + SecretKey.FILE_ENCRYPTED_SUFFIX);
         if (encryptedSystemConfigUrl == null
@@ -253,7 +253,7 @@ public class IoTDBDescriptor {
     if (url == null || !(new File(url.getPath()).exists())) {
       url =
           getPropsUrl(
-              SecretKey.FILE_ENCRYPTED_PREFIX
+              SecretKey.DN_FILE_ENCRYPTED_PREFIX
                   + CommonConfig.SYSTEM_CONFIG_NAME
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
     }
@@ -2616,7 +2616,7 @@ public class IoTDBDescriptor {
     if (url == null || !(new File(url.getPath()).exists())) {
       url =
           getPropsUrl(
-              SecretKey.FILE_ENCRYPTED_PREFIX
+              SecretKey.DN_FILE_ENCRYPTED_PREFIX
                   + CommonConfig.SYSTEM_CONFIG_NAME
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
     }

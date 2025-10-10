@@ -53,7 +53,7 @@ public class IoTDBRestServiceDescriptor {
     if (systemConfig == null || !(new File(systemConfig.getPath()).exists())) {
       URL encryptedSystemConfig =
           getPropsUrl(
-              SecretKey.FILE_ENCRYPTED_PREFIX
+              SecretKey.DN_FILE_ENCRYPTED_PREFIX
                   + CommonConfig.SYSTEM_CONFIG_NAME
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
       if (encryptedSystemConfig == null || !(new File(encryptedSystemConfig.getPath()).exists())) {
@@ -81,7 +81,7 @@ public class IoTDBRestServiceDescriptor {
     if (url == null || !(new File(url.getPath()).exists())) {
       url =
           getPropsUrl(
-              SecretKey.FILE_ENCRYPTED_PREFIX
+              SecretKey.DN_FILE_ENCRYPTED_PREFIX
                   + CommonConfig.SYSTEM_CONFIG_NAME
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
     }

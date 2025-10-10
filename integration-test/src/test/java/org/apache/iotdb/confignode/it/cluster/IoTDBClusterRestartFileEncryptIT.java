@@ -90,6 +90,8 @@ public class IoTDBClusterRestartFileEncryptIT {
     ((AbstractEnv) EnvFactory.getEnv()).checkClusterStatusWithoutUnknown();
 
     Assert.assertTrue(checkConfigFileContains("series_slot_num=50"));
+    testSetConfiguration();
+    Assert.assertTrue(checkConfigFileContains("cluster_name=helloCluster"));
     userAndRoleCheck();
   }
 
@@ -206,5 +208,14 @@ public class IoTDBClusterRestartFileEncryptIT {
       return false;
     }
     return expectedKeyValues.isEmpty();
+  }
+
+  public void testSetConfiguration() {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      statement.execute("set configuration \"cluster_name\"=\"helloCluster\"");
+    } catch (Exception e) {
+      Assert.fail(e.getMessage());
+    }
   }
 }

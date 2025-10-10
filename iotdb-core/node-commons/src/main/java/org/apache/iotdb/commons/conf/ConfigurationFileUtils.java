@@ -28,17 +28,21 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -173,7 +177,17 @@ public class ConfigurationFileUtils {
 
   public static void encryptConfigFile(URL systemConfigUrl, String targetFilePath) {
     if (systemConfigUrl != null) {
-      File file = new File(systemConfigUrl.getPath());
+      File file;
+      if (targetFilePath.contains(SecretKey.DN_FILE_ENCRYPTED_PREFIX)) {
+        file = new File(systemConfigUrl.getPath());
+      } else if (targetFilePath.contains(SecretKey.CN_FILE_ENCRYPTED_PREFIX)) {
+        if (new File(targetFilePath).exists()) {
+          return;
+        }
+        file = new File(systemConfigUrl.getPath() + ".tmp");
+      } else {
+        return;
+      }
       try {
         try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
           String content = readConfigFileContent(systemConfigUrl);
@@ -297,11 +311,25 @@ public class ConfigurationFileUtils {
       // read configuration file
       List<String> lines = new ArrayList<>();
       TrimProperties mergedProps = new TrimProperties();
-      try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-          lines.add(line);
-          mergedProps.load(new StringReader(line));
+      if (file.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+        byte[] fileBytes = Files.readAllBytes(file.toPath());
+        byte[] decryptedBytes = FileEncryptUtils.decrypt(fileBytes);
+        String decryptedContent = new String(decryptedBytes, StandardCharsets.UTF_8);
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(decryptedContent))) {
+          String line;
+          while ((line = reader.readLine()) != null) {
+            lines.add(line);
+            mergedProps.load(new StringReader(line));
+          }
+        }
+      } else {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+          String line = null;
+          while ((line = reader.readLine()) != null) {
+            lines.add(line);
+            mergedProps.load(new StringReader(line));
+          }
         }
       }
       // overwrite old configuration with new value
@@ -343,19 +371,44 @@ public class ConfigurationFileUtils {
         return;
       }
       logger.info("Updating configuration file {}", file.getAbsolutePath());
-      try (BufferedWriter writer = new BufferedWriter(new FileWriter(lockFile))) {
-        writer.write(contentsOfNewConfigurationFile.toString());
-        // Properties.store is not used as Properties.store may generate '\' automatically
-        writer.write("#" + new Date().toString() + lineSeparator);
-        for (String key : newConfigItems.stringPropertyNames()) {
-          writer.write(key + "=" + newConfigItems.get(key) + lineSeparator);
+      if (file.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            OutputStreamWriter osw = new OutputStreamWriter(baos, StandardCharsets.UTF_8);
+            BufferedWriter writer = new BufferedWriter(osw)) {
+
+          writeConfigurationContent(newConfigItems, writer, contentsOfNewConfigurationFile);
+
+          byte[] contentBytes = baos.toByteArray();
+          byte[] encryptedBytes = FileEncryptUtils.encrypt(contentBytes);
+
+          try (FileOutputStream fos = new FileOutputStream(lockFile)) {
+            fos.write(encryptedBytes);
+            fos.flush();
+          }
         }
-        writer.flush();
+      } else {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(lockFile))) {
+          writeConfigurationContent(newConfigItems, writer, contentsOfNewConfigurationFile);
+        }
       }
       Files.move(lockFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     } finally {
       releaseFileLock(lockFile);
     }
+  }
+
+  private static void writeConfigurationContent(
+      Properties newConfigItems,
+      BufferedWriter writer,
+      StringBuilder contentsOfNewConfigurationFile)
+      throws IOException {
+    writer.write(contentsOfNewConfigurationFile.toString());
+    // Properties.store is not used as Properties.store may generate '\' automatically
+    writer.write("#" + new Date().toString() + lineSeparator);
+    for (String key : newConfigItems.stringPropertyNames()) {
+      writer.write(key + "=" + newConfigItems.get(key) + lineSeparator);
+    }
+    writer.flush();
   }
 
   private static String readConfigLinesWithoutLicense(File file) throws IOException {

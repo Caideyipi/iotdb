@@ -291,7 +291,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
       // Serialize mutable system properties
       IoTDBStartCheck.getInstance().serializeMutableSystemPropertiesIfNecessary();
 
-      logger.info("IoTDB configuration: {}", config.getConfigMessage());
+      // logger.info("IoTDB configuration: {}", config.getConfigMessage());
       logger.info("Congratulations, IoTDB DataNode is set up successfully. Now, enjoy yourself!");
 
       // Start the Audit Service when necessary

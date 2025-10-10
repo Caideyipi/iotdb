@@ -19,7 +19,8 @@ public class SecretKey {
   private static final String SECRET_KEY_PATH = ".secretKey.bin";
   private static final String HARDWARE_CODE_PATH = ".hardware.bin";
   public static final String FILE_ENCRYPTED_SUFFIX = ".encrypted";
-  public static final String FILE_ENCRYPTED_PREFIX = ".";
+  public static final String CN_FILE_ENCRYPTED_PREFIX = ".cn.";
+  public static final String DN_FILE_ENCRYPTED_PREFIX = ".dn.";
   private String secretKey;
   private String hardwareCode;
   private String encryptType;

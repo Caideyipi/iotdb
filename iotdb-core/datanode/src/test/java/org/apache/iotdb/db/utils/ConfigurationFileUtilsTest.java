@@ -107,7 +107,7 @@ public class ConfigurationFileUtilsTest {
           new File(
               dir
                   + File.separator
-                  + SecretKey.FILE_ENCRYPTED_PREFIX
+                  + SecretKey.DN_FILE_ENCRYPTED_PREFIX
                   + "iotdb-system.properties"
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
     }

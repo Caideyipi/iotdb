@@ -82,6 +82,7 @@ import org.apache.iotdb.db.utils.ThreadUtils;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
 import com.timecho.iotdb.os.cache.CacheRecoverTask;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
 import com.timecho.iotdb.os.metrics.ObjectStorageMetrics;
@@ -700,6 +701,15 @@ public class StorageEngine implements IService {
     newConfigProperties.putAll(newConfigItems);
 
     URL configFileUrl = IoTDBDescriptor.getPropsUrl(CommonConfig.SYSTEM_CONFIG_NAME);
+    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile()
+        || configFileUrl == null
+        || !(new File(configFileUrl.getFile()).exists())) {
+      configFileUrl =
+          IoTDBDescriptor.getPropsUrl(
+              SecretKey.DN_FILE_ENCRYPTED_PREFIX
+                  + CommonConfig.SYSTEM_CONFIG_NAME
+                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
+    }
     if (configFileUrl == null || !(new File(configFileUrl.getFile()).exists())) {
       // configuration file not exist, update in mem
       String msg =

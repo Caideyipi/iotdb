@@ -99,7 +99,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
 
   public static final String WRONG_MAIN_CLASS_MESSAGE =
       "You are not using the correct main class. If the ConfigNode is started through start-confignode.sh, please check this script's version.";
-  private static final String CONFIGURATION = "IoTDB configuration: {}";
+  // private static final String CONFIGURATION = "IoTDB configuration: {}";
 
   private final String mbeanName =
       String.format(
@@ -198,7 +198,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
         // Notice: We always set up Seed-ConfigNode's RPC service lastly to ensure
         // that the external service is not provided until ConfigNode is fully available
         setUpRPCService();
-        LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
+        // LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
         LOGGER.info(
             "{} has successfully restarted and joined the cluster: {}.",
             ConfigNodeConstant.GLOBAL_NAME,
@@ -254,7 +254,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
         setUpRPCService();
 
         // The initial startup of Seed-ConfigNode finished
-        LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
+        // LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
         LOGGER.info(
             "{} has successfully started and joined the cluster: {}.",
             ConfigNodeConstant.GLOBAL_NAME,
@@ -270,7 +270,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
       sendRegisterConfigNodeRequest();
       // The initial startup of Non-Seed-ConfigNode is not yet finished,
       // we should wait for leader's scheduling
-      LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
+      // LOGGER.info(CONFIGURATION, CONF.getConfigMessage());
       LOGGER.info(
           "{} {} has registered successfully. Waiting for the leader's scheduling to join the cluster: {}.",
           ConfigNodeConstant.GLOBAL_NAME,

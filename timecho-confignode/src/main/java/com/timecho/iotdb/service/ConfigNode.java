@@ -138,7 +138,7 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
   protected void initSecretKey() throws AuthException, IOException {
     URL configFileUrl =
         ConfigNodeDescriptor.getPropsUrl(
-            SecretKey.FILE_ENCRYPTED_PREFIX
+            SecretKey.CN_FILE_ENCRYPTED_PREFIX
                 + CommonConfig.SYSTEM_CONFIG_NAME
                 + SecretKey.FILE_ENCRYPTED_SUFFIX);
     LocalFileUserManager userManager =
@@ -168,7 +168,7 @@ public class ConfigNode extends org.apache.iotdb.confignode.service.ConfigNode {
               systemConfigUrl,
               systemConfigFile.getParentFile().getPath()
                   + File.separator
-                  + SecretKey.FILE_ENCRYPTED_PREFIX
+                  + SecretKey.CN_FILE_ENCRYPTED_PREFIX
                   + CommonConfig.SYSTEM_CONFIG_NAME
                   + SecretKey.FILE_ENCRYPTED_SUFFIX);
         }
