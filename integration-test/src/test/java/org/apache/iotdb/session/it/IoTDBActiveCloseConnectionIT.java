@@ -172,5 +172,9 @@ public class IoTDBActiveCloseConnectionIT {
                 }
               });
     }
+
+    try (ISession session1 = EnvFactory.getEnv().getSessionConnection()) {
+      session1.executeNonQueryStatement("flush");
+    }
   }
 }

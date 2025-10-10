@@ -259,6 +259,7 @@ public class SessionManager implements SessionManagerMBean {
             openSessionResp.getMessage(),
             username,
             session);
+        updateIdleTime();
         if (enableLoginLock) {
           loginLockManager.clearFailure(userId, session.getClientAddress());
         }
@@ -367,8 +368,8 @@ public class SessionManager implements SessionManagerMBean {
       long idleInNanos = idleSessionTimeoutInMinutes * 60 * 1000 * 1000 * 1000L;
       if (System.nanoTime() - currSessionIdleTime.get() > idleInNanos) {
         closeSession(session, Coordinator.getInstance()::cleanupQueryExecution);
+        return false;
       }
-      return false;
     }
 
     return isLoggedIn;
