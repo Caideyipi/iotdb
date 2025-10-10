@@ -209,7 +209,8 @@ public class CommonConfig {
 
   // Sequentially poll the tsFile by default
   private int pipeRealTimeQueuePollHistoricalTsFileThreshold = 1;
-  private int pipeRealTimeQueueMaxWaitingTsFileSize = 1;
+  private int pipeRealTimeQueueMaxWaitingTsFileSize =
+      Math.max(16, Runtime.getRuntime().availableProcessors());
   private boolean skipFailedTableSchemaCheck = false;
 
   /** The maximum number of threads that can be used to execute subtasks in PipeSubtaskExecutor. */
