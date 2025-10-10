@@ -2309,7 +2309,11 @@ public class ConfigManager implements IManager {
         deleteTimeSeriesPatternPaths.add(path);
       }
       if (!canOptimize) {
-        return procedureManager.deleteTimeSeries(queryId, rawPatternTree, isGeneratedByPipe);
+        return procedureManager.deleteTimeSeries(
+            queryId,
+            rawPatternTree,
+            isGeneratedByPipe,
+            req.isSetMayDeleteAudit() && req.isMayDeleteAudit());
       }
       // check if the database is using template
       try {
@@ -2326,7 +2330,10 @@ public class ConfigManager implements IManager {
         deleteTimeSeriesPatternTree.constructTree();
         status =
             procedureManager.deleteTimeSeries(
-                queryId, deleteTimeSeriesPatternTree, isGeneratedByPipe);
+                queryId,
+                deleteTimeSeriesPatternTree,
+                isGeneratedByPipe,
+                req.isSetMayDeleteAudit() && req.isMayDeleteAudit());
       }
       if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         // 2. delete database
@@ -2678,12 +2685,21 @@ public class ConfigManager implements IManager {
 
   /**
    * Get all related dataRegion which may contains the data of specific timeseries matched by given
-   * patternTree
+   * patternTree. The audit db is excluded
    */
   public Map<TConsensusGroupId, TRegionReplicaSet> getRelatedDataRegionGroup(
       final PathPatternTree patternTree) {
+    return getRelatedDataRegionGroup(patternTree, false);
+  }
+
+  /**
+   * Get all related dataRegion which may contains the data of specific timeseries matched by given
+   * patternTree
+   */
+  public Map<TConsensusGroupId, TRegionReplicaSet> getRelatedDataRegionGroup(
+      final PathPatternTree patternTree, boolean needAuditDB) {
     return getRelatedDataRegionGroup(
-        getSchemaPartition(patternTree, false).getSchemaPartitionTable());
+        getSchemaPartition(patternTree, needAuditDB).getSchemaPartitionTable());
   }
 
   public Map<TConsensusGroupId, TRegionReplicaSet> getRelatedDataRegionGroup4TableModel(
