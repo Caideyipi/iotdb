@@ -162,7 +162,7 @@ public class IoTDBActiveCloseConnectionIT {
               () -> {
                 Thread.sleep(waitTime);
                 try {
-                  session1.executeQueryStatement("FLUSH");
+                  session1.executeNonQueryStatement("FLUSH");
                   return false;
                 } catch (StatementExecutionException e) {
                   assertEquals(
