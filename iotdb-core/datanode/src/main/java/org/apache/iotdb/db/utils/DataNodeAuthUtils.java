@@ -160,7 +160,7 @@ public class DataNodeAuthUtils {
   }
 
   public static TSStatus recordPasswordHistory(
-      long userId, String password, String oldPassword, long timeToRecord) {
+      long userId, String password, String oldEncryptedPassword, long timeToRecord) {
     InsertRowStatement insertRowStatement = new InsertRowStatement();
     try {
       insertRowStatement.setDevicePath(
@@ -170,7 +170,9 @@ public class DataNodeAuthUtils {
       insertRowStatement.setValues(
           new Object[] {
             new Binary(AuthUtils.encryptPassword(password), StandardCharsets.UTF_8),
-            oldPassword == null ? null : new Binary(oldPassword, StandardCharsets.UTF_8)
+            oldEncryptedPassword == null
+                ? null
+                : new Binary(oldEncryptedPassword, StandardCharsets.UTF_8)
           });
       insertRowStatement.setDataTypes(new TSDataType[] {TSDataType.STRING, TSDataType.STRING});
     } catch (IllegalPathException ignored) {

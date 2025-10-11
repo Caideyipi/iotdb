@@ -32,6 +32,7 @@ import org.apache.iotdb.commons.service.ServiceType;
 import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.commons.service.metric.enums.Metric;
 import org.apache.iotdb.commons.service.metric.enums.Tag;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.auth.AuthorityChecker;
@@ -210,7 +211,8 @@ public class SessionManager implements SessionManagerMBean {
               username);
           long currentTime = CommonDateTimeUtils.currentTime();
           TSStatus tsStatus =
-              DataNodeAuthUtils.recordPasswordHistory(userId, password, password, currentTime);
+              DataNodeAuthUtils.recordPasswordHistory(
+                  userId, password, AuthUtils.encryptPassword(password), currentTime);
           if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
             openSessionResp
                 .sessionId(-1)
