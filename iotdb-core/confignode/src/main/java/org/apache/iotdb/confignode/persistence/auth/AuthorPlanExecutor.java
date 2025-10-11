@@ -279,6 +279,8 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
         case DropRole:
           authorizer.deleteRole(roleName);
           break;
+        case AccountUnlock:
+          break;
         case GrantRole:
           for (int permission : permissions) {
             PrivilegeType priv = PrivilegeType.values()[permission];
@@ -389,6 +391,8 @@ public class AuthorPlanExecutor implements IAuthorPlanExecutor {
             return status;
           }
           authorizer.updateUserMinSession(userName, authorPlan.getMinSessionPerUser());
+          break;
+        case RAccountUnlock:
           break;
         case RDropRole:
           authorizer.deleteRole(roleName);

@@ -119,6 +119,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       case RevokeUser:
       case RevokeRole:
       case RevokeRoleFromUser:
+      case AccountUnlock:
         return commonAuthorPlanExecutor.executeAuthorNonQuery(authorPlan);
 
       case GrantUser:
@@ -183,6 +184,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       case RGrantRoleSysPri:
       case RRevokeUserSysPri:
       case RRevokeRoleSysPri:
+      case RAccountUnlock:
         return commonAuthorPlanExecutor.executeRelationalAuthorNonQuery(authorPlan);
       case RGrantUserSysPri:
         try {

@@ -52,6 +52,7 @@ public class StrictAccessControlImpl extends AccessControlImpl {
       case DROP_USER:
       case UPDATE_MAX_USER_SESSION:
       case UPDATE_MIN_USER_SESSION:
+      case ACCOUNT_UNLOCK:
         auditEntity
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
