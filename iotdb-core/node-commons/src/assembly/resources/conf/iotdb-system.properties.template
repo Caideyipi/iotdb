@@ -1908,25 +1908,26 @@ password_stale_warning_days=30
 # effectiveMode: first_start
 enable_grant_option=true
 
-# The maximum number of consecutive failed login attempts for a specific user@address
-# Options: any positive integer
+# The maximum number of consecutive failed login attempts from a single IP address
+# Options:
+#   ≤0 = Completely disable IP-level restrictions
+#   ≥1 = Custom attempt threshold (default: 5)
 # effectiveMode: restart
 # Datatype: Integer
 # Note: When enabled, failed_login_attempts_per_user must also be enabled
 failed_login_attempts=5
 
-# The maximum number of consecutive failed login attempts for a specific user (global)
+# The maximum number of consecutive failed login attempts for a specific user account
 # Options:
-#   -1 = Completely disable global user-level restrictions (overrides master switch)
-#    0 = Automatically adjusted to minimum value 1
-#   ≥1 = Custom attempt threshold
+#   ≤0 = Completely disable user-level restrictions
+#   ≥1 = Custom attempt threshold (default: 1000)
 # effectiveMode: restart
 # Datatype: Integer
 # Note: Must be enabled if failed_login_attempts is enabled
 failed_login_attempts_per_user=1000
 
 # The lock time duration (in minutes) after reaching failed login attempts threshold
-# Options: any positive integer
+# Options: any positive integer (minimum: 1, default: 10)
 # effectiveMode: restart
 # Datatype: Integer
 password_lock_time_minutes=10

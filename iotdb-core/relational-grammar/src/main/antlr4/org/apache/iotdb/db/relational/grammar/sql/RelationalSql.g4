@@ -739,7 +739,7 @@ usernameWithRoot
     ;
 
 usernameWithRootWithOptionalHost
-    : usernameWithRoot (AT host=STRING_LITERAL)?
+    : usernameWithRoot (AT_SIGN host=string)?
     ;
 
 renameUserStatement
@@ -1855,6 +1855,7 @@ YEAR: 'YEAR' | 'Y';
 ZONE: 'ZONE';
 AUDIT: 'AUDIT';
 
+AT_SIGN: '@';
 EQ: '=';
 NEQ: '<>' | '!=';
 LT: '<';
@@ -1928,19 +1929,6 @@ fragment DATE_LITERAL
     : INTEGER_VALUE '-' INTEGER_VALUE '-' INTEGER_VALUE
     | INTEGER_VALUE '/' INTEGER_VALUE '/' INTEGER_VALUE
     | INTEGER_VALUE '.' INTEGER_VALUE '.' INTEGER_VALUE
-    ;
-
-fragment DQUOTA_STRING
-    : '"' ( '""' | ~('"') )* '"'
-    ;
-
-fragment SQUOTA_STRING
-    : '\'' ( '\'\'' | ~('\'') )* '\''
-    ;
-
-STRING_LITERAL
-    : DQUOTA_STRING
-    | SQUOTA_STRING
     ;
 
 fragment TIME_LITERAL
