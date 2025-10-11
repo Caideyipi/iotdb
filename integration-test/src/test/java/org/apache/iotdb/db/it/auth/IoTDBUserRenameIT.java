@@ -113,13 +113,26 @@ public class IoTDBUserRenameIT {
       adminStmt.execute("ALTER USER root RENAME TO user4");
       // We can create another root
       adminStmt.execute("CREATE USER root 'IoTDB@2025abc'");
+      // We can grant and revoke privilege to the new root
+      if (BaseEnv.TABLE_SQL_DIALECT.equals(dialect)) {
+        adminStmt.execute("GRANT SYSTEM TO USER root");
+        adminStmt.execute("REVOKE SYSTEM FROM USER root");
+      } else {
+        adminStmt.execute("GRANT SYSTEM ON root.** TO USER root");
+        adminStmt.execute("REVOKE SYSTEM ON root.** FROM USER root");
+      }
       // Ensure everything works
-      final String ans =
+      String ans =
           "0,admin,-1,-1,\n"
               + "10000,user4,-1,-1,\n"
               + "10001,user2,-1,-1,\n"
               + "10002,root,-1,-1,\n";
       ResultSet resultSet = adminStmt.executeQuery("LIST USER");
+      validateResultSet(resultSet, ans);
+      // Finally, the other root can be deleted
+      adminStmt.execute("DROP USER root");
+      ans = "0,admin,-1,-1,\n" + "10000,user4,-1,-1,\n" + "10001,user2,-1,-1,\n";
+      resultSet = adminStmt.executeQuery("LIST USER");
       validateResultSet(resultSet, ans);
     }
   }
