@@ -634,6 +634,12 @@ public class MppCommonConfig extends MppBaseConfig implements CommonConfig {
   }
 
   @Override
+  public CommonConfig setDnRpcMaxConcurrentClientNum(int dnRpcMaxConcurrentClientNum) {
+    setProperty("dn_rpc_max_concurrent_client_num", String.valueOf(dnRpcMaxConcurrentClientNum));
+    return this;
+  }
+
+  @Override
   public CommonConfig setAuditableOperationType(String auditableOperationType) {
     setProperty("auditable_operation_type", auditableOperationType);
     return this;

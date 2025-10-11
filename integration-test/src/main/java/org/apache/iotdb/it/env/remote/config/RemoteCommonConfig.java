@@ -464,6 +464,11 @@ public class RemoteCommonConfig implements CommonConfig {
   }
 
   @Override
+  public CommonConfig setDnRpcMaxConcurrentClientNum(int dnRpcMaxConcurrentClientNum) {
+    return this;
+  }
+
+  @Override
   public CommonConfig setAuditableOperationType(String auditableOperationType) {
     return this;
   }

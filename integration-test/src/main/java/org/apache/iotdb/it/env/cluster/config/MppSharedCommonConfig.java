@@ -665,6 +665,13 @@ public class MppSharedCommonConfig implements CommonConfig {
   }
 
   @Override
+  public CommonConfig setDnRpcMaxConcurrentClientNum(int dnRpcMaxConcurrentClientNum) {
+    dnConfig.setDnRpcMaxConcurrentClientNum(dnRpcMaxConcurrentClientNum);
+    cnConfig.setDnRpcMaxConcurrentClientNum(dnRpcMaxConcurrentClientNum);
+    return this;
+  }
+
+  @Override
   public CommonConfig setAuditableOperationType(String auditableOperationType) {
     dnConfig.setAuditableOperationType(auditableOperationType);
     cnConfig.setAuditableOperationType(auditableOperationType);

@@ -638,7 +638,9 @@ public class SessionManager implements SessionManagerMBean {
     int currentSessionNums =
         Math.toIntExact(
             sessions.keySet().stream().filter(s -> username.equals(s.getUsername())).count());
-    if (maxSessionPerUser == 0 || currentSessionNums == maxSessionPerUser) {
+
+    if (maxSessionPerUser == 0
+        || (maxSessionPerUser != -1 && currentSessionNums >= maxSessionPerUser)) {
       sessionNumCheckStatus.setCode(TSStatusCode.SESSION_NUMS_EXCEEDED.getStatusCode());
       sessionNumCheckStatus.setMessage(
           String.format(

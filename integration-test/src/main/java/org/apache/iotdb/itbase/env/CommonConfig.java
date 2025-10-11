@@ -206,6 +206,8 @@ public interface CommonConfig {
 
   CommonConfig setEnableAuditLog(boolean enableAuditLog);
 
+  CommonConfig setDnRpcMaxConcurrentClientNum(int dnRpcMaxConcurrentClientNum);
+
   CommonConfig setAuditableOperationType(String auditableOperationType);
 
   CommonConfig setAuditableOperationLevel(String auditableOperationLevel);
