@@ -335,6 +335,7 @@
                                     <inclusion>
                                         <groupId>org.apache.tsfile</groupId>
                                         <artifactId>tsfile</artifactId>
+                                        <filter>!META-INF/**</filter>
                                     </inclusion>
                                     <inclusion>
                                         <groupId>org.apache.iotdb</groupId>
