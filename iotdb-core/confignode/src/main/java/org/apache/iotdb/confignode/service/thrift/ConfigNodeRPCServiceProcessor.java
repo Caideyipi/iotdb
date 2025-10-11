@@ -776,8 +776,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TSStatus checkSessionNum(TCheckSessionNumReq req) {
-    return configManager.checkSessionNumOnConnect(
-        req.getCurrentSessionInfo(), req.getRpcMaxConcurrentClientNum());
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -832,7 +831,7 @@ public class ConfigNodeRPCServiceProcessor implements IConfigNodeRPCService.Ifac
 
   @Override
   public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
-    return configManager.checkMaxClientNumValid(maxConcurrentClientNum);
+    throw new UnsupportedOperationException();
   }
 
   @Override

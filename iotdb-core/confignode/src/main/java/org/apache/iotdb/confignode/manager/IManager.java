@@ -514,9 +514,6 @@ public interface IManager {
   /** login. */
   TPermissionInfoResp login(String username, String password);
 
-  TSStatus checkSessionNumOnConnect(
-      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum);
-
   /** Check User Privileges. */
   TPermissionInfoResp checkUserPrivileges(String username, PrivilegeUnion union);
 

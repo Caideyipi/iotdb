@@ -25,6 +25,7 @@ import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.common.rpc.thrift.TSetConfigurationReq;
+import org.apache.iotdb.commons.auth.AuthException;
 import org.apache.iotdb.commons.client.ClientPoolFactory;
 import org.apache.iotdb.commons.client.IClientManager;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
@@ -40,6 +41,7 @@ import org.apache.iotdb.confignode.manager.ProcedureManager;
 import org.apache.iotdb.confignode.persistence.ProcedureInfo;
 import org.apache.iotdb.confignode.persistence.auth.AuthorInfo;
 import org.apache.iotdb.confignode.persistence.node.NodeInfo;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TNodeActivateInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowClusterResp;
@@ -291,5 +293,35 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
     }
 
     return super.setConfiguration(req);
+  }
+
+  public TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
+    TSStatus status = confirmLeader();
+    if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      return ((TimechoPermissionManager) permissionManager)
+          .checkSessionNumOnConnect(currentSessionInfo, rpcMaxConcurrentClientNum);
+    } else {
+      return status;
+    }
+  }
+
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
+    TSStatus status = confirmLeader();
+    TCheckMaxClientNumResp resp = new TCheckMaxClientNumResp();
+    if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      try {
+        resp =
+            ((TimechoPermissionManager) permissionManager)
+                .checkMaxClientNumValid(maxConcurrentClientNum);
+      } catch (AuthException e) {
+        status.setCode(e.getCode().getStatusCode()).setMessage(e.getMessage());
+        resp.setStatus(status);
+        return resp;
+      }
+    } else {
+      resp.setStatus(status);
+    }
+    return resp;
   }
 }

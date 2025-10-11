@@ -30,7 +30,6 @@ import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
 import org.apache.iotdb.confignode.manager.consensus.ConsensusManager;
 import org.apache.iotdb.confignode.persistence.auth.AuthorInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
-import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
 import org.apache.iotdb.consensus.exception.ConsensusException;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -39,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 
 /** Manager permission read and operation. */
 public class PermissionManager {
@@ -116,11 +114,6 @@ public class PermissionManager {
     return authorInfo.login(username, password);
   }
 
-  public TSStatus checkSessionNumOnConnect(
-      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
-    return authorInfo.checkSessionNumOnConnect(currentSessionInfo, rpcMaxConcurrentClientNum);
-  }
-
   public String login4Pipe(final String userName, final String password) {
     return authorInfo.login4Pipe(userName, password);
   }
@@ -156,10 +149,5 @@ public class PermissionManager {
   public TSStatus enableSeparationOfPowers(
       String systemAdminUsername, String securityAdminUsername, String auditAdminUsername) {
     throw new UnsupportedOperationException("Enable separation of powers is not supported");
-  }
-
-  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum)
-      throws AuthException {
-    return authorInfo.checkMaxClientNumValid(maxConcurrentClientNum);
   }
 }

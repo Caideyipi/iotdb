@@ -58,9 +58,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
   private final IAuthorizer authorizer;
   private final IAuthorPlanExecutor commonAuthorPlanExecutor;
 
-  public StrictAuthorPlanExecutor(IAuthorizer authorizer) {
+  public StrictAuthorPlanExecutor(IAuthorizer authorizer, ConfigManager configManager) {
     this.authorizer = authorizer;
-    this.commonAuthorPlanExecutor = new AuthorPlanExecutor(authorizer, null);
+    this.commonAuthorPlanExecutor = new AuthorPlanExecutor(authorizer, configManager);
   }
 
   @Override
@@ -109,6 +109,8 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
     // other checks have been done in datanode
     switch (authorType) {
       case CreateUser:
+      case UpdateUserMaxSession:
+      case UpdateUserMinSession:
       case CreateUserWithRawPassword:
       case CreateRole:
       case DropRole:
@@ -156,6 +158,8 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
     ConfigPhysicalPlanType authorType = authorPlan.getAuthorType();
     switch (authorType) {
       case RCreateUser:
+      case RUpdateUserMaxSession:
+      case RUpdateUserMinSession:
       case RCreateRole:
       case RDropRole:
       case RGrantUserRole:

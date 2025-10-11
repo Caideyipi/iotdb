@@ -28,6 +28,8 @@ import org.apache.iotdb.commons.client.sync.SyncConfigNodeIServiceClient;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.conf.ConfigNodeDescriptor;
 import org.apache.iotdb.confignode.rpc.thrift.TActivationControl;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckSessionNumReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatReq;
 import org.apache.iotdb.confignode.rpc.thrift.TConfigNodeHeartbeatResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetAllActivationStatusResp;
@@ -166,5 +168,16 @@ public class TimechoConfigNodeRPCServiceProcessor extends ConfigNodeRPCServicePr
     Map<Integer, String> activationMap = configManager.getLoadManager().getNodeActivateStatus();
     resp.setActivationStatusMap(activationMap);
     return resp;
+  }
+
+  @Override
+  public TSStatus checkSessionNum(TCheckSessionNumReq req) {
+    return configManager.checkSessionNumOnConnect(
+        req.getCurrentSessionInfo(), req.getRpcMaxConcurrentClientNum());
+  }
+
+  @Override
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum) {
+    return configManager.checkMaxClientNumValid(maxConcurrentClientNum);
   }
 }

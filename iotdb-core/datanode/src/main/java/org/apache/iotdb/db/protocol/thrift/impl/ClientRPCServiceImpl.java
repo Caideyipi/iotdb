@@ -357,7 +357,8 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
                 stat.getMaxSessionPerUser(), rpcMaxConcurrentClientNum)) {
               return RpcUtils.getTSExecuteStatementResp(
                   RpcUtils.getStatus(
-                      TSStatusCode.ILLEGAL_PARAMETER, "This maxSessionPerUser number is illegal."));
+                      TSStatusCode.ILLEGAL_PARAMETER,
+                      "The value of maxSessionPerUser cannot exceed the value of dn_rpc_max_comput_cient_num."));
             }
           }
           if (stat.getType() == StatementType.MODIFY_MIN_USER_SESSION) {
@@ -365,7 +366,8 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
                 stat.getMinSessionPerUser(), rpcMaxConcurrentClientNum)) {
               return RpcUtils.getTSExecuteStatementResp(
                   RpcUtils.getStatus(
-                      TSStatusCode.ILLEGAL_PARAMETER, "This minSessionPerUser number is illegal."));
+                      TSStatusCode.ILLEGAL_PARAMETER,
+                      "The value of minSessionPerUser cannot exceed the value of dn_rpc_max_comput_cient_num."));
             }
           }
         }

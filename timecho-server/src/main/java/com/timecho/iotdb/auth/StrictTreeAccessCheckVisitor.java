@@ -52,6 +52,8 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
     switch (authorType) {
       case CREATE_USER:
       case DROP_USER:
+      case UPDATE_USER_MAX_SESSION:
+      case UPDATE_USER_MIN_SESSION:
         context
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);

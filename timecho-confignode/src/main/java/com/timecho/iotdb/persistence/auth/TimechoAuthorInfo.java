@@ -24,12 +24,14 @@ import org.apache.iotdb.commons.auth.AuthException;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.persistence.auth.AuthorInfo;
 import org.apache.iotdb.confignode.persistence.auth.StrictAuthorPlanExecutor;
+import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.rpc.RpcUtils;
 
 import org.apache.thrift.TException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class TimechoAuthorInfo extends AuthorInfo {
   private static final String ENABLE_SEPARATION_OF_ADMIN_POWERS_FILE_NAME =
@@ -53,7 +55,7 @@ public class TimechoAuthorInfo extends AuthorInfo {
       return RpcUtils.getStatus(e.getCode(), e.getMessage());
     }
     separationOfPowersEnabled = true;
-    authorPlanExecutor = new StrictAuthorPlanExecutor(authorizer);
+    authorPlanExecutor = new StrictAuthorPlanExecutor(authorizer, configManager);
     return RpcUtils.SUCCESS_STATUS;
   }
 
@@ -78,7 +80,18 @@ public class TimechoAuthorInfo extends AuthorInfo {
     File markInSnapshotDir = new File(snapshotDir, ENABLE_SEPARATION_OF_ADMIN_POWERS_FILE_NAME);
     separationOfPowersEnabled = markInSnapshotDir.exists();
     if (separationOfPowersEnabled) {
-      authorPlanExecutor = new StrictAuthorPlanExecutor(authorizer);
+      authorPlanExecutor = new StrictAuthorPlanExecutor(authorizer, configManager);
     }
+  }
+
+  public TSStatus checkSessionNumOnConnect(
+      Map<String, Integer> currentSessionInfo, int rpcMaxConcurrentClientNum) {
+    return authorPlanExecutor.checkSessionNumOnConnect(
+        currentSessionInfo, rpcMaxConcurrentClientNum);
+  }
+
+  public TCheckMaxClientNumResp checkMaxClientNumValid(int maxConcurrentClientNum)
+      throws AuthException {
+    return authorPlanExecutor.checkMaxClientNumValid(maxConcurrentClientNum);
   }
 }
