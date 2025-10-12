@@ -25,20 +25,14 @@ import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.db.utils.constant.TestConstant;
 
 import com.timecho.iotdb.commons.secret.SecretKey;
-import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import com.timecho.iotdb.commons.utils.OSUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Objects;
@@ -102,46 +96,16 @@ public class ConfigurationFileUtilsTest {
     generateFile(datanodeConfigFile, "b=2");
     generateFile(commonConfigFile, "c=3");
     CommonDescriptor.getInstance().getConfig().setEnableEncryptConfigFile(true);
-    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile()) {
-      systemConfigFile =
-          new File(
-              dir
-                  + File.separator
-                  + SecretKey.DN_FILE_ENCRYPTED_PREFIX
-                  + "iotdb-system.properties"
-                  + SecretKey.FILE_ENCRYPTED_SUFFIX);
-    }
     ConfigurationFileUtils.checkAndMayUpdate(
         systemConfigFile.toURI().toURL(),
         confignodeConfigFile.toURI().toURL(),
         datanodeConfigFile.toURI().toURL(),
         commonConfigFile.toURI().toURL());
     Assert.assertTrue(systemConfigFile.exists());
-
     Properties properties = new Properties();
-    if (CommonDescriptor.getInstance().getConfig().isEnableEncryptConfigFile()) {
-      try (FileInputStream inputStream = new FileInputStream(systemConfigFile);
-          ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-          byteOutputStream.write(buffer, 0, bytesRead);
-        }
-
-        byte[] decryptedData = FileEncryptUtils.decrypt(byteOutputStream.toByteArray());
-
-        try (ByteArrayInputStream decryptedInputStream = new ByteArrayInputStream(decryptedData);
-            InputStreamReader reader =
-                new InputStreamReader(decryptedInputStream, StandardCharsets.UTF_8)) {
-          properties.load(reader);
-        }
-      }
-    } else {
-      try (FileReader fileReader = new FileReader(systemConfigFile)) {
-        properties.load(fileReader);
-      }
+    try (FileReader fileReader = new FileReader(systemConfigFile)) {
+      properties.load(fileReader);
     }
-
     Assert.assertEquals("1", properties.getProperty("a"));
     Assert.assertEquals("2", properties.getProperty("b"));
     Assert.assertEquals("3", properties.getProperty("c"));

@@ -40,8 +40,6 @@ import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -141,33 +139,14 @@ public class ConfigurationFileUtils {
       if (systemFile.exists()) {
         return;
       }
-      try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw");
-          FileChannel channel = raf.getChannel()) {
+      try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw")) {
+        raf.write(license.getBytes());
         String configNodeContent = readConfigLinesWithoutLicense(configNodeFile);
+        raf.write(configNodeContent.getBytes());
         String dataNodeContent = readConfigLinesWithoutLicense(dataNodeFile);
+        raf.write(dataNodeContent.getBytes());
         String commonContent = readConfigLinesWithoutLicense(commonFile);
-        if (systemFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
-          int capacity =
-              license.getBytes().length
-                  + configNodeContent.getBytes().length
-                  + dataNodeContent.getBytes().length
-                  + commonContent.getBytes().length;
-          ByteBuffer buffer = ByteBuffer.allocate(capacity);
-          buffer.put(license.getBytes());
-          buffer.put(configNodeContent.getBytes());
-          buffer.put(dataNodeContent.getBytes());
-          buffer.put(commonContent.getBytes());
-          buffer.flip();
-
-          byte[] encryptedData = FileEncryptUtils.encrypt(buffer.array());
-          ByteBuffer encryptedBuffer = ByteBuffer.wrap(encryptedData);
-          channel.write(encryptedBuffer);
-        } else {
-          raf.write(license.getBytes());
-          raf.write(configNodeContent.getBytes());
-          raf.write(dataNodeContent.getBytes());
-          raf.write(commonContent.getBytes());
-        }
+        raf.write(commonContent.getBytes());
       }
       Files.move(lockFile.toPath(), systemFile.toPath());
     } finally {

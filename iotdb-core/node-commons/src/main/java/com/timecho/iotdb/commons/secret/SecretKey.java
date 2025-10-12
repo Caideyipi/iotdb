@@ -96,7 +96,7 @@ public class SecretKey {
   public void loadSecretKeyFromFile(String systemDir) throws IOException {
     File file = new File(systemDir + File.separator + SECRET_KEY_PATH);
     if (!file.exists()) {
-      LOGGER.error("Secret key is not ready.");
+      LOGGER.warn("Secret key is not ready.");
       throw new IOException("Secret key is not ready.");
     }
 
@@ -104,7 +104,7 @@ public class SecretKey {
         BinaryFileParser.readStringFromBinary(
             systemDir + File.separator + SECRET_KEY_PATH, ByteOrder.BIG_ENDIAN);
     if (content.isEmpty()) {
-      LOGGER.error("Secret key is not ready.");
+      LOGGER.warn("Secret key is not ready.");
       throw new IOException("Secret key is not ready.");
     }
     this.secretKey = content;
@@ -113,7 +113,7 @@ public class SecretKey {
   public void loadHardwareCodeFromFile(String systemDir) throws IOException {
     File file = new File(systemDir + File.separator + HARDWARE_CODE_PATH);
     if (!file.exists()) {
-      LOGGER.error("Hardware code is not ready.");
+      LOGGER.warn("Hardware code is not ready.");
       throw new IOException("Hardware code is not ready.");
     }
 
@@ -121,7 +121,7 @@ public class SecretKey {
         BinaryFileParser.readStringFromBinary(
             systemDir + File.separator + HARDWARE_CODE_PATH, ByteOrder.BIG_ENDIAN);
     if (content.isEmpty()) {
-      LOGGER.error("Hardware code is not ready.");
+      LOGGER.warn("Hardware code is not ready.");
       throw new IOException("Hardware code is not ready.");
     }
     this.hardwareCode = content;

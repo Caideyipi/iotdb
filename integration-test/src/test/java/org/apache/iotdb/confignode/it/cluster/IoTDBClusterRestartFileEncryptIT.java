@@ -76,6 +76,7 @@ public class IoTDBClusterRestartFileEncryptIT {
   @Test
   public void userPrivilegeFileClusterRestartTest() {
     userAndRoleGenerator();
+    testSetConfiguration();
 
     // Shutdown all cluster nodes
     logger.info("Shutting down all ConfigNodes and DataNodes...");
@@ -90,8 +91,7 @@ public class IoTDBClusterRestartFileEncryptIT {
     ((AbstractEnv) EnvFactory.getEnv()).checkClusterStatusWithoutUnknown();
 
     Assert.assertTrue(checkConfigFileContains("series_slot_num=50"));
-    testSetConfiguration();
-    Assert.assertTrue(checkConfigFileContains("cluster_name=helloCluster"));
+    Assert.assertTrue(checkConfigFileContains("enable_query_memory_estimation=false"));
     userAndRoleCheck();
   }
 
@@ -213,7 +213,7 @@ public class IoTDBClusterRestartFileEncryptIT {
   public void testSetConfiguration() {
     try (Connection connection = EnvFactory.getEnv().getConnection();
         Statement statement = connection.createStatement()) {
-      statement.execute("set configuration \"cluster_name\"=\"helloCluster\"");
+      statement.execute("set configuration \"enable_query_memory_estimation\"=\"false\"");
     } catch (Exception e) {
       Assert.fail(e.getMessage());
     }

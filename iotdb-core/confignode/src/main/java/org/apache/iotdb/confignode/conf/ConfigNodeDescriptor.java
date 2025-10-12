@@ -68,18 +68,6 @@ public class ConfigNodeDescriptor {
     URL dataNodeUrl = getPropsUrl(CommonConfig.OLD_DATA_NODE_CONFIG_NAME);
     URL commonConfigUrl = getPropsUrl(CommonConfig.OLD_COMMON_CONFIG_NAME);
     try {
-      if (systemConfigUrl == null || !(new File(systemConfigUrl.getPath()).exists())) {
-        URL encryptedSystemConfigUrl =
-            getPropsUrl(
-                SecretKey.CN_FILE_ENCRYPTED_PREFIX
-                    + CommonConfig.SYSTEM_CONFIG_NAME
-                    + SecretKey.FILE_ENCRYPTED_SUFFIX);
-        if (encryptedSystemConfigUrl == null
-            || !(new File(encryptedSystemConfigUrl.getPath()).exists())) {
-          throw new IOException("The system config file is lost in the ConfigNode.");
-        }
-        systemConfigUrl = encryptedSystemConfigUrl;
-      }
       ConfigurationFileUtils.checkAndMayUpdate(
           systemConfigUrl, configNodeUrl, dataNodeUrl, commonConfigUrl);
     } catch (InterruptedException e) {

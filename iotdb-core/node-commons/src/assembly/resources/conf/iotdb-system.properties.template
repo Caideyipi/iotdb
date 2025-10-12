@@ -2484,3 +2484,17 @@ include_null_value_in_write_throughput_metric=false
 # effectiveMode: first_start_or_set_configuration
 # Datatype: Boolean
 enable_separation_of_powers=false
+
+####################
+### File Encrypt Configuration
+####################
+
+# The switch to control if encrypt config file.
+# effectiveMode: restart
+# Datatype: boolean
+enable_encrypt_config_file=false
+
+# The switch to control if encrypt permission file.
+# effectiveMode: restart
+# Datatype: boolean
+enable_encrypt_permission_file=false
