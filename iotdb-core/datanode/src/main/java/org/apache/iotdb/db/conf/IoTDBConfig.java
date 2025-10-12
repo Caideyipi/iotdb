@@ -4439,4 +4439,8 @@ public class IoTDBConfig {
   public ConcurrentHashMap<String, EncryptParameter> getTSFileDBToEncryptMap() {
     return tsFileDBToEncryptMap;
   }
+
+  public void setTSFileDBToEncryptMap(ConcurrentHashMap<String, EncryptParameter> map) {
+    tsFileDBToEncryptMap = map;
+  }
 }

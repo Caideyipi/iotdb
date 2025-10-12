@@ -56,6 +56,10 @@ public class SecretKey {
     return decryptor;
   }
 
+  public String getEncryptType() {
+    return encryptType;
+  }
+
   public void initSecretKeyFile(String systemDir, String content) {
     if (content == null || content.isEmpty()) {
       return;

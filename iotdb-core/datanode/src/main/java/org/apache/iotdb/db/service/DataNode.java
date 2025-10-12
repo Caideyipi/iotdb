@@ -121,10 +121,12 @@ import org.apache.iotdb.metrics.utils.InternalReporterType;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.udf.api.exception.UDFManagementException;
 
+import com.timecho.iotdb.commons.secret.SecretKey;
 import com.timecho.iotdb.os.HybridFileInputFactoryDecorator;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.ratis.util.ExitUtils;
 import org.apache.thrift.TException;
+import org.apache.tsfile.encrypt.EncryptParameter;
 import org.apache.tsfile.fileSystem.FSFactoryProducer;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 import org.slf4j.Logger;
@@ -143,6 +145,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -264,11 +267,25 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
           loadSecretKey();
           loadHardwareCode();
           initEncryptProps();
+          config.setTSFileDBToEncryptMap(
+              new ConcurrentHashMap<>(
+                  Collections.singletonMap(
+                      "root.__audit",
+                      new EncryptParameter(
+                          SecretKey.getInstance().getEncryptType(),
+                          SecretKey.getInstance().getRealSecretKey()))));
         } catch (IOException e) {
           initSecretKey();
           loadSecretKey();
           loadHardwareCode();
           initEncryptProps();
+          config.setTSFileDBToEncryptMap(
+              new ConcurrentHashMap<>(
+                  Collections.singletonMap(
+                      "root.__audit",
+                      new EncryptParameter(
+                          SecretKey.getInstance().getEncryptType(),
+                          SecretKey.getInstance().getRealSecretKey()))));
         }
         encryptConfigFile();
       }

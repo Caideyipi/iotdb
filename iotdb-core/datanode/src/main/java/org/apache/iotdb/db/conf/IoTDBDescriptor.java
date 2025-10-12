@@ -71,6 +71,7 @@ import org.apache.iotdb.rpc.ZeroCopyRpcTransportFactory;
 import com.timecho.iotdb.commons.secret.SecretKey;
 import com.timecho.iotdb.commons.utils.FileEncryptUtils;
 import org.apache.tsfile.common.conf.TSFileDescriptor;
+import org.apache.tsfile.encrypt.EncryptParameter;
 import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
 import org.apache.tsfile.file.metadata.enums.TSEncoding;
@@ -94,11 +95,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileStore;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongConsumer;
 import java.util.regex.Pattern;
@@ -258,6 +261,14 @@ public class IoTDBDescriptor {
           SecretKey.getInstance().loadHardwareCodeFromFile(systemDir);
           SecretKey.getInstance()
               .initEncryptProps(CommonDescriptor.getInstance().getConfig().getFileEncryptType());
+          getConfig()
+              .setTSFileDBToEncryptMap(
+                  new ConcurrentHashMap<>(
+                      Collections.singletonMap(
+                          "root.__audit",
+                          new EncryptParameter(
+                              SecretKey.getInstance().getEncryptType(),
+                              SecretKey.getInstance().getRealSecretKey()))));
 
           try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
               ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream()) {
