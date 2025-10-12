@@ -136,6 +136,20 @@ public interface BaseEnv {
     return getConnection(SessionConfig.DEFAULT_USER, SessionConfig.DEFAULT_PASSWORD, sqlDialect);
   }
 
+  default Connection getSysAdminConnection(String sqlDialect) throws SQLException {
+    return getConnection(SessionConfig.SYS_ADMIN_USER, SessionConfig.DEFAULT_PASSWORD, sqlDialect);
+  }
+
+  default Connection getSecurityAdminConnection(String sqlDialect) throws SQLException {
+    return getConnection(
+        SessionConfig.SECURITY_ADMIN_USER, SessionConfig.DEFAULT_PASSWORD, sqlDialect);
+  }
+
+  default Connection getAuditAdminConnection(String sqlDialect) throws SQLException {
+    return getConnection(
+        SessionConfig.AUDIT_ADMIN_USER, SessionConfig.DEFAULT_PASSWORD, sqlDialect);
+  }
+
   default Connection getConnection(Constant.Version version) throws SQLException {
     return getConnection(
         version, SessionConfig.DEFAULT_USER, SessionConfig.DEFAULT_PASSWORD, TREE_SQL_DIALECT);

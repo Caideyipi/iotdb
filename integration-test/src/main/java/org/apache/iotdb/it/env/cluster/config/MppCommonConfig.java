@@ -628,6 +628,12 @@ public class MppCommonConfig extends MppBaseConfig implements CommonConfig {
   }
 
   @Override
+  public CommonConfig setEnableSeparationOfPowers(boolean enableSeparationOfPowers) {
+    setProperty("enable_separation_of_powers", String.valueOf(enableSeparationOfPowers));
+    return this;
+  }
+
+  @Override
   public CommonConfig setEnableAuditLog(boolean enableAuditLog) {
     setProperty("enable_audit_log", String.valueOf(enableAuditLog));
     return this;

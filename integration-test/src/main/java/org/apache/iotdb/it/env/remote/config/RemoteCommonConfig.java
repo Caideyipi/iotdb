@@ -459,6 +459,11 @@ public class RemoteCommonConfig implements CommonConfig {
   }
 
   @Override
+  public CommonConfig setEnableSeparationOfPowers(boolean enableSeparationOfPowers) {
+    return this;
+  }
+
+  @Override
   public CommonConfig setEnableAuditLog(boolean enableAuditLog) {
     return this;
   }

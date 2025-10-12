@@ -77,27 +77,54 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
             statement::getUserName);
 
       case LIST_USER:
-        context
-            .setAuditLogOperation(AuditLogOperation.QUERY)
-            .setPrivilegeType(PrivilegeType.SECURITY);
+        context.setAuditLogOperation(AuditLogOperation.QUERY);
+        // Internal admins can list users that created by themselves
+        if (User.INTERNAL_SYSTEM_ADMIN == context.getUserId()) {
+          context.setPrivilegeType(PrivilegeType.SYSTEM);
+          recordObjectAuthenticationAuditLog(context.setResult(true), statement::getUserName);
+        } else if (User.INTERNAL_SECURITY_ADMIN == context.getUserId()) {
+          context.setPrivilegeType(PrivilegeType.SECURITY);
+          recordObjectAuthenticationAuditLog(context.setResult(true), statement::getUserName);
+        } else if (User.INTERNAL_AUDIT_ADMIN == context.getUserId()) {
+          context.setPrivilegeType(PrivilegeType.AUDIT);
+          recordObjectAuthenticationAuditLog(context.setResult(true), statement::getUserName);
+        } else {
+          // No need to check privilege to list himself/herself
+          recordObjectAuthenticationAuditLog(context.setResult(true), context::getUsername);
+        }
         return RpcUtils.SUCCESS_STATUS;
 
       case LIST_USER_PRIVILEGE:
-        context
-            .setAuditLogOperation(AuditLogOperation.QUERY)
-            .setPrivilegeType(PrivilegeType.SECURITY);
+        context.setAuditLogOperation(AuditLogOperation.QUERY);
         if (context.getUsername().equals(statement.getUserName())) {
+          // No need any privilege to list him/herself
+          recordObjectAuthenticationAuditLog(context.setResult(true), statement::getUserName);
           return RpcUtils.SUCCESS_STATUS;
         }
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
         if (queriedUser != null
             && User.INTERNAL_SYSTEM_ADMIN == context.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
+          // System admin can list any user with system privilege
+          recordObjectAuthenticationAuditLog(
+              context.setPrivilegeType(PrivilegeType.SYSTEM).setResult(true),
+              statement::getUserName);
           return RpcUtils.SUCCESS_STATUS;
         }
         if (queriedUser != null
             && User.INTERNAL_AUDIT_ADMIN == context.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
+          // Audit admin can list any user with audit privilege
+          recordObjectAuthenticationAuditLog(
+              context.setPrivilegeType(PrivilegeType.AUDIT).setResult(true),
+              statement::getUserName);
+          return RpcUtils.SUCCESS_STATUS;
+        }
+        if (User.INTERNAL_SECURITY_ADMIN == context.getUserId()) {
+          // Security admin can list any user
+          recordObjectAuthenticationAuditLog(
+              context.setPrivilegeType(PrivilegeType.SECURITY).setResult(true),
+              statement::getUserName);
           return RpcUtils.SUCCESS_STATUS;
         }
         return checkGlobalAuth(
@@ -106,12 +133,15 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
             statement::getUserName);
 
       case LIST_ROLE_PRIVILEGE:
-        context
-            .setAuditLogOperation(AuditLogOperation.QUERY)
-            .setPrivilegeType(PrivilegeType.SECURITY);
-        if (AuthorityChecker.checkRole(context.getUsername(), statement.getRoleName())
-            || User.INTERNAL_SYSTEM_ADMIN == context.getUserId()
+        context.setAuditLogOperation(AuditLogOperation.QUERY);
+        if (AuthorityChecker.checkRole(context.getUsername(), statement.getRoleName())) {
+          // No need any privilege to list his/hers own role
+          recordObjectAuthenticationAuditLog(context.setResult(true), statement::getRoleName);
+          return RpcUtils.SUCCESS_STATUS;
+        }
+        if (User.INTERNAL_SYSTEM_ADMIN == context.getUserId()
             || User.INTERNAL_AUDIT_ADMIN == context.getUserId()) {
+          recordObjectAuthenticationAuditLog(context.setResult(true), statement::getRoleName);
           return RpcUtils.SUCCESS_STATUS;
         }
         return checkGlobalAuth(
@@ -120,11 +150,17 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
             statement::getRoleName);
 
       case LIST_ROLE:
-        context
-            .setAuditLogOperation(AuditLogOperation.QUERY)
-            .setPrivilegeType(PrivilegeType.SECURITY);
+        context.setAuditLogOperation(AuditLogOperation.QUERY);
         // LIST ROLE
         if (statement.getUserName() == null) {
+          if (User.INTERNAL_SECURITY_ADMIN == context.getUserId()) {
+            // security admin can list all roles
+            recordObjectAuthenticationAuditLog(
+                context.setPrivilegeType(PrivilegeType.SECURITY).setResult(true),
+                statement::getRoleName);
+            context.setPrivilegeType(PrivilegeType.SECURITY);
+            return RpcUtils.SUCCESS_STATUS;
+          }
           if (User.INTERNAL_SYSTEM_ADMIN != context.getUserId()
               && User.INTERNAL_AUDIT_ADMIN != context.getUserId()
               // getRoleName will return null
@@ -134,6 +170,8 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
                   statement::getRoleName)) {
             // convert to list role of current user
             statement.setUserName(context.getUsername());
+            recordObjectAuthenticationAuditLog(
+                context.setPrivilegeType(null).setResult(true), context::getUsername);
           }
           return RpcUtils.SUCCESS_STATUS;
         }
@@ -164,10 +202,14 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
         context
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
+        auditObject =
+            authorType == AuthorType.CREATE_ROLE || authorType == AuthorType.DROP_ROLE
+                ? statement::getRoleName
+                : () -> "user: " + statement.getUserName() + ", role: " + statement.getRoleName();
         return checkGlobalAuth(
-            context.setAuditLogOperation(AuditLogOperation.QUERY),
+            context.setAuditLogOperation(AuditLogOperation.DDL),
             PrivilegeType.SECURITY,
-            statement::getUserName);
+            auditObject);
 
       case REVOKE_USER:
       case GRANT_USER:

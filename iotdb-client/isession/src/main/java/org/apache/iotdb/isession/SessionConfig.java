@@ -26,6 +26,9 @@ public class SessionConfig {
   public static final String DEFAULT_HOST = "localhost";
   public static final int DEFAULT_PORT = 6667;
   public static final String DEFAULT_USER = "root";
+  public static final String SYS_ADMIN_USER = "sys_admin";
+  public static final String SECURITY_ADMIN_USER = "security_admin";
+  public static final String AUDIT_ADMIN_USER = "audit_admin";
   public static final String DEFAULT_PASSWORD = "TimechoDB@2021";
   public static final int DEFAULT_FETCH_SIZE = 5000;
   public static final int DEFAULT_CONNECTION_TIMEOUT_MS = 0;

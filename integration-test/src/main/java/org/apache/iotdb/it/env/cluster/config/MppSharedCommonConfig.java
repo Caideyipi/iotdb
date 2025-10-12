@@ -658,6 +658,13 @@ public class MppSharedCommonConfig implements CommonConfig {
   }
 
   @Override
+  public CommonConfig setEnableSeparationOfPowers(boolean enableSeparationOfPowers) {
+    dnConfig.setEnableSeparationOfPowers(enableSeparationOfPowers);
+    cnConfig.setEnableSeparationOfPowers(enableSeparationOfPowers);
+    return this;
+  }
+
+  @Override
   public CommonConfig setEnableAuditLog(boolean enableAuditLog) {
     dnConfig.setEnableAuditLog(enableAuditLog);
     cnConfig.setEnableAuditLog(enableAuditLog);

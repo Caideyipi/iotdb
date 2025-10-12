@@ -204,6 +204,8 @@ public interface CommonConfig {
 
   CommonConfig setDatanodeMemoryProportion(String datanodeMemoryProportion);
 
+  CommonConfig setEnableSeparationOfPowers(boolean enableSeparationOfPowers);
+
   CommonConfig setEnableAuditLog(boolean enableAuditLog);
 
   CommonConfig setDnRpcMaxConcurrentClientNum(int dnRpcMaxConcurrentClientNum);
