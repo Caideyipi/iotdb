@@ -21,7 +21,9 @@ package com.timecho.iotdb.commons.systeminfo;
 
 import org.slf4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public abstract class SystemInfoGetter implements ISystemInfoGetter {
 
@@ -30,6 +32,8 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
   abstract Logger getLogger();
 
   private static final String GET_SYSTEM_INFO_FAIL = "Get system info fail.";
+
+  protected static final String BASH = "/bin/bash";
 
   public void setLogEnabled(boolean logEnabled) {
     this.logEnabled = logEnabled;
@@ -62,6 +66,15 @@ public abstract class SystemInfoGetter implements ISystemInfoGetter {
       return getSystemUUIDImpl();
     } catch (Exception e) {
       return "";
+    }
+  }
+
+  protected String executeShell(String[] shell) throws IOException {
+    Process process = Runtime.getRuntime().exec(shell);
+    process.getOutputStream().close();
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+      return reader.readLine().trim();
     }
   }
 }

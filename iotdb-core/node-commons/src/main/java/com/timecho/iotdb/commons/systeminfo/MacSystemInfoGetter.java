@@ -22,7 +22,7 @@ package com.timecho.iotdb.commons.systeminfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static cn.hutool.system.oshi.OshiUtil.getSystem;
+import java.io.IOException;
 
 public class MacSystemInfoGetter extends SystemInfoGetter {
 
@@ -39,12 +39,33 @@ public class MacSystemInfoGetter extends SystemInfoGetter {
   }
 
   @Override
-  String getMainBoardIdImpl() {
-    return getSystem().getBaseboard().getSerialNumber();
+  String getMainBoardIdImpl() throws IOException {
+    String mainBoardId =
+        executeShell(
+            new String[] {
+              BASH,
+              "-c",
+              "ioreg -l | grep '\"mlb-serial-number\"' | awk '{gsub(/[<>\"]/, \"\", $NF); print $NF}' | xxd -r -p"
+            });
+    if (mainBoardId == null || mainBoardId.isEmpty()) {
+      mainBoardId =
+          executeShell(
+              new String[] {
+                BASH,
+                "-c",
+                "system_profiler SPHardwareDataType | grep \"Serial Number (system)\" | awk '{print $4}'"
+              });
+    }
+    return mainBoardId;
   }
 
   @Override
-  String getSystemUUIDImpl() {
-    return getSystem().getHardwareUUID();
+  String getSystemUUIDImpl() throws IOException {
+    return executeShell(
+        new String[] {
+          BASH,
+          "-c",
+          "system_profiler SPHardwareDataType | grep \"Hardware UUID\" | awk '{print $3}'"
+        });
   }
 }

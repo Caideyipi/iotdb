@@ -22,15 +22,11 @@ package com.timecho.iotdb.commons.systeminfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class LinuxSystemInfoGetter extends SystemInfoGetter {
 
   private static final Logger logger = LoggerFactory.getLogger(LinuxSystemInfoGetter.class);
-
-  private static final String BASH = "/bin/bash";
 
   @Override
   Logger getLogger() {
@@ -56,14 +52,5 @@ public class LinuxSystemInfoGetter extends SystemInfoGetter {
   @Override
   String getSystemUUIDImpl() throws IOException {
     return executeShell(new String[] {BASH, "-c", "cat /sys/class/dmi/id/product_uuid"});
-  }
-
-  protected String executeShell(String[] shell) throws IOException {
-    Process process = Runtime.getRuntime().exec(shell);
-    process.getOutputStream().close();
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-      return reader.readLine().trim();
-    }
   }
 }

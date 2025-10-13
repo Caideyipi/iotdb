@@ -3,8 +3,6 @@ package com.timecho.iotdb.commons.utils;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.structure.SortedProperties;
 
-import cn.hutool.system.OsInfo;
-import cn.hutool.system.SystemUtil;
 import com.google.common.collect.ImmutableMap;
 import com.timecho.iotdb.commons.commission.Lottery;
 import com.timecho.iotdb.commons.systeminfo.ISystemInfoGetter;
@@ -36,15 +34,15 @@ public class OSUtils {
           Lottery.SYSTEM_UUID_NAME, systemInfoGetter::getSystemUUID);
 
   public static SystemInfoGetter generateSystemInfoGetter() {
-    OsInfo osInfo = SystemUtil.getOsInfo();
-    if (osInfo.isWindows()) {
+    String os = System.getProperty("os.name").toLowerCase();
+    if (os.contains("windows")) {
       return new WindowsSystemInfoGetter();
-    } else if (osInfo.isMac()) {
+    } else if (os.contains("mac")) {
       return new MacSystemInfoGetter();
-    } else if (osInfo.isLinux()) {
+    } else if (os.contains("linux")) {
       return new LinuxSystemInfoGetter();
     }
-    logger.warn("OS {} is not officially supported, will be treated as Linux", osInfo.getName());
+    logger.warn("OS {} is not officially supported, will be treated as Linux", os);
     return new LinuxSystemInfoGetter();
   }
 
