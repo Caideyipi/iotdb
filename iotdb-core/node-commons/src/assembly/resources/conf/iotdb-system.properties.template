@@ -1822,6 +1822,9 @@ compressor=LZ4
 # Encryption configuration
 # Data encryption method, supports org.apache.tsfile.encrypt.UNENCRYPTED.
 # To use other types of encryption, please contact us for the libraries to put under the 'libs' directory and the type names.
+# There are two kinds of encrypt algorithm can choose:
+# com.timecho.iotdb.commons.encrypt.AES128.AES128
+# com.timecho.iotdb.commons.encrypt.SM4128.SM4128
 # effectiveMode: restart
 encrypt_type=org.apache.tsfile.encrypt.UNENCRYPTED
 

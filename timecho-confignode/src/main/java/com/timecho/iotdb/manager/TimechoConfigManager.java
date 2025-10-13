@@ -292,6 +292,34 @@ public class TimechoConfigManager extends org.apache.iotdb.confignode.manager.Co
                   IoTDBConstant.DEFAULT_AUDIT_ADMIN_USERNAME));
     }
 
+    String isEnableEncryptConfigFile =
+        req.getConfigs().get(IoTDBConstant.ENABLE_ENCRYPT_CONFIG_FILE);
+    if (isEnableEncryptConfigFile != null) {
+      if (!Boolean.parseBoolean(isEnableEncryptConfigFile)) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION,
+            "No permission to turn off the switch of encrypt config file");
+      }
+      TSStatus tsStatus = confirmLeader();
+      if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        return tsStatus;
+      }
+    }
+
+    String isEnableEncryptPermissionFile =
+        req.getConfigs().get(IoTDBConstant.ENABLE_ENCRYPT_PERMISSION_FILE);
+    if (isEnableEncryptPermissionFile != null) {
+      if (!Boolean.parseBoolean(isEnableEncryptPermissionFile)) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION,
+            "No permission to turn off the switch of encrypt permission file");
+      }
+      TSStatus tsStatus = confirmLeader();
+      if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        return tsStatus;
+      }
+    }
+
     return super.setConfiguration(req);
   }
 

@@ -77,6 +77,7 @@ public class IoTDBClusterRestartFileEncryptIT {
   public void userPrivilegeFileClusterRestartTest() {
     userAndRoleGenerator();
     testSetConfiguration();
+    testRejectSetConfiguration();
 
     // Shutdown all cluster nodes
     logger.info("Shutting down all ConfigNodes and DataNodes...");
@@ -216,6 +217,24 @@ public class IoTDBClusterRestartFileEncryptIT {
       statement.execute("set configuration \"enable_query_memory_estimation\"=\"false\"");
     } catch (Exception e) {
       Assert.fail(e.getMessage());
+    }
+  }
+
+  public void testRejectSetConfiguration() {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      statement.execute("set configuration \"enable_encrypt_config_file\"=\"false\"");
+    } catch (Exception e) {
+      assertEquals(
+          "803: No permission to turn off the switch of encrypt config file", e.getMessage());
+    }
+
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      statement.execute("set configuration \"enable_encrypt_permission_file\"=\"false\"");
+    } catch (Exception e) {
+      assertEquals(
+          "803: No permission to turn off the switch of encrypt permission file", e.getMessage());
     }
   }
 }

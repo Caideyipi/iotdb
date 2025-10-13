@@ -360,6 +360,9 @@ public class IoTDBConstant {
   public static final String DEFAULT_SECURITY_ADMIN_USERNAME = "security_admin";
   public static final String DEFAULT_AUDIT_ADMIN_USERNAME = "audit_admin";
 
+  public static final String ENABLE_ENCRYPT_CONFIG_FILE = "enable_encrypt_config_file";
+  public static final String ENABLE_ENCRYPT_PERMISSION_FILE = "enable_encrypt_permission_file";
+
   // client version number
   public enum ClientVersion {
     V_0_12,
