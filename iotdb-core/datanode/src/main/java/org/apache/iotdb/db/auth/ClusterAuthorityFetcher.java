@@ -776,7 +776,7 @@ public class ClusterAuthorityFetcher implements IAuthorityFetcher {
     }
     TAuthorizerReq req =
         new TAuthorizerReq(
-            authorStatement.getAuthorType().serialize(),
+            authorStatement.getAuthorType().ordinal(),
             authorStatement.getUserName() == null ? "" : authorStatement.getUserName(),
             authorStatement.getRoleName() == null ? "" : authorStatement.getRoleName(),
             authorStatement.getPassWord() == null ? "" : authorStatement.getPassWord(),

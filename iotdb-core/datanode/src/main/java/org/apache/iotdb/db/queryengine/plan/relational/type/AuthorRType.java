@@ -56,8 +56,6 @@ public enum AuthorRType {
   UPDATE_MAX_USER_SESSION,
   UPDATE_MIN_USER_SESSION,
   // Remind to renew the convert codes in ConfigNodeRPCServiceProcessor
-  UPDATE_MAX_USER_SESSION,
-  UPDATE_MIN_USER_SESSION,
   RENAME_USER,
   ACCOUNT_UNLOCK,
 }
