@@ -382,18 +382,27 @@ public class IoTDBStartCheck {
   }
 
   public void checkEncryptMagicString() throws IOException, ConfigurationException {
+    properties = systemPropertiesHandler.read();
+    if (!properties.containsKey(ENCRYPT_MAGIC_STRING)
+        || properties.getProperty(ENCRYPT_MAGIC_STRING).isEmpty()
+        || !properties.containsKey(ENCRYPT_SALT)
+        || properties.getProperty(ENCRYPT_SALT).isEmpty()
+        || !properties.containsKey(ENCRYPT_TOKEN_HINT)
+        || properties.getProperty(ENCRYPT_TOKEN_HINT).isEmpty()) {
+      serializeEncryptMagicString();
+      return;
+    }
+    CommonDescriptor.getInstance()
+        .getConfig()
+        .setUserEncryptTokenHint(properties.getProperty(ENCRYPT_TOKEN_HINT));
+    String encryptSalt = properties.getProperty(ENCRYPT_SALT);
+    byte[] saltBytes = EncryptUtils.hexStringToByteArray(encryptSalt);
+    TSFileDescriptor.getInstance().getConfig().setEncryptSalt(saltBytes);
+
     if (!Objects.equals(TSFileDescriptor.getInstance().getConfig().getEncryptType(), "UNENCRYPTED")
         && !Objects.equals(
             TSFileDescriptor.getInstance().getConfig().getEncryptType(),
             "org.apache.tsfile.encrypt.UNENCRYPTED")) {
-      properties = systemPropertiesHandler.read();
-      CommonDescriptor.getInstance()
-          .getConfig()
-          .setUserEncryptTokenHint(properties.getProperty(ENCRYPT_TOKEN_HINT));
-      String encryptSalt = properties.getProperty(ENCRYPT_SALT);
-      byte[] saltBytes = EncryptUtils.hexStringToByteArray(encryptSalt);
-      TSFileDescriptor.getInstance().getConfig().setEncryptSalt(saltBytes);
-
       String token = System.getenv("user_encrypt_token");
       if (token == null || token.trim().isEmpty()) {
         throw new EncryptException(
@@ -401,18 +410,19 @@ public class IoTDBStartCheck {
                 + CommonDescriptor.getInstance().getConfig().getUserEncryptTokenHint());
       }
       TSFileDescriptor.getInstance().getConfig().setEncryptKeyFromToken(token);
-      String encryptMagicString = properties.getProperty(ENCRYPT_MAGIC_STRING);
-      byte[] magicStringBytes = EncryptUtils.hexStringToByteArray(encryptMagicString);
-      String decryptedMagicString =
-          new String(
-              EncryptUtils.getEncrypt().getDecryptor().decrypt(magicStringBytes),
-              TSFileConfig.STRING_CHARSET);
-      if (!Objects.equals(decryptedMagicString, magicString)) {
-        logger.error("encrypt_magic_string is not matched");
-        throw new ConfigurationException(
-            "Changing encrypt type or key for tsfile encryption after first start is not permitted. Here is your token hint info: "
-                + CommonDescriptor.getInstance().getConfig().getUserEncryptTokenHint());
-      }
+    }
+
+    String encryptMagicString = properties.getProperty(ENCRYPT_MAGIC_STRING);
+    byte[] magicStringBytes = EncryptUtils.hexStringToByteArray(encryptMagicString);
+    String decryptedMagicString =
+        new String(
+            EncryptUtils.getEncrypt().getDecryptor().decrypt(magicStringBytes),
+            TSFileConfig.STRING_CHARSET);
+    if (!Objects.equals(decryptedMagicString, magicString)) {
+      logger.error("encrypt_magic_string is not matched");
+      throw new ConfigurationException(
+          "Changing encrypt type or key for tsfile encryption after first start is not permitted. Here is your token hint info: "
+              + CommonDescriptor.getInstance().getConfig().getUserEncryptTokenHint());
     }
   }
 }
