@@ -60,7 +60,8 @@ public class WALWriter extends LogWriter {
             .getConfig()
             .getEncryptType()
             .equals(IoTDBConstant.UNENCRYPTED_ENCRYPT_TYPE)
-        && !logFile.getName().endsWith(IoTDBConstant.WAL_CHECKPOINT_FILE_SUFFIX)) {
+        && !logFile.getName().endsWith(IoTDBConstant.WAL_CHECKPOINT_FILE_SUFFIX)
+        && !logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
       logFile = new File(logFile.getAbsoluteFile() + SecretKey.FILE_ENCRYPTED_SUFFIX);
     }
     return logFile;

@@ -63,10 +63,6 @@ public class WALInputStream extends InputStream implements AutoCloseable {
   WALFileVersion version;
 
   public WALInputStream(File logFile) throws IOException {
-    File encryptedLogFile = new File(logFile.getAbsoluteFile() + SecretKey.FILE_ENCRYPTED_SUFFIX);
-    if (encryptedLogFile.exists()) {
-      logFile = encryptedLogFile;
-    }
     channel = FileChannel.open(logFile.toPath());
     this.logFile = logFile;
     try {
