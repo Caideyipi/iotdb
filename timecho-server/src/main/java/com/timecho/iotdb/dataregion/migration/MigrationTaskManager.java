@@ -75,12 +75,6 @@ public class MigrationTaskManager implements IService, IMigrationManager {
 
   @Override
   public void start() throws StartupException {
-    if (iotdbConfig.getTierDataDirs().length == 1
-        && TierFullPolicy.valueOf(iotdbConfig.getTierFullPolicy()) == TierFullPolicy.NULL) {
-      logger.info("tiered storage status: disable");
-      stop();
-      return;
-    }
     enable = true;
     // metrics
     MetricService.getInstance().addMetricSet(MigrationMetrics.getInstance());
@@ -169,7 +163,9 @@ public class MigrationTaskManager implements IService, IMigrationManager {
       if (TierFullPolicy.valueOf(iotdbConfig.getTierFullPolicy()) == TierFullPolicy.DELETE) {
         scheduleDeletion();
       }
-      scheduleMigration();
+      if (iotdbConfig.getTierDataDirs().length != 1) {
+        scheduleMigration();
+      }
     }
 
     private void scheduleAuditDeletion() {
