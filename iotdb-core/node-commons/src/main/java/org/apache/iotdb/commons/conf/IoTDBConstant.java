@@ -389,4 +389,6 @@ public class IoTDBConstant {
   public static final String STRING_ARRAY_CLASS_NAME = String[].class.getName();
 
   public static final int SUPER_USER_ID = 0;
+
+  public static final String UNENCRYPTED_ENCRYPT_TYPE = "org.apache.tsfile.encrypt.UNENCRYPTED";
 }

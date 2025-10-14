@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.storageengine.dataregion.wal.io;
 
+import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.service.metrics.WritingMetrics;
 import org.apache.iotdb.db.storageengine.dataregion.wal.buffer.WALEntry;
@@ -130,6 +131,10 @@ public abstract class LogWriter implements ILogWriter {
               .getConfig()
               .getEncryptType()
               .equals(EncryptionType.UNENCRYPTED.getExtension())
+          && !TSFileDescriptor.getInstance()
+              .getConfig()
+              .getEncryptType()
+              .equals(IoTDBConstant.UNENCRYPTED_ENCRYPT_TYPE)
           && logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
         ByteBuffer slice = buffer.slice();
         byte[] data = new byte[slice.remaining()];
