@@ -28,6 +28,7 @@ import org.apache.iotdb.commons.exception.auth.AccessDeniedException;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.schema.table.InformationSchema;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.QualifiedObjectName;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.RelationalAuthorStatement;
@@ -313,6 +314,11 @@ public class AccessControlImpl implements AccessControl {
         return;
       case UPDATE_MAX_USER_SESSION:
       case UPDATE_MIN_USER_SESSION:
+        if (AuthUtils.isRootAdmin(
+            AuthorityChecker.getUserId(statement.getUserName()).orElse(-1L))) {
+          throw new AccessDeniedException(
+              "The number of connections for the built-in admin cannot be modified.");
+        }
         if (AuthorityChecker.SUPER_USER.equals(userName)) {
           return;
         }

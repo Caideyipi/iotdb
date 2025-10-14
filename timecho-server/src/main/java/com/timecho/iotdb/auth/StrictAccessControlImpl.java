@@ -25,6 +25,7 @@ import org.apache.iotdb.commons.audit.IAuditEntity;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.exception.auth.AccessDeniedException;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.QualifiedObjectName;
 import org.apache.iotdb.db.queryengine.plan.relational.security.AccessControlImpl;
@@ -50,9 +51,24 @@ public class StrictAccessControlImpl extends AccessControlImpl {
     switch (type) {
       case CREATE_USER:
       case DROP_USER:
+      case ACCOUNT_UNLOCK:
+        auditEntity
+            .setAuditLogOperation(AuditLogOperation.DDL)
+            .setPrivilegeType(PrivilegeType.SECURITY);
+        if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
+          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          return;
+        }
+        authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.SECURITY, auditEntity);
+        return;
+
       case UPDATE_MAX_USER_SESSION:
       case UPDATE_MIN_USER_SESSION:
-      case ACCOUNT_UNLOCK:
+        if (AuthUtils.isRootAdmin(
+            AuthorityChecker.getUserId(statement.getUserName()).orElse(-1L))) {
+          throw new AccessDeniedException(
+              "The number of connections for the built-in admin cannot be modified.");
+        }
         auditEntity
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);

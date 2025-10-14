@@ -221,6 +221,9 @@ public abstract class BasicUserManager extends BasicRoleManager {
       user =
           new User(
               username, enableEncrypt ? AuthUtils.encryptPassword(password) : password, userid);
+      if (userid == SUPER_USER_ID) {
+        user.setMinSessionPerUser(1);
+      }
       entityMap.put(username, user);
       return true;
     } finally {
@@ -244,6 +247,7 @@ public abstract class BasicUserManager extends BasicRoleManager {
       user =
           new User(
               username, enableEncrypt ? AuthUtils.encryptPassword(password) : password, userId);
+      user.setMinSessionPerUser(1);
       entityMap.put(username, user);
     } finally {
       lock.writeUnlock(username);
@@ -408,6 +412,9 @@ public abstract class BasicUserManager extends BasicRoleManager {
           } else {
             user.setUserId(++nextUserId);
           }
+        }
+        if (AuthUtils.isRootAdmin(user.getUserId())) {
+          user.setMinSessionPerUser(1);
         }
         entityMap.put(user.getName(), user);
       } catch (IOException e) {

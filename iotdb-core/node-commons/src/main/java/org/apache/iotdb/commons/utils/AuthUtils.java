@@ -21,6 +21,7 @@ package org.apache.iotdb.commons.utils;
 import org.apache.iotdb.commons.auth.AuthException;
 import org.apache.iotdb.commons.auth.entity.PathPrivilege;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
+import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.path.PartialPath;
@@ -658,5 +659,12 @@ public class AuthUtils {
       default:
         throw new RuntimeException("Not support position");
     }
+  }
+
+  public static boolean isRootAdmin(long userId) {
+    return (userId == IoTDBConstant.SUPER_USER_ID
+        || userId == User.INTERNAL_AUDIT_ADMIN
+        || userId == User.INTERNAL_SECURITY_ADMIN
+        || userId == User.INTERNAL_SYSTEM_ADMIN);
   }
 }

@@ -474,7 +474,7 @@ public class IoTDBAuthIT {
 
     try {
       ResultSet resultSet = adminStmt.executeQuery("LIST USER");
-      String ans = "0,root,-1,-1,\n";
+      String ans = "0,root,-1,1,\n";
       try {
         validateResultSet(resultSet, ans);
 
@@ -483,7 +483,7 @@ public class IoTDBAuthIT {
         }
         resultSet = adminStmt.executeQuery("LIST USER");
         ans =
-            "0,root,-1,-1,\n"
+            "0,root,-1,1,\n"
                 + "10000,user0,-1,-1,\n"
                 + "10001,user1,-1,-1,\n"
                 + "10002,user2,-1,-1,\n"
@@ -503,7 +503,7 @@ public class IoTDBAuthIT {
         }
         resultSet = adminStmt.executeQuery("LIST USER");
         ans =
-            "0,root,-1,-1,\n"
+            "0,root,-1,1,\n"
                 + "10001,user1,-1,-1,\n"
                 + "10003,user3,-1,-1,\n"
                 + "10005,user5,-1,-1,\n"
@@ -856,7 +856,7 @@ public class IoTDBAuthIT {
         adminStmt.execute("GRANT SECURITY on root.** TO USER tempuser");
         resultSet = userStmt.executeQuery("LIST USER");
         ans =
-            "0,root,-1,-1,\n"
+            "0,root,-1,1,\n"
                 + "10010,tempuser,-1,-1,\n"
                 + "10000,user0,-1,-1,\n"
                 + "10001,user1,-1,-1,\n"

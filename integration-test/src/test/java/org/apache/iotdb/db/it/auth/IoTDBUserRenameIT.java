@@ -123,7 +123,7 @@ public class IoTDBUserRenameIT {
       }
       // Ensure everything works
       String ans =
-          "0,admin,-1,-1,\n"
+          "0,admin,-1,1,\n"
               + "10000,user4,-1,-1,\n"
               + "10001,user2,-1,-1,\n"
               + "10002,root,-1,-1,\n";
@@ -131,7 +131,7 @@ public class IoTDBUserRenameIT {
       validateResultSet(resultSet, ans);
       // Finally, the other root can be deleted
       adminStmt.execute("DROP USER root");
-      ans = "0,admin,-1,-1,\n" + "10000,user4,-1,-1,\n" + "10001,user2,-1,-1,\n";
+      ans = "0,admin,-1,1,\n" + "10000,user4,-1,-1,\n" + "10001,user2,-1,-1,\n";
       resultSet = adminStmt.executeQuery("LIST USER");
       validateResultSet(resultSet, ans);
     }

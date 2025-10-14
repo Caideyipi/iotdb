@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.audit.AuditLogOperation;
 import org.apache.iotdb.commons.audit.IAuditEntity;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.User;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.queryengine.plan.relational.security.TreeAccessCheckContext;
 import org.apache.iotdb.db.queryengine.plan.relational.security.TreeAccessCheckVisitor;
@@ -52,9 +53,21 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
     switch (authorType) {
       case CREATE_USER:
       case DROP_USER:
+      case ACCOUNT_UNLOCK:
+        context
+            .setAuditLogOperation(AuditLogOperation.DDL)
+            .setPrivilegeType(PrivilegeType.SECURITY);
+        return checkGlobalAuth(
+            context.setAuditLogOperation(AuditLogOperation.DDL),
+            PrivilegeType.SECURITY,
+            statement::getUserName);
       case UPDATE_USER_MAX_SESSION:
       case UPDATE_USER_MIN_SESSION:
-      case ACCOUNT_UNLOCK:
+        if (AuthUtils.isRootAdmin(
+            AuthorityChecker.getUserId(statement.getUserName()).orElse(-1L))) {
+          return AuthorityChecker.getTSStatus(
+              false, "The number of connections for the built-in admin cannot be modified.");
+        }
         context
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);

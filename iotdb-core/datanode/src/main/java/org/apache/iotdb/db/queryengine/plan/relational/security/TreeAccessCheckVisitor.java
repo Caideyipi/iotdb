@@ -26,8 +26,10 @@ import org.apache.iotdb.commons.audit.IAuditEntity;
 import org.apache.iotdb.commons.auth.AuthException;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.commons.exception.auth.AccessDeniedException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTreeUtils;
+import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.queryengine.plan.statement.AuthorType;
@@ -558,14 +560,18 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
         return RpcUtils.SUCCESS_STATUS;
       case UPDATE_USER_MAX_SESSION:
       case UPDATE_USER_MIN_SESSION:
-        if (checkHasGlobalAuth(
-            context.setAuditLogOperation(AuditLogOperation.QUERY),
-            PrivilegeType.MANAGE_USER,
-            statement::getUserName)) {
-          return RpcUtils.SUCCESS_STATUS;
+        if (AuthUtils.isRootAdmin(
+            AuthorityChecker.getUserId(statement.getUserName()).orElse(-1L))) {
+          throw new AccessDeniedException(
+              "The number of connections for the built-in admin cannot be modified.");
         }
-        statement.setUserName(context.getUsername());
-        return RpcUtils.SUCCESS_STATUS;
+        context
+            .setAuditLogOperation(AuditLogOperation.DDL)
+            .setPrivilegeType(PrivilegeType.SECURITY);
+        return checkGlobalAuth(
+            context.setAuditLogOperation(AuditLogOperation.DDL),
+            PrivilegeType.MANAGE_USER,
+            statement::getUserName);
       case LIST_USER_PRIVILEGE:
         context.setAuditLogOperation(AuditLogOperation.QUERY);
         if (context.getUsername().equals(statement.getUserName())) {

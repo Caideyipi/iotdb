@@ -944,7 +944,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     int maxConcurrentClientNum = config.getRpcMaxConcurrentClientNum();
     TCheckMaxClientNumResp status = AuthorityChecker.checkMaxClientNumValid(maxConcurrentClientNum);
     if (status.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      maxConcurrentClientNum = status.getMinSessionsSum();
+      maxConcurrentClientNum = status.getMinSessionsSum() + 1;
       logger.warn(
           String.format(
               "The dn_rpc_max_concurrent_client_num parameter is less than the number of connections that the system needs to reserve, so it has been reset to %s",

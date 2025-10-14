@@ -537,7 +537,7 @@ public class IoTDBRelationalAuthIT {
 
       ResultSet resultSet = adminStmt.executeQuery("List user");
       Set<String> resultSetList = new HashSet<>();
-      resultSetList.add("0,root,-1,-1,");
+      resultSetList.add("0,root,-1,1,");
       resultSetList.add("10000,testuser,-1,-1,");
       resultSetList.add("10001,!@#$%^*()_+-=1,-1,-1,");
       resultSetList.add("10002,!@#$%^*()_+-=2,-1,-1,");
