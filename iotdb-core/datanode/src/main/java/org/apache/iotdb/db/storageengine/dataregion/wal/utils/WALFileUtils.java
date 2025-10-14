@@ -19,7 +19,11 @@
 
 package org.apache.iotdb.db.storageengine.dataregion.wal.utils;
 
+import org.apache.iotdb.commons.conf.IoTDBConstant;
+
 import com.timecho.iotdb.commons.secret.SecretKey;
+import org.apache.tsfile.common.conf.TSFileDescriptor;
+import org.apache.tsfile.file.metadata.enums.EncryptionType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,12 +54,13 @@ public class WALFileUtils {
   public static final Pattern WAL_FILE_NAME_PATTERN =
       Pattern.compile(
           String.format(
-              "%s(?<%s>\\d+)-(?<%s>\\d+)-(?<%s>\\d+)\\%s$",
+              "%s(?<%s>\\d+)-(?<%s>\\d+)-(?<%s>\\d+)\\%s(%s)?$",
               WAL_FILE_PREFIX,
               WAL_VERSION_ID,
               WAL_START_SEARCH_INDEX,
               WAL_STATUS_CODE,
-              WAL_FILE_SUFFIX));
+              WAL_FILE_SUFFIX,
+              SecretKey.FILE_ENCRYPTED_SUFFIX));
 
   public static final String WAL_FILE_NAME_FORMAT =
       WAL_FILE_PREFIX
@@ -174,7 +179,13 @@ public class WALFileUtils {
 
   /** Get .wal filename. */
   public static String getLogFileName(long versionId, long startSearchIndex, WALFileStatus status) {
-    return String.format(WAL_FILE_NAME_FORMAT, versionId, startSearchIndex, status.getCode());
+    return String.format(
+        isEnableEncrypt()
+            ? WAL_FILE_NAME_FORMAT + SecretKey.FILE_ENCRYPTED_SUFFIX
+            : WAL_FILE_NAME_FORMAT,
+        versionId,
+        startSearchIndex,
+        status.getCode());
   }
 
   /**
@@ -188,5 +199,16 @@ public class WALFileUtils {
   public static String getTsFileRelativePath(String absolutePath) {
     Path path = new File(absolutePath).toPath();
     return path.subpath(path.getNameCount() - 5, path.getNameCount()).toString();
+  }
+
+  public static boolean isEnableEncrypt() {
+    return !TSFileDescriptor.getInstance()
+            .getConfig()
+            .getEncryptType()
+            .equals(EncryptionType.UNENCRYPTED.getExtension())
+        && !TSFileDescriptor.getInstance()
+            .getConfig()
+            .getEncryptType()
+            .equals(IoTDBConstant.UNENCRYPTED_ENCRYPT_TYPE);
   }
 }
