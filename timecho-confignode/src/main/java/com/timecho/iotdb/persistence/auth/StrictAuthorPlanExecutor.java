@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.persistence.auth;
+package com.timecho.iotdb.persistence.auth;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.auth.AuthException;
@@ -35,6 +35,8 @@ import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorRelational
 import org.apache.iotdb.confignode.consensus.request.write.auth.AuthorTreePlan;
 import org.apache.iotdb.confignode.consensus.response.auth.PermissionInfoResp;
 import org.apache.iotdb.confignode.manager.ConfigManager;
+import org.apache.iotdb.confignode.persistence.auth.AuthorPlanExecutor;
+import org.apache.iotdb.confignode.persistence.auth.IAuthorPlanExecutor;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TListUserInfo;
@@ -127,7 +129,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
           Set<Integer> permissions = authorPlan.getPermissions();
           User user = authorizer.getUser(userName);
           if (user == null) {
-            return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+            return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG + userName);
           }
           // check user other admin permissions
           if (isGrantingDifferentAdminPowerToAdmin(user, permissions)) {
@@ -192,7 +194,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
           String userName = authorPlan.getUserName();
           User user = authorizer.getUser(userName);
           if (user == null) {
-            return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+            return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG + userName);
           }
           // check user other admin permissions
           if (isGrantingDifferentAdminPowerToAdmin(user, permissions)) {
@@ -224,7 +226,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       User executedByUser = authorizer.getUser(authorPlan.getExecutedByUserId());
       User droppedUser = authorizer.getUser(userName);
       if (droppedUser == null) {
-        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG + userName);
       }
       if (isBuiltinUser(droppedUser.getUserId())) {
         return RpcUtils.getStatus(
@@ -259,7 +261,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       User executedByUser = authorizer.getUser(authorPlan.getExecutedByUserId());
       User userToUpdate = authorizer.getUser(userName);
       if (userToUpdate == null) {
-        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG + userName);
       }
       if (userToUpdate.getUserId() == executedByUser.getUserId()) {
         authorizer.updateUserPassword(userName, password);
@@ -302,7 +304,7 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       User executedByUser = authorizer.getUser(authorPlan.getExecutedByUserId());
       User userToUpdate = authorizer.getUser(userName);
       if (userToUpdate == null) {
-        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG);
+        return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG + userName);
       }
       if (userToUpdate.getUserId() == executedByUser.getUserId()) {
         authorizer.renameUser(userName, newUserName);

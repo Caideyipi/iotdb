@@ -27,6 +27,7 @@ import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.exception.auth.AccessDeniedException;
 import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.db.auth.AuthorityChecker;
+import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.QualifiedObjectName;
 import org.apache.iotdb.db.queryengine.plan.relational.security.AccessControlImpl;
 import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthChecker;
@@ -368,6 +369,8 @@ public class StrictAccessControlImpl extends AccessControlImpl {
           checkGrantOrRevokeAdminPrivilege(userName, privilegeType, auditEntity);
         }
         break;
+      default:
+        throw new SemanticException("Unsupported authorType: " + type);
     }
   }
 
