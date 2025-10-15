@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.procedure.state.auth;
+package com.timecho.iotdb.confignode.procedure.state.auth;
 
 public enum EnableSeparationOfAdminPowersProcedureState {
   INIT,

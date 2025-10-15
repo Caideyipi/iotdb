@@ -20,12 +20,13 @@
 package com.timecho.iotdb.manager;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
-import org.apache.iotdb.confignode.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.ProcedureManager;
 import org.apache.iotdb.confignode.persistence.ProcedureInfo;
-import org.apache.iotdb.confignode.procedure.impl.sync.EnableSeparationOfAdminPowersProcedure;
 import org.apache.iotdb.rpc.TSStatusCode;
+
+import com.timecho.iotdb.confignode.procedure.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
+import com.timecho.iotdb.confignode.procedure.impl.auth.EnableSeparationOfAdminPowersProcedure;
 
 public class TimechoProcedureManager extends ProcedureManager {
   public TimechoProcedureManager(ConfigManager configManager, ProcedureInfo procedureInfo) {

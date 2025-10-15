@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.iotdb.confignode.procedure.impl.sync;
+package com.timecho.iotdb.confignode.procedure.impl.auth;
 
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
@@ -25,15 +25,15 @@ import org.apache.iotdb.commons.exception.IoTDBException;
 import org.apache.iotdb.confignode.client.async.CnToDnAsyncRequestType;
 import org.apache.iotdb.confignode.client.async.CnToDnInternalServiceAsyncRequestManager;
 import org.apache.iotdb.confignode.client.async.handlers.DataNodeAsyncRequestContext;
-import org.apache.iotdb.confignode.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.impl.node.AbstractNodeProcedure;
-import org.apache.iotdb.confignode.procedure.state.auth.EnableSeparationOfAdminPowersProcedureState;
 import org.apache.iotdb.confignode.procedure.store.ProcedureType;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import com.timecho.iotdb.confignode.procedure.consensus.request.write.auth.EnableSeparationOfAdminPowersPlan;
+import com.timecho.iotdb.confignode.procedure.state.auth.EnableSeparationOfAdminPowersProcedureState;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +43,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import static org.apache.iotdb.confignode.procedure.state.auth.EnableSeparationOfAdminPowersProcedureState.INIT;
-import static org.apache.iotdb.confignode.procedure.state.auth.EnableSeparationOfAdminPowersProcedureState.UPDATE_DATANODE_STATUS;
+import static com.timecho.iotdb.confignode.procedure.state.auth.EnableSeparationOfAdminPowersProcedureState.INIT;
+import static com.timecho.iotdb.confignode.procedure.state.auth.EnableSeparationOfAdminPowersProcedureState.UPDATE_DATANODE_STATUS;
 
 public class EnableSeparationOfAdminPowersProcedure
     extends AbstractNodeProcedure<EnableSeparationOfAdminPowersProcedureState> {

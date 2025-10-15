@@ -80,7 +80,6 @@ import org.apache.iotdb.confignode.procedure.impl.subscription.topic.runtime.Top
 import org.apache.iotdb.confignode.procedure.impl.sync.AuthOperationProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.CreatePipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.DropPipeProcedure;
-import org.apache.iotdb.confignode.procedure.impl.sync.EnableSeparationOfAdminPowersProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.StartPipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.sync.StopPipeProcedure;
 import org.apache.iotdb.confignode.procedure.impl.testonly.AddNeverFinishSubProcedureProcedure;
@@ -90,6 +89,7 @@ import org.apache.iotdb.confignode.procedure.impl.trigger.CreateTriggerProcedure
 import org.apache.iotdb.confignode.procedure.impl.trigger.DropTriggerProcedure;
 import org.apache.iotdb.confignode.service.ConfigNode;
 
+import com.timecho.iotdb.confignode.procedure.impl.auth.EnableSeparationOfAdminPowersProcedure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
