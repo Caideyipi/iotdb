@@ -187,8 +187,7 @@ public class SessionManager implements SessionManagerMBean {
         long passwordStaleWarningDays =
             CommonDescriptor.getInstance().getConfig().getPasswordStaleWarningDays();
         if (passwordStaleWarningDays > 0 && expirationAndModifiedTime != null) {
-          long modifiedTime =
-              CommonDateTimeUtils.convertIoTDBTimeToMillis(expirationAndModifiedTime.right);
+          long modifiedTime = expirationAndModifiedTime.right;
           long timeToWarn = modifiedTime + passwordStaleWarningDays * 86400 * 1000L;
           if (timeToWarn <= System.currentTimeMillis()) {
             logInMessage +=

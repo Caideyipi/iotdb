@@ -280,7 +280,8 @@ public class DataNodeAuthUtils {
    *
    * @return the first element is the timestamp when the password will expire, Long.MAX if the
    *     password never expires. the second element is the time when the password was changed to the
-   *     current value Null if the password history cannot be found.
+   *     current value Null if the password history cannot be found. Both timestamps are in
+   *     millis-seconds.
    */
   public static Pair<Long, Long> checkPasswordExpiration(long userId, String password) {
     // check password expiration
