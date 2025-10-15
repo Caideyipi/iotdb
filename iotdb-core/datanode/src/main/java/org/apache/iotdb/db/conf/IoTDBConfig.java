@@ -1070,9 +1070,9 @@ public class IoTDBConfig {
   // enable or disable the black list function
   private boolean enableBlackList = false;
   // white ip list
-  private String whiteIPList = "";
+  private String whiteIPList;
   // black ip list
-  private String blackIPList = "";
+  private String blackIPList;
 
   // customizedProperties, this should be empty by default.
   private Properties customizedProperties = new Properties();

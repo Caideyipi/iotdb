@@ -26,8 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
@@ -122,17 +124,21 @@ public class IPFilter {
 
   private static void loadIPCheckList() {
     Set<String> whiteIPList =
-        new HashSet<>(
-            Arrays.asList(
-                Arrays.stream(conf.getRawWhiteIPList().split(","))
-                    .map(String::trim)
-                    .toArray(String[]::new)));
+        Objects.equals(conf.getRawWhiteIPList(), "")
+            ? Collections.emptySet()
+            : new HashSet<>(
+                Arrays.asList(
+                    Arrays.stream(conf.getRawWhiteIPList().split(","))
+                        .map(String::trim)
+                        .toArray(String[]::new)));
     Set<String> blackIPList =
-        new HashSet<>(
-            Arrays.asList(
-                Arrays.stream(conf.getRawBlackIPList().split(","))
-                    .map(String::trim)
-                    .toArray(String[]::new)));
+        Objects.equals(conf.getRawBlackIPList(), "")
+            ? Collections.emptySet()
+            : new HashSet<>(
+                Arrays.asList(
+                    Arrays.stream(conf.getRawBlackIPList().split(","))
+                        .map(String::trim)
+                        .toArray(String[]::new)));
     if (conf.isEnableWhiteList()) {
       checkValidityOfIP(whiteIPList, true);
     }
