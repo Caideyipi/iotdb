@@ -658,7 +658,9 @@ public class ConfigPhysicalPlanSerDeTest {
             false,
             new ArrayList<>(),
             233,
-            "newUserName");
+            "newUserName",
+            -1,
+            -1);
     req1 = (AuthorTreePlan) ConfigPhysicalPlan.Factory.create(req0.serializeToByteBuffer());
     Assert.assertEquals(req0, req1);
     req0 =
@@ -672,7 +674,9 @@ public class ConfigPhysicalPlanSerDeTest {
             false,
             "",
             666,
-            "newUserName");
+            "newUserName",
+            -1,
+            -1);
     req1 = (AuthorRelationalPlan) ConfigPhysicalPlan.Factory.create(req0.serializeToByteBuffer());
     Assert.assertEquals(req0, req1);
   }
