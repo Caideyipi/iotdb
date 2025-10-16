@@ -1107,14 +1107,6 @@ public class IoTDBDescriptor {
 
     commonDescriptor
         .getConfig()
-        .setPasswordExpirationDays(
-            Long.parseLong(
-                properties.getProperty(
-                    "password_expiration_days",
-                    String.valueOf(commonDescriptor.getConfig().getPasswordExpirationDays()))));
-
-    commonDescriptor
-        .getConfig()
         .setPasswordReuseIntervalDays(
             Long.parseLong(
                 properties.getProperty(
@@ -2507,14 +2499,6 @@ public class IoTDBDescriptor {
                       "timestamp_precision_check_enabled",
                       ConfigurationFileUtils.getConfigurationDefaultValue(
                           "timestamp_precision_check_enabled"))));
-
-      commonDescriptor
-          .getConfig()
-          .setPasswordExpirationDays(
-              Long.parseLong(
-                  properties.getProperty(
-                      "password_expiration_days",
-                      String.valueOf(commonDescriptor.getConfig().getPasswordExpirationDays()))));
 
       commonDescriptor
           .getConfig()

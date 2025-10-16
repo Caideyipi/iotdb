@@ -40,7 +40,7 @@ public class RemoteMigrationTask extends MigrationTask {
   }
 
   @Override
-  public void migrate() {
+  public void migrate() throws Exception {
     long migratedFileSize = 0;
 
     // dest tsfile may exist if the last same migration task hasn't completed when the system
@@ -77,7 +77,7 @@ public class RemoteMigrationTask extends MigrationTask {
         logger.error("Fail to copy TsFile from local {} to remote {}", srcFile, destTsFile, e);
       }
       cleanup();
-      return;
+      throw e;
     } finally {
       tsFileResource.readUnlock();
     }

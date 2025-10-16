@@ -95,6 +95,9 @@ public abstract class MigrationTask implements Runnable {
     try {
       MIGRATION_METRICS.recordMigrationCause(cause);
       migrate();
+    } catch (Throwable t) {
+      logger.warn("migrate task error", t);
+      return;
     } finally {
       // try to set the final status to NORMAL to avoid migrate failure
       // TODO: this setting may occur side effects
@@ -112,7 +115,7 @@ public abstract class MigrationTask implements Runnable {
         taskTimeCost);
   }
 
-  public abstract void migrate();
+  public abstract void migrate() throws Exception;
 
   protected void migrateFile(File src, File dest) throws IOException {
     long copyStartTime = System.nanoTime();
