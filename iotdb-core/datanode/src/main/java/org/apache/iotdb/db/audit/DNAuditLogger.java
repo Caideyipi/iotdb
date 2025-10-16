@@ -90,7 +90,6 @@ public class DNAuditLogger extends AbstractAuditLogger {
   // TODO: @zhujt20 Optimize the following stupid intervals
   private static final int INSERT_RETRY_COUNT = 5;
   private static final int INSERT_RETRY_INTERVAL_MS = 2000;
-  private static final int INSERT_INTERVAL_MS = 50;
 
   private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
 
@@ -381,7 +380,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
   }
 
   @Override
-  public synchronized void log(IAuditEntity auditLogFields, Supplier<String> log) {
+  public void log(IAuditEntity auditLogFields, Supplier<String> log) {
     if (!IS_AUDIT_LOG_ENABLED) {
       return;
     }
@@ -411,7 +410,6 @@ public class DNAuditLogger extends AbstractAuditLogger {
                 ClusterPartitionFetcher.getInstance(),
                 SCHEMA_FETCHER);
         if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-          TimeUnit.MILLISECONDS.sleep(INSERT_INTERVAL_MS);
           return;
         }
         TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);

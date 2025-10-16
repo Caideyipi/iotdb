@@ -101,13 +101,12 @@ public class IoTDBAuditLogBasicIT {
     EnvFactory.getEnv()
         .getConfig()
         .getCommonConfig()
+        .setTimestampPrecision("ns") // For preventing audit log conflict in test envs
         .setEnableAuditLog(ENABLE_AUDIT_LOG)
         .setAuditableOperationType(AUDITABLE_OPERATION_TYPE)
         .setAuditableOperationLevel(AUDITABLE_OPERATION_LEVEL)
         .setAuditableOperationResult(AUDITABLE_OPERATION_RESULT);
-
-    // Init 1C1D cluster environment
-    EnvFactory.getEnv().initClusterEnvironment(1, 1);
+    EnvFactory.getEnv().initClusterEnvironment();
 
     Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TREE_SQL_DIALECT);
     Statement statement = connection.createStatement();
