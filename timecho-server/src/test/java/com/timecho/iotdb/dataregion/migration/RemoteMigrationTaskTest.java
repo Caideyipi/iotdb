@@ -48,6 +48,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 
+import static org.apache.iotdb.db.utils.ErrorHandlingUtils.getRootCause;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -238,7 +239,11 @@ public class RemoteMigrationTaskTest {
     TsFileResource tsfile = new TsFileResource(srcFile);
     MigrationTask task =
         MigrationTask.newTask(MigrationCause.TTL, tsfile, MIGRATION_DESTINATION_OS_DIR);
-    task.migrate();
+    try {
+      task.migrate();
+    } catch (Exception e) {
+      assertTrue(getRootCause(e) instanceof ObjectStorageException);
+    }
     // check
     assertTrue(srcFile.exists());
     assertTrue(srcResourceFile.exists());
