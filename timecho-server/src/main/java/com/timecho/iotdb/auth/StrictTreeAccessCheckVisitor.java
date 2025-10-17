@@ -117,6 +117,7 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
         if (queriedUser != null
             && User.INTERNAL_SYSTEM_ADMIN == context.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
           // System admin can list any user with system privilege
           recordObjectAuthenticationAuditLog(
@@ -126,6 +127,7 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
         }
         if (queriedUser != null
             && User.INTERNAL_AUDIT_ADMIN == context.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
           // Audit admin can list any user with audit privilege
           recordObjectAuthenticationAuditLog(
@@ -195,11 +197,13 @@ public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
         if (queriedUser != null
             && User.INTERNAL_SYSTEM_ADMIN == context.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
           return RpcUtils.SUCCESS_STATUS;
         }
         if (queriedUser != null
             && User.INTERNAL_AUDIT_ADMIN == context.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
           return RpcUtils.SUCCESS_STATUS;
         }

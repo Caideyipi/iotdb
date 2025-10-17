@@ -97,10 +97,10 @@ public class IoTDBStrictSystemPermissionIT {
     createUser("user2", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("user1"), executeListUserWithSpecifiedUser("user1"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("sys_admin", "root")),
+        new HashSet<>(Collections.singletonList("sys_admin")),
         executeListUserWithSpecifiedUser("sys_admin"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("audit_admin", "root")),
+        new HashSet<>(Collections.singletonList("audit_admin")),
         executeListUserWithSpecifiedUser("audit_admin"));
     Assert.assertEquals(
         new HashSet<>(
@@ -110,28 +110,28 @@ public class IoTDBStrictSystemPermissionIT {
     executeNonQuery("grant system on root.** to user user1", "sys_admin", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("user1"), executeListUserWithSpecifiedUser("user1"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("sys_admin", "root", "user1")),
+        new HashSet<>(Arrays.asList("sys_admin", "user1")),
         executeListUserWithSpecifiedUser("sys_admin"));
     Assert.assertEquals(
         new HashSet<>(
             Arrays.asList("root", "sys_admin", "security_admin", "audit_admin", "user1", "user2")),
         executeListUserWithSpecifiedUser("security_admin"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("audit_admin", "root")),
+        new HashSet<>(Collections.singletonList("audit_admin")),
         executeListUserWithSpecifiedUser("audit_admin"));
     executeNonQuery("revoke system on root.** from user user1", "sys_admin", "TimechoDB@2021");
 
     executeNonQuery("grant audit on root.** to user user1", "audit_admin", "TimechoDB@2021");
     Assert.assertEquals(Collections.singleton("user1"), executeListUserWithSpecifiedUser("user1"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("sys_admin", "root")),
+        new HashSet<>(Collections.singletonList("sys_admin")),
         executeListUserWithSpecifiedUser("sys_admin"));
     Assert.assertEquals(
         new HashSet<>(
             Arrays.asList("root", "sys_admin", "security_admin", "audit_admin", "user1", "user2")),
         executeListUserWithSpecifiedUser("security_admin"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("audit_admin", "root", "user1")),
+        new HashSet<>(Arrays.asList("audit_admin", "user1")),
         executeListUserWithSpecifiedUser("audit_admin"));
     executeNonQuery("revoke audit on root.** from user user1", "audit_admin", "TimechoDB@2021");
 
@@ -141,14 +141,14 @@ public class IoTDBStrictSystemPermissionIT {
             Arrays.asList("root", "sys_admin", "security_admin", "audit_admin", "user1", "user2")),
         executeListUserWithSpecifiedUser("user1"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("sys_admin", "root")),
+        new HashSet<>(Collections.singletonList("sys_admin")),
         executeListUserWithSpecifiedUser("sys_admin"));
     Assert.assertEquals(
         new HashSet<>(
             Arrays.asList("root", "sys_admin", "security_admin", "audit_admin", "user1", "user2")),
         executeListUserWithSpecifiedUser("security_admin"));
     Assert.assertEquals(
-        new HashSet<>(Arrays.asList("audit_admin", "root")),
+        new HashSet<>(Collections.singletonList("audit_admin")),
         executeListUserWithSpecifiedUser("audit_admin"));
     executeNonQuery(
         "revoke security on root.** from user user1", "security_admin", "TimechoDB@2021");

@@ -41,11 +41,13 @@ import org.apache.iotdb.confignode.rpc.thrift.TAuthizedPatternTreeResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TListUserInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TPermissionInfoResp;
+import org.apache.iotdb.confignode.rpc.thrift.TRoleResp;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -268,6 +270,11 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
         return RpcUtils.SUCCESS_STATUS;
       }
 
+      if (AuthorityChecker.SUPER_USER_ID == userToUpdate.getUserId()) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION, "No permission to update original super user.");
+      }
+
       if (isSystemAdmin(userToUpdate.getUserId())) {
         return RpcUtils.getStatus(
             TSStatusCode.NO_PERMISSION, "No permission to update system admin.");
@@ -306,6 +313,12 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
       if (userToUpdate == null) {
         return RpcUtils.getStatus(TSStatusCode.USER_NOT_EXIST, NO_USER_MSG + userName);
       }
+
+      if (AuthorityChecker.SUPER_USER_ID == userToUpdate.getUserId()) {
+        return RpcUtils.getStatus(
+            TSStatusCode.NO_PERMISSION, "No permission to update original super user.");
+      }
+
       if (userToUpdate.getUserId() == executedByUser.getUserId()) {
         authorizer.renameUser(userName, newUserName);
         return RpcUtils.SUCCESS_STATUS;
@@ -457,7 +470,21 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
 
   @Override
   public PermissionInfoResp executeListUserPrivileges(AuthorPlan plan) throws AuthException {
-    return commonAuthorPlanExecutor.executeListUserPrivileges(plan);
+    TPermissionInfoResp user = getUser(plan.getUserName());
+    PermissionInfoResp permissionInfoResp =
+        commonAuthorPlanExecutor.executeListUserPrivileges(plan);
+    if (permissionInfoResp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
+        && AuthorityChecker.SUPER_USER_ID == user.getUserInfo().getUserId()) {
+      TRoleResp permissionInfo =
+          permissionInfoResp.getPermissionInfoResp().getUserInfo().getPermissionInfo();
+      permissionInfo.setPrivilegeList(Collections.emptyList());
+      permissionInfo.setSysPriSet(Collections.emptySet());
+      permissionInfo.setSysPriSetGrantOpt(Collections.emptySet());
+      permissionInfo.setAnyScopeSet(Collections.emptySet());
+      permissionInfo.setAnyScopeGrantSet(Collections.emptySet());
+      permissionInfo.setDbPrivilegeMap(Collections.emptyMap());
+    }
+    return permissionInfoResp;
   }
 
   @Override
@@ -498,6 +525,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
   }
 
   private boolean isSystemAdmin(long userId) {
+    if (userId == AuthorityChecker.SUPER_USER_ID) {
+      return false;
+    }
     if (isBuiltinSystemAdmin(userId)) {
       return true;
     }
@@ -517,6 +547,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
   }
 
   private boolean isSecurityAdmin(long userId) {
+    if (userId == AuthorityChecker.SUPER_USER_ID) {
+      return false;
+    }
     if (isBuiltinSecurityAdmin(userId)) {
       return true;
     }
@@ -536,6 +569,9 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
   }
 
   private boolean isAuditAdmin(long userId) {
+    if (userId == AuthorityChecker.SUPER_USER_ID) {
+      return false;
+    }
     if (isBuiltinAuditAdmin(userId)) {
       return true;
     }

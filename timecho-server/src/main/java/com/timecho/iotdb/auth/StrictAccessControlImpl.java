@@ -99,6 +99,7 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
         if (queriedUser != null
             && User.INTERNAL_SYSTEM_ADMIN == auditEntity.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
           // System admin can list any user with system privilege
           ITableAuthCheckerImpl.recordAuditLog(
@@ -108,6 +109,7 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         }
         if (queriedUser != null
             && User.INTERNAL_AUDIT_ADMIN == auditEntity.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
           // Audit admin can list any user with audit privilege
           ITableAuthCheckerImpl.recordAuditLog(
@@ -194,12 +196,14 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
         if (queriedUser != null
             && User.INTERNAL_SYSTEM_ADMIN == auditEntity.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
           ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
           return;
         }
         if (queriedUser != null
             && User.INTERNAL_AUDIT_ADMIN == auditEntity.getUserId()
+            && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
           ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
           return;
