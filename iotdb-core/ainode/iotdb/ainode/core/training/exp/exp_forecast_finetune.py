@@ -45,8 +45,6 @@ class ExpForecastFinetune(ExpBasic):
             epoch_start_time = time.time()
             iter_log_start_time = time.time()
             for i, (batch_x, batch_y, loss_mask) in enumerate(self.training_dataloader):
-                if i >= self.args.iter_per_epoch:
-                    break
                 iter_count += 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.gpu_id)
@@ -93,12 +91,12 @@ class ExpForecastFinetune(ExpBasic):
                     )
                 )
                 self.logger.info(
-                    "[Training][GPU-{}] Epoch: {}, current loss: {:.7f}, mse_list: {}, mae_list: {}".format(
+                    "[Training][GPU-{}] Epoch: {}, current loss: {:.7f}, mse_list: {}".format(
                         self.gpu_id,
                         epoch,
                         loss.item(),
                         self.mse_loss_list,
-                        self.mae_loss_list,
+                        # self.mae_loss_list,
                     )
                 )
                 # save the current model ckpt

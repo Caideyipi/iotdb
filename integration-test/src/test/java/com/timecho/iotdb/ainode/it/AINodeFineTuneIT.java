@@ -1,4 +1,4 @@
-package org.apache.iotdb.ainode.it;
+package com.timecho.iotdb.ainode.it;
 
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
@@ -18,6 +18,7 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkHeader;
+import static org.apache.iotdb.ainode.utils.AINodeTestUtils.concurrentInference;
 import static org.apache.iotdb.db.it.utils.TestUtils.prepareData;
 import static org.apache.iotdb.db.it.utils.TestUtils.prepareTableData;
 import static org.junit.Assert.assertEquals;
@@ -72,7 +73,7 @@ public class AINodeFineTuneIT {
     try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TREE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {
       statement.execute(
-          "CREATE MODEL sundial_tree FROM MODEL sundial ON DATASET (PATH root.AI.s0)");
+          "CREATE MODEL sundial_tree WITH HYPERPARAMETERS (train_epochs=2, num_warmup_steps=80, num_training_steps=3000, learning_rate=0.00001) FROM MODEL sundial ON DATASET (PATH root.AI.s0)");
       for (int retry = 0; retry < WAITING_COUNT_SECOND; retry++) {
         try (ResultSet resultSet = statement.executeQuery("SHOW MODELS sundial_tree")) {
           int modelCnt = 0;
@@ -99,6 +100,14 @@ public class AINodeFineTuneIT {
       fail(
           String.format(
               "Fine-tuning model did not finish after waiting for %ds.", WAITING_COUNT_SECOND));
+      // TODO: Ensure the fine-tuned model can be employed
+      //      statement.execute("LOAD MODEL sundial_tree TO DEVICES \"0,1\"");
+      //      concurrentInference(
+      //          statement,
+      //          "CALL INFERENCE(sundial_tree, \"SELECT s0 FROM root.AI\", predict_length=720)",
+      //          10,
+      //          100,
+      //          720);
     }
   }
 
@@ -107,7 +116,7 @@ public class AINodeFineTuneIT {
     try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {
       statement.execute(
-          "CREATE MODEL sundial_table FROM MODEL sundial ON DATASET (\'SELECT time, s0 FROM root.AI\')");
+          "CREATE MODEL sundial_table WITH HYPERPARAMETERS (train_epochs=2, num_warmup_steps=80, num_training_steps=3000, learning_rate=0.00001) FROM MODEL sundial ON DATASET (\'SELECT time, s0 FROM root.AI\')");
       for (int retry = 0; retry < WAITING_COUNT_SECOND; retry++) {
         try (ResultSet resultSet = statement.executeQuery("SHOW MODELS sundial_table")) {
           int modelCnt = 0;
@@ -134,6 +143,14 @@ public class AINodeFineTuneIT {
       fail(
           String.format(
               "Fine-tuning model did not finish after waiting for %ds.", WAITING_COUNT_SECOND));
+      // Ensure the fine-tuned model can be employed
+      statement.execute("LOAD MODEL sundial_tree TO DEVICES \"0,1\"");
+      concurrentInference(
+          statement,
+          "\"SELECT * FROM FORECAST(model_id=>'sundial_table', input=>(SELECT time,s0 FROM root.AI) ORDER BY time), output_length=>720",
+          10,
+          100,
+          720);
     }
   }
 }

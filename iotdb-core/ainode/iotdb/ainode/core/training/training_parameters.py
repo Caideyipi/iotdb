@@ -47,10 +47,12 @@ class TrainingParameters:
         self.world_size = 0  # The number of GPUs used for training
 
         # training
-        self.train_epochs = 10  # help='train epochs'
+        self.train_epochs = 5  # help='train epochs'
         self.training_batch_size = 64  # help='batch size of train input data'
         self.num_warmup_steps = 10000  # help='num warmup steps'
-        self.num_training_steps = 100000  # help='num training steps'
+        self.num_training_steps = (
+            100000  # help='num training steps', equals the total number of iterations
+        )
         self.iter_per_epoch = 5000  # help='iter per epoch'
         self.revin = True  # help='test with revin'
         self.learning_rate = (
