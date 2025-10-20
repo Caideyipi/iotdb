@@ -742,6 +742,32 @@ security-pipe-subscription:
       - integration-test/target/pipeIT-logs
     expire_in: 7 day
 
+security-ainode-test-1c1d1a:
+  stage: test
+  image: timechodb:AICluster
+  tags:
+    - gpu
+  before_script:
+    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
+  script:
+    - 'mvn verify -P with-integration-tests,with-ainode -P SecurityIT -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DaiNodeMaxHeapSize=1024 -pl integration-test,iotdb-core/ainode -am -PAIClusterIT -s $MAVEN_SETTINGS_XML'
+  interruptible: true
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rel/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^rc/
+    
+  artifacts:
+    when: on_failure
+    name: ainode-log
+    paths:
+      - integration-test/target/cluster-logs
+      - integration-test/target/ainode-logs
+    expire_in: 7 day
+
 dependencies:
   stage: test
   tags:
