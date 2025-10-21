@@ -649,6 +649,19 @@
                                     </descriptors>
                                 </configuration>
                             </execution>
+                            <!-- Package save binaries-->
+                            <execution>
+                                <id>safe-bin</id>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <descriptors combine.children="append">
+                                        <descriptor>src/assembly/ainode-safe.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                     <!--
@@ -669,6 +682,11 @@
                                         <fileSet>
                                             <includes combine.children="append">
                                                 <include>timechodb-${project.version}-ainode-bin.zip</include>
+                                            </includes>
+                                        </fileSet>
+                                        <fileSet>
+                                            <includes combine.children="append">
+                                                <include>timechodb-${project.version}-ainode-safe-bin.zip</include>
                                             </includes>
                                         </fileSet>
                                     </fileSets>
