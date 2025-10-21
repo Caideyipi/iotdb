@@ -274,23 +274,25 @@ public class WALInputStream extends InputStream implements AutoCloseable {
         // limit the buffer to prevent it from reading too much byte than expected
         dataBuffer.limit(segmentInfo.dataInDiskSize);
 
-        if (logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
-          ByteBuffer slice = dataBuffer.slice();
-          byte[] data = new byte[slice.remaining()];
-          slice.get(data);
-          byte[] decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
-          ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
-          if (Objects.isNull(dataBuffer)
-              || dataBuffer.capacity() < decryptedBuffer.capacity()
-              || dataBuffer.capacity() > decryptedBuffer.capacity() * 2) {
-            MmapUtil.clean(dataBuffer);
-            dataBuffer = ByteBuffer.allocateDirect(decryptedBuffer.capacity());
-          }
-          dataBuffer.put(decryptedBuffer);
-        }
-
         if (readWALBufferFromChannel(dataBuffer) != segmentInfo.dataInDiskSize) {
           throw new IOException("Unexpected end of file");
+        }
+
+        if (logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          dataBuffer.flip();
+          if (dataBuffer != null && dataBuffer.hasRemaining()) {
+            ByteBuffer slice = dataBuffer.slice();
+            byte[] data = new byte[slice.remaining()];
+            slice.get(data);
+            byte[] decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+            ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
+
+            MmapUtil.clean(dataBuffer);
+            dataBuffer = ByteBuffer.allocateDirect(decryptedBuffer.capacity());
+            dataBuffer.put(decryptedBuffer);
+          } else {
+            throw new IOException("dataBuffer is null or empty when processing encrypted file");
+          }
         }
       }
     } catch (Exception e) {
