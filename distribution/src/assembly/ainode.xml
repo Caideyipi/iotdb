@@ -30,6 +30,9 @@
         <fileSet>
             <directory>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/conf</directory>
             <outputDirectory>${file.separator}/conf</outputDirectory>
+            <excludes>
+                <exclude>safe/**</exclude>
+            </excludes>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/sbin</directory>
