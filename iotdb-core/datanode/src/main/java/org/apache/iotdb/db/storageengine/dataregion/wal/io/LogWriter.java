@@ -135,7 +135,8 @@ public abstract class LogWriter implements ILogWriter {
               .getConfig()
               .getEncryptType()
               .equals(IoTDBConstant.UNENCRYPTED_ENCRYPT_TYPE)
-          && logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)) {
+          && logFile.getName().endsWith(SecretKey.FILE_ENCRYPTED_SUFFIX)
+          && allowCompress) {
         ByteBuffer slice = buffer.slice();
         byte[] data = new byte[slice.remaining()];
         slice.get(data);
