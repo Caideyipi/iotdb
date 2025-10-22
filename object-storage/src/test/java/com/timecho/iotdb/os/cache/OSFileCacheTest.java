@@ -24,7 +24,7 @@ import com.timecho.iotdb.os.fileSystem.OSFile;
 import com.timecho.iotdb.os.fileSystem.OSURI;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
 import com.timecho.iotdb.os.utils.ObjectStorageType;
-import org.apache.commons.io.FileUtils;
+import org.apache.tsfile.external.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

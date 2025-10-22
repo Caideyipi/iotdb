@@ -5,12 +5,12 @@ import org.apache.iotdb.commons.structure.SortedProperties;
 
 import com.google.common.collect.ImmutableMap;
 import com.timecho.iotdb.commons.commission.Lottery;
+import com.timecho.iotdb.commons.external.codec.binary.Base32;
 import com.timecho.iotdb.commons.systeminfo.ISystemInfoGetter;
 import com.timecho.iotdb.commons.systeminfo.LinuxSystemInfoGetter;
 import com.timecho.iotdb.commons.systeminfo.MacSystemInfoGetter;
 import com.timecho.iotdb.commons.systeminfo.SystemInfoGetter;
 import com.timecho.iotdb.commons.systeminfo.WindowsSystemInfoGetter;
-import org.apache.commons.codec.binary.Base32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

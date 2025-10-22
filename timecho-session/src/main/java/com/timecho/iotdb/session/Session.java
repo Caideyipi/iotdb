@@ -30,8 +30,8 @@ import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
 import com.timecho.iotdb.isession.ISession;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.thrift.TException;
+import org.apache.tsfile.external.commons.collections4.CollectionUtils;
 import org.apache.tsfile.read.common.RowRecord;
 
 import java.time.ZoneId;

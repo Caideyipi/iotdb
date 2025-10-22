@@ -21,8 +21,8 @@ package com.timecho.iotdb.commons.commission;
 
 import org.apache.iotdb.commons.exception.LicenseException;
 
-import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.binary.Base64;
+import com.timecho.iotdb.commons.external.codec.binary.Base32;
+import com.timecho.iotdb.commons.external.codec.binary.Base64;
 
 import javax.crypto.Cipher;
 

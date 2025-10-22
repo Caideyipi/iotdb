@@ -27,7 +27,7 @@ import com.timecho.iotdb.os.io.IMetaData;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
 import com.timecho.iotdb.os.io.aws.S3MetaData;
 import com.timecho.iotdb.os.utils.ObjectStorageConstant;
-import org.apache.commons.io.FileUtils;
+import org.apache.tsfile.external.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
