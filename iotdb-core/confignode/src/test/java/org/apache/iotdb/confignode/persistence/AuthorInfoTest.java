@@ -66,8 +66,12 @@ public class AuthorInfoTest {
   private static final File roleFolder =
       new File(CommonDescriptor.getInstance().getConfig().getRoleFolder());
 
+  private static boolean enforceStrongPassword;
+
   @BeforeClass
   public static void setup() {
+    enforceStrongPassword = CommonDescriptor.getInstance().getConfig().isEnforceStrongPassword();
+    CommonDescriptor.getInstance().getConfig().setEnforceStrongPassword(false);
     authorInfo = new AuthorInfo(null);
     if (!snapshotDir.exists()) {
       snapshotDir.mkdirs();
@@ -92,6 +96,7 @@ public class AuthorInfoTest {
     if (roleFolder.exists()) {
       FileUtils.deleteDirectory(roleFolder);
     }
+    CommonDescriptor.getInstance().getConfig().setEnforceStrongPassword(true);
   }
 
   @Test

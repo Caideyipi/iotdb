@@ -204,7 +204,7 @@ public class IoTDBPipeInclusionIT extends AbstractPipeDualTreeModelManualIT {
       Assert.assertEquals(
           TSStatusCode.SUCCESS_STATUS.getStatusCode(), client.startPipe("testPipe").getCode());
 
-      TestUtils.executeNonQuery(senderEnv, "create user `ln_write_user` 'write_pwd123456'", null);
+      TestUtils.executeNonQuery(senderEnv, "create user `ln_write_user` 'write_PWD123456'", null);
 
       TestUtils.assertDataAlwaysOnEnv(
           receiverEnv, "list user", "user,", Collections.singleton("root,"));
@@ -245,7 +245,7 @@ public class IoTDBPipeInclusionIT extends AbstractPipeDualTreeModelManualIT {
       TestUtils.executeNonQueries(
           senderEnv,
           Arrays.asList(
-              "create user `ln_write_user` 'write_pwd123456'",
+              "create user `ln_write_user` 'write_PWD123456'",
               "grant system,security on root.** to USER ln_write_user with grant option",
               "GRANT READ_DATA, WRITE_DATA ON root.** TO USER ln_write_user;"),
           null);

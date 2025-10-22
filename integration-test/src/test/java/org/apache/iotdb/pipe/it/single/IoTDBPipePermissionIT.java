@@ -44,7 +44,7 @@ import static org.junit.Assert.fail;
 public class IoTDBPipePermissionIT extends AbstractPipeSingleIT {
   @Test
   public void testSinkPermission() {
-    TestUtils.executeNonQuery(env, "create user `thulab` 'passwd@#$@##d'", null);
+    TestUtils.executeNonQuery(env, "create user `thulab` 'passwd@#$@##d1D'", null);
 
     // Shall fail if username is specified without password
     try (final Connection connection = env.getConnection(BaseEnv.TABLE_SQL_DIALECT);
@@ -91,7 +91,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeSingleIT {
     try (final Connection connection = env.getConnection(BaseEnv.TABLE_SQL_DIALECT);
         final Statement statement = connection.createStatement()) {
       statement.execute(
-          "alter pipe a2b modify sink ('username'='thulab', 'password'='passwd@#$@##d')");
+          "alter pipe a2b modify sink ('username'='thulab', 'password'='passwd@#$@##d1D')");
     } catch (final SQLException e) {
       e.printStackTrace();
       fail("Alter pipe shall not fail if user and password are specified");
@@ -182,7 +182,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeSingleIT {
         BaseEnv.TABLE_SQL_DIALECT,
         env,
         Arrays.asList(
-            "create user thulab 'passwd@#$@##d@123456'",
+            "create user thulab 'passwd@#$@##dD@123456'",
             "grant INSERT on test.test1 to user thulab"),
         null);
 
@@ -198,7 +198,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeSingleIT {
           "create pipe a2b "
               + "with source ('database'='test1', 'table'='test1') "
               + "with processor('processor'='rename-database-processor', 'processor.new-db-name'='test') "
-              + "with sink ('sink'='write-back-sink', 'username'='thulab', 'password'='passwd@#$@##d@123456')");
+              + "with sink ('sink'='write-back-sink', 'username'='thulab', 'password'='passwd@#$@##dD@123456')");
     } catch (final SQLException e) {
       e.printStackTrace();
       fail("Create pipe without user shall succeed if use the current session");

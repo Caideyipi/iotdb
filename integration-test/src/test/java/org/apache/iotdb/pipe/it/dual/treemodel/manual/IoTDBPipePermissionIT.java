@@ -99,7 +99,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
     TestUtils.executeNonQueries(
         receiverEnv,
         Arrays.asList(
-            "create user `thulab` 'passwd123456'",
+            "create user `thulab` 'passWD@123456'",
             "create role `admin`",
             "grant role `admin` to `thulab`",
             "grant WRITE, READ, SYSTEM, SECURITY on root.** to role `admin`"),
@@ -114,7 +114,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
       TestUtils.executeNonQueries(
           senderEnv,
           Arrays.asList(
-              "create user user 'passwd123456'",
+              "create user user 'passWD@123456'",
               "create timeseries root.ln.wf02.wt01.temperature with datatype=INT64,encoding=PLAIN",
               "create timeseries root.ln.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN",
               "insert into root.ln.wf02.wt01(time, temperature, status) values (1800000000000, 23, true)"),
@@ -131,7 +131,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
       sinkAttributes.put("sink.ip", receiverIp);
       sinkAttributes.put("sink.port", Integer.toString(receiverPort));
       sinkAttributes.put("sink.username", "thulab");
-      sinkAttributes.put("sink.password", "passwd123456");
+      sinkAttributes.put("sink.password", "passWD@123456");
 
       final TSStatus status =
           client.createPipe(
@@ -173,7 +173,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
     TestUtils.executeNonQueries(
         receiverEnv,
         Arrays.asList(
-            "create user `thulab` 'passwd123456'",
+            "create user `thulab` 'passWD@123456'",
             "create role `admin`",
             "grant role `admin` to `thulab`",
             "grant READ on root.ln.** to role `admin`"),
@@ -188,7 +188,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
       TestUtils.executeNonQueries(
           senderEnv,
           Arrays.asList(
-              "create user someUser 'passwd$%@#$@%'",
+              "create user someUser 'passwd$%@#$@%1D'",
               "create timeseries root.noPermission.wf02.wt01.status with datatype=BOOLEAN,encoding=PLAIN"),
           null);
       awaitUntilFlush(senderEnv);
@@ -203,7 +203,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeDualTreeModelManualIT {
       sinkAttributes.put("sink.ip", receiverIp);
       sinkAttributes.put("sink.port", Integer.toString(receiverPort));
       sinkAttributes.put("sink.username", "thulab");
-      sinkAttributes.put("sink.password", "passwd123456");
+      sinkAttributes.put("sink.password", "passWD@123456");
 
       final TSStatus status =
           client.createPipe(

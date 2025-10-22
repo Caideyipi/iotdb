@@ -49,9 +49,13 @@ public class LocalFileAuthorizerTest {
   static final String database = "testDB";
   static final String table = "testTB";
 
+  private boolean enforceStrongPassword;
+
   @Before
   public void setUp() throws Exception {
     EnvironmentUtils.envSetUp();
+    enforceStrongPassword = CommonDescriptor.getInstance().getConfig().isEnforceStrongPassword();
+    CommonDescriptor.getInstance().getConfig().setEnforceStrongPassword(false);
     authorizer = BasicAuthorizer.getInstance();
     authorizer.reset();
     nodeName = new PartialPath("root.laptop.d1");
@@ -60,6 +64,7 @@ public class LocalFileAuthorizerTest {
   @After
   public void tearDown() throws Exception {
     EnvironmentUtils.cleanEnv();
+    CommonDescriptor.getInstance().getConfig().setEnforceStrongPassword(enforceStrongPassword);
   }
 
   @Test

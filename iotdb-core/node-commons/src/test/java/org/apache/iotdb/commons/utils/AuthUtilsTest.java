@@ -35,19 +35,19 @@ public class AuthUtilsTest {
 
   @Test
   public void authUtilsTest_ParameterCheck() throws AuthException, IllegalPathException {
-    AuthUtils.validatePassword("hello@123456");
-    AuthUtils.validatePassword("hello$123456");
-    AuthUtils.validatePassword("hello$^123456");
-    AuthUtils.validatePassword("hel_lo$^123456");
-    AuthUtils.validatePassword("he!l_lo$^123456");
-    AuthUtils.validatePassword("he!l_l$o$^123456");
-    AuthUtils.validatePassword("he!l_l!@#$%^*()_+-=$o$^");
-    AuthUtils.validatePassword("he!l^^+=123456");
-    AuthUtils.validatePassword("he!l*^^+=123456");
-    AuthUtils.validatePassword("he!!l*^^+=123456");
-    AuthUtils.validatePassword("he!!l*()^^+=");
-    AuthUtils.validateUsername("!@#$%&^&*()_+-=");
-    AuthUtils.validateUsername("!@!%^&!@#%$#@#$%&^&*()_+-=");
+    AuthUtils.validatePassword("hellO@123456");
+    AuthUtils.validatePassword("hellO$123456");
+    AuthUtils.validatePassword("hellO$^123456");
+    AuthUtils.validatePassword("hel_lO$^123456");
+    AuthUtils.validatePassword("he!l_lO$^123456");
+    AuthUtils.validatePassword("he!l_lP$o$^123456");
+    AuthUtils.validatePassword("he!l_lU1!@#$%^*()_+-=$o$^");
+    AuthUtils.validatePassword("he!lA^^+=123456");
+    AuthUtils.validatePassword("he!lA*^^+=123456");
+    AuthUtils.validatePassword("he!!lA*^^+=123456");
+    AuthUtils.validatePassword("he!!lA1*()^^+=");
+    AuthUtils.validateUsername("!@#$%&^&*()aA1_+-=");
+    AuthUtils.validateUsername("!@!%^&!@#%$#@#$%&^&*()aA1_+-=");
     Assert.assertThrows(AuthException.class, () -> AuthUtils.validatePassword("he!!l\\*()^^+="));
     Assert.assertThrows(AuthException.class, () -> AuthUtils.validatePassword("he!l^^ +="));
     Assert.assertThrows(AuthException.class, () -> AuthUtils.validatePassword("he"));

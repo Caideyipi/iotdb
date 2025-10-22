@@ -100,7 +100,7 @@ public class IoTDBClusterRestartFileEncryptIT {
     try (Connection connection = EnvFactory.getEnv().getTableConnection();
         Statement statement = connection.createStatement()) {
       statement.execute("create database test");
-      statement.execute("create user test1 'password123456'");
+      statement.execute("create user test1 'password123456@D'");
       statement.execute("create role role1");
       statement.execute("grant role role1 to test1");
       statement.execute("GRANT CREATE ON DATABASE test TO USER test1 WITH GRANT OPTION");

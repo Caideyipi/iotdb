@@ -284,7 +284,7 @@ public class IoTDBCteIT {
     Connection adminCon = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
     Statement adminStmt = adminCon.createStatement();
     try {
-      adminStmt.execute("CREATE USER tmpuser 'tmppw123456789'");
+      adminStmt.execute("CREATE USER tmpuser 'tmpPW@123456789'");
       adminStmt.execute("USE testdb");
       adminStmt.execute(
           "CREATE TABLE IF NOT EXISTS testtb1(deviceid STRING TAG, voltage FLOAT FIELD)");
@@ -292,7 +292,7 @@ public class IoTDBCteIT {
 
       try (Connection connection =
               EnvFactory.getEnv()
-                  .getConnection("tmpuser", "tmppw123456789", BaseEnv.TABLE_SQL_DIALECT);
+                  .getConnection("tmpuser", "tmpPW@123456789", BaseEnv.TABLE_SQL_DIALECT);
           Statement statement = connection.createStatement()) {
         statement.execute("USE testdb");
         statement.execute("with cte as (select * from testtb) select * from cte");
@@ -300,7 +300,7 @@ public class IoTDBCteIT {
 
       try (Connection connection =
               EnvFactory.getEnv()
-                  .getConnection("tmpuser", "tmppw123456789", BaseEnv.TABLE_SQL_DIALECT);
+                  .getConnection("tmpuser", "tmpPW@123456789", BaseEnv.TABLE_SQL_DIALECT);
           Statement statement = connection.createStatement()) {
         statement.execute("USE testdb");
         statement.execute("with cte as (select * from testtb1) select * from testtb");

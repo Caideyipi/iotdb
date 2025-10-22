@@ -448,7 +448,7 @@ public class CommonConfig {
 
   private String userEncryptTokenHint = "not set yet";
 
-  private boolean enforceStrongPassword = false;
+  private boolean enforceStrongPassword = true;
   private long passwordExpirationDays = -1;
   // an old password cannot be reused within the given interval if >= 0.
   private long passwordReuseIntervalDays = -1;

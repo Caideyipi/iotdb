@@ -50,40 +50,43 @@ public class IoTDBConnectionNumLimitIT {
     try (Connection adminCon = EnvFactory.getEnv().getConnection(BaseEnv.TREE_SQL_DIALECT);
         Statement adminStmt = adminCon.createStatement()) {
       // init users.
-      adminStmt.execute("create user user3 'user31234567890'");
-      adminStmt.execute("create user user2 'user21234567890'");
-      adminStmt.execute("create user user1 'user11234567890'");
+      adminStmt.execute("create user user3 'user31234567890D@'");
+      adminStmt.execute("create user user2 'user21234567890D@'");
+      adminStmt.execute("create user user1 'user11234567890D@'");
 
       // 1. test maxSessionPerUser
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 0");
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER -1");
       Connection user3_1 =
-          EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TREE_SQL_DIALECT);
+          EnvFactory.getEnv().getConnection("user3", "user31234567890D@", BaseEnv.TREE_SQL_DIALECT);
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 1");
       Assert.assertTrue(!user3_1.isClosed()); //
       Assert.assertThrows(
           SQLException.class,
           () -> {
-            EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TREE_SQL_DIALECT);
+            EnvFactory.getEnv()
+                .getConnection("user3", "user31234567890D@", BaseEnv.TREE_SQL_DIALECT);
           });
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 2");
       Assert.assertTrue(!user3_1.isClosed());
       Assert.assertThrows(
           SQLException.class,
           () -> {
-            EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TREE_SQL_DIALECT);
+            EnvFactory.getEnv()
+                .getConnection("user3", "user31234567890D@", BaseEnv.TREE_SQL_DIALECT);
           });
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 3");
       // two logins: one login success and one login fails.
       Assert.assertThrows(
           SQLException.class,
           () -> {
-            EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TREE_SQL_DIALECT);
+            EnvFactory.getEnv()
+                .getConnection("user3", "user31234567890D@", BaseEnv.TREE_SQL_DIALECT);
           });
       // two idle connections left.
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 5");
       Connection user3_2 =
-          EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TREE_SQL_DIALECT);
+          EnvFactory.getEnv().getConnection("user3", "user31234567890D@", BaseEnv.TREE_SQL_DIALECT);
       user3_1.close();
       Assert.assertTrue(user3_1.isClosed());
       user3_2.close();
@@ -102,11 +105,12 @@ public class IoTDBConnectionNumLimitIT {
       Assert.assertThrows(
           SQLException.class,
           () -> {
-            EnvFactory.getEnv().getConnection("user2", "user21234567890", BaseEnv.TREE_SQL_DIALECT);
+            EnvFactory.getEnv()
+                .getConnection("user2", "user21234567890D@", BaseEnv.TREE_SQL_DIALECT);
           });
       adminStmt.execute("ALTER USer user3 SET MIN_SESSION_PER_USER 8");
       Connection user2Conn =
-          EnvFactory.getEnv().getConnection("user2", "user21234567890", BaseEnv.TREE_SQL_DIALECT);
+          EnvFactory.getEnv().getConnection("user2", "user21234567890D@", BaseEnv.TREE_SQL_DIALECT);
       Assert.assertThrows(
           SQLException.class,
           () -> {
@@ -218,7 +222,7 @@ public class IoTDBConnectionNumLimitIT {
             adminStmt.execute("ALTER USer root SET MIN_SESSION_PER_USER -1");
           });
       Connection user3Conn =
-          EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TREE_SQL_DIALECT);
+          EnvFactory.getEnv().getConnection("user3", "user31234567890D@", BaseEnv.TREE_SQL_DIALECT);
       Statement user3Stmt = user3Conn.createStatement();
       Assert.assertThrows(
           SQLException.class,
@@ -253,22 +257,23 @@ public class IoTDBConnectionNumLimitIT {
     try (Connection adminCon = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
         Statement adminStmt = adminCon.createStatement()) {
       // init users.
-      adminStmt.execute("create user user3 'user31234567890'");
-      adminStmt.execute("create user user2 'user21234567890'");
-      adminStmt.execute("create user user1 'user11234567890'");
+      adminStmt.execute("create user user3 'user31234567890D@'");
+      adminStmt.execute("create user user2 'user21234567890D@'");
+      adminStmt.execute("create user user1 'user11234567890D@'");
 
       // 1. test maxSessionPerUser
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 0");
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER -1");
       Connection user3_1 =
-          EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TABLE_SQL_DIALECT);
+          EnvFactory.getEnv()
+              .getConnection("user3", "user31234567890D@", BaseEnv.TABLE_SQL_DIALECT);
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 1");
       Assert.assertTrue(!user3_1.isClosed()); //
       Assert.assertThrows(
           SQLException.class,
           () -> {
             EnvFactory.getEnv()
-                .getConnection("user3", "user31234567890", BaseEnv.TABLE_SQL_DIALECT);
+                .getConnection("user3", "user31234567890D@", BaseEnv.TABLE_SQL_DIALECT);
           });
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 2");
       Assert.assertTrue(!user3_1.isClosed());
@@ -276,7 +281,7 @@ public class IoTDBConnectionNumLimitIT {
           SQLException.class,
           () -> {
             EnvFactory.getEnv()
-                .getConnection("user3", "user31234567890", BaseEnv.TABLE_SQL_DIALECT);
+                .getConnection("user3", "user31234567890D@", BaseEnv.TABLE_SQL_DIALECT);
           });
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 3");
       // two logins: one login success and one login fails.
@@ -284,12 +289,13 @@ public class IoTDBConnectionNumLimitIT {
           SQLException.class,
           () -> {
             EnvFactory.getEnv()
-                .getConnection("user3", "user31234567890", BaseEnv.TABLE_SQL_DIALECT);
+                .getConnection("user3", "user31234567890D@", BaseEnv.TABLE_SQL_DIALECT);
           });
       // two idle connections left.
       adminStmt.execute("ALTER USer user3 SET MAX_SESSION_PER_USER 5");
       Connection user3_2 =
-          EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TABLE_SQL_DIALECT);
+          EnvFactory.getEnv()
+              .getConnection("user3", "user31234567890D@", BaseEnv.TABLE_SQL_DIALECT);
       user3_1.close();
       Assert.assertTrue(user3_1.isClosed());
       user3_2.close();
@@ -309,11 +315,12 @@ public class IoTDBConnectionNumLimitIT {
           SQLException.class,
           () -> {
             EnvFactory.getEnv()
-                .getConnection("user2", "user21234567890", BaseEnv.TABLE_SQL_DIALECT);
+                .getConnection("user2", "user21234567890D@", BaseEnv.TABLE_SQL_DIALECT);
           });
       adminStmt.execute("ALTER USer user3 SET MIN_SESSION_PER_USER 8");
       Connection user2Conn =
-          EnvFactory.getEnv().getConnection("user2", "user21234567890", BaseEnv.TABLE_SQL_DIALECT);
+          EnvFactory.getEnv()
+              .getConnection("user2", "user21234567890D@", BaseEnv.TABLE_SQL_DIALECT);
       Assert.assertThrows(
           SQLException.class,
           () -> {
@@ -425,7 +432,8 @@ public class IoTDBConnectionNumLimitIT {
             adminStmt.execute("ALTER USer root SET MIN_SESSION_PER_USER -1");
           });
       Connection user3Conn =
-          EnvFactory.getEnv().getConnection("user3", "user31234567890", BaseEnv.TABLE_SQL_DIALECT);
+          EnvFactory.getEnv()
+              .getConnection("user3", "user31234567890D@", BaseEnv.TABLE_SQL_DIALECT);
       Statement user3Stmt = user3Conn.createStatement();
       Assert.assertThrows(
           SQLException.class,
