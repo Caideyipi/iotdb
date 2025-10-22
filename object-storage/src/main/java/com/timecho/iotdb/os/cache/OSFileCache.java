@@ -27,8 +27,6 @@ import com.timecho.iotdb.os.conf.ObjectStorageConfig;
 import com.timecho.iotdb.os.conf.ObjectStorageDescriptor;
 import com.timecho.iotdb.os.io.ObjectStorageConnector;
 import com.timecho.iotdb.os.utils.ObjectStorageType;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +89,7 @@ public class OSFileCache {
 
   class OSFileCacheLoader implements CacheLoader<OSFileCacheKey, OSFileCacheValue> {
     @Override
-    public @Nullable OSFileCacheValue load(@NonNull OSFileCacheKey key) throws Exception {
+    public OSFileCacheValue load(OSFileCacheKey key) throws Exception {
       byte[] data =
           connector.getRemoteObject(
               key.getFile().toOSURI(), key.getStartPosition(), config.getCachePageSizeInByte());
