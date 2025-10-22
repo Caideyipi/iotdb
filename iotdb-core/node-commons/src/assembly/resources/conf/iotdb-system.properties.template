@@ -1880,15 +1880,24 @@ trusted_uri_pattern=file:.*
 # Privilege: SECURITY
 enforce_strong_password=true
 
-# When >= 0, the old password of a user cannot be reused within the days specified by this item,
+
+# When > 0, the password of a user will expire after last modification/creation in the giving
+# days, and the user can no longer login unless the user changes the password.
+# Notice: if the cluster have upgraded from an old version, the will not take effective
+# Datatype: int
+# effectiveMode: hot_reload
+# Privilege: SECURITY
+password_expiration_days=0
+
+# When > 0, the old password of a user cannot be reused within the days specified by this item,
 # after a successful password change.
 # Datatype: int
 # effectiveMode: hot_reload
 # Privilege: SECURITY
-password_reuse_interval_days=-1
+password_reuse_interval_days=0
 
 # The number of days since last password change to trigger a warning
-# Options: any positive integer(minimum 1), -1 means disabled (no warning)
+# Options: any positive integer(minimum 1), <= 0 means disabled (no warning)
 # effectiveMode: hot_reload
 # Privilege: SECURITY
 # Datatype: Integer
