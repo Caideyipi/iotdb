@@ -106,20 +106,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!-- for IP filter -->
-        <dependency>
-            <groupId>com.giladam</groupId>
-            <artifactId>ListMatch</artifactId>
-            <version>1.2.0</version>
-            <exclusions>
-                <!-- ListMatch depends on guava17, which has CVE.
-                but in fact, it only uses that jar for testing-->
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
