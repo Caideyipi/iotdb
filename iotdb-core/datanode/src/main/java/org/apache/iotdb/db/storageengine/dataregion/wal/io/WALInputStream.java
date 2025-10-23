@@ -19,12 +19,15 @@
 package org.apache.iotdb.db.storageengine.dataregion.wal.io;
 
 import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.service.metrics.WritingMetrics;
 import org.apache.iotdb.db.utils.MmapUtil;
 
 import com.timecho.iotdb.commons.secret.SecretKey;
 import org.apache.tsfile.compress.IUnCompressor;
+import org.apache.tsfile.encrypt.EncryptParameter;
 import org.apache.tsfile.encrypt.EncryptUtils;
+import org.apache.tsfile.encrypt.IDecryptor;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +39,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Objects;
 
 public class WALInputStream extends InputStream implements AutoCloseable {
@@ -250,7 +254,16 @@ public class WALInputStream extends InputStream implements AutoCloseable {
           ByteBuffer slice = compressedBuffer.slice();
           byte[] data = new byte[slice.remaining()];
           slice.get(data);
-          byte[] decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+          byte[] decryptedByte;
+          if (logFile.getParentFile().getName().contains("root.__audit")) {
+            Map<String, EncryptParameter> map =
+                IoTDBDescriptor.getInstance().getConfig().getTSFileDBToEncryptMap();
+            IDecryptor decryptor =
+                IDecryptor.getDecryptor(EncryptUtils.getEncryptParameter(map.get("root.__audit")));
+            decryptedByte = decryptor.decrypt(data);
+          } else {
+            decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+          }
           ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
           if (Objects.isNull(dataBuffer)
               || dataBuffer.capacity() < decryptedBuffer.capacity()
@@ -284,7 +297,17 @@ public class WALInputStream extends InputStream implements AutoCloseable {
             ByteBuffer slice = dataBuffer.slice();
             byte[] data = new byte[slice.remaining()];
             slice.get(data);
-            byte[] decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+            byte[] decryptedByte;
+            if (logFile.getParentFile().getName().contains("root.__audit")) {
+              Map<String, EncryptParameter> map =
+                  IoTDBDescriptor.getInstance().getConfig().getTSFileDBToEncryptMap();
+              IDecryptor decryptor =
+                  IDecryptor.getDecryptor(
+                      EncryptUtils.getEncryptParameter(map.get("root.__audit")));
+              decryptedByte = decryptor.decrypt(data);
+            } else {
+              decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
+            }
             ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
 
             MmapUtil.clean(dataBuffer);
