@@ -265,11 +265,13 @@ public class WALInputStream extends InputStream implements AutoCloseable {
             decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
           }
           ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
+          int minRequiredCapacity =
+              Math.max(decryptedBuffer.capacity(), segmentInfo.uncompressedSize);
           if (Objects.isNull(dataBuffer)
-              || dataBuffer.capacity() < decryptedBuffer.capacity()
-              || dataBuffer.capacity() > decryptedBuffer.capacity() * 2) {
+              || dataBuffer.capacity() < minRequiredCapacity
+              || dataBuffer.capacity() > minRequiredCapacity * 2) {
             MmapUtil.clean(dataBuffer);
-            dataBuffer = ByteBuffer.allocateDirect(decryptedBuffer.capacity());
+            dataBuffer = ByteBuffer.allocateDirect(minRequiredCapacity);
           }
           uncompressWALBuffer(decryptedBuffer, dataBuffer, unCompressor);
         } else {
@@ -308,11 +310,14 @@ public class WALInputStream extends InputStream implements AutoCloseable {
             } else {
               decryptedByte = EncryptUtils.getEncrypt().getDecryptor().decrypt(data);
             }
-            ByteBuffer decryptedBuffer = ByteBuffer.wrap(decryptedByte);
 
-            MmapUtil.clean(dataBuffer);
-            dataBuffer = ByteBuffer.allocateDirect(decryptedBuffer.capacity());
-            dataBuffer.put(decryptedBuffer);
+            if (Objects.isNull(dataBuffer)
+                || dataBuffer.capacity() < decryptedByte.length
+                || dataBuffer.capacity() > decryptedByte.length * 2) {
+              MmapUtil.clean(dataBuffer);
+              dataBuffer = ByteBuffer.allocateDirect(decryptedByte.length);
+            }
+            dataBuffer.put(decryptedByte);
           } else {
             throw new IOException("dataBuffer is null or empty when processing encrypted file");
           }
