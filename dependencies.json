@@ -14,7 +14,6 @@
     "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
     "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
     "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
-    "com.giladam:ListMatch",
     "com.github.ben-manes.caffeine:caffeine",
     "com.github.luben:zstd-jni",
     "com.github.moquette-io.moquette:moquette-broker",
