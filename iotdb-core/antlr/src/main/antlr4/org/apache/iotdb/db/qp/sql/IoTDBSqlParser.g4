@@ -72,7 +72,7 @@ ddlStatement
     | activate | showActivation | showSystemInfo
     // Quota
     | setSpaceQuota | showSpaceQuota | setThrottleQuota | showThrottleQuota
-//     // View
+    // View
     | createLogicalView | dropLogicalView | showLogicalView | renameLogicalView | alterLogicalView
     // Table View
     | createTableView
@@ -790,11 +790,11 @@ showAIDevices
     : SHOW AI_DEVICES
     ;
 
-// // Create Logical View
-// createLogicalView
-//     : CREATE VIEW viewTargetPaths AS viewSourcePaths
-//     ;
-//
+// Create Logical View
+createLogicalView
+    : CREATE VIEW viewTargetPaths AS viewSourcePaths
+    ;
+
 showLogicalView
     : SHOW VIEW prefixPath? timeseriesWhereClause? rowPaginationClause?
     ;
@@ -812,21 +812,21 @@ alterLogicalView
     | ALTER VIEW fullPath alterClause
     ;
 
-// viewSuffixPaths
-//     : nodeNameWithoutWildcard (DOT nodeNameWithoutWildcard)*
-//     ;
-// 
-// viewTargetPaths
-//     : fullPath (COMMA fullPath)*
-//     | prefixPath LR_BRACKET viewSuffixPaths (COMMA viewSuffixPaths)* RR_BRACKET
-//     ;
-// 
-// viewSourcePaths
-//     : fullPath (COMMA fullPath)*
-//     | prefixPath LR_BRACKET viewSuffixPaths (COMMA viewSuffixPaths)* RR_BRACKET
-//     | selectClause fromClause
-//     ;
-// 
+viewSuffixPaths
+    : nodeNameWithoutWildcard (DOT nodeNameWithoutWildcard)*
+    ;
+
+viewTargetPaths
+    : fullPath (COMMA fullPath)*
+    | prefixPath LR_BRACKET viewSuffixPaths (COMMA viewSuffixPaths)* RR_BRACKET
+    ;
+
+viewSourcePaths
+    : fullPath (COMMA fullPath)*
+    | prefixPath LR_BRACKET viewSuffixPaths (COMMA viewSuffixPaths)* RR_BRACKET
+    | selectClause fromClause
+    ;
+
 // Table view
 createTableView
     : CREATE (OR REPLACE)? VIEW qualifiedName
