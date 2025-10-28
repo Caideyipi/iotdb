@@ -79,4 +79,8 @@ public abstract class Statement extends StatementNode {
       final MPPQueryContext context) {
     throw new UnsupportedOperationException("Method not implemented yet");
   }
+
+  public String getPipeLoggingString() {
+    return toString();
+  }
 }
