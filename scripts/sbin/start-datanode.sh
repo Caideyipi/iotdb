@@ -105,9 +105,6 @@ fi
 #checkAllVariables is in iotdb-common.sh
 checkAllVariables
 
-#checkDataNodePortUsages is in iotdb-common.sh
-checkDataNodePortUsages
-
 CLASSPATH=""
 for f in "${IOTDB_HOME}"/lib/*.jar; do
   CLASSPATH=${CLASSPATH}":"$f

@@ -112,9 +112,6 @@ fi
 #checkAllVariables is in iotdb-common.sh
 checkAllConfigNodeVariables
 
-#checkConfigNodePortUsages is in iotdb-common.sh
-checkConfigNodePortUsages
-
 PARAMS="-s $PARAMS"
 
 #initEnv is in iotdb-common.sh
