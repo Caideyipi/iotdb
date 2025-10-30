@@ -47,10 +47,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
@@ -85,7 +87,15 @@ public class ConfigurationFileUtils {
   private static final String PRIVILEGE_PREFIX = "Privilege:";
   private static Map<String, DefaultConfigurationItem> configuration2DefaultValue;
 
+  // Used to display in showConfigurationStatement
   private static final Map<String, String> lastAppliedProperties = new HashMap<>();
+  private static final String displayValueOfHidedParameter = "******";
+  private static final Set<String> hidedParameters = new HashSet<>();
+
+  static {
+    hidedParameters.add("key_store_pwd");
+    hidedParameters.add("trust_store_pwd");
+  }
 
   public static void updateAppliedProperties(TrimProperties properties, boolean isHotReloading) {
     try {
@@ -105,7 +115,8 @@ public class ConfigurationFileUtils {
         continue;
       }
       String value = entry.getValue() == null ? null : entry.getValue().toString();
-      lastAppliedProperties.put(key, value);
+      lastAppliedProperties.put(
+          key, hidedParameters.contains(key) ? displayValueOfHidedParameter : value);
     }
   }
 
