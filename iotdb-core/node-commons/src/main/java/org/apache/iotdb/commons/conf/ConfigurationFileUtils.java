@@ -97,6 +97,12 @@ public class ConfigurationFileUtils {
     hidedParameters.add("trust_store_pwd");
   }
 
+  // for parameters only on TimechoDB
+  static {
+    hidedParameters.add("metric_key_store_pwd");
+    hidedParameters.add("metric_trust_store_pwd");
+  }
+
   public static void updateAppliedProperties(TrimProperties properties, boolean isHotReloading) {
     try {
       loadConfigurationDefaultValueFromTemplate();
