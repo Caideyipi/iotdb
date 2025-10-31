@@ -21,6 +21,7 @@ package com.timecho.iotdb.persistence.auth;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.auth.AuthException;
+import org.apache.iotdb.commons.conf.ConfigurationFileUtils;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.persistence.auth.AuthorInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
@@ -31,6 +32,8 @@ import org.apache.thrift.TException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+
+import static org.apache.iotdb.commons.conf.IoTDBConstant.ENABLE_SEPARATION_OF_ADMIN_POWERS;
 
 public class TimechoAuthorInfo extends AuthorInfo {
   private static final String ENABLE_SEPARATION_OF_ADMIN_POWERS_FILE_NAME =
@@ -55,6 +58,7 @@ public class TimechoAuthorInfo extends AuthorInfo {
     }
     separationOfPowersEnabled = true;
     authorPlanExecutor = new StrictAuthorPlanExecutor(authorizer, configManager);
+    ConfigurationFileUtils.updateAppliedProperties(ENABLE_SEPARATION_OF_ADMIN_POWERS, "true");
     return RpcUtils.SUCCESS_STATUS;
   }
 

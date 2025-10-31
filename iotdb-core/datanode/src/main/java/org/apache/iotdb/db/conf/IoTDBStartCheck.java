@@ -425,4 +425,8 @@ public class IoTDBStartCheck {
               + CommonDescriptor.getInstance().getConfig().getUserEncryptTokenHint());
     }
   }
+
+  public Properties getProperties() {
+    return properties;
+  }
 }
