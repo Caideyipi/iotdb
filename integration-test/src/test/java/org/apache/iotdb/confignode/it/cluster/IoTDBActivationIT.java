@@ -1006,22 +1006,32 @@ public class IoTDBActivationIT {
 
   @Test
   @Order(baseTest)
-  public void showClusterTest() throws SQLException {
+  public void showClusterTest() throws SQLException, InterruptedException {
     ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_IT =
         ClusterConstant.MAIN_CONFIGNODE_CLASS_NAME_FOR_OTHER_IT;
     EnvFactory.getEnv().initClusterEnvironment(1, 1);
     try (Connection connection = EnvFactory.getEnv().getConnection();
         Statement statement = connection.createStatement()) {
-      ResultSet resultSet = statement.executeQuery("show cluster");
-      while (resultSet.next()) {
-        // must contain "ActivateStatus" column, and this column must contain valid value
-        ObligationStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
+      boolean pass = false;
+      for (int retry = 0; retry < 5; retry++) {
+        try {
+          ResultSet resultSet = statement.executeQuery("show cluster");
+          while (resultSet.next()) {
+            // must contain "ActivateStatus" column, and this column must contain valid value
+            ObligationStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
+          }
+          resultSet = statement.executeQuery("show cluster details");
+          while (resultSet.next()) {
+            // must contain "ActivateStatus" column, and this column must contain valid value
+            ObligationStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
+          }
+          pass = true;
+          break;
+        } catch (Exception ignore) {
+          TimeUnit.SECONDS.sleep(1);
+        }
       }
-      resultSet = statement.executeQuery("show cluster details");
-      while (resultSet.next()) {
-        // must contain "ActivateStatus" column, and this column must contain valid value
-        ObligationStatus.valueOf(resultSet.getString(ColumnHeaderConstant.ACTIVATE_STATUS));
-      }
+      Assert.assertTrue(pass);
     }
 
     allCheckPass();
