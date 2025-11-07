@@ -124,13 +124,13 @@ public class IoTDBAlterEncodingCompressorIT extends AbstractSchemaIT {
         }
       }
 
-      statement.execute("create user IoTDBUser '!@#$!dfdfzvd343'");
+      statement.execute("create user IoTDBUser '!@#$!dfdFzvd343'");
       statement.execute("grant write on root.vehicle.wind.a to user IoTDBUser");
       statement.execute("create timeSeries root.vehicle.wind.b int32");
     }
 
     try (final Connection connection =
-            EnvFactory.getEnv().getConnection("IoTDBUser", "!@#$!dfdfzvd343");
+            EnvFactory.getEnv().getConnection("IoTDBUser", "!@#$!dfdFzvd343");
         final Statement statement = connection.createStatement()) {
       try {
         statement.execute("alter timeSeries root.vechile.** set encoding=PLAIN, compressor=LZMA2");
