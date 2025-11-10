@@ -978,7 +978,7 @@ public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAcces
   }
 
   @Override
-  public TSStatus visitCountStorageGroup(
+  public TSStatus visitCountDatabase(
       CountDatabaseStatement countDatabaseStatement, TreeAccessCheckContext context) {
     context
         .setAuditLogOperation(AuditLogOperation.QUERY)
