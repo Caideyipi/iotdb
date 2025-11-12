@@ -16,7 +16,6 @@
 # under the License.
 #
 
-import inspect
 import logging
 import os
 from enum import Enum
@@ -25,10 +24,10 @@ from typing import List
 from iotdb.ainode.core.model.model_enums import BuiltInModelType
 from iotdb.thrift.common.ttypes import TEndPoint
 
+IOTDB_AINODE_HOME = os.getenv("IOTDB_AINODE_HOME", "")
 AINODE_VERSION_INFO = "UNKNOWN"
 AINODE_BUILD_INFO = "UNKNOWN"
-AINODE_CONF_DIRECTORY_NAME = "conf"
-AINODE_ROOT_CONF_DIRECTORY_NAME = "conf"
+AINODE_CONF_DIRECTORY_NAME = os.path.join(IOTDB_AINODE_HOME, "conf")
 AINODE_CONF_FILE_NAME = "iotdb-ainode.properties"
 AINODE_CONF_GIT_FILE_NAME = "git.properties"
 AINODE_CONF_POM_FILE_NAME = "pom.properties"
@@ -63,13 +62,12 @@ AINODE_INFERENCE_EXTRA_MEMORY_RATIO = (
 )
 
 # AINode folder structure
-AINODE_ROOT_DIR = os.path.dirname(
-    os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-)
-AINODE_MODELS_DIR = "data/ainode/models"
-AINODE_BUILTIN_MODELS_DIR = "data/ainode/models/weights"  # For built-in models, we only need to store their weights and config.
-AINODE_SYSTEM_DIR = "data/ainode/system"
-AINODE_LOG_DIR = "logs"
+AINODE_MODELS_DIR = os.path.join(IOTDB_AINODE_HOME, "data/ainode/models")
+AINODE_BUILTIN_MODELS_DIR = os.path.join(
+    IOTDB_AINODE_HOME, "data/ainode/models/weights"
+)  # For built-in models, we only need to store their weights and config.
+AINODE_SYSTEM_DIR = os.path.join(IOTDB_AINODE_HOME, "data/ainode/system")
+AINODE_LOG_DIR = os.path.join(IOTDB_AINODE_HOME, "logs")
 
 # AINode log
 LOG_FILE_TYPE = ["all", "info", "warn", "error"]
