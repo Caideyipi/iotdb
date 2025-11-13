@@ -780,7 +780,7 @@ dependencies:
     - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
     - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
-    - 'mvn verify -Dmaven.test.skip=true -Dmdep.analyze.skip=true -P enable-sbom-check'
+    - 'mvn verify -Dmaven.test.skip=true -Dmdep.analyze.skip=true -P enable-sbom-check -s $MAVEN_SETTINGS_XML'
   parallel:
     matrix:
       - CLUSTER1: [HighPerformanceMode]
@@ -794,7 +794,7 @@ sonarqube-check:
   stage: sonarqube-check
 
   script:
-    - mvn clean verify sonar:sonar -Dsonar.projectKey=timechodb -Dsonar.projectName='timechodb' -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} -DskipTests -pl '!example/jdbc,!example/mqtt,!example/mqtt-customize,!example/pipe-count-point-processor,!example/pipe-opc-ua-sink,!example/rest-java-example,!example/schema,!example/session,!example/trigger,!example/udf,!library-udf' -am
+    - mvn clean verify sonar:sonar -Dsonar.projectKey=timechodb -Dsonar.projectName='timechodb' -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} -DskipTests -pl '!example/jdbc,!example/mqtt,!example/mqtt-customize,!example/pipe-count-point-processor,!example/pipe-opc-ua-sink,!example/rest-java-example,!example/schema,!example/session,!example/trigger,!example/udf,!library-udf' -am  -s $MAVEN_SETTINGS_XML
   allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
