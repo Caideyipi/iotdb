@@ -58,6 +58,7 @@ image:
 stages:
   - .pre
   - test
+  - cd
   - sonarqube-check
   - owasp-dependency-check
 #  - sonarqube-vulnerability-report
@@ -861,6 +862,86 @@ owasp-dependency-check:
   
   # 允许失败，不阻塞流水线
   allow_failure: true
+
+cd-deploy:
+  stage: cd
+  tags:
+    - timechodb-release
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"'
+  before_script:
+    - |
+        APT_SOURCES_PREPARED=0
+        prepare_apt_sources() {
+          if [ "$APT_SOURCES_PREPARED" -eq 0 ]; then
+            printf '%s\n' \
+              'deb http://mirrors.aliyun.com/debian bullseye main contrib non-free' \
+              'deb http://mirrors.aliyun.com/debian bullseye-updates main contrib non-free' \
+              'deb http://mirrors.aliyun.com/debian-security bullseye-security main contrib non-free' \
+              >/etc/apt/sources.list
+            if [ -d /etc/apt/sources.list.d ]; then
+              find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's#http://deb.debian.org/debian#http://mirrors.aliyun.com/debian#g' {} +
+              find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's#http://security.debian.org/debian-security#http://mirrors.aliyun.com/debian-security#g' {} +
+              find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's/buster/bullseye/g' {} +
+              find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's#bullseye/updates#bullseye-security#g' {} +
+            fi
+            apt-get update
+            APT_SOURCES_PREPARED=1
+          fi
+        }
+
+        ensure_package() {
+          local package="$1"
+          local bin_name="$2"
+          if ! command -v "$bin_name" >/dev/null 2>&1; then
+            prepare_apt_sources
+            apt-get install -y "$package"
+          fi
+        }
+
+        ensure_package openssh-client ssh-agent
+        ensure_package git git
+    - eval $(ssh-agent -s)
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$DEPLOY_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+  script:
+    - cd "$CI_PROJECT_DIR"
+    - mvn clean package -pl distribution -DskipTests -am -s $MAVEN_SETTINGS_XML
+    - |
+        set -euo pipefail
+        ZIP_FILE=$(ls distribution/target/timechodb-*-bin.zip | head -n 1)
+        if [ -z "$ZIP_FILE" ]; then
+          echo "未找到 timechodb 压缩包"
+          exit 1
+        fi
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        SHORT_SHA=${CI_COMMIT_SHORT_SHA:-$(git rev-parse --short HEAD)}
+        RENAMED_ZIP="distribution/target/timechodb-${TIMESTAMP}-${SHORT_SHA}.zip"
+        cp "$ZIP_FILE" "$RENAMED_ZIP"
+
+        METADATA_FILE="distribution/target/deploy-info-${TIMESTAMP}-${SHORT_SHA}.csv"
+        echo "commit_id,author,author_email,message" > "$METADATA_FILE"
+
+        CURRENT_SHA=${CI_COMMIT_SHA:-$(git rev-parse HEAD)}
+        COMMITS_RANGE="$CURRENT_SHA"
+        if [ -n "${CI_COMMIT_BEFORE_SHA:-}" ] && [ "$CI_COMMIT_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+          COMMITS_RANGE="${CI_COMMIT_BEFORE_SHA}..${CURRENT_SHA}"
+        fi
+
+        git log --reverse --pretty=format:'%H|%an|%ae|%s' "$COMMITS_RANGE" | while IFS='|' read -r COMMIT_ID AUTHOR_NAME AUTHOR_EMAIL COMMIT_MESSAGE; do
+          SAFE_AUTHOR_NAME=$(printf '%s' "$AUTHOR_NAME" | tr -d '"')
+          SAFE_AUTHOR_EMAIL=$(printf '%s' "$AUTHOR_EMAIL" | tr -d '"')
+          SAFE_MESSAGE=$(printf '%s' "$COMMIT_MESSAGE" | sed 's/"/""/g' | tr -d '\n\r')
+          printf '"%s","%s","%s","%s"\n' "$COMMIT_ID" "$SAFE_AUTHOR_NAME" "$SAFE_AUTHOR_EMAIL" "$SAFE_MESSAGE" >> "$METADATA_FILE"
+        done
+
+        ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p $DEPLOY_TARGET_DIR"
+        scp "$RENAMED_ZIP" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET_DIR/"
+        scp "$METADATA_FILE" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET_DIR/"
+  environment:
+    name: atmos
 
 #sonarqube-vulnerability-report:
 #  stage: sonarqube-vulnerability-report
