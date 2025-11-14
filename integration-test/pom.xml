@@ -39,8 +39,6 @@
         <integrationTest.readAndVerifyWithMultiNode>true</integrationTest.readAndVerifyWithMultiNode>
         <integrationTest.dataRegionPerDataNode>0</integrationTest.dataRegionPerDataNode>
         <integrationTest.testEnv/>
-        <integrationTest.safeDistributionPath>${maven.multiModuleProjectDirectory}/distribution/target/timechodb-${project.version}-safe-bin/timechodb-${project.version}-safe-bin</integrationTest.safeDistributionPath>
-        <integrationTest.safeTest>false</integrationTest.safeTest>
         <lightWeightStandaloneMode.configNodeConsensus>Simple</lightWeightStandaloneMode.configNodeConsensus>
         <!-- -DClusterConfigurations values configured here -->
         <lightWeightStandaloneMode.configNodeNumber>1</lightWeightStandaloneMode.configNodeNumber>
@@ -329,7 +327,6 @@
                             <reuseForks>false</reuseForks>
                             <systemPropertyVariables>
                                 <TestEnv>${integrationTest.testEnv}</TestEnv>
-                                <integrationTest.safeTest>${integrationTest.safeTest}</integrationTest.safeTest>
                                 <RandomSelectWriteNode>${integrationTest.randomSelectWriteNode}</RandomSelectWriteNode>
                                 <ReadAndVerifyWithMultiNode>${integrationTest.readAndVerifyWithMultiNode}</ReadAndVerifyWithMultiNode>
                                 <DataRegionPerDataNode>${integrationTest.dataRegionPerDataNode}</DataRegionPerDataNode>
@@ -747,15 +744,6 @@
                 <integrationTest.randomSelectWriteNode>true</integrationTest.randomSelectWriteNode>
                 <integrationTest.readAndVerifyWithMultiNode>true</integrationTest.readAndVerifyWithMultiNode>
                 <integrationTest.testEnv>Simple</integrationTest.testEnv>
-            </properties>
-        </profile>
-        <profile>
-            <id>SecurityIT</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <integrationTest.safeTest>true</integrationTest.safeTest>
             </properties>
         </profile>
     </profiles>

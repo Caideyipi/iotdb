@@ -85,6 +85,7 @@ tsfile-jdbc/src/main/resources/output/queryRes.csv
 
 ### vscode project
 **/.vscode/
+.VSCodeCounter
 
 **/lib/
 /target/

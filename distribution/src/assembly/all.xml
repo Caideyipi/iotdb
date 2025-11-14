@@ -27,60 +27,44 @@
     </formats>
     <baseDirectory>timechodb-${project.version}-bin</baseDirectory>
     <fileSets>
+        <!-- 包含合并的依赖JAR -->
         <fileSet>
             <outputDirectory>lib</outputDirectory>
-            <directory>${project.build.directory}/dependency</directory>
+            <directory>${project.build.directory}</directory>
             <includes>
-                <include>*.jar</include>
+                <include>common-dependency.jar</include>
+            </includes>
+        </fileSet>
+        <!-- 混淆后的主JAR文件 -->
+        <fileSet>
+            <outputDirectory>lib</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>timechodb-server-${project.version}.jar</include>
             </includes>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
-            <directory>${project.basedir}/../iotdb-core/datanode/src/assembly/resources/conf</directory>
+            <directory>${maven.multiModuleProjectDirectory}/iotdb-core/datanode/src/assembly/resources/conf</directory>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
-            <directory>${project.basedir}/../iotdb-core/confignode/src/assembly/resources/conf</directory>
+            <directory>${maven.multiModuleProjectDirectory}/iotdb-core/confignode/src/assembly/resources/conf</directory>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
-            <directory>${project.basedir}/../iotdb-core/node-commons/src/assembly/resources/conf</directory>
+            <directory>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/conf</directory>
             <excludes>
                 <exclude>safe/**</exclude>
-            </excludes>
-        </fileSet>
-        <fileSet>
-            <outputDirectory>activation</outputDirectory>
-            <directory>${maven.multiModuleProjectDirectory}/activation</directory>
-            <fileMode>0755</fileMode>
-            <excludes>
-                <exclude>**/*</exclude>
+                <exclude>**/ainode-env.*</exclude>
             </excludes>
         </fileSet>
         <fileSet>
             <outputDirectory>conf</outputDirectory>
-            <directory>${project.basedir}/../scripts/conf</directory>
+            <directory>${maven.multiModuleProjectDirectory}/scripts/conf</directory>
             <excludes>
                 <exclude>ainode-env.*</exclude>
                 <exclude>**/ainode-env.*</exclude>
-            </excludes>
-            <fileMode>0755</fileMode>
-        </fileSet>
-        <fileSet>
-            <outputDirectory>sbin</outputDirectory>
-            <directory>${project.basedir}/../scripts/sbin</directory>
-            <excludes>
-                <exclude>*ainode.*</exclude>
-                <exclude>**/*ainode.*</exclude>
-            </excludes>
-            <fileMode>0755</fileMode>
-        </fileSet>
-        <fileSet>
-            <outputDirectory>tools</outputDirectory>
-            <directory>${project.basedir}/../scripts/tools</directory>
-            <excludes>
-                <exclude>*ainode.*</exclude>
-                <exclude>**/*ainode.*</exclude>
             </excludes>
             <fileMode>0755</fileMode>
         </fileSet>
@@ -98,12 +82,56 @@
                 <exclude>META-INF/**</exclude>
             </excludes>
         </fileSet>
+        <!-- 激活目录 -->
+        <fileSet>
+            <outputDirectory>activation</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/activation</directory>
+            <fileMode>0755</fileMode>
+            <excludes>
+                <exclude>**/*</exclude>
+            </excludes>
+        </fileSet>
+        <!-- SSL 证书 -->
+        <!-- <fileSet>
+            <outputDirectory>.</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/certs</directory>
+        </fileSet> -->
+        <!-- 启动脚本 -->
+        <fileSet>
+            <outputDirectory>sbin</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/scripts/sbin</directory>
+            <excludes>
+                <exclude>*ainode.*</exclude>
+                <exclude>**/*ainode.*</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+        <!-- 工具脚本 -->
+        <fileSet>
+            <outputDirectory>tools</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/scripts/tools</directory>
+            <excludes>
+                <exclude>*ainode.*</exclude>
+                <exclude>**/*ainode.*</exclude>
+            </excludes>
+            <fileMode>0755</fileMode>
+        </fileSet>
     </fileSets>
     <files>
         <file>
-            <source>${project.basedir}/../iotdb-client/cli/src/assembly/resources/conf/logback-backup.xml</source>
+            <source>${maven.multiModuleProjectDirectory}/iotdb-client/cli/src/assembly/resources/conf/logback-backup.xml</source>
             <outputDirectory>conf</outputDirectory>
             <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/conf/iotdb-system.properties</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>iotdb-system.properties.template.efficiency</destName>
+        </file>
+        <file>
+            <source>${maven.multiModuleProjectDirectory}/iotdb-core/node-commons/src/assembly/resources/conf/safe/iotdb-system.properties</source>
+            <outputDirectory>conf</outputDirectory>
+            <destName>iotdb-system.properties.template.safe</destName>
         </file>
     </files>
     <componentDescriptors>

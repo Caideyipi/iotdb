@@ -494,7 +494,7 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
               + File.separator
               + "template-node-share"
               + File.separator
-              + (isSafeTest() ? "safe-lib" : "lib")
+              + "lib"
               + File.separator;
       File directory = new File(libPath);
       String osName = System.getProperty("os.name").toLowerCase();
@@ -836,9 +836,5 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
 
   public int[] getPortList() {
     return portList;
-  }
-
-  private boolean isSafeTest() {
-    return System.getProperty("integrationTest.safeTest", "false").equalsIgnoreCase("true");
   }
 }

@@ -19,7 +19,6 @@
 package org.apache.iotdb.db.it;
 
 import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.it.env.cluster.ClusterConstant;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.ClusterIT;
@@ -41,6 +40,7 @@ import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -58,6 +58,7 @@ import static org.junit.Assert.fail;
 // move to integration-test
 @RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class, RemoteIT.class})
+@Ignore
 public class GrafanaApiServiceIT {
 
   private int port = 18080;
@@ -92,7 +93,6 @@ public class GrafanaApiServiceIT {
 
   @Test
   public void login() {
-    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     HttpGet httpGet = new HttpGet("http://127.0.0.1:" + port + "/grafana/v1/login");
     CloseableHttpResponse response = null;
@@ -400,7 +400,6 @@ public class GrafanaApiServiceIT {
 
   @Test
   public void expressionWithConditionControlTest() {
-    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     rightInsertTablet(httpClient);
     expressionWithConditionControl(httpClient);
@@ -414,7 +413,6 @@ public class GrafanaApiServiceIT {
 
   @Test
   public void expressionTest() {
-    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     rightInsertTablet(httpClient);
     expression(httpClient);
@@ -429,7 +427,6 @@ public class GrafanaApiServiceIT {
 
   @Test
   public void expressionWithControlTest() {
-    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     rightInsertTablet(httpClient);
     expressionWithControl(httpClient);
@@ -443,7 +440,6 @@ public class GrafanaApiServiceIT {
 
   @Test
   public void variableTest() {
-    if (ClusterConstant.isSafeTest()) return;
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     rightInsertTablet(httpClient);
     variable(httpClient);

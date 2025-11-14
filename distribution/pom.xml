@@ -459,7 +459,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
+            <!-- <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.6.1</version>
@@ -475,7 +475,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin> -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -490,20 +490,6 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>src/assembly/all.xml</descriptor>
-                            </descriptors>
-                            <finalName>timechodb-${project.version}</finalName>
-                        </configuration>
-                    </execution>
-                    <!-- Package safe binaries-->
-                    <execution>
-                        <id>safe-bin</id>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/all-safe.xml</descriptor>
                             </descriptors>
                             <finalName>timechodb-${project.version}</finalName>
                         </configuration>
@@ -546,13 +532,6 @@
                                     <directory>${project.build.directory}</directory>
                                     <includes>
                                         <include>timechodb-${project.version}-bin.zip</include>
-                                    </includes>
-                                </fileSet>
-                                <!--safe-bin-->
-                                <fileSet>
-                                    <directory>${project.build.directory}</directory>
-                                    <includes>
-                                        <include>timechodb-${project.version}-safe-bin.zip</include>
                                     </includes>
                                 </fileSet>
                                 <!--security-file-->
@@ -649,19 +628,6 @@
                                     </descriptors>
                                 </configuration>
                             </execution>
-                            <!-- Package save binaries-->
-                            <execution>
-                                <id>safe-bin</id>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <phase>package</phase>
-                                <configuration>
-                                    <descriptors combine.children="append">
-                                        <descriptor>src/assembly/ainode-safe.xml</descriptor>
-                                    </descriptors>
-                                </configuration>
-                            </execution>
                         </executions>
                     </plugin>
                     <!--
@@ -682,11 +648,6 @@
                                         <fileSet>
                                             <includes combine.children="append">
                                                 <include>timechodb-${project.version}-ainode-bin.zip</include>
-                                            </includes>
-                                        </fileSet>
-                                        <fileSet>
-                                            <includes combine.children="append">
-                                                <include>timechodb-${project.version}-ainode-safe-bin.zip</include>
                                             </includes>
                                         </fileSet>
                                     </fileSets>

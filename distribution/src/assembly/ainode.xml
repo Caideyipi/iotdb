@@ -48,7 +48,22 @@
             <outputDirectory>${file.separator}/tools</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
+        <!-- SSL 证书 -->
+        <!-- <fileSet>
+            <outputDirectory>.</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/certs</directory>
+        </fileSet> -->
     </fileSets>
+    <files>
+        <file>
+            <source>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/conf/iotdb-ainode.properties</source>
+            <destName>efficiency-first-iotdb-ainode.properties.template</destName>
+        </file>
+        <file>
+            <source>${project.basedir}/../iotdb-core/ainode/target/timechodb-ainode-${project.version}/timechodb-ainode-${project.version}/conf/safe/iotdb-ainode.properties</source>
+            <destName>safe-first-iotdb-ainode.properties.template</destName>
+        </file>
+    </files>
     <componentDescriptors>
         <componentDescriptor>common-files.xml</componentDescriptor>
     </componentDescriptors>

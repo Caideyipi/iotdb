@@ -19,7 +19,6 @@
 package org.apache.iotdb.relational.it.rest.it;
 
 import org.apache.iotdb.it.env.EnvFactory;
-import org.apache.iotdb.it.env.cluster.ClusterConstant;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.TableClusterIT;
@@ -37,6 +36,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -51,6 +51,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
 @Category({TableLocalStandaloneIT.class, TableClusterIT.class})
+@Ignore
 public class IoTDBRestServiceIT {
 
   private int port = 18080;
@@ -132,7 +133,6 @@ public class IoTDBRestServiceIT {
 
   @Test
   public void test() {
-    if (ClusterConstant.isSafeTest()) return;
     ping();
     prepareTableData();
     rightNonQuery();

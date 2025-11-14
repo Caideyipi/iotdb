@@ -25,33 +25,20 @@
         <format>dir</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
-    <dependencySets>
-        <dependencySet>
-            <outputDirectory>lib</outputDirectory>
-            <scope>runtime</scope>
-            <unpack>false</unpack>
-            <includes>
-                <include>*:jar</include>
-            </includes>
-            <excludes>
-                <exclude>*.zip</exclude>
-            </excludes>
-        </dependencySet>
-    </dependencySets>
     <fileSets>
         <fileSet>
-            <outputDirectory>safe-lib</outputDirectory>
-            <directory>${integrationTest.safeDistributionPath}/lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/distribution/target/timechodb-${project.version}-bin/timechodb-${project.version}-bin/lib</directory>
         </fileSet>
         <fileSet>
-            <outputDirectory>safe-lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <directory>${maven.multiModuleProjectDirectory}/library-udf/target/</directory>
             <includes>
                 <include>library-udf-${project.version}-jar-with-dependencies.jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <outputDirectory>safe-lib</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <directory>${project.build.directory}</directory>
             <includes>
                 <include>integration-test-${project.version}.jar</include>
