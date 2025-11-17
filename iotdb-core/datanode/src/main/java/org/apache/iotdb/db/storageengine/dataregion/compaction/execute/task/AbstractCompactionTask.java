@@ -178,7 +178,8 @@ public abstract class AbstractCompactionTask {
     } else if (e instanceof InterruptedException
         || Thread.interrupted()
         || e instanceof StopReadTsFileByInterruptException
-        || !tsFileManager.isAllowCompaction()) {
+        || !tsFileManager.isAllowCompaction()
+        || CompactionTaskManager.getInstance().isStopAllCompactionWorker()) {
       logger.warn(
           "{}-{} [Compaction] {} task interrupted",
           storageGroupName,
