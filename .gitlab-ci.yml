@@ -466,7 +466,7 @@ sonarqube-check:
 owasp-dependency-check:
   stage: owasp-dependency-check
   tags:
-    - timechodb
+    - owasp
   # 定时执行：每周日 UTC 16:00 (北京时间周一 00:00)
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
@@ -487,11 +487,11 @@ owasp-dependency-check:
     
     # 执行 OWASP 依赖检查
     - echo "执行 OWASP 依赖漏洞检查..."
-    - mvn org.owasp:dependency-check-maven:check -DossIndexUsername=${OSS_INDEX_USER}  -DossIndexPassword=${OSS_INDEX_TOKEN} -DdataDirectory=/root/.m2/owasp -DnvdApiKey=${NVD_API_KEY} -DretireJsUrl=${OSASP_JS_URL} -s $MAVEN_SETTINGS_XML
+    - mvn org.owasp:dependency-check-maven:check -DossIndexUsername=${OSS_INDEX_USER}  -DossIndexPassword=${OSS_INDEX_TOKEN} -DdataDirectory=/root/.m2/owasp -DnvdApiKey=${NVD_API_KEY} -DretireJsUrl=${OWASP_JS_URL} -s $MAVEN_SETTINGS_XML
 
     # 生成聚合报告
     - echo "生成 OWASP 聚合报告..."
-    - mvn org.owasp:dependency-check-maven:aggregate -DossIndexUsername=${OSS_INDEX_USER} -DossIndexPassword=${OSS_INDEX_TOKEN} -DdataDirectory=/root/.m2/owasp -DnvdApiKey=${NVD_API_KEY} -Dformats=HTML,XML,JSON -DretireJsUrl=${OSASP_JS_URL} -s $MAVEN_SETTINGS_XML
+    - mvn org.owasp:dependency-check-maven:aggregate -DossIndexUsername=${OSS_INDEX_USER} -DossIndexPassword=${OSS_INDEX_TOKEN} -DdataDirectory=/root/.m2/owasp -DnvdApiKey=${NVD_API_KEY} -Dformats=HTML,XML,JSON -DretireJsUrl=${OWASP_JS_URL} -s $MAVEN_SETTINGS_XML
 
     # 生成时间戳用于报告命名
     - export REPORT_DATE=$(date +"%Y-%m-%d")
