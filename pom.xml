@@ -215,6 +215,7 @@
         <keypass/>
         <alias/>
         <jarsigner.skip>true</jarsigner.skip>
+        <tsfile.version>2.2.0-251113-SNAPSHOT</tsfile.version>
     </properties>
     <!--
     if we claim dependencies in dependencyManagement, then we do not claim
