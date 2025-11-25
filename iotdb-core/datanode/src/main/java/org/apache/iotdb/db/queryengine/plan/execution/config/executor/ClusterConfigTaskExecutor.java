@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.queryengine.plan.execution.config.executor;
 
+import org.apache.iotdb.ainode.rpc.thrift.IDataSchema;
 import org.apache.iotdb.ainode.rpc.thrift.TLoadModelReq;
 import org.apache.iotdb.ainode.rpc.thrift.TShowAIDevicesResp;
 import org.apache.iotdb.ainode.rpc.thrift.TShowLoadedModelsReq;
@@ -3716,13 +3717,22 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
         AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
       final TTrainingReq req = new TTrainingReq();
       req.setModelId(modelId);
+      req.setExistingModelId(existingModelId);
       req.setParameters(parameters);
-      if (existingModelId != null) {
-        req.setExistingModelId(existingModelId);
+      List<IDataSchema> dataSchemaList;
+      if (isTableModel) {
+        req.setDbType("iotdb.table");
+        dataSchemaList = Collections.singletonList(new IDataSchema(targetSql));
+      } else {
+        req.setDbType("iotdb.tree");
+        dataSchemaList = new ArrayList<>();
+        for (int i = 0; i < pathList.size(); i++) {
+          IDataSchema dataSchema = new IDataSchema(pathList.get(i));
+          dataSchema.setTimeRange(timeRanges.get(i));
+          dataSchemaList.add(dataSchema);
+        }
       }
-      if (existingModelId != null) {
-        req.setExistingModelId(existingModelId);
-      }
+      req.setTargetDataSchema(dataSchemaList);
       final TSStatus status = ai.createTrainingTask(req);
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != status.getCode()) {
         future.setException(new IoTDBException(status));

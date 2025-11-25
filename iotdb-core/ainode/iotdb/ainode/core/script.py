@@ -25,6 +25,7 @@ from iotdb.ainode.core.log import Logger
 
 logger = Logger()
 
+
 def main():
     # Handle PyInstaller: filter out Python arguments that might be passed to subprocesses
     # These arguments are not needed in frozen executables and cause warnings

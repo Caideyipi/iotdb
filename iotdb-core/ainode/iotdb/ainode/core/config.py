@@ -16,8 +16,8 @@
 # under the License.
 #
 import os
-import threading
 import re
+import threading
 
 from iotdb.ainode.core.constant import (
     AINODE_BUILD_INFO,

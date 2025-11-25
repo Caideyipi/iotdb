@@ -120,3 +120,8 @@ ainode = "iotdb.ainode.core.script:main"
 [tool.isort]
 profile = "black"
 skip = ["build", "dist", "target"]
+
+[[tool.poetry.source]]
+name = "nexus"
+url = "https://nexus.infra.timecho.com:8443/repository/pypi-proxy/simple"
+priority = "primary"

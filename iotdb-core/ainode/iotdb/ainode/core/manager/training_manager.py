@@ -7,12 +7,10 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-from iotdb.ainode.core.config import AINodeDescriptor
 from iotdb.ainode.core.constant import TSStatusCode
 from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.manager.model_manager import ModelManager
 from iotdb.ainode.core.model.model_info import ModelStates
-from iotdb.ainode.core.rpc.client import ClientManager
 from iotdb.ainode.core.rpc.status import get_status
 from iotdb.ainode.core.training.exp.exp_forecast_finetune import ExpForecastFinetune
 from iotdb.ainode.core.training.training_parameters import TrainingParameters
@@ -84,25 +82,8 @@ def _init_training(args: TrainingParameters, model_manager: ModelManager):
             for result in status_dict.values()
         )
         if all_successful:
-            ClientManager().borrow_config_node_client().update_model_info(
-                args.model_id,
-                3,  # TODO: use enum
-                "finished",
-                [AINodeDescriptor().get_config().get_ainode_id()],
-                args.seq_len,
-                args.output_token_len,
-            )
             model_manager.update_model_state(args.model_id, ModelStates.ACTIVE)
         else:
-            # TODO: handle and delete this model on IoTDB
-            ClientManager().borrow_config_node_client().update_model_info(
-                args.model_id,
-                0,
-                "Please check the training logs for more details.",
-                [AINodeDescriptor().get_config().get_ainode_id()],
-                args.seq_len,
-                args.output_token_len,
-            )
             model_manager.update_model_state(args.model_id, ModelStates.FAILED)
 
 
