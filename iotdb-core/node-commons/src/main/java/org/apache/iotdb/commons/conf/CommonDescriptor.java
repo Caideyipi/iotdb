@@ -330,6 +330,11 @@ public class CommonDescriptor {
                 "password_stale_warning_days",
                 String.valueOf(config.getPasswordStaleWarningDays()))));
 
+    config.setPathLogMaxSize(
+        Integer.parseInt(
+            properties.getProperty(
+                "path_log_max_size", String.valueOf(config.getPathLogMaxSize()))));
+
     loadRetryProperties(properties);
     loadBinaryAllocatorProps(properties);
   }

@@ -475,6 +475,7 @@ public class CommonConfig {
   private PrivilegeLevel auditableOperationLevel = PrivilegeLevel.GLOBAL;
 
   private String auditableOperationResult = "SUCCESS, FAIL";
+  private int pathLogMaxSize = 100;
 
   private double auditLogSpaceTlInGB = 1.0;
 
@@ -2588,6 +2589,14 @@ public class CommonConfig {
 
   public void setLog2SizeClassGroup(int log2SizeClassGroup) {
     this.log2SizeClassGroup = log2SizeClassGroup;
+  }
+
+  public int getPathLogMaxSize() {
+    return pathLogMaxSize;
+  }
+
+  public void setPathLogMaxSize(int pathLogMaxSize) {
+    this.pathLogMaxSize = pathLogMaxSize;
   }
 
   /**
