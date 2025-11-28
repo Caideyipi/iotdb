@@ -157,7 +157,7 @@ public class SharedStorageCompactionRecoverTaskTest {
     // recover
     SharedStorageCompactionRecoverTask recoverTask =
         new SharedStorageCompactionRecoverTask(
-            dataRegion.getDataRegionId(), dataRegion.getTsFileManager(), logFile);
+            dataRegion.getDataRegionIdString(), dataRegion.getTsFileManager(), logFile);
     recoverTask.recover();
     // verify
     for (TsFileResource sourceFile : sourceFiles) {
@@ -213,7 +213,7 @@ public class SharedStorageCompactionRecoverTaskTest {
     // recover
     SharedStorageCompactionRecoverTask recoverTask =
         new SharedStorageCompactionRecoverTask(
-            dataRegion.getDataRegionId(), dataRegion.getTsFileManager(), logFile);
+            dataRegion.getDataRegionIdString(), dataRegion.getTsFileManager(), logFile);
     recoverTask.recover();
     // verify
     for (TsFileResource sourceFile : sourceFiles) {
@@ -269,7 +269,7 @@ public class SharedStorageCompactionRecoverTaskTest {
     // recover
     SharedStorageCompactionRecoverTask recoverTask =
         new SharedStorageCompactionRecoverTask(
-            dataRegion.getDataRegionId(), dataRegion.getTsFileManager(), logFile);
+            dataRegion.getDataRegionIdString(), dataRegion.getTsFileManager(), logFile);
     recoverTask.recover();
     // verify
     for (TsFileResource sourceFile : sourceFiles) {
@@ -329,7 +329,7 @@ public class SharedStorageCompactionRecoverTaskTest {
     // recover
     SharedStorageCompactionRecoverTask recoverTask =
         new SharedStorageCompactionRecoverTask(
-            dataRegion.getDataRegionId(), dataRegion.getTsFileManager(), logFile);
+            dataRegion.getDataRegionIdString(), dataRegion.getTsFileManager(), logFile);
     recoverTask.recover();
     // verify
     for (TsFileResource sourceFile : sourceFiles.subList(0, 1)) {
