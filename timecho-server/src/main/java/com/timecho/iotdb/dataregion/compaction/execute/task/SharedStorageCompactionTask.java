@@ -379,7 +379,7 @@ public class SharedStorageCompactionTask extends AbstractCompactionTask {
       throws IOException {
     Map<Long, SharedStorageCompactionTask> timePartitionTasks =
         dataRegion2TimePartitionCompactionTask.getOrDefault(
-            dataRegion.getDataRegionId(), Collections.emptyMap());
+            dataRegion.getDataRegionIdString(), Collections.emptyMap());
     List<SharedStorageCompactionTask> selectedTasks = new ArrayList<>();
     timePartitionTasks.forEach(
         (k, v) -> {

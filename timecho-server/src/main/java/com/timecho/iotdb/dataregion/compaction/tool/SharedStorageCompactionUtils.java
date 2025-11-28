@@ -67,7 +67,7 @@ public class SharedStorageCompactionUtils {
           TFetchIoTConsensusProgressResp resp =
               client.fetchIoTConsensusProgress(
                   new TFetchIoTConsensusProgressReq(
-                      Integer.parseInt(dataRegion.getDataRegionId())));
+                      Integer.parseInt(dataRegion.getDataRegionIdString())));
           if (resp == null || !resp.isAllSearchIndexSafelyDeleted) {
             return false;
           }
@@ -113,7 +113,7 @@ public class SharedStorageCompactionUtils {
     } catch (Exception e) {
       LOGGER.error(
           "Fail to pull remote replica for data region {} in time partition {}",
-          dataRegion.getDataRegionId(),
+          dataRegion.getDataRegionIdString(),
           timePartition,
           e);
       return Collections.emptyList();
@@ -131,7 +131,7 @@ public class SharedStorageCompactionUtils {
       resp =
           client.fetchLeaderRemoteReplica(
               new TFetchLeaderRemoteReplicaReq(
-                  Integer.parseInt(dataRegion.getDataRegionId()), timePartition));
+                  Integer.parseInt(dataRegion.getDataRegionIdString()), timePartition));
       if (resp == null || resp.fileNames.isEmpty()) {
         return Collections.emptyList();
       }
