@@ -178,7 +178,7 @@
                     <artifactId>object-storage</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>com.timecho.ratis</groupId>
+                    <groupId>org.apache.ratis</groupId>
                     <artifactId>ratis-common</artifactId>
                 </exclusion>
                 <exclusion>
