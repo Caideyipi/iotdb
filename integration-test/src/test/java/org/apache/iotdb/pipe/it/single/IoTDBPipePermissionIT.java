@@ -157,7 +157,7 @@ public class IoTDBPipePermissionIT extends AbstractPipeSingleIT {
 
     // A user shall only see its own pipe
     try (final Connection connection =
-            env.getConnection("thulab", "StrngPsWd@623451", BaseEnv.TABLE_SQL_DIALECT);
+            env.getConnection("thulab", "passwd@#$@##d1D", BaseEnv.TABLE_SQL_DIALECT);
         final Statement statement = connection.createStatement()) {
       final ResultSet result = statement.executeQuery("show pipes");
       Assert.assertTrue(result.next());
