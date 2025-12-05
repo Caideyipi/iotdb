@@ -65,7 +65,7 @@ public class IoTDBConnectionsIT {
   public static void setUp() throws Exception {
     EnvFactory.getEnv().getConfig().getCommonConfig();
     EnvFactory.getEnv().initClusterEnvironment(1, 2);
-    createUser("test", "test123123456");
+    createUser("test", "TimechoDB@2021");
     try (Connection connection = EnvFactory.getEnv().getTableConnection();
         Statement statement = connection.createStatement()) {
       // Get all data nodes
@@ -356,9 +356,7 @@ public class IoTDBConnectionsIT {
       ResultSetMetaData metaData = resultSet.getMetaData();
       Assert.assertEquals(COLUMN_AMOUNT, metaData.getColumnCount());
     } catch (SQLException e) {
-      Assert.assertEquals(
-          "803: Access Denied: No permissions for this operation, please add privilege SYSTEM",
-          e.getMessage());
+      Assert.assertEquals("801: Authentication failed.", e.getMessage());
     }
   }
 }
