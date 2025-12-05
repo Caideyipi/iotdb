@@ -61,6 +61,11 @@
             <version>${tsfile.version}</version>
         </dependency>
         <dependency>
+            <groupId>at.yawk.lz4</groupId>
+            <artifactId>lz4-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>com.timecho.iotdb</groupId>
             <artifactId>timechodb-thrift</artifactId>
             <version>2.0.6-SNAPSHOT</version>
@@ -121,6 +126,15 @@
                         <phase>integration-test</phase>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <configuration>
+                    <usedDependencies>
+                        <usedDependency>at.yawk.lz4:lz4-java</usedDependency>
+                    </usedDependencies>
+                </configuration>
             </plugin>
         </plugins>
     </build>
