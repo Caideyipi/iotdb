@@ -1498,6 +1498,7 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
         req.statementId,
         req.isSetStatementId(),
         req.isSetQueryId(),
+        req.isSetPreparedStatementName() ? req.getPreparedStatementName() : null,
         COORDINATOR::cleanupQueryExecution);
   }
 
