@@ -480,6 +480,20 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
+                    <!-- Package binaries( if no need proguard, use this )-->
+                    <!-- <execution>
+                        <id>all-bin</id>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/inner.xml</descriptor>
+                            </descriptors>
+                            <finalName>timechodb-${project.version}</finalName>
+                        </configuration>
+                    </execution>-->
                     <!-- Package binaries-->
                     <execution>
                         <id>all-bin</id>
