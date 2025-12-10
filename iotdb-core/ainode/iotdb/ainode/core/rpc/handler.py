@@ -149,8 +149,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
                 get_status(
                     TSStatusCode.AINODE_INTERNAL_ERROR,
                     "Reject inference because TimechoDB-AINode is unactivated.",
-                )
-            , [])
+                ),
+                [],
+            )
         status = self._ensure_model_is_registered(req.modelId)
         if status.code != TSStatusCode.SUCCESS_STATUS.value:
             return TInferenceResp(status, [])
@@ -158,10 +159,13 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def forecast(self, req: TForecastReq) -> TForecastResp:
         if not AIN_CONFIG.is_activated():
-            return TForecastResp(get_status(
-                TSStatusCode.AINODE_INTERNAL_ERROR,
-                "Reject forecast because TimechoDB-AINode is unactivated.",
-            ), [])
+            return TForecastResp(
+                get_status(
+                    TSStatusCode.AINODE_INTERNAL_ERROR,
+                    "Reject forecast because TimechoDB-AINode is unactivated.",
+                ),
+                [],
+            )
         status = self._ensure_model_is_registered(req.modelId)
         if status.code != TSStatusCode.SUCCESS_STATUS.value:
             return TForecastResp(status, [])
@@ -180,9 +184,9 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
         try:
             # Parse the request to set up the training parameters
             args.model_id = req.modelId
-            args.model_type = self._model_manager.get_built_in_model_type(
+            args.model_type = self._model_manager.get_model_info(
                 req.existingModelId
-            )
+            ).model_type
             args.ckpt_path = self._model_manager.get_ckpt_path(req.existingModelId)
             args.dataset_type = req.dbType
             args.data_schema_list = req.targetDataSchema
@@ -190,10 +194,10 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
             args.init_from_map(req.parameters)
             # Initialize GPU configuration
             args.init_gpu_config()
-            self._model_manager.register_built_in_model(
+            self._model_manager.register_fine_tuned_model(
                 ModelInfo(
                     model_id=args.model_id,
-                    model_type=args.model_type.value,
+                    model_type=args.model_type,
                     category=ModelCategory.FINE_TUNED,
                     state=ModelStates.TRAINING,
                 )

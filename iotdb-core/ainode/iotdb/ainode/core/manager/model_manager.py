@@ -16,12 +16,12 @@
 # under the License.
 #
 
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from iotdb.ainode.core.constant import TSStatusCode
 from iotdb.ainode.core.exception import BuiltInModelDeletionError
 from iotdb.ainode.core.log import Logger
-from iotdb.ainode.core.model.model_loader import load_model
+from iotdb.ainode.core.model.model_constants import ModelStates
 from iotdb.ainode.core.model.model_storage import ModelCategory, ModelInfo, ModelStorage
 from iotdb.ainode.core.rpc.status import get_status
 from iotdb.ainode.core.util.decorator import singleton
@@ -58,6 +58,9 @@ class ModelManager:
             return TRegisterModelResp(
                 get_status(TSStatusCode.AINODE_INTERNAL_ERROR, str(e))
             )
+
+    def register_fine_tuned_model(self, model_info: ModelInfo):
+        self._model_storage.register_fine_tuned_model(model_info)
 
     def show_models(self, req: TShowModelsReq) -> TShowModelsResp:
         self._refresh()
@@ -97,3 +100,9 @@ class ModelManager:
 
     def is_model_registered(self, model_id: str) -> bool:
         return self._model_storage.is_model_registered(model_id)
+
+    def get_ckpt_path(self, model_id: str) -> str:
+        return self._model_storage.get_ckpt_path(model_id)
+
+    def update_model_state(self, model_id: str, state: ModelStates):
+        self._model_storage.update_model_state(model_id, state)

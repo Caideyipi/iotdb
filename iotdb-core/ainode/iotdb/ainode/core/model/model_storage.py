@@ -69,6 +69,7 @@ class ModelStorage:
         self._models: Dict[str, Dict[str, ModelInfo]] = {
             ModelCategory.BUILTIN.value: {},
             ModelCategory.USER_DEFINED.value: {},
+            ModelCategory.FINE_TUNED.value: {},
         }
         # Async download executor
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
@@ -419,6 +420,20 @@ class ModelStorage:
                 )
                 return None
 
+    def register_fine_tuned_model(self, model_info: ModelInfo):
+        """
+        Register fine-tuned model
+        Args:
+            model_info (ModelInfo): the model info of the fine-tuned model
+        """
+        if self._models[ModelCategory.FINE_TUNED.value].get(model_info.model_id):
+            raise RuntimeError(
+                f"Model {model_info.model_id} is already registered, cannot fine_tune."
+            )
+        self._models[ModelCategory.FINE_TUNED.value][model_info.model_id] = model_info
+        logger.info(f"Successfully registered model {model_info.model_id}.")
+        return True
+
     # ==================== Show and Delete Models ====================
 
     def show_models(self, req: TShowModelsReq) -> TShowModelsResp:
@@ -580,3 +595,13 @@ class ModelStorage:
             for category_dict in self._models.values():
                 model_ids.extend(category_dict.keys())
             return model_ids
+
+    def get_ckpt_path(self, model_id: str) -> str:
+        if self._models[ModelCategory.BUILTIN.value].get(model_id) is None:
+            return os.path.join(
+                self._models_dir, ModelCategory.FINE_TUNED.value, model_id
+            )
+        return os.path.join(self._models_dir, ModelCategory.BUILTIN.value, model_id)
+
+    def update_model_state(self, model_id: str, state: ModelStates):
+        self._models[ModelCategory.FINE_TUNED.value][model_id].state = state

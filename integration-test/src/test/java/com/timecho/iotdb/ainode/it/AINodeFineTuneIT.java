@@ -18,6 +18,8 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkHeader;
+import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkModelNotOnSpecifiedDevice;
+import static org.apache.iotdb.ainode.utils.AINodeTestUtils.checkModelOnSpecifiedDevice;
 import static org.apache.iotdb.ainode.utils.AINodeTestUtils.concurrentInference;
 import static org.apache.iotdb.db.it.utils.TestUtils.prepareData;
 import static org.apache.iotdb.db.it.utils.TestUtils.prepareTableData;
@@ -86,9 +88,9 @@ public class AINodeFineTuneIT {
             String state = resultSet.getString(4);
 
             assertEquals("sundial_tree", modelId);
-            assertEquals("Timer-Sundial", modelType);
-            assertEquals("FINE-TUNED", category);
-            if (state.equals("ACTIVE")) {
+            assertEquals("sundial", modelType);
+            assertEquals("fine_tuned", category);
+            if (state.equals("active")) {
               return;
             }
             ++modelCnt;
@@ -100,14 +102,16 @@ public class AINodeFineTuneIT {
       fail(
           String.format(
               "Fine-tuning model did not finish after waiting for %ds.", WAITING_COUNT_SECOND));
-      // TODO: Ensure the fine-tuned model can be employed
-      //      statement.execute("LOAD MODEL sundial_tree TO DEVICES \"0,1\"");
-      //      concurrentInference(
-      //          statement,
-      //          "CALL INFERENCE(sundial_tree, \"SELECT s0 FROM root.AI\", predict_length=720)",
-      //          10,
-      //          100,
-      //          720);
+      statement.execute("LOAD MODEL sundial_tree TO DEVICES \"0,1\"");
+      checkModelOnSpecifiedDevice(statement, "sundial_tree", "0,1");
+      concurrentInference(
+          statement,
+          "CALL INFERENCE(sundial_tree, \"SELECT s0 FROM root.AI\", outputLength=720)",
+          10,
+          100,
+          720);
+      statement.execute("UNLOAD MODEL sundial_tree FROM DEVICES \"0,1\"");
+      checkModelNotOnSpecifiedDevice(statement, "sundial_tree", "0,1");
     }
   }
 
@@ -129,9 +133,9 @@ public class AINodeFineTuneIT {
             String state = resultSet.getString(4);
 
             assertEquals("sundial_table", modelId);
-            assertEquals("Timer-Sundial", modelType);
-            assertEquals("FINE-TUNED", category);
-            if (state.equals("ACTIVE")) {
+            assertEquals("sundial", modelType);
+            assertEquals("fine_tuned", category);
+            if (state.equals("active")) {
               return;
             }
             ++modelCnt;
@@ -144,13 +148,16 @@ public class AINodeFineTuneIT {
           String.format(
               "Fine-tuning model did not finish after waiting for %ds.", WAITING_COUNT_SECOND));
       // Ensure the fine-tuned model can be employed
-      statement.execute("LOAD MODEL sundial_tree TO DEVICES \"0,1\"");
+      statement.execute("LOAD MODEL sundial_table TO DEVICES \"0,1\"");
+      checkModelOnSpecifiedDevice(statement, "sundial_table", "0,1");
       concurrentInference(
           statement,
           "\"SELECT * FROM FORECAST(model_id=>'sundial_table', input=>(SELECT time,s0 FROM root.AI) ORDER BY time), output_length=>720",
           10,
           100,
           720);
+      statement.execute("UNLOAD MODEL sundial_table FROM DEVICES \"0,1\"");
+      checkModelNotOnSpecifiedDevice(statement, "sundial_table", "0,1");
     }
   }
 }

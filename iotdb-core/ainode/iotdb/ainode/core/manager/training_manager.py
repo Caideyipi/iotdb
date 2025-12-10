@@ -39,12 +39,12 @@ def _start_training(
             rank=rank,
         )
         logger.info(
-            f"[Training][GPU-{gpu_id}] Start training model_id: {args.model_id}, model_type: {args.model_type.value} based on ckpt: {args.ckpt_path}."
+            f"[Training][GPU-{gpu_id}] Start training model_id: {args.model_id}, model_type: {args.model_type} based on ckpt: {args.ckpt_path}."
         )
         exp = ExpForecastFinetune(rank, args)
         exp.finetune()
         logger.info(
-            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type.value} is finished."
+            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type} is finished."
         )
         status_dict[rank] = get_status(
             TSStatusCode.SUCCESS_STATUS,
@@ -52,7 +52,7 @@ def _start_training(
         )
     except Exception as e:
         logger.error(
-            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type.value} is failed, because {e}."
+            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type} is failed, because {e}."
         )
         status_dict[rank] = get_status(TSStatusCode.TRAINING_INTERNAL_ERROR, str(e))
     finally:

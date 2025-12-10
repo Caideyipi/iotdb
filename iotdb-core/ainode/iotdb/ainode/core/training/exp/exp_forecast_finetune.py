@@ -9,7 +9,6 @@ import torch.nn.functional as F
 from torch import optim
 from transformers import get_scheduler
 
-from iotdb.ainode.core.model.model_info import BuiltInModelType
 from iotdb.ainode.core.training.exp.exp_basic import ExpBasic
 from iotdb.ainode.core.training.training_parameters import TrainingParameters
 
@@ -117,7 +116,7 @@ class ExpForecastFinetune(ExpBasic):
         if self.rank == 0:
             # Save the best model, TODO: The ModelManager should take over this process
             best_index = np.argmin(np.array(self.mse_loss_list))
-            final_dir = os.path.join(self._built_in_model_dir, self.args.model_id)
+            final_dir = os.path.join(self._fine_tuned_model_dir, self.args.model_id)
             for i in range(0, self.args.train_epochs):
                 save_dir = os.path.join(
                     self._model_dir, self.args.model_id + "_" + str(i)
@@ -164,13 +163,13 @@ class ExpForecastFinetune(ExpBasic):
                 batch_y = batch_y.float().to(self.gpu_id)
 
                 B = batch_x.shape[0]
-                if BuiltInModelType.TIMER_XL == self.args.model_type:
+                if "timer" == self.args.model_type:
                     pred = self.model.module.generate(
                         batch_x,
                         max_new_tokens=self.args.vali_pred_len,
                         revin=self.args.revin,
                     )
-                elif BuiltInModelType.SUNDIAL == self.args.model_type:
+                elif "sundial" == self.args.model_type:
                     outputs = self.model.module.generate(
                         batch_x,
                         max_new_tokens=self.args.vali_pred_len,

@@ -10,11 +10,11 @@ from iotdb.ainode.core.config import AINodeDescriptor
 from iotdb.ainode.core.constant import TRAINING_LOG_FILE_NAME_PREFIX_TEMPLATE
 from iotdb.ainode.core.ingress.iotdb import DatasetFactory
 from iotdb.ainode.core.log import Logger
-from iotdb.ainode.core.model.model_info import BuiltInModelType
+from iotdb.ainode.core.model.model_constants import ModelCategory
 from iotdb.ainode.core.model.sundial import configuration_sundial as config_sundial
 from iotdb.ainode.core.model.sundial import modeling_sundial as sundial
-from iotdb.ainode.core.model.timerxl import configuration_timer as config_xl
-from iotdb.ainode.core.model.timerxl import modeling_timer as timerxl
+from iotdb.ainode.core.model.timer_xl import configuration_timer as config_xl
+from iotdb.ainode.core.model.timer_xl import modeling_timer as timer_xl
 from iotdb.ainode.core.training.training_parameters import TrainingParameters
 
 
@@ -23,16 +23,18 @@ class ExpBasic(object):
         self._model_dir = os.path.join(
             os.getcwd(), AINodeDescriptor().get_config().get_ain_models_dir()
         )
-        self._built_in_model_dir = os.path.join(
-            os.getcwd(), AINodeDescriptor().get_config().get_ain_builtin_models_dir()
+        self._fine_tuned_model_dir = os.path.join(
+            os.getcwd(),
+            AINodeDescriptor().get_config().get_ain_models_dir(),
+            ModelCategory.FINE_TUNED.value,
         )
         self.model_dict = {
-            BuiltInModelType.TIMER_XL: timerxl,
-            BuiltInModelType.SUNDIAL: sundial,
+            "timer": timer_xl,
+            "sundial": sundial,
         }
         self.config_dict = {
-            BuiltInModelType.TIMER_XL: config_xl,
-            BuiltInModelType.SUNDIAL: config_sundial,
+            "timer": config_xl,
+            "sundial": config_sundial,
         }
 
         self.rank = rank
@@ -68,13 +70,13 @@ class ExpBasic(object):
         """
         # Build a raw model
         # TODO: The ModelManager should take over this process
-        if BuiltInModelType.TIMER_XL == self.args.model_type:
+        if "timer" == self.args.model_type:
             config = self.config_dict[self.args.model_type].TimerConfig(
                 input_token_len=self.args.input_token_len,
                 output_token_lens=[self.args.output_token_len],
             )
             model = self.model_dict[self.args.model_type].TimerForPrediction(config)
-        elif BuiltInModelType.SUNDIAL == self.args.model_type:
+        elif "sundial" == self.args.model_type:
             config = self.config_dict[self.args.model_type].SundialConfig(
                 input_token_len=self.args.input_token_len,
                 output_token_lens=[self.args.output_token_len],
@@ -109,7 +111,7 @@ class ExpBasic(object):
         self.logger.info(
             "[Training][GPU-{}] Finetune model type: {} model id: {} with adaptation: {}".format(
                 self.gpu_id,
-                self.args.model_type.value,
+                self.args.model_type,
                 self.args.model_id,
                 self.args.adaptation,
             )
@@ -120,13 +122,13 @@ class ExpBasic(object):
             pass
         elif self.args.adaptation == "linear":
             # * Linear Probing: freezing everything except linear head
-            if BuiltInModelType.TIMER_XL == self.args.model_type:
+            if "timer" == self.args.model_type:
                 for name, param in self.model.module.named_parameters():
                     if "lm_head" in name:
                         param.requires_grad = True
                     else:
                         param.requires_grad = False
-            elif BuiltInModelType.SUNDIAL == self.args.model_type:
+            elif "sundial" == self.args.model_type:
                 for name, param in self.model.module.named_parameters():
                     if "flow_loss" in name:
                         # param.data.zero_() # * Zero Initialization for linear probing params

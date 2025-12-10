@@ -1,5 +1,4 @@
 from iotdb.ainode.core.log import Logger
-from iotdb.ainode.core.model.model_info import BuiltInModelType
 from iotdb.ainode.core.util.gpu_mapping import parse_devices
 
 logger = Logger()
@@ -13,8 +12,8 @@ class TrainingParameters:
     def __init__(self):
         # Model config
         self.model_type = (
-            BuiltInModelType.SUNDIAL
-        )  # The model name to be finetune, options: [sundial, timer_xl]
+            "sundial"  # The model name to be finetune, options: [sundial, timer]
+        )
         self.model_id = "test"  # The model id of the finetune result
         self.ckpt_path = ""  # Checkpoint path, used for finetune
 
