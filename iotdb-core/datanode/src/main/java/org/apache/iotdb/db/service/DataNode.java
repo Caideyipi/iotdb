@@ -112,6 +112,7 @@ import org.apache.iotdb.db.storageengine.dataregion.flush.FlushManager;
 import org.apache.iotdb.db.storageengine.dataregion.memtable.TsFileProcessor;
 import org.apache.iotdb.db.storageengine.dataregion.wal.WALManager;
 import org.apache.iotdb.db.storageengine.dataregion.wal.utils.WALMode;
+import org.apache.iotdb.db.storageengine.load.active.ActiveLoadAgent;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 import org.apache.iotdb.db.subscription.agent.SubscriptionAgent;
 import org.apache.iotdb.db.trigger.executor.TriggerExecutor;
@@ -253,6 +254,8 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
           saveSecretKey();
           saveHardwareCode();
         }
+        // Clean up active load listening directories on first startup
+        ActiveLoadAgent.cleanupListeningDirectories();
       } else {
         /* Check encrypt magic string */
         try {
