@@ -33,6 +33,7 @@ from iotdb.thrift.ainode.ttypes import (
     TAIHeartbeatResp,
     TDeleteModelReq,
     TForecastReq,
+    TForecastResp,
     TInferenceReq,
     TInferenceResp,
     TLoadModelReq,
@@ -83,19 +84,32 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
 
     def registerModel(self, req: TRegisterModelReq) -> TRegisterModelResp:
         if not AIN_CONFIG.is_activated():
-            logger.warning(
-                "TimechoDB-AINode rejects model registration because it is unactivated."
-            )
             return TRegisterModelResp(
                 status=get_status(
                     TSStatusCode.AINODE_INTERNAL_ERROR,
-                    "Reject model registration because AINode is unactivated.",
+                    "Reject model registration because TimechoDB-AINode is unactivated.",
                 )
             )
         return self._model_manager.register_model(req)
 
+    def deleteModel(self, req: TDeleteModelReq) -> TSStatus:
+        if not AIN_CONFIG.is_activated():
+            return get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject model deletion because TimechoDB-AINode is unactivated.",
+            )
+        return self._model_manager.delete_model(req)
+
+    def showModels(self, req: TShowModelsReq) -> TShowModelsResp:
+        return self._model_manager.show_models(req)
+
     def loadModel(self, req: TLoadModelReq) -> TSStatus:
-        status = self._ensure_model_is_built_in_or_fine_tuned(req.existingModelId)
+        if not AIN_CONFIG.is_activated():
+            return get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject load model because TimechoDB-AINode is unactivated.",
+            )
+        status = self._ensure_model_is_registered(req.existingModelId)
         if status.code != TSStatusCode.SUCCESS_STATUS.value:
             return status
         status = _ensure_device_id_is_available(req.deviceIdList)
@@ -104,54 +118,18 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
         return self._inference_manager.load_model(req)
 
     def unloadModel(self, req: TUnloadModelReq) -> TSStatus:
-        status = self._ensure_model_is_built_in_or_fine_tuned(req.modelId)
+        if not AIN_CONFIG.is_activated():
+            return get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject unload model because TimechoDB-AINode is unactivated.",
+            )
+        status = self._ensure_model_is_registered(req.modelId)
         if status.code != TSStatusCode.SUCCESS_STATUS.value:
             return status
         status = _ensure_device_id_is_available(req.deviceIdList)
         if status.code != TSStatusCode.SUCCESS_STATUS.value:
             return status
         return self._inference_manager.unload_model(req)
-
-    def deleteModel(self, req: TDeleteModelReq) -> TSStatus:
-        if not AIN_CONFIG.is_activated():
-            logger.warning(
-                "TimechoDB-AINode rejects model deletion because it is unactivated."
-            )
-            return get_status(
-                TSStatusCode.AINODE_INTERNAL_ERROR,
-                "Reject model deletion because AINode is unactivated.",
-            )
-        return self._model_manager.delete_model(req)
-
-    def inference(self, req: TInferenceReq) -> TInferenceResp:
-        if not AIN_CONFIG.is_activated():
-            logger.warning(
-                "TimechoDB-AINode rejects inference because it is unactivated."
-            )
-            return TInferenceResp(
-                status=get_status(
-                    TSStatusCode.AINODE_INTERNAL_ERROR,
-                    "Reject inference because AINode is unactivated.",
-                )
-            )
-        return self._inference_manager.inference(req)
-
-    def forecast(self, req: TForecastReq) -> TSStatus:
-        if not AIN_CONFIG.is_activated():
-            logger.warning(
-                "TimechoDB-AINode rejects forecast because it is unactivated."
-            )
-            return get_status(
-                TSStatusCode.AINODE_INTERNAL_ERROR,
-                "Reject forecast because AINode is unactivated.",
-            )
-        return self._inference_manager.forecast(req)
-
-    def getAIHeartbeat(self, req: TAIHeartbeatReq) -> TAIHeartbeatResp:
-        return ClusterManager.get_heart_beat(req)
-
-    def showModels(self, req: TShowModelsReq) -> TShowModelsResp:
-        return self._model_manager.show_models(req)
 
     def showLoadedModels(self, req: TShowLoadedModelsReq) -> TShowLoadedModelsResp:
         status = _ensure_device_id_is_available(req.deviceIdList)
@@ -165,14 +143,38 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
             deviceIdList=get_available_devices(),
         )
 
+    def inference(self, req: TInferenceReq) -> TInferenceResp:
+        if not AIN_CONFIG.is_activated():
+            return TInferenceResp(
+                get_status(
+                    TSStatusCode.AINODE_INTERNAL_ERROR,
+                    "Reject inference because TimechoDB-AINode is unactivated.",
+                )
+            , [])
+        status = self._ensure_model_is_registered(req.modelId)
+        if status.code != TSStatusCode.SUCCESS_STATUS.value:
+            return TInferenceResp(status, [])
+        return self._inference_manager.inference(req)
+
+    def forecast(self, req: TForecastReq) -> TForecastResp:
+        if not AIN_CONFIG.is_activated():
+            return TForecastResp(get_status(
+                TSStatusCode.AINODE_INTERNAL_ERROR,
+                "Reject forecast because TimechoDB-AINode is unactivated.",
+            ), [])
+        status = self._ensure_model_is_registered(req.modelId)
+        if status.code != TSStatusCode.SUCCESS_STATUS.value:
+            return TForecastResp(status, [])
+        return self._inference_manager.forecast(req)
+
+    def getAIHeartbeat(self, req: TAIHeartbeatReq) -> TAIHeartbeatResp:
+        return ClusterManager.get_heart_beat(req)
+
     def createTrainingTask(self, req: TTrainingReq) -> TSStatus:
         if not AIN_CONFIG.is_activated():
-            logger.warning(
-                "TimechoDB-AINode rejects training task creation because it is unactivated."
-            )
             return get_status(
                 TSStatusCode.AINODE_INTERNAL_ERROR,
-                "Reject training task creation because AINode is unactivated.",
+                "Reject training task creation because TimechoDB-AINode is unactivated.",
             )
         args = get_default_training_args()
         try:
@@ -201,10 +203,10 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
             logger.error(f"Failed to parse training configuration: {e}")
             return get_status(TSStatusCode.INVALID_TRAINING_CONFIG, str(e))
 
-    def _ensure_model_is_built_in_or_fine_tuned(self, model_id: str) -> TSStatus:
-        if not self._model_manager.is_built_in_or_fine_tuned(model_id):
+    def _ensure_model_is_registered(self, model_id: str) -> TSStatus:
+        if not self._model_manager.is_model_registered(model_id):
             return TSStatus(
                 code=TSStatusCode.MODEL_NOT_FOUND_ERROR.value,
-                message=f"Model [{model_id}] is not a built-in or fine-tuned model. You can use 'SHOW MODELS' to retrieve the available models.",
+                message=f"Model [{model_id}] is not registered yet. You can use 'SHOW MODELS' to retrieve the available models.",
             )
         return TSStatus(code=TSStatusCode.SUCCESS_STATUS.value)

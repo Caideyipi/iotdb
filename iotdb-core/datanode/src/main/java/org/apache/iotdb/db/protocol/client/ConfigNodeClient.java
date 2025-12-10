@@ -75,7 +75,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateConsumerReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateFunctionReq;
-import org.apache.iotdb.confignode.rpc.thrift.TCreateModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateSchemaTemplateReq;
@@ -104,7 +103,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TDescTable4InformationSchemaResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDescTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDropCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropFunctionReq;
-import org.apache.iotdb.confignode.rpc.thrift.TDropModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropSubscriptionReq;
@@ -124,8 +122,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TGetDatabaseReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetJarInListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetLocationForTriggerResp;
-import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoReq;
-import org.apache.iotdb.confignode.rpc.thrift.TGetModelInfoResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPathsSetTemplatesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TGetPipePluginTableResp;
@@ -189,7 +185,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TTestOperation;
 import org.apache.iotdb.confignode.rpc.thrift.TThrottleQuotaResp;
 import org.apache.iotdb.confignode.rpc.thrift.TUnsetSchemaTemplateReq;
 import org.apache.iotdb.confignode.rpc.thrift.TUnsubscribeReq;
-import org.apache.iotdb.confignode.rpc.thrift.TUpdateModelInfoReq;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.rpc.DeepCopyRpcTransportFactory;
@@ -530,7 +525,8 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
 
   @Override
   public TGetAINodeLocationResp getAINodeLocation() throws TException {
-    return client.getAINodeLocation();
+    return executeRemoteCallWithRetry(
+        () -> client.getAINodeLocation(), resp -> !updateConfigNodeLeader(resp.status));
   }
 
   @Override
@@ -1359,23 +1355,6 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   }
 
   @Override
-  public TSStatus createModel(TCreateModelReq req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.createModel(req), status -> !updateConfigNodeLeader(status));
-  }
-
-  @Override
-  public TSStatus dropModel(TDropModelReq req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.dropModel(req), status -> !updateConfigNodeLeader(status));
-  }
-
-  public TGetModelInfoResp getModelInfo(TGetModelInfoReq req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.getModelInfo(req), resp -> !updateConfigNodeLeader(resp.getStatus()));
-  }
-
-  @Override
   public TSStatus setLicenseFile(String fileName, String licenseContent) throws TException {
     return executeRemoteCallWithRetry(
         () -> client.setLicenseFile(fileName, licenseContent),
@@ -1432,12 +1411,6 @@ public class ConfigNodeClient implements IConfigNodeRPCService.Iface, ThriftClie
   public TGetAllActivationStatusResp getAllActivationStatus() throws TException {
     return executeRemoteCallWithRetry(
         () -> client.getAllActivationStatus(), resp -> !updateConfigNodeLeader(resp.getStatus()));
-  }
-
-  @Override
-  public TSStatus updateModelInfo(TUpdateModelInfoReq req) throws TException {
-    return executeRemoteCallWithRetry(
-        () -> client.updateModelInfo(req), status -> !updateConfigNodeLeader(status));
   }
 
   @Override

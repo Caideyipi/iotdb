@@ -20,7 +20,10 @@
 package org.apache.iotdb.db.queryengine.plan.execution.config.executor;
 
 import org.apache.iotdb.ainode.rpc.thrift.IDataSchema;
+import org.apache.iotdb.ainode.rpc.thrift.TDeleteModelReq;
 import org.apache.iotdb.ainode.rpc.thrift.TLoadModelReq;
+import org.apache.iotdb.ainode.rpc.thrift.TRegisterModelReq;
+import org.apache.iotdb.ainode.rpc.thrift.TRegisterModelResp;
 import org.apache.iotdb.ainode.rpc.thrift.TShowAIDevicesResp;
 import org.apache.iotdb.ainode.rpc.thrift.TShowLoadedModelsReq;
 import org.apache.iotdb.ainode.rpc.thrift.TShowLoadedModelsResp;
@@ -97,7 +100,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCountTimeSlotListResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateFunctionReq;
-import org.apache.iotdb.confignode.rpc.thrift.TCreateModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreatePipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TCreateTableViewReq;
@@ -115,7 +117,6 @@ import org.apache.iotdb.confignode.rpc.thrift.TDeleteTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDescTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDropCQReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropFunctionReq;
-import org.apache.iotdb.confignode.rpc.thrift.TDropModelReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipePluginReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropPipeReq;
 import org.apache.iotdb.confignode.rpc.thrift.TDropSubscriptionReq;
@@ -178,8 +179,8 @@ import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
 import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
 import org.apache.iotdb.db.protocol.client.DataNodeClientPoolFactory;
-import org.apache.iotdb.db.protocol.client.ainode.AINodeClient;
-import org.apache.iotdb.db.protocol.client.ainode.AINodeClientManager;
+import org.apache.iotdb.db.protocol.client.an.AINodeClient;
+import org.apache.iotdb.db.protocol.client.an.AINodeClientManager;
 import org.apache.iotdb.db.protocol.session.IClientSession;
 import org.apache.iotdb.db.protocol.session.SessionManager;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
@@ -384,6 +385,8 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
   private static final IClientManager<ConfigRegionId, ConfigNodeClient> CONFIG_NODE_CLIENT_MANAGER =
       ConfigNodeClientManager.getInstance();
+  private static final IClientManager<Integer, AINodeClient> AI_NODE_CLIENT_MANAGER =
+      AINodeClientManager.getInstance();
 
   /** FIXME Consolidate this clientManager with the upper one. */
   private static final IClientManager<ConfigRegionId, ConfigNodeClient>
@@ -3601,16 +3604,16 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   @Override
   public SettableFuture<ConfigTaskResult> createModel(String modelId, String uri) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
-    try (final ConfigNodeClient client =
-        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      final TCreateModelReq req = new TCreateModelReq(modelId, uri);
-      final TSStatus status = client.createModel(req);
-      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != status.getCode()) {
-        future.setException(new IoTDBException(status));
+    try (final AINodeClient client =
+        AI_NODE_CLIENT_MANAGER.borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
+      final TRegisterModelReq req = new TRegisterModelReq(modelId, uri);
+      final TRegisterModelResp resp = client.registerModel(req);
+      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != resp.getStatus().getCode()) {
+        future.setException(new IoTDBException(resp.getStatus()));
       } else {
         future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
       }
-    } catch (final ClientManagerException | TException e) {
+    } catch (final TException | ClientManagerException e) {
       future.setException(e);
     }
     return future;
@@ -3619,9 +3622,9 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   @Override
   public SettableFuture<ConfigTaskResult> dropModel(final String modelId) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
-    try (final ConfigNodeClient client =
-        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      final TSStatus executionStatus = client.dropModel(new TDropModelReq(modelId));
+    try (final AINodeClient client =
+        AI_NODE_CLIENT_MANAGER.borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
+      final TSStatus executionStatus = client.deleteModel(new TDeleteModelReq(modelId));
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != executionStatus.getCode()) {
         future.setException(new IoTDBException(executionStatus));
       } else {
@@ -3637,7 +3640,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   public SettableFuture<ConfigTaskResult> showModels(final String modelId) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (final AINodeClient ai =
-        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
+        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
       final TShowModelsReq req = new TShowModelsReq();
       if (modelId != null) {
         req.setModelId(modelId);
@@ -3658,7 +3661,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   public SettableFuture<ConfigTaskResult> showLoadedModels(List<String> deviceIdList) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (final AINodeClient ai =
-        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
+        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
       final TShowLoadedModelsReq req = new TShowLoadedModelsReq();
       req.setDeviceIdList(deviceIdList != null ? deviceIdList : new ArrayList<>());
       final TShowLoadedModelsResp resp = ai.showLoadedModels(req);
@@ -3677,7 +3680,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   public SettableFuture<ConfigTaskResult> showAIDevices() {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (final AINodeClient ai =
-        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
+        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
       final TShowAIDevicesResp resp = ai.showAIDevices();
       if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
         future.setException(new IoTDBException(resp.getStatus()));
@@ -3695,7 +3698,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       String existingModelId, List<String> deviceIdList) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (final AINodeClient ai =
-        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
+        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
       final TLoadModelReq req = new TLoadModelReq(existingModelId, deviceIdList);
       final TSStatus result = ai.loadModel(req);
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != result.getCode()) {
@@ -3714,7 +3717,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       String existingModelId, List<String> deviceIdList) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (final AINodeClient ai =
-        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
+        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
       final TUnloadModelReq req = new TUnloadModelReq(existingModelId, deviceIdList);
       final TSStatus result = ai.unloadModel(req);
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != result.getCode()) {
@@ -3739,7 +3742,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       @Nullable List<String> pathList) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
     try (final AINodeClient ai =
-        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.DEFAULT_AINODE_ID)) {
+        AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
       final TTrainingReq req = new TTrainingReq();
       req.setModelId(modelId);
       req.setExistingModelId(existingModelId);
