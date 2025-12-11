@@ -66,7 +66,7 @@ public class IoTDBCurrentQueriesIT {
   public static void setUp() throws Exception {
     EnvFactory.getEnv().getConfig().getDataNodeConfig().setQueryCostStatWindow(1);
     EnvFactory.getEnv().initClusterEnvironment();
-    createUser("test", "test123123456");
+    createUser("test", "TimechoDB@2021");
   }
 
   @AfterClass
@@ -166,7 +166,7 @@ public class IoTDBCurrentQueriesIT {
   private void testPrivilege() {
     // 1. test current_queries table
     try (Connection connection =
-            EnvFactory.getEnv().getConnection("test", "test123123456", TABLE_SQL_DIALECT);
+            EnvFactory.getEnv().getConnection("test", "TimechoDB@2021", TABLE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {
       String sql = "SELECT * FROM information_schema.current_queries";
 
@@ -193,7 +193,7 @@ public class IoTDBCurrentQueriesIT {
 
     // 2. test queries_costs_histogram table
     try (Connection connection =
-            EnvFactory.getEnv().getConnection("test", "test123123456", TABLE_SQL_DIALECT);
+            EnvFactory.getEnv().getConnection("test", "TimechoDB@2021", TABLE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {
       statement.executeQuery("SELECT * FROM information_schema.queries_costs_histogram");
     } catch (SQLException e) {
