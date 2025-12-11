@@ -29,7 +29,7 @@ import org.apache.iotdb.ainode.rpc.thrift.TShowLoadedModelsReq;
 import org.apache.iotdb.ainode.rpc.thrift.TShowLoadedModelsResp;
 import org.apache.iotdb.ainode.rpc.thrift.TShowModelsReq;
 import org.apache.iotdb.ainode.rpc.thrift.TShowModelsResp;
-import org.apache.iotdb.ainode.rpc.thrift.TTrainingReq;
+import org.apache.iotdb.ainode.rpc.thrift.TTuningReq;
 import org.apache.iotdb.ainode.rpc.thrift.TUnloadModelReq;
 import org.apache.iotdb.common.rpc.thrift.FunctionType;
 import org.apache.iotdb.common.rpc.thrift.Model;
@@ -3732,7 +3732,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
-  public SettableFuture<ConfigTaskResult> createTraining(
+  public SettableFuture<ConfigTaskResult> createTuningTask(
       String modelId,
       boolean isTableModel,
       Map<String, String> parameters,
@@ -3741,9 +3741,9 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       @Nullable String targetSql,
       @Nullable List<String> pathList) {
     final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
-    try (final AINodeClient ai =
+    try (final AINodeClient aiNodeClient =
         AINodeClientManager.getInstance().borrowClient(AINodeClientManager.AINODE_ID_PLACEHOLDER)) {
-      final TTrainingReq req = new TTrainingReq();
+      final TTuningReq req = new TTuningReq();
       req.setModelId(modelId);
       req.setExistingModelId(existingModelId);
       req.setParameters(parameters);
@@ -3761,7 +3761,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
         }
       }
       req.setTargetDataSchema(dataSchemaList);
-      final TSStatus status = ai.createTrainingTask(req);
+      final TSStatus status = aiNodeClient.createTuningTask(req);
       if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != status.getCode()) {
         future.setException(new IoTDBException(status));
       } else {

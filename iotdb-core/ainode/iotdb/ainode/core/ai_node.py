@@ -24,7 +24,6 @@ import psutil
 
 from iotdb.ainode.core.config import AINodeDescriptor
 from iotdb.ainode.core.constant import AINODE_SYSTEM_FILE_NAME
-from iotdb.ainode.core.exception import MissingConfigError
 from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.rpc.client import ClientManager
 from iotdb.ainode.core.rpc.handler import AINodeRPCServiceHandler
@@ -111,7 +110,7 @@ class AINode:
                     logger.error(
                         "TimechoDB-AINode registration failed because TimechoDB-AINode can only join TimechoDB cluster."
                     )
-                    raise MissingConfigError(
+                    raise ValueError(
                         "The target ConfigNode is not an enterprise version, "
                         "please check the configuration of the ConfigNode."
                     )
