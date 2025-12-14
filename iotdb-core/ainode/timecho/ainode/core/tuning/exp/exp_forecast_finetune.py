@@ -9,12 +9,12 @@ import torch.nn.functional as F
 from torch import optim
 from transformers import get_scheduler
 
-from iotdb.ainode.core.training.exp.exp_basic import ExpBasic
-from iotdb.ainode.core.training.training_parameters import TrainingParameters
+from timecho.ainode.core.tuning.exp.exp_basic import ExpBasic
+from timecho.ainode.core.tuning.training_parameters import TuningParameters
 
 
 class ExpForecastFinetune(ExpBasic):
-    def __init__(self, rank: int, args: TrainingParameters):
+    def __init__(self, rank: int, args: TuningParameters):
         super(ExpForecastFinetune, self).__init__(rank, args)
 
     def _select_optimizer(self):

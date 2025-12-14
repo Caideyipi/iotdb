@@ -26,7 +26,6 @@ from iotdb.ainode.core.config import AINodeDescriptor
 from iotdb.ainode.core.constant import AINODE_SYSTEM_FILE_NAME
 from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.rpc.client import ClientManager
-from iotdb.ainode.core.rpc.handler import AINodeRPCServiceHandler
 from iotdb.ainode.core.rpc.service import AINodeRPCService
 from iotdb.thrift.common.ttypes import (
     TAINodeConfiguration,
@@ -35,6 +34,7 @@ from iotdb.thrift.common.ttypes import (
     TNodeResource,
 )
 from iotdb.thrift.confignode.ttypes import TNodeVersionInfo
+from timecho.ainode.core.rpc.handler import TimechoAINodeRPCServiceHandler
 
 logger = Logger()
 
@@ -150,7 +150,7 @@ class AINode:
                 raise e
 
         # Start the RPC service
-        self._rpc_handler = AINodeRPCServiceHandler(ainode=self)
+        self._rpc_handler = TimechoAINodeRPCServiceHandler(ainode=self)
         self._rpc_service = AINodeRPCService(self._rpc_handler)
         self._rpc_service.start()
         self._rpc_service.join(1)

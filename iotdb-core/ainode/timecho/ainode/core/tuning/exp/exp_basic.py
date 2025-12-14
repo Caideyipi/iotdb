@@ -15,11 +15,11 @@ from iotdb.ainode.core.model.sundial import configuration_sundial as config_sund
 from iotdb.ainode.core.model.sundial import modeling_sundial as sundial
 from iotdb.ainode.core.model.timer_xl import configuration_timer as config_xl
 from iotdb.ainode.core.model.timer_xl import modeling_timer as timer_xl
-from iotdb.ainode.core.training.training_parameters import TrainingParameters
+from timecho.ainode.core.tuning.training_parameters import TuningParameters
 
 
 class ExpBasic(object):
-    def __init__(self, rank: int, args: TrainingParameters):
+    def __init__(self, rank: int, args: TuningParameters):
         self._model_dir = os.path.join(
             os.getcwd(), AINodeDescriptor().get_config().get_ain_models_dir()
         )
@@ -147,7 +147,7 @@ class ExpBasic(object):
 
     def _init_data_provider(self):
         """
-        Initialize the training and validation datasets based on the provided schema list.
+        Initialize the tuning and validation datasets based on the provided schema list.
         """
         dataset = DatasetFactory().get_dataset(self.args.dataset_type)
         training_dataset = dataset(
@@ -185,7 +185,7 @@ class ExpBasic(object):
             num_workers=self.args.num_workers,
         )
         self.logger.info(
-            "[Training][GPU-{}] Init training dataset (len: {}), vali dataset (len: {})".format(
+            "[Training][GPU-{}] Init tuning dataset (len: {}), vali dataset (len: {})".format(
                 self.gpu_id, len(training_dataloader), len(vali_dataloader)
             )
         )

@@ -145,7 +145,7 @@ class IoTDBTreeModelDataset(BasicDatabaseForecastDataset):
         sorted_series_with_prefix_sum = []
         window_sum = 0
         for seq_name, seq_value in sorted_series:
-            # calculate and sum the number of training data windows for each time series
+            # calculate and sum the number of tuning data windows for each time series
             window_count = (
                 seq_value[1] - self.seq_len - self.output_token_len + 1
             ) // self.window_step
@@ -182,7 +182,7 @@ class IoTDBTreeModelDataset(BasicDatabaseForecastDataset):
             cache_key = self.cache_key_prefix + ".".join(series) + time_condition
             series_data = self.cache.get(cache_key)
             if series_data is not None:
-                # try to get the training data window from cache first
+                # try to get the tuning data window from cache first
                 series_data = torch.tensor(series_data)
                 result = series_data[
                     window_index * self.window_step : window_index * self.window_step
@@ -308,7 +308,7 @@ class IoTDBTableModelDataset(BasicDatabaseForecastDataset):
                             tag_col = i
                     if time_col == -1 or value_col == -1:
                         raise ValueError(
-                            "The training cannot start due to invalid data schema"
+                            "The tuning cannot start due to invalid data schema"
                         )
                     if tag_col == -1:
                         tag = self.DEFAULT_TAG
@@ -326,7 +326,7 @@ class IoTDBTableModelDataset(BasicDatabaseForecastDataset):
         series_with_prefix_sum = []
         window_sum = 0
         for seq_name, seq_values in series_map.items():
-            # calculate and sum the number of training data windows for each time series
+            # calculate and sum the number of tuning data windows for each time series
             window_count = (
                 len(seq_values) - self.seq_len - self.output_token_len + 1
             ) // self.window_step

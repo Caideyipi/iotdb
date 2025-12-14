@@ -359,7 +359,7 @@ class SundialModel(SundialPreTrainedModel):
             # Suppose the sequence length of each layer is the same
             past_key_values_length = past_key_values.get_seq_length()
 
-        # When training + checkpoints, caching is usually disabled (just do not transfer)
+        # When tuning + checkpoints, caching is usually disabled (just do not transfer)
         if (
             self.gradient_checkpointing
             and self.training

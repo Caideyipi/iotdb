@@ -99,6 +99,7 @@ class ModelStorage:
         """Scan file system to discover all models"""
         self._discover_category(ModelCategory.BUILTIN)
         self._discover_category(ModelCategory.USER_DEFINED)
+        self._discover_category(ModelCategory.FINE_TUNED)
 
     def _discover_category(self, category: ModelCategory):
         """Discover all models in a category directory"""
@@ -109,6 +110,12 @@ class ModelStorage:
             for model_id in os.listdir(category_path):
                 if os.path.isdir(os.path.join(category_path, model_id)):
                     self._process_user_defined_model_directory(
+                        os.path.join(category_path, model_id), model_id
+                    )
+        elif category == ModelCategory.FINE_TUNED:
+            for model_id in os.listdir(category_path):
+                if os.path.isdir(os.path.join(category_path, model_id)):
+                    self._process_fine_tuned_model_directory(
                         os.path.join(category_path, model_id), model_id
                     )
 
@@ -237,6 +244,30 @@ class ModelStorage:
                 _transformers_registered=False,  # Lazy registration
             )
             self._models[ModelCategory.USER_DEFINED.value][model_id] = model_info
+
+    def _process_fine_tuned_model_directory(self, model_dir: str, model_id: str):
+        """Handling the discovery logic for a fine-tuned model directory."""
+        config_path = os.path.join(model_dir, MODEL_CONFIG_FILE_IN_JSON)
+        model_type = ""
+        auto_map = {}
+        pipeline_cls = ""
+        if os.path.exists(config_path):
+            config = load_model_config_in_json(config_path)
+            model_type = config.get("model_type", "")
+            auto_map = config.get("auto_map", None)
+            pipeline_cls = config.get("pipeline_cls", "")
+
+        with self._lock_pool.get_lock(model_id).write_lock():
+            model_info = ModelInfo(
+                model_id=model_id,
+                model_type=model_type,
+                category=ModelCategory.FINE_TUNED,
+                state=ModelStates.ACTIVE,
+                pipeline_cls=pipeline_cls,
+                auto_map=auto_map,
+                _transformers_registered=False,  # Lazy registration
+            )
+            self._models[ModelCategory.FINE_TUNED.value][model_id] = model_info
 
     # ==================== Registration Methods ====================
 

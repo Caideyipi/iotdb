@@ -146,7 +146,7 @@ class Logger(BaseLogger):
     Logger is a singleton, just use Logger() to get it in the specified process.
 
     Args:
-        log_file_name_prefix: the prefix of the log file name, it is used to distinguish inference, training and the main process.
+        log_file_name_prefix: the prefix of the log file name, it is used to distinguish inference, tuning and the main process.
     """
 
     def __init__(self, log_file_name_prefix: str = AINODE_LOG_FILE_NAME_PREFIX):

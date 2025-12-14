@@ -143,6 +143,7 @@ for package, fallback_modules, display_name in submodule_collection_configs:
 project_packages = [
     'iotdb.ainode.core',  # This will include all sub-packages: manager, model, inference, etc.
     'iotdb.thrift',        # This will include all thrift sub-packages
+    'timecho.ainode.core',
 ]
 
 # Collect all submodules for project packages automatically
@@ -152,7 +153,7 @@ for package in project_packages:
     collect_submodules_with_fallback(package, fallback_modules=[package], package_name=package)
 
 # Add parent packages to ensure they are included
-all_hiddenimports.extend(['iotdb', 'iotdb.ainode'])
+all_hiddenimports.extend(['iotdb', 'iotdb.ainode', 'timecho', 'timecho.ainode'])
 
 # Fix circular import issues in scipy.stats
 # scipy.stats has circular imports that can cause issues in PyInstaller

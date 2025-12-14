@@ -4,9 +4,9 @@ from iotdb.ainode.core.util.gpu_mapping import parse_devices
 logger = Logger()
 
 
-class TrainingParameters:
+class TuningParameters:
     """
-    A class to hold training parameters. Please note that, all parameters should be serializable!
+    A class to hold tuning parameters. Please note that, all parameters should be serializable!
     """
 
     def __init__(self):
@@ -17,7 +17,7 @@ class TrainingParameters:
         self.model_id = "test"  # The model id of the finetune result
         self.ckpt_path = ""  # Checkpoint path, used for finetune
 
-        self.seq_len = 2880  # The number of time series data points for each input training data window
+        self.seq_len = 2880  # The number of time series data points for each input tuning data window
         self.input_token_len = (
             16  # The number of time series data points for each token
             # 96 # To finetune Timer-XL, this should be set only to 96
@@ -29,7 +29,7 @@ class TrainingParameters:
 
         # Dataset and Dataloader
         self.dataset_type = (
-            ""  # The dataset type for training, options: [iotdb.table, iotdb.tree]
+            ""  # The dataset type for tuning, options: [iotdb.table, iotdb.tree]
         )
         self.data_schema_list = (
             []
@@ -41,16 +41,16 @@ class TrainingParameters:
 
         # GPU
         self.ddp = True  # Enabling DistributedDataParallel (DDP) by default
-        self.devices = ""  # The device ids of GPU for training, set None or "" to occupy all available devices by default TODO: we have problems when parsing this
-        self.gpu_ids = []  # The list of GPU ids used for training, parsed from devices
-        self.world_size = 0  # The number of GPUs used for training
+        self.devices = ""  # The device ids of GPU for tuning, set None or "" to occupy all available devices by default TODO: we have problems when parsing this
+        self.gpu_ids = []  # The list of GPU ids used for tuning, parsed from devices
+        self.world_size = 0  # The number of GPUs used for tuning
 
-        # training
+        # tuning
         self.train_epochs = 5  # help='train epochs'
         self.training_batch_size = 64  # help='batch size of train input data'
         self.num_warmup_steps = 10000  # help='num warmup steps'
         self.num_training_steps = (
-            100000  # help='num training steps', equals the total number of iterations
+            100000  # help='num tuning steps', equals the total number of iterations
         )
         self.iter_per_epoch = 5000  # help='iter per epoch'
         self.revin = True  # help='test with revin'
@@ -68,7 +68,7 @@ class TrainingParameters:
         )
         self.seed = 2021  # help='seed'
         self.only_preserve_best = (
-            True  # Only preserve the best ckpt during training, by default is True
+            True  # Only preserve the best ckpt during tuning, by default is True
         )
         self.patience = 3  # The number of epochs to wait for improvement before early stopping, TODO: Enable this function
 
@@ -102,13 +102,13 @@ class TrainingParameters:
 
     def init_gpu_config(self):
         """
-        Initialize the GPU configuration for DDP training.
+        Initialize the GPU configuration for DDP tuning.
         """
         self.devices = parse_devices(self.devices)
         self.gpu_ids = [int(gpu) for gpu in self.devices.split(",")]
         self.world_size = len(self.gpu_ids)
 
 
-def get_default_training_args() -> TrainingParameters:
-    args = TrainingParameters()
+def get_default_training_args() -> TuningParameters:
+    args = TuningParameters()
     return args

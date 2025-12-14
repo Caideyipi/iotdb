@@ -35,7 +35,7 @@ class ModelStates(Enum):
     ACTIVATING = "activating"
     ACTIVE = "active"
     DROPPING = "dropping"
-    TRAINING = "training"
+    TRAINING = "tuning"
     FAILED = "failed"
 
 

@@ -12,10 +12,10 @@ from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.manager.model_manager import ModelManager
 from iotdb.ainode.core.model.model_info import ModelStates
 from iotdb.ainode.core.rpc.status import get_status
-from iotdb.ainode.core.training.exp.exp_forecast_finetune import ExpForecastFinetune
-from iotdb.ainode.core.training.training_parameters import TrainingParameters
 from iotdb.ainode.core.util.lock import ReadWriteLock
 from iotdb.thrift.common.ttypes import TSStatus
+from timecho.ainode.core.tuning.exp.exp_forecast_finetune import ExpForecastFinetune
+from timecho.ainode.core.tuning.training_parameters import TuningParameters
 
 logger = Logger()
 
@@ -25,7 +25,7 @@ DEFAULT_MASTER_PORT = "64209"  # TODO: generate different ports for each process
 
 # TODO: Starting from this interface, the log files should be distributed according to diff GPU process.
 def _start_training(
-    rank: int, args: TrainingParameters, status_dict: Dict[int, TSStatus]
+    rank: int, args: TuningParameters, status_dict: Dict[int, TSStatus]
 ):
     gpu_id = args.gpu_ids[rank]
     try:
@@ -39,12 +39,12 @@ def _start_training(
             rank=rank,
         )
         logger.info(
-            f"[Training][GPU-{gpu_id}] Start training model_id: {args.model_id}, model_type: {args.model_type} based on ckpt: {args.ckpt_path}."
+            f"[Training][GPU-{gpu_id}] Start tuning model_id: {args.model_id}, model_type: {args.model_type} based on ckpt: {args.ckpt_path}."
         )
         exp = ExpForecastFinetune(rank, args)
         exp.finetune()
         logger.info(
-            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type} is finished."
+            f"[Training][GPU-{gpu_id}] The tuning task of model_id: {args.model_id}, model_type: {args.model_type} is finished."
         )
         status_dict[rank] = get_status(
             TSStatusCode.SUCCESS_STATUS,
@@ -52,7 +52,7 @@ def _start_training(
         )
     except Exception as e:
         logger.error(
-            f"[Training][GPU-{gpu_id}] The training task of model_id: {args.model_id}, model_type: {args.model_type} is failed, because {e}."
+            f"[Training][GPU-{gpu_id}] The tuning task of model_id: {args.model_id}, model_type: {args.model_type} is failed, because {e}."
         )
         status_dict[rank] = get_status(TSStatusCode.TRAINING_INTERNAL_ERROR, str(e))
     finally:
@@ -62,9 +62,9 @@ def _start_training(
 TRAINING_BIG_LOCK = ReadWriteLock()  # TODO: definitely required optimize
 
 
-def _init_training(args: TrainingParameters, model_manager: ModelManager):
+def _init_training(args: TuningParameters, model_manager: ModelManager):
     with TRAINING_BIG_LOCK.write_lock():
-        # Setup training environment variables for DDP
+        # Setup tuning environment variables for DDP
         os.environ["MASTER_ADDR"] = DEFAULT_MASTER_ADDR
         os.environ["MASTER_PORT"] = DEFAULT_MASTER_PORT
         status_dict = mp.Manager().dict()
@@ -87,9 +87,9 @@ def _init_training(args: TrainingParameters, model_manager: ModelManager):
             model_manager.update_model_state(args.model_id, ModelStates.FAILED)
 
 
-class TrainingManager:
+class TuningManager:
     """
-    A manager class for handling training tasks in a parallel manner using the ParallelTaskExecutor.
+    A manager class for handling tuning tasks in a parallel manner using the ParallelTaskExecutor.
     """
 
     def __init__(self):
@@ -97,11 +97,11 @@ class TrainingManager:
         # self.executor = ParallelTaskExecutor()
         # self.executor.start()
 
-    def create_training_task(self, args: TrainingParameters):
+    def create_tuning_task(self, args: TuningParameters):
         """
-        Create a training task with the given parameters and submit it to the executor.
+        Create a tuning task with the given parameters and submit it to the executor.
         Args:
-            args (TrainingParameters): The training parameters.
+            args (TuningParameters): The tuning parameters.
         """
         try:
             # TODO: Wrap with ParallelTaskExecutor if necessary
