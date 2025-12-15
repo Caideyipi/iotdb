@@ -1638,7 +1638,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       queryStatement.setOrderByComponent(
           parseOrderByClause(
               ctx.orderByClause(),
-              ImmutableSet.of(OrderByKey.TIME, OrderByKey.DEVICE, OrderByKey.TIMESERIES)));
+              ImmutableSet.of(OrderByKey.TIME, OrderByKey.DEVICE, OrderByKey.TIMESERIES),
+              true));
     }
 
     // parse FILL
@@ -1941,7 +1942,9 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   // ---- Order By Clause
   // all SortKeys should be contained by limitSet
   private OrderByComponent parseOrderByClause(
-      IoTDBSqlParser.OrderByClauseContext ctx, ImmutableSet<String> limitSet) {
+      IoTDBSqlParser.OrderByClauseContext ctx,
+      ImmutableSet<String> limitSet,
+      boolean allowExpression) {
     OrderByComponent orderByComponent = new OrderByComponent();
     Set<String> sortKeySet = new HashSet<>();
     for (IoTDBSqlParser.OrderByAttributeClauseContext orderByAttributeClauseContext :
@@ -1950,7 +1953,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       if (orderByComponent.isUnique()) {
         break;
       }
-      SortItem sortItem = parseOrderByAttributeClause(orderByAttributeClauseContext, limitSet);
+      SortItem sortItem =
+          parseOrderByAttributeClause(orderByAttributeClauseContext, limitSet, allowExpression);
 
       String sortKey = sortItem.getSortKey();
       if (sortKeySet.contains(sortKey)) {
@@ -1969,7 +1973,9 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
   }
 
   private SortItem parseOrderByAttributeClause(
-      IoTDBSqlParser.OrderByAttributeClauseContext ctx, ImmutableSet<String> limitSet) {
+      IoTDBSqlParser.OrderByAttributeClauseContext ctx,
+      ImmutableSet<String> limitSet,
+      boolean allowExpression) {
     if (ctx.sortKey() != null) {
       String sortKey = ctx.sortKey().getText().toUpperCase();
       if (!limitSet.contains(sortKey)) {
@@ -1978,6 +1984,11 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
       }
       return new SortItem(sortKey, ctx.DESC() != null ? Ordering.DESC : Ordering.ASC);
     } else {
+      if (!allowExpression) {
+        throw new SemanticException(
+            "ORDER BY expression is not supported for current statement, supported sort key: "
+                + limitSet.toString());
+      }
       Expression sortExpression = parseExpression(ctx.expression(), true);
       return new SortItem(
           sortExpression,
@@ -3738,7 +3749,8 @@ public class ASTVisitor extends IoTDBSqlParserBaseVisitor<Statement> {
                   OrderByKey.QUERYID,
                   OrderByKey.DATANODEID,
                   OrderByKey.ELAPSEDTIME,
-                  OrderByKey.STATEMENT)));
+                  OrderByKey.STATEMENT),
+              false));
     }
 
     // parse LIMIT & OFFSET
