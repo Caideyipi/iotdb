@@ -668,14 +668,14 @@ service IClientRPCService {
 
   TSConnectionInfoResp fetchAllConnectionsInfo();
 
-  WhiteListInfoResp getWhiteIpSet()
+  WhiteListInfoResp getWhiteIpSet();
 
-  common.TSStatus updateWhiteList(1:set<string> ipSet)
+  common.TSStatus updateWhiteList(1:set<string> ipSet);
 
-  LicenseInfoResp getLicenseInfo()
+  LicenseInfoResp getLicenseInfo();
 
   /** For other node's call */
-  common.TSStatus testConnectionEmptyRPC()
+  common.TSStatus testConnectionEmptyRPC();
 }
 
 struct LicenseInfoResp{

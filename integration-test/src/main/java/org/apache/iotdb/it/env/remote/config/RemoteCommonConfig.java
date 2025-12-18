@@ -497,4 +497,9 @@ public class RemoteCommonConfig implements CommonConfig {
   public CommonConfig setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile) {
     return this;
   }
+
+  @Override
+  public CommonConfig setRestrictObjectLimit(boolean restrictObjectLimit) {
+    return this;
+  }
 }

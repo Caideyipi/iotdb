@@ -219,4 +219,6 @@ public interface CommonConfig {
   CommonConfig setEnableEncryptConfigFile(boolean enableEncryptConfigFile);
 
   CommonConfig setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile);
+
+  CommonConfig setRestrictObjectLimit(boolean restrictObjectLimit);
 }
