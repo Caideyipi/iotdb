@@ -52,7 +52,7 @@ cd src/main/DockerCompose
 e.g.
 ./do-docker-build.sh -t standalone -v 1.0.0
 # for ainode, start from 2.0.5
-./do-docker-build-enterprise.sh -t ainode -v 2.0.6-SNAPSHOT -e
+./do-docker-build-enterprise.sh -t ainode -v 2.0.7-SNAPSHOT -e
 ```
 Notice:
 Make directory of src/main/target and put the zip file downloading from the official download page. 
@@ -63,7 +63,7 @@ total 215M
 -rw-r--r-- 1 root root 75M Nov 30 20:04 apache-iotdb-1.0.0-all-bin.zip
 -rw-r--r-- 1 root root 69M Dec  1 17:12 apache-iotdb-1.0.0-confignode-bin.zip
 -rw-r--r-- 1 root root 73M Dec  1 17:13 apache-iotdb-1.0.0-datanode-bin.zip
--rw-r--r-- 1 root root 329K  7 15 17:12 timechodb-2.0.6-SNAPSHOT-ainode-bin.zip
+-rw-r--r-- 1 root root 329K  7 15 17:12 timechodb-2.0.7-SNAPSHOT-ainode-bin.zip
 ```
 
 To avoid manually copy these files, you can run our `do-docker-build.sh` with argument `-b`.
