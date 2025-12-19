@@ -17,27 +17,22 @@
  * under the License.
  */
 
-package org.apache.iotdb.session.pool;
+package com.timecho.iotdb.session.pool;
 
-import org.apache.iotdb.isession.ITableSession;
-import org.apache.iotdb.isession.pool.ITableSessionPool;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 
-public class TableSessionPool implements ITableSessionPool {
+import com.timecho.iotdb.isession.ITableSession;
+import com.timecho.iotdb.isession.pool.ITableSessionPool;
 
-  private final SessionPool sessionPool;
+public class TableSessionPool extends org.apache.iotdb.session.pool.TableSessionPool
+    implements ITableSessionPool {
 
   protected TableSessionPool(SessionPool sessionPool) {
-    this.sessionPool = sessionPool;
+    super(sessionPool);
   }
 
   @Override
   public ITableSession getSession() throws IoTDBConnectionException {
-    return sessionPool.getPooledTableSession();
-  }
-
-  @Override
-  public void close() {
-    this.sessionPool.close();
+    return (ITableSession) super.getSession();
   }
 }

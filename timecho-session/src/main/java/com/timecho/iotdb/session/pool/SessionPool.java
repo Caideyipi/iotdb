@@ -25,8 +25,10 @@ import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.service.rpc.thrift.LicenseInfoResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
+import org.apache.iotdb.session.pool.AbstractSessionPoolBuilder;
 
 import com.timecho.iotdb.isession.ISession;
+import com.timecho.iotdb.isession.ITableSession;
 import com.timecho.iotdb.isession.pool.ISessionPool;
 import com.timecho.iotdb.session.Session;
 import org.slf4j.Logger;
@@ -186,6 +188,10 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
         version,
         thriftDefaultBufferSize,
         thriftMaxFrameSize);
+  }
+
+  public SessionPool(AbstractSessionPoolBuilder builder) {
+    super(builder);
   }
 
   public SessionPool(Builder builder) {
@@ -416,6 +422,11 @@ public class SessionPool extends org.apache.iotdb.session.pool.SessionPool imple
     }
     session.setEnableQueryRedirection(enableQueryRedirection);
     return session;
+  }
+
+  @Override
+  protected ITableSession getPooledTableSession() throws IoTDBConnectionException {
+    return new TableSessionWrapper((Session) getSession(), this);
   }
 
   public static class Builder extends org.apache.iotdb.session.pool.SessionPool.Builder {

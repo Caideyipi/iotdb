@@ -381,6 +381,11 @@ public class TableSessionBuilder extends AbstractSessionBuilder {
    * @throws IoTDBConnectionException if an error occurs while establishing the connection.
    */
   public ITableSession build() throws IoTDBConnectionException {
+
+    return new TableSession(constructNewSession());
+  }
+
+  protected Session constructNewSession() throws IoTDBConnectionException {
     if (nodeUrls == null) {
       this.nodeUrls =
           Collections.singletonList(SessionConfig.DEFAULT_HOST + ":" + SessionConfig.DEFAULT_PORT);
@@ -392,10 +397,10 @@ public class TableSessionBuilder extends AbstractSessionBuilder {
 
     try {
       newSession.open(isThriftRpcCompactionEnabled, connectionTimeoutInMs);
+      return newSession;
     } catch (IoTDBConnectionException e) {
       newSession.close();
       throw e;
     }
-    return new TableSession(newSession);
   }
 }

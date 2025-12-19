@@ -917,7 +917,7 @@ public class SessionConnection {
         status -> status.getCode() == TSStatusCode.PLAN_FAILED_NETWORK_PARTITION.getStatusCode());
   }
 
-  private <T> RetryResult<T> callWithRetryAndReconnect(
+  public <T> RetryResult<T> callWithRetryAndReconnect(
       TFunction<T> rpc, Function<T, TSStatus> statusGetter) {
     return callWithRetryAndReconnect(
         rpc,
@@ -1295,11 +1295,11 @@ public class SessionConnection {
     return statementId;
   }
 
-  private interface TFunction<T> {
+  public interface TFunction<T> {
     T run() throws TException;
   }
 
-  private static class RetryResult<T> {
+  public static class RetryResult<T> {
     private final T result;
     private final TException exception;
     private final int retryAttempts;

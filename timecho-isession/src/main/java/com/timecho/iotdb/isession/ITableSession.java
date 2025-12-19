@@ -17,27 +17,24 @@
  * under the License.
  */
 
-package org.apache.iotdb.session.pool;
+package com.timecho.iotdb.isession;
 
-import org.apache.iotdb.isession.ITableSession;
-import org.apache.iotdb.isession.pool.ITableSessionPool;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
+import org.apache.iotdb.rpc.StatementExecutionException;
 
-public class TableSessionPool implements ITableSessionPool {
+import java.util.List;
 
-  private final SessionPool sessionPool;
+public interface ITableSession extends org.apache.iotdb.isession.ITableSession {
 
-  protected TableSessionPool(SessionPool sessionPool) {
-    this.sessionPool = sessionPool;
-  }
-
-  @Override
-  public ITableSession getSession() throws IoTDBConnectionException {
-    return sessionPool.getPooledTableSession();
-  }
-
-  @Override
-  public void close() {
-    this.sessionPool.close();
-  }
+  /**
+   * Retrieves the DataNode URL of the device leader for a given database and a deviceID.
+   *
+   * @param dbName the name of the database.
+   * @param deviceId a list of string for constructing the specified deviceID.
+   * @param isSetTag a true indicating the deviceID is set, false otherwise.
+   * @param time the time at which partition the device leader is queried.
+   * @return the DataNode URL <ip:port> of the device leader as a String.
+   */
+  String getDeviceLeaderURL(String dbName, List<String> deviceId, List<Boolean> isSetTag, long time)
+      throws IoTDBConnectionException, StatementExecutionException;
 }

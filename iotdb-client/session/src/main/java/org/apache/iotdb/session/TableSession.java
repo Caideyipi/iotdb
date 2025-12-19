@@ -28,9 +28,9 @@ import org.apache.tsfile.write.record.Tablet;
 
 public class TableSession implements ITableSession {
 
-  private final Session session;
+  protected final Session session;
 
-  TableSession(Session session) {
+  public TableSession(Session session) {
     this.session = session;
   }
 

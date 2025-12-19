@@ -287,12 +287,15 @@ public class TableSessionPoolBuilder extends AbstractSessionPoolBuilder {
    * @return a fully configured {@link ITableSessionPool}.
    */
   public ITableSessionPool build() {
+    prepare();
+    return new TableSessionPool(new SessionPool(this));
+  }
+
+  protected void prepare() {
     if (nodeUrls == null) {
       this.nodeUrls =
           Collections.singletonList(SessionConfig.DEFAULT_HOST + ":" + SessionConfig.DEFAULT_PORT);
     }
     this.sqlDialect = "table";
-    SessionPool sessionPool = new SessionPool(this);
-    return new TableSessionPool(sessionPool);
   }
 }

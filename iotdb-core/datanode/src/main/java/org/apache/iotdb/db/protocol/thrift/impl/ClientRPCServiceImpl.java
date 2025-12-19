@@ -185,6 +185,8 @@ import org.apache.iotdb.service.rpc.thrift.TSSetTimeZoneReq;
 import org.apache.iotdb.service.rpc.thrift.TSUnsetSchemaTemplateReq;
 import org.apache.iotdb.service.rpc.thrift.TSyncIdentityInfo;
 import org.apache.iotdb.service.rpc.thrift.TSyncTransportMetaInfo;
+import org.apache.iotdb.service.rpc.thrift.TTableDeviceLeaderReq;
+import org.apache.iotdb.service.rpc.thrift.TTableDeviceLeaderResp;
 import org.apache.iotdb.service.rpc.thrift.WhiteListInfoResp;
 
 import io.airlift.units.Duration;
@@ -250,14 +252,14 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
   private static final Coordinator COORDINATOR = Coordinator.getInstance();
 
-  private static final SessionManager SESSION_MANAGER = SessionManager.getInstance();
+  protected static final SessionManager SESSION_MANAGER = SessionManager.getInstance();
 
   public static final String ERROR_CODE = "error code: ";
 
   private static final TSProtocolVersion CURRENT_RPC_VERSION =
       TSProtocolVersion.IOTDB_SERVICE_PROTOCOL_V3;
 
-  private final IPartitionFetcher partitionFetcher;
+  protected final IPartitionFetcher partitionFetcher;
 
   private final ISchemaFetcher schemaFetcher;
 
@@ -3326,6 +3328,11 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
 
   @Override
   public LicenseInfoResp getLicenseInfo() throws TException {
+    return null;
+  }
+
+  @Override
+  public TTableDeviceLeaderResp fetchDeviceLeader(TTableDeviceLeaderReq req) throws TException {
     return null;
   }
 

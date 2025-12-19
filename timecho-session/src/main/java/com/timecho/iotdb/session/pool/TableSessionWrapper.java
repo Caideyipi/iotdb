@@ -17,27 +17,29 @@
  * under the License.
  */
 
-package org.apache.iotdb.session.pool;
+package com.timecho.iotdb.session.pool;
 
-import org.apache.iotdb.isession.ITableSession;
-import org.apache.iotdb.isession.pool.ITableSessionPool;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
+import org.apache.iotdb.rpc.StatementExecutionException;
+import org.apache.iotdb.session.Session;
+import org.apache.iotdb.session.pool.SessionPool;
 
-public class TableSessionPool implements ITableSessionPool {
+import com.timecho.iotdb.isession.ITableSession;
+import com.timecho.iotdb.session.TableSession;
 
-  private final SessionPool sessionPool;
+import java.util.List;
 
-  protected TableSessionPool(SessionPool sessionPool) {
-    this.sessionPool = sessionPool;
+public class TableSessionWrapper extends org.apache.iotdb.session.pool.TableSessionWrapper
+    implements ITableSession {
+
+  protected TableSessionWrapper(Session session, SessionPool sessionPool) {
+    super(session, sessionPool);
   }
 
   @Override
-  public ITableSession getSession() throws IoTDBConnectionException {
-    return sessionPool.getPooledTableSession();
-  }
-
-  @Override
-  public void close() {
-    this.sessionPool.close();
+  public String getDeviceLeaderURL(
+      String dbName, List<String> deviceId, List<Boolean> isSetTag, long time)
+      throws IoTDBConnectionException, StatementExecutionException {
+    return TableSession.getDeviceLeaderURL(dbName, deviceId, isSetTag, time, session);
   }
 }

@@ -43,7 +43,7 @@ public class TableSessionWrapper implements ITableSession {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TableSessionWrapper.class);
 
-  private Session session;
+  protected Session session;
 
   private final SessionPool sessionPool;
 

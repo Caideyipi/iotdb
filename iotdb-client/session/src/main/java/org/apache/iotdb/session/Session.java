@@ -1030,7 +1030,7 @@ public class Session implements ISession {
     }
   }
 
-  private SessionConnection getQuerySessionConnection() throws IoTDBConnectionException {
+  public SessionConnection getQuerySessionConnection() throws IoTDBConnectionException {
     Optional<TEndPoint> endPoint =
         availableNodes == null ? Optional.empty() : availableNodes.getQueryEndPoint();
     if (!endPoint.isPresent() || endPointToSessionConnection == null) {
