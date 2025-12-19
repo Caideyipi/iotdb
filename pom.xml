@@ -214,7 +214,7 @@
         <keypass/>
         <alias/>
         <jarsigner.skip>true</jarsigner.skip>
-        <tsfile.version>2.2.0-251210-SNAPSHOT</tsfile.version>
+        <tsfile.version>2.2.0-251218-SNAPSHOT</tsfile.version>
     </properties>
     <!--
     if we claim dependencies in dependencyManagement, then we do not claim
