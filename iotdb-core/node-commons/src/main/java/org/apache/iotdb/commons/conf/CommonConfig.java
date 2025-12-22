@@ -476,6 +476,7 @@ public class CommonConfig {
 
   private String auditableOperationResult = "SUCCESS, FAIL";
   private int pathLogMaxSize = 100;
+  private boolean restrictObjectLimit = false;
 
   private double auditLogSpaceTlInGB = 1.0;
 
@@ -2834,5 +2835,13 @@ public class CommonConfig {
 
   public void setAuditLogTtlInDays(double auditLogTtlInDays) {
     this.auditLogTtlInDays = auditLogTtlInDays;
+  }
+
+  public boolean isRestrictObjectLimit() {
+    return restrictObjectLimit;
+  }
+
+  public void setRestrictObjectLimit(boolean restrictObjectLimit) {
+    this.restrictObjectLimit = restrictObjectLimit;
   }
 }

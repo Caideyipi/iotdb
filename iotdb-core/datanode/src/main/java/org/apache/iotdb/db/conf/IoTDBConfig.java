@@ -1251,8 +1251,6 @@ public class IoTDBConfig {
 
   private long maxObjectSizeInByte = 4 * 1024 * 1024 * 1024L;
 
-  private boolean restrictObjectLimit = false;
-
   IoTDBConfig() {}
 
   public int getMaxLogEntriesNumPerBatch() {
@@ -4544,13 +4542,5 @@ public class IoTDBConfig {
 
   public void setMaxObjectSizeInByte(long maxObjectSizeInByte) {
     this.maxObjectSizeInByte = maxObjectSizeInByte;
-  }
-
-  public boolean getRestrictObjectLimit() {
-    return restrictObjectLimit;
-  }
-
-  public void setRestrictObjectLimit(boolean restrictObjectLimit) {
-    this.restrictObjectLimit = restrictObjectLimit;
   }
 }

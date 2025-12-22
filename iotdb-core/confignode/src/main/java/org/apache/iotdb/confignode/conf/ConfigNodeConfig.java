@@ -318,8 +318,6 @@ public class ConfigNodeConfig {
 
   private boolean enableSeparationOfPowers = false;
 
-  private boolean restrictObjectLimit = false;
-
   public ConfigNodeConfig() {
     // empty constructor
   }
@@ -1286,13 +1284,5 @@ public class ConfigNodeConfig {
 
   public void setEnableSeparationOfPowers(boolean enableSeparationOfPowers) {
     this.enableSeparationOfPowers = enableSeparationOfPowers;
-  }
-
-  public boolean getRestrictObjectLimit() {
-    return restrictObjectLimit;
-  }
-
-  public void setRestrictObjectLimit(boolean restrictObjectLimit) {
-    this.restrictObjectLimit = restrictObjectLimit;
   }
 }

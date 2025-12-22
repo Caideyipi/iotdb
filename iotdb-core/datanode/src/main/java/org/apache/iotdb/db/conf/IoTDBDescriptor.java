@@ -3203,7 +3203,6 @@ public class IoTDBDescriptor {
     conf.setSeriesPartitionExecutorClass(globalConfig.getSeriesPartitionExecutorClass());
     conf.setSeriesPartitionSlotNum(globalConfig.getSeriesPartitionSlotNum());
     conf.setReadConsistencyLevel(globalConfig.getReadConsistencyLevel());
-    conf.setRestrictObjectLimit(globalConfig.isRestrictObjectLimit());
   }
 
   public void loadRatisConfig(TRatisConfig ratisConfig) {
