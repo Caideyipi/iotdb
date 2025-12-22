@@ -135,8 +135,6 @@
                                     <keypass>${keypass}</keypass>
                                     <alias>${alias}</alias>
                                     <arguments>
-                                        <argument>-tsa</argument>
-                                        <argument>http://timestamp.digicert.com</argument>
                                         <argument>-signedjar</argument>
                                         <argument>${project.build.directory}/${project.build.finalName}-signed.jar</argument>
                                     </arguments>

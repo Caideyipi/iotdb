@@ -451,10 +451,10 @@
                             <keypass>${keypass}</keypass>
                             <alias>${alias}</alias>
                             <!-- <certchain>${chain}</certchain> -->
-                            <arguments>
+                            <!-- <arguments>
                                 <argument>-tsa</argument>
                                 <argument>http://timestamp.digicert.com</argument>
-                            </arguments>
+                            </arguments> -->
                         </configuration>
                     </execution>
                 </executions>
