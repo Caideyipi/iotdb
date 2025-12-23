@@ -62,12 +62,16 @@ class ModelManager:
             return TRegisterModelResp(
                 get_status(TSStatusCode.CREATE_MODEL_ERROR, str(e))
             )
+        except Exception as e:
+            # Catch-all for other exceptions (mainly from transformers implementation)
+            return TRegisterModelResp(
+                get_status(TSStatusCode.CREATE_MODEL_ERROR, str(e))
+            )
 
     def register_fine_tuned_model(self, model_info: ModelInfo):
         self._model_storage.register_fine_tuned_model(model_info)
 
     def show_models(self, req: TShowModelsReq) -> TShowModelsResp:
-        self._refresh()
         return self._model_storage.show_models(req)
 
     def delete_model(self, req: TDeleteModelReq) -> TSStatus:
