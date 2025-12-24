@@ -303,7 +303,7 @@ public class ConfigManager implements IManager {
   private final PartitionManager partitionManager;
 
   /** Manage cluster authorization. */
-  protected final PermissionManager permissionManager;
+  protected PermissionManager permissionManager;
 
   /** Manage load balancing. */
   protected LoadManager loadManager;
