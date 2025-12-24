@@ -22,6 +22,7 @@ package org.apache.iotdb.db.queryengine.plan.relational.sql.ast;
 import org.apache.iotdb.commons.utils.TestOnly;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.tsfile.utils.RamUsageEstimator;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 
 import javax.annotation.Nonnull;
@@ -35,6 +36,9 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 public class ComparisonExpression extends Expression {
+
+  private static final long INSTANCE_SIZE =
+      RamUsageEstimator.shallowSizeOfInstance(ComparisonExpression.class);
 
   public enum Operator {
     EQUAL("="),
@@ -203,5 +207,13 @@ public class ComparisonExpression extends Expression {
     operator = Operator.values()[ReadWriteIOUtils.readInt(byteBuffer)];
     left = deserialize(byteBuffer);
     right = deserialize(byteBuffer);
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    return INSTANCE_SIZE
+        + AstMemoryEstimationHelper.getEstimatedSizeOfNodeLocation(getLocationInternal())
+        + AstMemoryEstimationHelper.getEstimatedSizeOfAccountableObject(left)
+        + AstMemoryEstimationHelper.getEstimatedSizeOfAccountableObject(right);
   }
 }
