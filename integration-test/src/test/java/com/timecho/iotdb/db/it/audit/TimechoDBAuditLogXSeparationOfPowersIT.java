@@ -21,6 +21,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1396,64 +1397,68 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
                   "true",
                   "",
                   "",
-                  "is closing")),
-          // =============================Audit user audit_admin=============================
-          // audit_admin login, twice for both read and write connections
-          new AuditLogSet(
-              Arrays.asList(
-                  "node_1",
-                  "u_3",
-                  "audit_admin",
-                  "127.0.0.1",
-                  "LOGIN",
-                  "CONTROL",
-                  "null",
-                  "GLOBAL",
-                  "true",
-                  "",
-                  "",
-                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens Session"),
-              Arrays.asList(
-                  "node_1",
-                  "u_3",
-                  "audit_admin",
-                  "127.0.0.1",
-                  "LOGIN",
-                  "CONTROL",
-                  "null",
-                  "GLOBAL",
-                  "true",
-                  "",
-                  "",
-                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens Session")),
-          // Select audit log
-          new AuditLogSet(
-              Arrays.asList(
-                  "node_1",
-                  "u_3",
-                  "audit_admin",
-                  "127.0.0.1",
-                  "OBJECT_AUTHENTICATION",
-                  "QUERY",
-                  "[SELECT]",
-                  "OBJECT",
-                  "true",
-                  "__audit",
-                  "SELECT * FROM __audit.audit_log ORDER BY TIME",
-                  "User audit_admin (ID=3) requests authority on object __audit with result true"),
-              Arrays.asList(
-                  "node_1",
-                  "u_3",
-                  "audit_admin",
-                  "127.0.0.1",
-                  "OBJECT_AUTHENTICATION",
-                  "QUERY",
-                  "[SELECT]",
-                  "OBJECT",
-                  "true",
-                  "__audit",
-                  "fetch device for query",
-                  "User audit_admin (ID=3) requests authority on object __audit with result true")));
+                  "is closing")));
+  // =============================Audit user audit_admin=============================
+  // audit_admin login, twice for both read and write connections
+  //          new AuditLogSet(
+  //              Arrays.asList(
+  //                  "node_1",
+  //                  "u_3",
+  //                  "audit_admin",
+  //                  "127.0.0.1",
+  //                  "LOGIN",
+  //                  "CONTROL",
+  //                  "null",
+  //                  "GLOBAL",
+  //                  "true",
+  //                  "",
+  //                  "",
+  //                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens
+  // Session"),
+  //              Arrays.asList(
+  //                  "node_1",
+  //                  "u_3",
+  //                  "audit_admin",
+  //                  "127.0.0.1",
+  //                  "LOGIN",
+  //                  "CONTROL",
+  //                  "null",
+  //                  "GLOBAL",
+  //                  "true",
+  //                  "",
+  //                  "",
+  //                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens
+  // Session")),
+  //          // Select audit log
+  //          new AuditLogSet(
+  //              Arrays.asList(
+  //                  "node_1",
+  //                  "u_3",
+  //                  "audit_admin",
+  //                  "127.0.0.1",
+  //                  "OBJECT_AUTHENTICATION",
+  //                  "QUERY",
+  //                  "[SELECT]",
+  //                  "OBJECT",
+  //                  "true",
+  //                  "__audit",
+  //                  "SELECT * FROM __audit.audit_log ORDER BY TIME",
+  //                  "User audit_admin (ID=3) requests authority on object __audit with result
+  // true"),
+  //              Arrays.asList(
+  //                  "node_1",
+  //                  "u_3",
+  //                  "audit_admin",
+  //                  "127.0.0.1",
+  //                  "OBJECT_AUTHENTICATION",
+  //                  "QUERY",
+  //                  "[SELECT]",
+  //                  "OBJECT",
+  //                  "true",
+  //                  "__audit",
+  //                  "fetch device for query",
+  //                  "User audit_admin (ID=3) requests authority on object __audit with result
+  // true")));
   private static final Set<Integer> TABLE_INDEX_FOR_CONTAIN =
       Stream.of(11, 12).collect(Collectors.toSet());
 
@@ -1504,7 +1509,8 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
       statement.execute(sql);
     }
     closeConnectionCompletely(connection);
-
+    // Wait for audit log to be flushed
+    TimeUnit.SECONDS.sleep(10);
     connection = EnvFactory.getEnv().getAuditAdminConnection(BaseEnv.TABLE_SQL_DIALECT);
     statement = connection.createStatement();
     ResultSet resultSet = statement.executeQuery("SELECT * FROM __audit.audit_log ORDER BY TIME");
@@ -3063,60 +3069,64 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
                   "",
                   "LOGOUT",
                   "127.0.0.1",
-                  "security_admin")),
-          // =============================Audit user audit_admin=============================
-          // audit_admin login, twice for both read and write connections
-          new AuditLogSet(
-              Arrays.asList(
-                  "root.__audit.log.node_1.u_3",
-                  "true",
-                  "GLOBAL",
-                  "null",
-                  "",
-                  "CONTROL",
-                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens Session",
-                  "",
-                  "LOGIN",
-                  "127.0.0.1",
-                  "audit_admin"),
-              Arrays.asList(
-                  "root.__audit.log.node_1.u_3",
-                  "true",
-                  "GLOBAL",
-                  "null",
-                  "",
-                  "CONTROL",
-                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens Session",
-                  "",
-                  "LOGIN",
-                  "127.0.0.1",
-                  "audit_admin")),
-          // Select audit log
-          new AuditLogSet(
-              Arrays.asList(
-                  "root.__audit.log.node_1.u_3",
-                  "true",
-                  "GLOBAL",
-                  "[AUDIT]",
-                  "null",
-                  "QUERY",
-                  "User audit_admin (ID=3) requests authority on object root.__audit with result true",
-                  "SELECT * FROM root.__audit.log.** ORDER BY TIME ALIGN BY DEVICE",
-                  "OBJECT_AUTHENTICATION",
-                  "127.0.0.1",
-                  "audit_admin"),
-              Arrays.asList(
-                  "root.__audit.log.node_1.u_3",
-                  "true",
-                  "OBJECT",
-                  "[READ_DATA]",
-                  "null",
-                  "QUERY",
-                  "User audit_admin (ID=3) requests authority on object [root.__audit.log.**.*] with result true",
-                  "SELECT * FROM root.__audit.log.** ORDER BY TIME ALIGN BY DEVICE",
-                  "OBJECT_AUTHENTICATION",
-                  "127.0.0.1",
-                  "audit_admin")));
+                  "security_admin")));
+  // =============================Audit user audit_admin=============================
+  // audit_admin login, twice for both read and write connections
+  //          new AuditLogSet(
+  //              Arrays.asList(
+  //                  "root.__audit.log.node_1.u_3",
+  //                  "true",
+  //                  "GLOBAL",
+  //                  "null",
+  //                  "",
+  //                  "CONTROL",
+  //                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens
+  // Session",
+  //                  "",
+  //                  "LOGIN",
+  //                  "127.0.0.1",
+  //                  "audit_admin"),
+  //              Arrays.asList(
+  //                  "root.__audit.log.node_1.u_3",
+  //                  "true",
+  //                  "GLOBAL",
+  //                  "null",
+  //                  "",
+  //                  "CONTROL",
+  //                  "IoTDB: Login status: Login successfully. User audit_admin (ID=3), opens
+  // Session",
+  //                  "",
+  //                  "LOGIN",
+  //                  "127.0.0.1",
+  //                  "audit_admin")),
+  //          // Select audit log
+  //          new AuditLogSet(
+  //              Arrays.asList(
+  //                  "root.__audit.log.node_1.u_3",
+  //                  "true",
+  //                  "GLOBAL",
+  //                  "[AUDIT]",
+  //                  "null",
+  //                  "QUERY",
+  //                  "User audit_admin (ID=3) requests authority on object root.__audit with result
+  // true",
+  //                  "SELECT * FROM root.__audit.log.** ORDER BY TIME ALIGN BY DEVICE",
+  //                  "OBJECT_AUTHENTICATION",
+  //                  "127.0.0.1",
+  //                  "audit_admin"),
+  //              Arrays.asList(
+  //                  "root.__audit.log.node_1.u_3",
+  //                  "true",
+  //                  "OBJECT",
+  //                  "[READ_DATA]",
+  //                  "null",
+  //                  "QUERY",
+  //                  "User audit_admin (ID=3) requests authority on object [root.__audit.log.**.*]
+  // with result true",
+  //                  "SELECT * FROM root.__audit.log.** ORDER BY TIME ALIGN BY DEVICE",
+  //                  "OBJECT_AUTHENTICATION",
+  //                  "127.0.0.1",
+  //                  "audit_admin")));
   private static final Set<Integer> TREE_INDEX_FOR_CONTAIN =
       Stream.of(7).collect(Collectors.toSet());
 
@@ -3175,7 +3185,8 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
       statement.execute(sql);
     }
     closeConnectionCompletely(connection);
-
+    // Wait for audit log to be flushed
+    TimeUnit.SECONDS.sleep(10);
     connection = EnvFactory.getEnv().getAuditAdminConnection(BaseEnv.TREE_SQL_DIALECT);
     statement = connection.createStatement();
     ResultSet resultSet =

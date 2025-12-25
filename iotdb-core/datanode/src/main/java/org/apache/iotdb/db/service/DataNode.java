@@ -320,6 +320,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
       // Start the Audit Service when necessary
       if (CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
         DNAuditLogger.getInstance().setCoordinator(Coordinator.getInstance());
+        DNAuditLogger.getInstance().start();
         AuditLogFields fields =
             new AuditLogFields(
                 -1,
@@ -1340,6 +1341,9 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     registerManager.deregisterAll();
     JMXService.deregisterMBean(mbeanName);
     MetricService.getInstance().stop();
+    if (CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
+      DNAuditLogger.getInstance().stop();
+    }
     if (schemaRegionConsensusStarted) {
       try {
         SchemaRegionConsensusImpl.getInstance().stop();

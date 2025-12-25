@@ -487,6 +487,9 @@ public class CommonConfig {
   private boolean enableEncryptConfigFile = false;
   private boolean enableEncryptPermissionFile = false;
 
+  private long auditLogBatchIntervalInMs = 1000L;
+  private long auditLogBatchMaxQueueBytes = 256L * 1024L * 1024L; // 256MB
+
   CommonConfig() {
     // Empty constructor
   }
@@ -2835,6 +2838,22 @@ public class CommonConfig {
 
   public void setAuditLogTtlInDays(double auditLogTtlInDays) {
     this.auditLogTtlInDays = auditLogTtlInDays;
+  }
+
+  public long getAuditLogBatchIntervalInMs() {
+    return auditLogBatchIntervalInMs;
+  }
+
+  public void setAuditLogBatchIntervalInMs(long auditLogBatchIntervalInMs) {
+    this.auditLogBatchIntervalInMs = auditLogBatchIntervalInMs;
+  }
+
+  public long getAuditLogBatchMaxQueueBytes() {
+    return auditLogBatchMaxQueueBytes;
+  }
+
+  public void setAuditLogBatchMaxQueueBytes(long auditLogBatchMaxQueueBytes) {
+    this.auditLogBatchMaxQueueBytes = auditLogBatchMaxQueueBytes;
   }
 
   public boolean isRestrictObjectLimit() {

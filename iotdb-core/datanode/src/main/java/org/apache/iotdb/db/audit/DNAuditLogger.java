@@ -59,9 +59,11 @@ import org.apache.iotdb.db.queryengine.plan.relational.metadata.Metadata;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.parser.SqlParser;
 import org.apache.iotdb.db.queryengine.plan.statement.Statement;
 import org.apache.iotdb.db.queryengine.plan.statement.crud.InsertRowStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.crud.InsertRowsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowDatabaseStatement;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import com.timecho.iotdb.db.utils.AsyncBatchUtils;
 import org.apache.thrift.TException;
 import org.apache.tsfile.common.conf.TSFileConfig;
 import org.apache.tsfile.enums.TSDataType;
@@ -75,7 +77,6 @@ import java.io.IOException;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -86,10 +87,6 @@ import static org.apache.iotdb.db.pipe.receiver.protocol.legacy.loader.ILoader.S
 public class DNAuditLogger extends AbstractAuditLogger {
   public static final String PREFIX_PASSWORD_HISTORY = "root.__audit.password_history";
   private static final Logger logger = LoggerFactory.getLogger(DNAuditLogger.class);
-
-  // TODO: @zhujt20 Optimize the following stupid intervals
-  private static final int INSERT_RETRY_COUNT = 5;
-  private static final int INSERT_RETRY_INTERVAL_MS = 2000;
 
   private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
 
@@ -119,8 +116,46 @@ public class DNAuditLogger extends AbstractAuditLogger {
 
   private Coordinator coordinator;
 
+  private final AsyncBatchUtils<InsertRowStatement> asyncBatchUtils;
+
   private DNAuditLogger() {
     // Empty constructor
+    if (IS_AUDIT_LOG_ENABLED) {
+      asyncBatchUtils =
+          new AsyncBatchUtils<>(
+              "DNAuditLogger",
+              CommonDescriptor.getInstance()
+                  .getConfig()
+                  .getAuditLogBatchIntervalInMs(), // flush interval ms
+              CommonDescriptor.getInstance()
+                  .getConfig()
+                  .getAuditLogBatchMaxQueueBytes(), // max queue bytes
+              batch -> {
+                InsertRowsStatement stmt = new InsertRowsStatement();
+                stmt.setInsertRowStatementList(batch);
+                return coordinator.executeForTreeModel(
+                    stmt,
+                    SESSION_MANAGER.requestQueryId(),
+                    sessionInfo,
+                    "",
+                    ClusterPartitionFetcher.getInstance(),
+                    SCHEMA_FETCHER);
+              });
+    } else {
+      asyncBatchUtils = null;
+    }
+  }
+
+  public void stop() {
+    if (asyncBatchUtils != null) {
+      asyncBatchUtils.shutdown();
+    }
+  }
+
+  public void start() {
+    if (asyncBatchUtils != null) {
+      asyncBatchUtils.start();
+    }
   }
 
   public static DNAuditLogger getInstance() {
@@ -400,23 +435,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
               auditLogFields,
               log.get(),
               DEVICE_PATH_CACHE.getPartialPath(String.format(AUDIT_LOG_DEVICE, dataNodeId, user)));
-      for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
-        ExecutionResult insertResult =
-            coordinator.executeForTreeModel(
-                statement,
-                SESSION_MANAGER.requestQueryId(),
-                sessionInfo,
-                "",
-                ClusterPartitionFetcher.getInstance(),
-                SCHEMA_FETCHER);
-        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-          return;
-        }
-        TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);
-      }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      logger.warn("[AUDIT] Audit log insertion retry sleep was interrupted because", e);
+      asyncBatchUtils.push(statement);
     } catch (Exception e) {
       logger.warn("[AUDIT] Failed to log audit events because", e);
     }
@@ -456,23 +475,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
               auditLogFields,
               log,
               DEVICE_PATH_CACHE.getPartialPath(String.format(AUDIT_CN_LOG_DEVICE, nodeId)));
-      for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
-        ExecutionResult insertResult =
-            coordinator.executeForTreeModel(
-                statement,
-                SESSION_MANAGER.requestQueryId(),
-                sessionInfo,
-                "",
-                ClusterPartitionFetcher.getInstance(),
-                SCHEMA_FETCHER);
-        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-          return;
-        }
-      }
-      TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      logger.warn("[AUDIT] Audit log insertion retry sleep was interrupted", e);
+      asyncBatchUtils.push(statement);
     } catch (Exception e) {
       logger.warn("[AUDIT] Failed to log audit events because", e);
     }

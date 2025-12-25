@@ -2350,6 +2350,20 @@ audit_log_space_tl_in_GB=1.0
 # Privilege: AUDIT
 audit_log_ttl_in_days=-1.0
 
+# Batch write interval for audit logs, default value is 1000 ms
+# Datatype: long
+# effectiveMode: restart
+# Privilege: AUDIT
+audit_log_batch_interval_in_ms=1000
+
+# Maximum size in byte of the queue used for batching audit logs, default value is 268435456 bytes (256MB)
+# If the size exceeds this value, further writes will be blocked.
+# Datatype: long
+# effectiveMode: restart
+# Privilege: AUDIT
+audit_log_batch_max_queue_bytes=268435456
+
+
 ####################
 ### White and Black ip list Configuration
 ####################

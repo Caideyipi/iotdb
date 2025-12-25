@@ -210,6 +210,9 @@ public enum ThreadName {
   BINARY_ALLOCATOR_SAMPLE_EVICTOR("BinaryAllocator-SampleEvictor"),
   BINARY_ALLOCATOR_AUTO_RELEASER("BinaryAllocator-Auto-Releaser"),
 
+  ASYNC_BATCH_WRITE_DATA("async-batch-write"),
+  ASYNC_BATCH_WRITE_SCHEDULER_IN_TIME("async-batch-write-scheduler-in-time"),
+
   // the unknown thread name is used for metrics
   UNKNOWN("UNKNOWN");
 
@@ -406,7 +409,9 @@ public enum ThreadName {
               DATANODE_SHUTDOWN_HOOK,
               UPGRADE_TASK,
               REGION_MIGRATE,
-              STORAGE_ENGINE_RECOVER_TRIGGER));
+              STORAGE_ENGINE_RECOVER_TRIGGER,
+              ASYNC_BATCH_WRITE_DATA,
+              ASYNC_BATCH_WRITE_SCHEDULER_IN_TIME));
 
   private static final Set<ThreadName>[] threadNameSetList =
       new Set[] {

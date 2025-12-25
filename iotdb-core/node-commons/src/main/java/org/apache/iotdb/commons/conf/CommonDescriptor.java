@@ -261,6 +261,21 @@ public class CommonDescriptor {
     }
     config.setAuditLogTtlInDays(auditLogTtlInDays);
 
+    config.setAuditLogBatchIntervalInMs(
+        Long.parseLong(
+            properties
+                .getProperty(
+                    "audit_log_batch_interval_in_ms",
+                    String.valueOf(config.getAuditLogBatchIntervalInMs()))
+                .trim()));
+    config.setAuditLogBatchMaxQueueBytes(
+        Long.parseLong(
+            properties
+                .getProperty(
+                    "audit_log_batch_max_queue_bytes",
+                    String.valueOf(config.getAuditLogBatchMaxQueueBytes()))
+                .trim()));
+
     PipeDescriptor.loadPipeProps(config, properties, false);
     loadSubscriptionProps(properties);
 
