@@ -364,23 +364,24 @@ public class IoTDBPipeMetaHistoricalIT extends AbstractPipeDualTreeModelManualIT
               "insert into root.ln.wf01.wt01(time, temperature, status) values (1800000000000, 23, true)"),
           null);
 
-      final Map<String, String> extractorAttributes = new HashMap<>();
+      final Map<String, String> sourceAttributes = new HashMap<>();
       final Map<String, String> processorAttributes = new HashMap<>();
-      final Map<String, String> connectorAttributes = new HashMap<>();
+      final Map<String, String> sinkAttributes = new HashMap<>();
 
-      extractorAttributes.put("extractor.inclusion", "schema");
-      extractorAttributes.put("extractor.inclusion.exclusion", "schema.timeseries.template");
+      sourceAttributes.put("extractor.inclusion", "schema");
+      sourceAttributes.put("extractor.inclusion.exclusion", "schema.timeseries.template");
+      sourceAttributes.put("user", "root");
 
-      connectorAttributes.put("connector", "iotdb-thrift-connector");
-      connectorAttributes.put("connector.ip", receiverIp);
-      connectorAttributes.put("connector.port", Integer.toString(receiverPort));
-      connectorAttributes.put("connector.exception.conflict.resolve-strategy", "retry");
-      connectorAttributes.put("connector.exception.conflict.retry-max-time-seconds", "-1");
+      sinkAttributes.put("connector", "iotdb-thrift-connector");
+      sinkAttributes.put("connector.ip", receiverIp);
+      sinkAttributes.put("connector.port", Integer.toString(receiverPort));
+      sinkAttributes.put("connector.exception.conflict.resolve-strategy", "retry");
+      sinkAttributes.put("connector.exception.conflict.retry-max-time-seconds", "-1");
 
       final TSStatus status =
           client.createPipe(
-              new TCreatePipeReq("testPipe", connectorAttributes)
-                  .setExtractorAttributes(extractorAttributes)
+              new TCreatePipeReq("testPipe", sinkAttributes)
+                  .setExtractorAttributes(sourceAttributes)
                   .setProcessorAttributes(processorAttributes));
 
       Assert.assertEquals(TSStatusCode.SUCCESS_STATUS.getStatusCode(), status.getCode());
