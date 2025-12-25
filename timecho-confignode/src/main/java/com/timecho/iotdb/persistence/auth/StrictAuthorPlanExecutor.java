@@ -27,6 +27,7 @@ import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.PrivilegeUnion;
 import org.apache.iotdb.commons.auth.entity.Role;
 import org.apache.iotdb.commons.auth.entity.User;
+import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.confignode.consensus.request.ConfigPhysicalPlanType;
@@ -502,6 +503,12 @@ public class StrictAuthorPlanExecutor implements IAuthorPlanExecutor {
   public TAuthizedPatternTreeResp generateAuthorizedPTree(String username, int permission)
       throws AuthException {
     return commonAuthorPlanExecutor.generateAuthorizedPTree(username, permission);
+  }
+
+  @Override
+  public PathPatternTree generateRawAuthorizedPTree(String username, PrivilegeType type)
+      throws AuthException {
+    return commonAuthorPlanExecutor.generateRawAuthorizedPTree(username, type);
   }
 
   @Override
