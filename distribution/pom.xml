@@ -32,6 +32,7 @@
     <properties>
         <proguard.config>proguard.conf</proguard.config>
         <jdk.library>${java.home}/jmods</jdk.library>
+        <proguard.keep.option>-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod, Exceptions, LineNumberTable, SourceFile</proguard.keep.option>
     </properties>
     <dependencies>
         <dependency>
@@ -347,7 +348,6 @@
                                     </inclusion>
                                 </inclusions>
                             </assembly>
-                            <!-- <inLibsFilter>!META-INF/**</inLibsFilter>-->
                             <generateTemporaryConfigurationFile>true</generateTemporaryConfigurationFile>
                             <outputDirectory>${project.basedir}/target</outputDirectory>
                             <outjar>timechodb-server-${project.version}.jar</outjar>
@@ -361,6 +361,7 @@
                                 <option>-printseeds ${project.basedir}/target/obfuscation-seeds.txt</option>
                                 <option>-printusage ${project.basedir}/target/obfuscation-usage.txt</option>
                                 <option>-printconfiguration ${project.basedir}/target/obfuscation-configuration.txt</option>
+                                <option>${proguard.keep.option}</option>
                             </options>
                             <addManifest>true</addManifest>
                             <addMavenDescriptor>true</addMavenDescriptor>
@@ -444,38 +445,15 @@
                             <includes>
                                 <include>timechodb-server-${project.version}.jar</include>
                                 <include>common-dependency.jar</include>
-                                <!-- <include>dependency/*.jar</include> -->
                             </includes>
                             <keystore>${keystore}</keystore>
                             <storepass>${storepass}</storepass>
                             <keypass>${keypass}</keypass>
                             <alias>${alias}</alias>
-                            <!-- <certchain>${chain}</certchain> -->
-                            <!-- <arguments>
-                                <argument>-tsa</argument>
-                                <argument>http://timestamp.digicert.com</argument>
-                            </arguments> -->
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            <!-- <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/dependency</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin> -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -695,6 +673,12 @@
             </activation>
             <properties>
                 <jdk.library>${java.home}/jmods</jdk.library>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <properties>
+                <proguard.keep.option>-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod, Exceptions, LineNumberTable</proguard.keep.option>
             </properties>
         </profile>
     </profiles>
