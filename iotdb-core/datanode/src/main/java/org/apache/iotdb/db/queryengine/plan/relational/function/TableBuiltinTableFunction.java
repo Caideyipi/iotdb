@@ -26,9 +26,10 @@ import org.apache.iotdb.commons.udf.builtin.relational.tvf.SessionTableFunction;
 import org.apache.iotdb.commons.udf.builtin.relational.tvf.TumbleTableFunction;
 import org.apache.iotdb.commons.udf.builtin.relational.tvf.VariationTableFunction;
 import org.apache.iotdb.db.queryengine.plan.relational.function.tvf.ClassifyTableFunction;
-import org.apache.iotdb.db.queryengine.plan.relational.function.tvf.ForecastTableFunction;
 import org.apache.iotdb.db.queryengine.plan.relational.function.tvf.PatternMatchTableFunction;
 import org.apache.iotdb.udf.api.relational.TableFunction;
+
+import com.timecho.iotdb.db.queryengine.plan.relational.function.tvf.TimechoForecastTableFunction;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -87,7 +88,7 @@ public enum TableBuiltinTableFunction {
       case "capacity":
         return new CapacityTableFunction();
       case "forecast":
-        return new ForecastTableFunction();
+        return new TimechoForecastTableFunction();
       case "classify":
         return new ClassifyTableFunction();
       default:

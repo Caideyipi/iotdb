@@ -20,8 +20,6 @@ import threading
 import time
 from typing import Dict
 
-import pandas as pd
-import torch
 import torch.multiprocessing as mp
 
 from iotdb.ainode.core.config import AINodeDescriptor

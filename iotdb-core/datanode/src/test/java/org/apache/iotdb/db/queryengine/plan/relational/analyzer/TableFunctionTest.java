@@ -21,7 +21,6 @@ package org.apache.iotdb.db.queryengine.plan.relational.analyzer;
 
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.LogicalQueryPlan;
-import org.apache.iotdb.db.queryengine.plan.relational.function.tvf.ForecastTableFunction;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.PlanTester;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.assertions.PlanMatchPattern;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.assertions.TableFunctionProcessorMatcher;
@@ -32,6 +31,7 @@ import org.apache.iotdb.udf.api.relational.table.MapTableFunctionHandle;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.timecho.iotdb.db.queryengine.plan.relational.function.tvf.TimechoForecastTableFunction;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -369,11 +369,13 @@ public class TableFunctionTest {
                 .properOutputs("time", "s3")
                 .requiredSymbols("time_0", "s3_1")
                 .handle(
-                    new ForecastTableFunction.ForecastTableFunctionHandle(
+                    new TimechoForecastTableFunction.TimechoForecastTableFunctionHandle(
                         false,
                         2880,
                         "timer_xl",
                         Collections.emptyMap(),
+                        "",
+                        "",
                         96,
                         DEFAULT_OUTPUT_START_TIME,
                         DEFAULT_OUTPUT_INTERVAL,
@@ -429,11 +431,13 @@ public class TableFunctionTest {
                 .properOutputs("time", "s3")
                 .requiredSymbols("time_0", "s3_1")
                 .handle(
-                    new ForecastTableFunction.ForecastTableFunctionHandle(
+                    new TimechoForecastTableFunction.TimechoForecastTableFunctionHandle(
                         false,
                         2880,
                         "timer_xl",
                         Collections.emptyMap(),
+                        "",
+                        "",
                         96,
                         DEFAULT_OUTPUT_START_TIME,
                         DEFAULT_OUTPUT_INTERVAL,

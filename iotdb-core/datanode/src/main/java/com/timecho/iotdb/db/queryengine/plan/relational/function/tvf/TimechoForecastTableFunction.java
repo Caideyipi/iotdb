@@ -17,18 +17,16 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.queryengine.plan.relational.function.tvf;
+package com.timecho.iotdb.db.queryengine.plan.relational.function.tvf;
 
 import org.apache.iotdb.ainode.rpc.thrift.TForecastReq;
 import org.apache.iotdb.ainode.rpc.thrift.TForecastResp;
-import org.apache.iotdb.commons.client.IClientManager;
 import org.apache.iotdb.commons.exception.IoTDBRuntimeException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.protocol.client.an.AINodeClient;
 import org.apache.iotdb.db.protocol.client.an.AINodeClientManager;
-import org.apache.iotdb.db.queryengine.plan.relational.utils.ResultColumnAppender;
+import org.apache.iotdb.db.queryengine.plan.relational.function.tvf.ForecastTableFunction;
 import org.apache.iotdb.rpc.TSStatusCode;
-import org.apache.iotdb.udf.api.relational.TableFunction;
 import org.apache.iotdb.udf.api.relational.access.Record;
 import org.apache.iotdb.udf.api.relational.table.TableFunctionAnalysis;
 import org.apache.iotdb.udf.api.relational.table.TableFunctionHandle;
@@ -43,12 +41,7 @@ import org.apache.iotdb.udf.api.relational.table.specification.ScalarParameterSp
 import org.apache.iotdb.udf.api.relational.table.specification.TableParameterSpecification;
 import org.apache.iotdb.udf.api.type.Type;
 
-import org.apache.tsfile.block.column.Column;
-import org.apache.tsfile.block.column.ColumnBuilder;
-import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.read.common.block.TsBlock;
-import org.apache.tsfile.read.common.block.TsBlockBuilder;
-import org.apache.tsfile.read.common.block.column.TsBlockSerde;
 import org.apache.tsfile.utils.PublicBAOS;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 
@@ -58,10 +51,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -71,40 +60,38 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.iotdb.commons.udf.builtin.relational.tvf.WindowTVFUtils.findColumnIndex;
-import static org.apache.iotdb.db.queryengine.plan.relational.utils.ResultColumnAppender.createResultColumnAppender;
 import static org.apache.iotdb.rpc.TSStatusCode.CAN_NOT_CONNECT_AINODE;
 
-public class ForecastTableFunction implements TableFunction {
+public class TimechoForecastTableFunction extends ForecastTableFunction {
 
-  public static class ForecastTableFunctionHandle implements TableFunctionHandle {
-    protected String modelId;
-    protected int maxInputLength;
-    protected int outputLength;
-    protected long outputStartTime;
-    protected long outputInterval;
-    protected boolean keepInput;
-    protected Map<String, String> options;
-    protected List<Type> targetColumntypes;
+  public static class TimechoForecastTableFunctionHandle extends ForecastTableFunctionHandle {
+    protected String historyCovs;
+    protected String futureCovs;
 
-    public ForecastTableFunctionHandle() {}
+    public TimechoForecastTableFunctionHandle() {}
 
-    public ForecastTableFunctionHandle(
+    public TimechoForecastTableFunctionHandle(
         boolean keepInput,
         int maxInputLength,
         String modelId,
         Map<String, String> options,
+        String historyCovs,
+        String futureCovs,
         int outputLength,
         long outputStartTime,
         long outputInterval,
         List<Type> targetColumntypes) {
-      this.keepInput = keepInput;
-      this.maxInputLength = maxInputLength;
-      this.modelId = modelId;
-      this.options = options;
-      this.outputLength = outputLength;
-      this.outputStartTime = outputStartTime;
-      this.outputInterval = outputInterval;
-      this.targetColumntypes = targetColumntypes;
+      super(
+          keepInput,
+          maxInputLength,
+          modelId,
+          options,
+          outputLength,
+          outputStartTime,
+          outputInterval,
+          targetColumntypes);
+      this.historyCovs = historyCovs;
+      this.futureCovs = futureCovs;
     }
 
     @Override
@@ -114,6 +101,8 @@ public class ForecastTableFunction implements TableFunction {
         ReadWriteIOUtils.write(modelId, outputStream);
         ReadWriteIOUtils.write(maxInputLength, outputStream);
         ReadWriteIOUtils.write(outputLength, outputStream);
+        ReadWriteIOUtils.write(historyCovs, outputStream);
+        ReadWriteIOUtils.write(futureCovs, outputStream);
         ReadWriteIOUtils.write(outputStartTime, outputStream);
         ReadWriteIOUtils.write(outputInterval, outputStream);
         ReadWriteIOUtils.write(keepInput, outputStream);
@@ -138,6 +127,8 @@ public class ForecastTableFunction implements TableFunction {
       this.modelId = ReadWriteIOUtils.readString(buffer);
       this.maxInputLength = ReadWriteIOUtils.readInt(buffer);
       this.outputLength = ReadWriteIOUtils.readInt(buffer);
+      this.historyCovs = ReadWriteIOUtils.readString(buffer);
+      this.futureCovs = ReadWriteIOUtils.readString(buffer);
       this.outputStartTime = ReadWriteIOUtils.readLong(buffer);
       this.outputInterval = ReadWriteIOUtils.readLong(buffer);
       this.keepInput = ReadWriteIOUtils.readBoolean(buffer);
@@ -157,13 +148,15 @@ public class ForecastTableFunction implements TableFunction {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      ForecastTableFunctionHandle that = (ForecastTableFunctionHandle) o;
+      TimechoForecastTableFunctionHandle that = (TimechoForecastTableFunctionHandle) o;
       return maxInputLength == that.maxInputLength
           && outputLength == that.outputLength
           && outputStartTime == that.outputStartTime
           && outputInterval == that.outputInterval
           && keepInput == that.keepInput
           && Objects.equals(modelId, that.modelId)
+          && Objects.equals(historyCovs, that.historyCovs)
+          && Objects.equals(futureCovs, that.futureCovs)
           && Objects.equals(options, that.options)
           && Objects.equals(targetColumntypes, that.targetColumntypes);
     }
@@ -174,6 +167,8 @@ public class ForecastTableFunction implements TableFunction {
           modelId,
           maxInputLength,
           outputLength,
+          historyCovs,
+          futureCovs,
           outputStartTime,
           outputInterval,
           keepInput,
@@ -182,33 +177,10 @@ public class ForecastTableFunction implements TableFunction {
     }
   }
 
-  protected static final String TARGETS_PARAMETER_NAME = "TARGETS";
-  protected static final String MODEL_ID_PARAMETER_NAME = "MODEL_ID";
-  protected static final String OUTPUT_LENGTH_PARAMETER_NAME = "OUTPUT_LENGTH";
-  protected static final int DEFAULT_OUTPUT_LENGTH = 96;
-  protected static final String OUTPUT_START_TIME = "OUTPUT_START_TIME";
-  public static final long DEFAULT_OUTPUT_START_TIME = Long.MIN_VALUE;
-  protected static final String OUTPUT_INTERVAL = "OUTPUT_INTERVAL";
-  public static final long DEFAULT_OUTPUT_INTERVAL = 0L;
-  public static final String TIMECOL_PARAMETER_NAME = "TIMECOL";
-  protected static final String DEFAULT_TIME_COL = "time";
-  protected static final String KEEP_INPUT_PARAMETER_NAME = "PRESERVE_INPUT";
-  protected static final Boolean DEFAULT_KEEP_INPUT = Boolean.FALSE;
-  protected static final String IS_INPUT_COLUMN_NAME = "is_input";
-  protected static final String OPTIONS_PARAMETER_NAME = "MODEL_OPTIONS";
-  protected static final String DEFAULT_OPTIONS = "";
-  protected static final int MAX_INPUT_LENGTH = 2880;
-
-  private static final String INVALID_OPTIONS_FORMAT = "Invalid options: %s";
-
-  private static final Set<Type> ALLOWED_INPUT_TYPES = new HashSet<>();
-
-  static {
-    ALLOWED_INPUT_TYPES.add(Type.INT32);
-    ALLOWED_INPUT_TYPES.add(Type.INT64);
-    ALLOWED_INPUT_TYPES.add(Type.FLOAT);
-    ALLOWED_INPUT_TYPES.add(Type.DOUBLE);
-  }
+  private static final String HISTORY_COVS_PARAMETER_NAME = "HISTORY_COVS";
+  private static final String DEFAULT_HISTORY_COVS = "";
+  private static final String FUTURE_COVS_PARAMETER_NAME = "FUTURE_COVS";
+  private static final String DEFAULT_FUTURE_COVS = "";
 
   @Override
   public List<ParameterSpecification> getArgumentsSpecifications() {
@@ -217,6 +189,16 @@ public class ForecastTableFunction implements TableFunction {
         ScalarParameterSpecification.builder()
             .name(MODEL_ID_PARAMETER_NAME)
             .type(Type.STRING)
+            .build(),
+        ScalarParameterSpecification.builder()
+            .name(HISTORY_COVS_PARAMETER_NAME)
+            .type(Type.STRING)
+            .defaultValue(DEFAULT_HISTORY_COVS)
+            .build(),
+        ScalarParameterSpecification.builder()
+            .name(FUTURE_COVS_PARAMETER_NAME)
+            .type(Type.STRING)
+            .defaultValue(DEFAULT_FUTURE_COVS)
             .build(),
         ScalarParameterSpecification.builder()
             .name(OUTPUT_LENGTH_PARAMETER_NAME)
@@ -314,13 +296,6 @@ public class ForecastTableFunction implements TableFunction {
       properColumnSchemaBuilder.addField(fieldName.get(), columnType);
     }
 
-    if (targetColumnTypes.size() > 1) {
-      throw new SemanticException(
-          String.format(
-              "%s should not contain more than one target column, found [%s] target columns.",
-              TARGETS_PARAMETER_NAME, targetColumnTypes.size()));
-    }
-
     boolean keepInput =
         (boolean) ((ScalarArgument) arguments.get(KEEP_INPUT_PARAMETER_NAME)).getValue();
     if (keepInput) {
@@ -328,14 +303,20 @@ public class ForecastTableFunction implements TableFunction {
     }
 
     long outputStartTime = (long) ((ScalarArgument) arguments.get(OUTPUT_START_TIME)).getValue();
+    String historyCovs =
+        (String) ((ScalarArgument) arguments.get(HISTORY_COVS_PARAMETER_NAME)).getValue();
+    String futureCovs =
+        (String) ((ScalarArgument) arguments.get(FUTURE_COVS_PARAMETER_NAME)).getValue();
     String options = (String) ((ScalarArgument) arguments.get(OPTIONS_PARAMETER_NAME)).getValue();
 
     ForecastTableFunctionHandle functionHandle =
-        new ForecastTableFunctionHandle(
+        new TimechoForecastTableFunctionHandle(
             keepInput,
             MAX_INPUT_LENGTH,
             modelId,
             parseOptions(options),
+            historyCovs,
+            futureCovs,
             outputLength,
             outputStartTime,
             outputInterval,
@@ -351,7 +332,7 @@ public class ForecastTableFunction implements TableFunction {
 
   @Override
   public TableFunctionHandle createTableFunctionHandle() {
-    return new ForecastTableFunctionHandle();
+    return new TimechoForecastTableFunctionHandle();
   }
 
   @Override
@@ -360,182 +341,23 @@ public class ForecastTableFunction implements TableFunction {
     return new TableFunctionProcessorProvider() {
       @Override
       public TableFunctionDataProcessor getDataProcessor() {
-        return new ForecastDataProcessor((ForecastTableFunctionHandle) tableFunctionHandle);
+        return new TimechoForecastDataProcessor(
+            (TimechoForecastTableFunctionHandle) tableFunctionHandle);
       }
     };
   }
 
-  // only allow for INT32, INT64, FLOAT, DOUBLE
-  public void checkType(Type type, String columnName) {
-    if (!ALLOWED_INPUT_TYPES.contains(type)) {
-      throw new SemanticException(
-          String.format(
-              "The type of the column [%s] is [%s], only INT32, INT64, FLOAT, DOUBLE is allowed",
-              columnName, type));
-    }
-  }
+  private static class TimechoForecastDataProcessor extends ForecastDataProcessor {
+    private final String historyCovs;
+    private final String futureCovs;
 
-  public static Map<String, String> parseOptions(String options) {
-    if (options.isEmpty()) {
-      return Collections.emptyMap();
-    }
-    String[] optionArray = options.split(",");
-    if (optionArray.length == 0) {
-      throw new SemanticException(String.format(INVALID_OPTIONS_FORMAT, options));
-    }
-
-    Map<String, String> optionsMap = new HashMap<>(optionArray.length);
-    for (String option : optionArray) {
-      int index = option.indexOf('=');
-      if (index == -1 || index == option.length() - 1) {
-        throw new SemanticException(String.format(INVALID_OPTIONS_FORMAT, option));
-      }
-      String key = option.substring(0, index).trim();
-      String value = option.substring(index + 1).trim();
-      optionsMap.put(key, value);
-    }
-    return optionsMap;
-  }
-
-  protected static class ForecastDataProcessor implements TableFunctionDataProcessor {
-
-    protected static final TsBlockSerde SERDE = new TsBlockSerde();
-    protected static final IClientManager<Integer, AINodeClient> CLIENT_MANAGER =
-        AINodeClientManager.getInstance();
-
-    protected final String modelId;
-    private final int maxInputLength;
-    protected final int outputLength;
-    private final long outputStartTime;
-    private final long outputInterval;
-    private final boolean keepInput;
-    protected final Map<String, String> options;
-    protected final LinkedList<Record> inputRecords;
-    protected final List<ResultColumnAppender> resultColumnAppenderList;
-    protected final TsBlockBuilder inputTsBlockBuilder;
-
-    public ForecastDataProcessor(ForecastTableFunctionHandle functionHandle) {
-      this.modelId = functionHandle.modelId;
-      this.maxInputLength = functionHandle.maxInputLength;
-      this.outputLength = functionHandle.outputLength;
-      this.outputStartTime = functionHandle.outputStartTime;
-      this.outputInterval = functionHandle.outputInterval;
-      this.keepInput = functionHandle.keepInput;
-      this.options = functionHandle.options;
-      this.inputRecords = new LinkedList<>();
-      this.resultColumnAppenderList = new ArrayList<>(functionHandle.targetColumntypes.size());
-      List<TSDataType> tsDataTypeList = new ArrayList<>(functionHandle.targetColumntypes.size());
-      for (Type type : functionHandle.targetColumntypes) {
-        resultColumnAppenderList.add(createResultColumnAppender(type));
-        // ainode currently only accept double input
-        tsDataTypeList.add(TSDataType.DOUBLE);
-      }
-      this.inputTsBlockBuilder = new TsBlockBuilder(tsDataTypeList);
+    public TimechoForecastDataProcessor(TimechoForecastTableFunctionHandle functionHandle) {
+      super(functionHandle);
+      this.historyCovs = functionHandle.historyCovs;
+      this.futureCovs = functionHandle.futureCovs;
     }
 
     @Override
-    public void process(
-        Record input,
-        List<ColumnBuilder> properColumnBuilders,
-        ColumnBuilder passThroughIndexBuilder) {
-
-      if (keepInput) {
-        int columnSize = properColumnBuilders.size();
-
-        // time column, will never be null
-        if (input.isNull(0)) {
-          throw new IoTDBRuntimeException(
-              "Time column should never be null", TSStatusCode.SEMANTIC_ERROR.getStatusCode());
-        }
-        properColumnBuilders.get(0).writeLong(input.getLong(0));
-
-        // predicated columns
-        for (int i = 1, size = columnSize - 1; i < size; i++) {
-          resultColumnAppenderList.get(i - 1).append(input, i, properColumnBuilders.get(i));
-        }
-
-        // is_input column
-        properColumnBuilders.get(columnSize - 1).writeBoolean(true);
-      }
-
-      // only keep at most maxInputLength rows
-      if (maxInputLength != 0 && inputRecords.size() == maxInputLength) {
-        inputRecords.removeFirst();
-      }
-      inputRecords.add(input);
-    }
-
-    @Override
-    public void finish(
-        List<ColumnBuilder> properColumnBuilders, ColumnBuilder passThroughIndexBuilder) {
-
-      int columnSize = properColumnBuilders.size();
-
-      // sort inputRecords in ascending order by timestamp
-      inputRecords.sort(Comparator.comparingLong(record -> record.getLong(0)));
-
-      // time column
-      long inputStartTime = inputRecords.getFirst().getLong(0);
-      long inputEndTime = inputRecords.getLast().getLong(0);
-      if (inputEndTime < inputStartTime) {
-        throw new SemanticException(
-            String.format(
-                "input end time should never less than start time, start time is %s, end time is %s",
-                inputStartTime, inputEndTime));
-      }
-      long interval = outputInterval;
-      if (outputInterval <= 0) {
-        interval =
-            inputRecords.size() == 1
-                ? 0
-                : (inputEndTime - inputStartTime) / (inputRecords.size() - 1);
-      }
-      long outputTime =
-          (outputStartTime == Long.MIN_VALUE) ? (inputEndTime + interval) : outputStartTime;
-      if (outputTime <= inputEndTime) {
-        throw new SemanticException(
-            String.format(
-                "The %s should be greater than the maximum timestamp of target time series. Expected greater than [%s] but found [%s].",
-                OUTPUT_START_TIME, inputEndTime, outputTime));
-      }
-      for (int i = 0; i < outputLength; i++) {
-        properColumnBuilders.get(0).writeLong(outputTime + interval * i);
-      }
-
-      // predicated columns
-      TsBlock predicatedResult = forecast();
-      if (predicatedResult.getPositionCount() != outputLength) {
-        throw new IoTDBRuntimeException(
-            String.format(
-                "Model %s output length is %s, doesn't equal to specified %s",
-                modelId, predicatedResult.getPositionCount(), outputLength),
-            TSStatusCode.INTERNAL_SERVER_ERROR.getStatusCode());
-      }
-
-      for (int columnIndex = 1, size = predicatedResult.getValueColumnCount();
-          columnIndex <= size;
-          columnIndex++) {
-        Column column = predicatedResult.getColumn(columnIndex - 1);
-        ColumnBuilder builder = properColumnBuilders.get(columnIndex);
-        ResultColumnAppender appender = resultColumnAppenderList.get(columnIndex - 1);
-        for (int row = 0; row < outputLength; row++) {
-          if (column.isNull(row)) {
-            builder.appendNull();
-          } else {
-            // convert double to real type
-            appender.writeDouble(column.getDouble(row), builder);
-          }
-        }
-      }
-
-      // is_input column if keep_input is true
-      if (keepInput) {
-        for (int i = 0; i < outputLength; i++) {
-          properColumnBuilders.get(columnSize - 1).writeBoolean(false);
-        }
-      }
-    }
-
     protected TsBlock forecast() {
       // construct inputTSBlock for AINode
       while (!inputRecords.isEmpty()) {
@@ -562,6 +384,8 @@ public class ForecastTableFunction implements TableFunction {
         resp =
             client.forecast(
                 new TForecastReq(modelId, SERDE.serialize(inputData), outputLength)
+                    .setHistoryCovs(historyCovs)
+                    .setFutureCovs(futureCovs)
                     .setOptions(options));
       } catch (Exception e) {
         throw new IoTDBRuntimeException(e.getMessage(), CAN_NOT_CONNECT_AINODE.getStatusCode());
