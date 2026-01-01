@@ -118,7 +118,10 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
         try {
           opcUaClient =
               getOpcUaClient(
-                  "opc.tcp://127.0.0.1:" + tcpPort + "/iotdb", SecurityPolicy.None, "root", "root");
+                  "opc.tcp://127.0.0.1:" + tcpPort + "/iotdb",
+                  SecurityPolicy.None,
+                  "root",
+                  "TimechoDB@2021");
         } catch (final PipeException e) {
           if (e.getCause() instanceof ConnectException) {
             continue;
@@ -164,7 +167,10 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
         try {
           opcUaClient =
               getOpcUaClient(
-                  "opc.tcp://127.0.0.1:" + tcpPort + "/iotdb", SecurityPolicy.None, "root", "root");
+                  "opc.tcp://127.0.0.1:" + tcpPort + "/iotdb",
+                  SecurityPolicy.None,
+                  "root",
+                  "TimechoDB@2021");
         } catch (final PipeException e) {
           if (e.getCause() instanceof ConnectException) {
             continue;
