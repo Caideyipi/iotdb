@@ -39,8 +39,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -96,6 +98,9 @@ public class AsyncBatchUtils<T extends Accountable> {
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition notEnoughMemory = lock.newCondition();
 
+  private final AtomicInteger activePushes = new AtomicInteger(0);
+  private final AtomicBoolean forcedClose = new AtomicBoolean(false);
+
   /* ================= Lifecycle ================= */
 
   public AsyncBatchUtils(
@@ -134,26 +139,31 @@ public class AsyncBatchUtils<T extends Accountable> {
           new IllegalStateException(String.format("[AsyncBatchUtils] %s already shutdown", name)));
       return f;
     }
-
-    BatchItem<T> item = new BatchItem<>(data);
-    long bytes = data.ramBytesUsed();
-
+    activePushes.incrementAndGet();
     lock.lockInterruptibly();
     try {
-      while (currentQueueBytes.get() + bytes > maxQueueBytes) {
+      BatchItem<T> item = new BatchItem<>(data);
+      long bytes = data.ramBytesUsed();
+      while (!forcedClose.get() && currentQueueBytes.get() + bytes > maxQueueBytes) {
         notEnoughMemory.await();
       }
 
-      long afterAdd = currentQueueBytes.addAndGet(bytes);
+      if (forcedClose.get()) {
+        CompletableFuture<TSStatus> f = new CompletableFuture<>();
+        f.completeExceptionally(
+            new IllegalStateException(String.format("[AsyncBatchUtils] %s forced shutdown", name)));
+        return f;
+      }
       queue.offer(item);
+      long afterAdd = currentQueueBytes.addAndGet(bytes);
 
       if (afterAdd >= flushWatermarkBytes) {
         triggerFlushAsync();
       }
-
       return item.future;
     } finally {
       lock.unlock();
+      activePushes.decrementAndGet();
     }
   }
 
@@ -216,8 +226,13 @@ public class AsyncBatchUtils<T extends Accountable> {
     } catch (Exception e) {
       handlePermanentFailure(items, e);
     } finally {
-      currentQueueBytes.addAndGet(-releasedBytes);
-      notEnoughMemory.signalAll();
+      lock.lock();
+      try {
+        currentQueueBytes.addAndGet(-releasedBytes);
+        notEnoughMemory.signalAll();
+      } finally {
+        lock.unlock();
+      }
     }
   }
 
@@ -236,6 +251,7 @@ public class AsyncBatchUtils<T extends Accountable> {
     if (closed.get()) {
       return;
     }
+    closed.set(true);
     // Stop the scheduled flush task
     if (scheduler != null) {
       scheduler.shutdownNow();
@@ -250,6 +266,29 @@ public class AsyncBatchUtils<T extends Accountable> {
         logger.warn("[AsyncBatchUtils] {} Interrupted while shutting down scheduler", name, e);
       }
     }
+    // Wait for active pushes to complete
+    long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+    while (activePushes.get() > 0 && System.nanoTime() < deadline) {
+      triggerFlushAsync();
+      LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100));
+    }
+    // Force close if there are still active pushes
+    if (activePushes.get() > 0) {
+      forcedClose.set(true);
+      lock.lock();
+      try {
+        notEnoughMemory.signalAll();
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+    while (flushing.get() && System.nanoTime() < deadline) {
+      LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100));
+    }
+    // Final flush to process remaining data
+    triggerFlushAsync();
 
     // Stop the flush executor
     if (flushExecutor != null) {
@@ -268,7 +307,6 @@ public class AsyncBatchUtils<T extends Accountable> {
         logger.warn("[AsyncBatchUtils] {} Interrupted while shutting down flushExecutor", name, e);
       }
     }
-    closed.set(true);
 
     logger.info("[AsyncBatchUtils] {} Shutdown completed", name);
   }
