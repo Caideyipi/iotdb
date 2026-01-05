@@ -26,12 +26,12 @@ import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.User;
 import org.apache.iotdb.commons.exception.auth.AccessDeniedException;
 import org.apache.iotdb.commons.utils.AuthUtils;
+import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.QualifiedObjectName;
 import org.apache.iotdb.db.queryengine.plan.relational.security.AccessControlImpl;
 import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthChecker;
-import org.apache.iotdb.db.queryengine.plan.relational.security.ITableAuthCheckerImpl;
 import org.apache.iotdb.db.queryengine.plan.relational.security.TableModelPrivilege;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.RelationalAuthorStatement;
 import org.apache.iotdb.db.queryengine.plan.relational.type.AuthorRType;
@@ -57,7 +57,9 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.SECURITY, auditEntity);
@@ -74,7 +76,9 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.SECURITY, auditEntity);
@@ -84,7 +88,9 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         auditEntity.setAuditLogOperation(AuditLogOperation.DDL);
         if (auditEntity.getUsername().equals(statement.getUserName())) {
           // users can change the username and password of themselves
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.SECURITY, auditEntity);
@@ -93,7 +99,9 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         auditEntity.setAuditLogOperation(AuditLogOperation.QUERY);
         if (auditEntity.getUsername().equals(statement.getUserName())) {
           // No need any privilege to list him/herself
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
@@ -102,9 +110,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
           // System admin can list any user with system privilege
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setPrivilegeType(PrivilegeType.SYSTEM).setResult(true),
-              statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setPrivilegeType(PrivilegeType.SYSTEM).setResult(true),
+                  statement::getUserName);
           return;
         }
         if (queriedUser != null
@@ -112,16 +121,18 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
           // Audit admin can list any user with audit privilege
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setPrivilegeType(PrivilegeType.AUDIT).setResult(true),
-              statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setPrivilegeType(PrivilegeType.AUDIT).setResult(true),
+                  statement::getUserName);
           return;
         }
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
           // Security admin can list any user
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setPrivilegeType(PrivilegeType.SECURITY).setResult(true),
-              statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setPrivilegeType(PrivilegeType.SECURITY).setResult(true),
+                  statement::getUserName);
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -132,17 +143,24 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         // Internal admins can list users that created by themselves
         if (User.INTERNAL_SYSTEM_ADMIN == auditEntity.getUserId()) {
           auditEntity.setPrivilegeType(PrivilegeType.SYSTEM);
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
         } else if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
           auditEntity.setPrivilegeType(PrivilegeType.SECURITY);
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
         } else if (User.INTERNAL_AUDIT_ADMIN == auditEntity.getUserId()) {
           auditEntity.setPrivilegeType(PrivilegeType.AUDIT);
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
         } else {
           // No need to check privilege to list himself/herself
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), auditEntity::getUsername);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), auditEntity::getUsername);
         }
         return;
 
@@ -152,7 +170,9 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getRoleName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getRoleName);
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -164,9 +184,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setAuditLogOperation(AuditLogOperation.DDL)
             .setPrivilegeType(PrivilegeType.SECURITY);
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true),
-              () -> "user: " + statement.getUserName() + ", role: " + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> "user: " + statement.getUserName() + ", role: " + statement.getRoleName());
           return;
         }
         authChecker.checkGlobalPrivilege(userName, TableModelPrivilege.SECURITY, auditEntity);
@@ -185,12 +206,16 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             // security admin can list all roles
             auditEntity.setPrivilegeType(PrivilegeType.SECURITY);
           }
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getRoleName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getRoleName);
           return;
         }
         // LIST ROLE OF USER
         if (auditEntity.getUsername().equals(statement.getUserName())) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         queriedUser = AuthorityChecker.getUser(statement.getUserName());
@@ -198,14 +223,18 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             && User.INTERNAL_SYSTEM_ADMIN == auditEntity.getUserId()
             && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.SYSTEM)) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         if (queriedUser != null
             && User.INTERNAL_AUDIT_ADMIN == auditEntity.getUserId()
             && AuthorityChecker.SUPER_USER_ID != queriedUser.getUserId()
             && queriedUser.checkSysPrivilege(PrivilegeType.AUDIT)) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getUserName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getUserName);
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -216,12 +245,16 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         auditEntity.setAuditLogOperation(AuditLogOperation.QUERY);
         if (AuthorityChecker.checkRole(userName, statement.getRoleName())) {
           // No need any privilege to list his/hers own role
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getRoleName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getRoleName);
           return;
         }
         if (User.INTERNAL_SYSTEM_ADMIN == auditEntity.getUserId()
             || User.INTERNAL_AUDIT_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(auditEntity.setResult(true), statement::getRoleName);
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true), statement::getRoleName);
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -235,8 +268,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setPrivilegeType(PrivilegeType.SECURITY)
             .setDatabase(statement.getDatabase());
         if (hasGlobalPrivilege(auditEntity, PrivilegeType.SECURITY)) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), () -> statement.getUserName() + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> statement.getUserName() + statement.getRoleName());
           return;
         }
         for (PrivilegeType privilegeType : statement.getPrivilegeTypes()) {
@@ -251,8 +286,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setPrivilegeType(PrivilegeType.SECURITY)
             .setDatabase(statement.getDatabase());
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), () -> statement.getUserName() + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> statement.getUserName() + statement.getRoleName());
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -273,8 +310,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setPrivilegeType(PrivilegeType.SECURITY)
             .setDatabase(statement.getDatabase());
         if (hasGlobalPrivilege(auditEntity, PrivilegeType.SECURITY)) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), () -> statement.getUserName() + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> statement.getUserName() + statement.getRoleName());
           return;
         }
         for (PrivilegeType privilegeType : statement.getPrivilegeTypes()) {
@@ -293,8 +332,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setPrivilegeType(PrivilegeType.SECURITY)
             .setDatabase(statement.getDatabase());
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), () -> statement.getUserName() + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> statement.getUserName() + statement.getRoleName());
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -308,8 +349,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setPrivilegeType(PrivilegeType.SECURITY)
             .setDatabase(statement.getDatabase());
         if (hasGlobalPrivilege(auditEntity, PrivilegeType.SECURITY)) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), () -> statement.getUserName() + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> statement.getUserName() + statement.getRoleName());
           return;
         }
         for (PrivilegeType privilegeType : statement.getPrivilegeTypes()) {
@@ -327,8 +370,10 @@ public class StrictAccessControlImpl extends AccessControlImpl {
             .setPrivilegeType(PrivilegeType.SECURITY)
             .setDatabase(statement.getDatabase());
         if (User.INTERNAL_SECURITY_ADMIN == auditEntity.getUserId()) {
-          ITableAuthCheckerImpl.recordAuditLog(
-              auditEntity.setResult(true), () -> statement.getUserName() + statement.getRoleName());
+          DNAuditLogger.getInstance()
+              .recordObjectAuthenticationAuditLog(
+                  auditEntity.setResult(true),
+                  () -> statement.getUserName() + statement.getRoleName());
           return;
         }
         authChecker.checkGlobalPrivilege(
@@ -408,19 +453,21 @@ public class StrictAccessControlImpl extends AccessControlImpl {
         AuthorityChecker.getGrantOptTSStatus(
             AuthorityChecker.checkSystemPermissionGrantOption(userName, privilege), privilege);
     if (result.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-      ITableAuthCheckerImpl.recordAuditLog(
-          auditEntity
-              .setAuditLogOperation(privilege.getAuditLogOperation())
-              .setPrivilegeType(privilege)
-              .setResult(false),
-          () -> AuthorityChecker.ANY_SCOPE);
+      DNAuditLogger.getInstance()
+          .recordObjectAuthenticationAuditLog(
+              auditEntity
+                  .setAuditLogOperation(privilege.getAuditLogOperation())
+                  .setPrivilegeType(privilege)
+                  .setResult(false),
+              () -> AuthorityChecker.ANY_SCOPE);
       throw new AccessDeniedException("Only the builtin admin can grant/revoke admin permissions");
     }
-    ITableAuthCheckerImpl.recordAuditLog(
-        auditEntity
-            .setAuditLogOperation(privilege.getAuditLogOperation())
-            .setPrivilegeType(privilege)
-            .setResult(true),
-        () -> AuthorityChecker.ANY_SCOPE);
+    DNAuditLogger.getInstance()
+        .recordObjectAuthenticationAuditLog(
+            auditEntity
+                .setAuditLogOperation(privilege.getAuditLogOperation())
+                .setPrivilegeType(privilege)
+                .setResult(true),
+            () -> AuthorityChecker.ANY_SCOPE);
   }
 }

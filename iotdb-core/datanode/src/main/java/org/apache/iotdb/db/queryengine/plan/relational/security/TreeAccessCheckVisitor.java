@@ -185,7 +185,7 @@ import static org.apache.iotdb.db.queryengine.plan.relational.security.AccessCon
 
 public class TreeAccessCheckVisitor extends StatementVisitor<TSStatus, TreeAccessCheckContext> {
 
-  private static final DNAuditLogger AUDIT_LOGGER = DNAuditLogger.getInstance();
+  protected static final DNAuditLogger AUDIT_LOGGER = DNAuditLogger.getInstance();
 
   private static final String OBJECT_AUTHENTICATION_AUDIT_STR =
       "User %s (ID=%d) requests authority on object %s with result %s";
