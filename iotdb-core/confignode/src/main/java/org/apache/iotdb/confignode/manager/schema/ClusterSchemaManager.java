@@ -32,6 +32,7 @@ import org.apache.iotdb.commons.schema.table.TableNodeStatus;
 import org.apache.iotdb.commons.schema.table.TreeViewSchema;
 import org.apache.iotdb.commons.schema.table.TsTable;
 import org.apache.iotdb.commons.schema.table.TsTableInternalRPCUtil;
+import org.apache.iotdb.commons.schema.table.column.FieldColumnSchema;
 import org.apache.iotdb.commons.schema.table.column.TsTableColumnCategory;
 import org.apache.iotdb.commons.schema.table.column.TsTableColumnSchema;
 import org.apache.iotdb.commons.schema.template.Template;
@@ -1356,7 +1357,7 @@ public class ClusterSchemaManager {
       return result.get();
     }
 
-    final TsTable expandedTable = TsTable.deserialize(ByteBuffer.wrap(originalTable.serialize()));
+    final TsTable expandedTable = new TsTable(originalTable);
 
     final String errorMsg =
         String.format(
@@ -1386,6 +1387,40 @@ public class ClusterSchemaManager {
       expandedTable.checkTableNameAndObjectNames4Object();
     }
     return new Pair<>(StatusUtils.OK, expandedTable);
+  }
+
+  public synchronized Pair<TSStatus, TsTable> tableColumnCheckForColumnAltering(
+      final String database,
+      final String tableName,
+      final String columnName,
+      final TSDataType dataType)
+      throws MetadataException {
+    final TsTable originalTable = getTableIfExists(database, tableName).orElse(null);
+
+    if (Objects.isNull(originalTable)) {
+      return new Pair<>(
+          RpcUtils.getStatus(
+              TSStatusCode.TABLE_NOT_EXISTS,
+              String.format("Table '%s.%s' does not exist", database, tableName)),
+          null);
+    }
+
+    TSStatus tsStatus =
+        clusterSchemaInfo.preAlterColumnDataType(database, tableName, columnName, dataType);
+    if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      return new Pair<>(tsStatus, null);
+    }
+
+    final TsTable alteredTable = new TsTable(originalTable);
+    TsTableColumnSchema tsTableColumnSchema = alteredTable.getColumnSchema(columnName);
+    tsTableColumnSchema.setDataType(dataType);
+    if (tsTableColumnSchema instanceof FieldColumnSchema) {
+      FieldColumnSchema fieldColumnSchema = ((FieldColumnSchema) tsTableColumnSchema);
+      fieldColumnSchema.setEncoding(
+          SchemaUtils.getDataTypeCompatibleEncoding(dataType, fieldColumnSchema.getEncoding()));
+    }
+
+    return new Pair<>(RpcUtils.SUCCESS_STATUS, alteredTable);
   }
 
   public synchronized Pair<TSStatus, TsTable> tableColumnCheckForColumnRenaming(
@@ -1435,7 +1470,7 @@ public class ClusterSchemaManager {
           null);
     }
 
-    final TsTable expandedTable = TsTable.deserialize(ByteBuffer.wrap(originalTable.serialize()));
+    final TsTable expandedTable = new TsTable(originalTable);
 
     expandedTable.renameColumnSchema(oldName, newName);
 
@@ -1472,7 +1507,7 @@ public class ClusterSchemaManager {
           null);
     }
 
-    final TsTable expandedTable = TsTable.deserialize(ByteBuffer.wrap(originalTable.serialize()));
+    final TsTable expandedTable = new TsTable(originalTable);
     expandedTable.renameTable(newName);
     return new Pair<>(RpcUtils.SUCCESS_STATUS, expandedTable);
   }
@@ -1559,7 +1594,7 @@ public class ClusterSchemaManager {
       return new Pair<>(RpcUtils.SUCCESS_STATUS, null);
     }
 
-    final TsTable updatedTable = TsTable.deserialize(ByteBuffer.wrap(originalTable.serialize()));
+    final TsTable updatedTable = new TsTable(originalTable);
     updatedProperties.forEach(
         (k, v) -> {
           originalProperties.put(k, originalTable.getPropValue(k).orElse(null));
