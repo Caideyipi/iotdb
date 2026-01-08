@@ -221,4 +221,8 @@ public interface CommonConfig {
   CommonConfig setEnableEncryptPermissionFile(boolean enableEncryptPermissionFile);
 
   CommonConfig setRestrictObjectLimit(boolean restrictObjectLimit);
+
+  CommonConfig setCteBufferSize(long cteBufferSize);
+
+  CommonConfig setMaxRowsInCteBuffer(int maxRows);
 }
