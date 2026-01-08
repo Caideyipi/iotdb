@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.audit.AuditLogOperation;
 import org.apache.iotdb.commons.audit.IAuditEntity;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.auth.entity.User;
+import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.utils.AuthUtils;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.queryengine.plan.relational.security.TreeAccessCheckContext;
@@ -33,16 +34,44 @@ import org.apache.iotdb.db.queryengine.plan.statement.sys.AuthorStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.sys.LoadConfigurationStatement;
 import org.apache.iotdb.rpc.RpcUtils;
 
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class StrictTreeAccessCheckVisitor extends TreeAccessCheckVisitor {
 
   @Override
   protected boolean checkHasGlobalAuth(
-      IAuditEntity context, PrivilegeType requiredPrivilege, Supplier<String> auditObject) {
+      IAuditEntity context,
+      PrivilegeType requiredPrivilege,
+      Supplier<String> auditObject,
+      boolean checkGrantOption) {
     // only check SYSTEM, SECURITY, AUDIT
     return super.checkHasGlobalAuth(
+        context, requiredPrivilege.getReplacedPrivilegeType(), auditObject, checkGrantOption);
+  }
+
+  @Override
+  protected TSStatus checkGlobalAuth(
+      IAuditEntity context, PrivilegeType requiredPrivilege, Supplier<String> auditObject) {
+    return super.checkGlobalAuth(
         context, requiredPrivilege.getReplacedPrivilegeType(), auditObject);
+  }
+
+  @Override
+  protected TSStatus checkPermissionsWithGrantOption(
+      IAuditEntity auditEntity,
+      AuthorType authorType,
+      List<PrivilegeType> privilegeList,
+      List<PartialPath> paths) {
+    return super.checkPermissionsWithGrantOption(
+        auditEntity,
+        authorType,
+        privilegeList.stream()
+            .map(PrivilegeType::getReplacedPrivilegeType)
+            .distinct()
+            .collect(Collectors.toList()),
+        paths);
   }
 
   @Override
