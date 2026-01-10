@@ -56,6 +56,7 @@ import java.util.stream.Stream;
 @Category({LocalStandaloneIT.class})
 public class IoTDBAuditLogBasicIT {
 
+  private static final int SQL_EXECUTE_INTERVAL_IN_MS = 100;
   public static final long ENSURE_AUDIT_LOG_SLEEP_IN_MS = 250;
 
   public static final List<String> AUDIT_TABLE_COLUMNS =
@@ -1268,6 +1269,7 @@ public class IoTDBAuditLogBasicIT {
     Statement statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_ROOT) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -1275,6 +1277,7 @@ public class IoTDBAuditLogBasicIT {
     statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_USER1) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -1283,8 +1286,10 @@ public class IoTDBAuditLogBasicIT {
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_USER2) {
       try {
         statement.execute(sql);
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       } catch (SQLException e) {
         // Ignore, only record audit log
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       }
     }
     closeConnectionCompletely(connection);
@@ -1292,6 +1297,7 @@ public class IoTDBAuditLogBasicIT {
     statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_ROOT_FINAL) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     // Wait for audit log to be flushed
     TimeUnit.SECONDS.sleep(10);
@@ -2394,6 +2400,7 @@ public class IoTDBAuditLogBasicIT {
     Statement statement = connection.createStatement();
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_ROOT) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -2401,6 +2408,7 @@ public class IoTDBAuditLogBasicIT {
     statement = connection.createStatement();
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_USER1) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -2409,8 +2417,10 @@ public class IoTDBAuditLogBasicIT {
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_USER2) {
       try {
         statement.execute(sql);
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       } catch (SQLException e) {
         // Ignore, only record audit log
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       }
     }
     closeConnectionCompletely(connection);
@@ -2418,6 +2428,7 @@ public class IoTDBAuditLogBasicIT {
     statement = connection.createStatement();
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_ROOT_FINAL) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     // Wait for audit log to be flushed
     TimeUnit.SECONDS.sleep(10);

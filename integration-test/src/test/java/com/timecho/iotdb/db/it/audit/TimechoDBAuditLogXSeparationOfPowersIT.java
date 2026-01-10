@@ -42,6 +42,7 @@ import static org.apache.iotdb.db.it.audit.IoTDBAuditLogBasicIT.closeConnectionC
 @Category({LocalStandaloneIT.class})
 public class TimechoDBAuditLogXSeparationOfPowersIT {
 
+  private static final int SQL_EXECUTE_INTERVAL_IN_MS = 100;
   private static final boolean ENABLE_SEPARATION_OF_POWERS = true;
 
   @Before
@@ -1469,12 +1470,14 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     Statement statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_SYS_ADMIN) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection = EnvFactory.getEnv().getSecurityAdminConnection(BaseEnv.TABLE_SQL_DIALECT);
     statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_SECURITY_ADMIN) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -1483,6 +1486,7 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_USER1) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -1492,8 +1496,10 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_USER2) {
       try {
         statement.execute(sql);
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       } catch (SQLException e) {
         // Ignore, only record audit log
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       }
     }
     closeConnectionCompletely(connection);
@@ -1501,12 +1507,14 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_SYS_ADMIN_FINAL) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection = EnvFactory.getEnv().getSecurityAdminConnection(BaseEnv.TABLE_SQL_DIALECT);
     statement = connection.createStatement();
     for (String sql : TABLE_MODEL_AUDIT_SQLS_USER_SECURITY_ADMIN_FINAL) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     // Wait for audit log to be flushed
@@ -3138,8 +3146,10 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_SYS_ADMIN) {
       try {
         statement.execute(sql);
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       } catch (SQLException e) {
         // Ignore, only record audit log
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       }
     }
     closeConnectionCompletely(connection);
@@ -3147,6 +3157,7 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     statement = connection.createStatement();
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_SECURITY_ADMIN) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -3155,6 +3166,7 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     statement = connection.createStatement();
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_USER1) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     connection =
@@ -3164,8 +3176,10 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_USER2) {
       try {
         statement.execute(sql);
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       } catch (SQLException e) {
         // Ignore, only record audit log
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       }
     }
     closeConnectionCompletely(connection);
@@ -3174,8 +3188,10 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_SYS_ADMIN_FINAL) {
       try {
         statement.execute(sql);
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       } catch (SQLException e) {
         // Ignore, only record audit log
+        TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
       }
     }
     closeConnectionCompletely(connection);
@@ -3183,6 +3199,7 @@ public class TimechoDBAuditLogXSeparationOfPowersIT {
     statement = connection.createStatement();
     for (String sql : TREE_MODEL_AUDIT_SQLS_USER_SECURITY_ADMIN_FINAL) {
       statement.execute(sql);
+      TimeUnit.MILLISECONDS.sleep(SQL_EXECUTE_INTERVAL_IN_MS);
     }
     closeConnectionCompletely(connection);
     // Wait for audit log to be flushed
