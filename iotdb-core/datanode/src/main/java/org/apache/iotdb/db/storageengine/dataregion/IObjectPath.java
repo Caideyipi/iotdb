@@ -47,7 +47,10 @@ public interface IObjectPath {
 
     IObjectPath create(int regionId, long time, IDeviceID iDeviceID, String measurement);
 
-    Factory FACTORY = null;
+    Factory FACTORY =
+        CONFIG.isRestrictObjectLimit()
+            ? PlainObjectPath.getFACTORY()
+            : Base32ObjectPath.getFACTORY();
   }
 
   interface Deserializer {
@@ -60,6 +63,8 @@ public interface IObjectPath {
   }
 
   static Deserializer getDeserializer() {
-    return null;
+    return CONFIG.isRestrictObjectLimit()
+        ? PlainObjectPath.getDESERIALIZER()
+        : Base32ObjectPath.getDESERIALIZER();
   }
 }
