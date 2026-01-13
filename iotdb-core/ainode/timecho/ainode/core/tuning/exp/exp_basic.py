@@ -38,8 +38,8 @@ class ExpBasic(object):
         }
 
         self.rank = rank
-        self.gpu_id = args.gpu_ids[rank]
-        self.logger = Logger(TRAINING_LOG_FILE_NAME_PREFIX_TEMPLATE.format(self.gpu_id))
+        self.device = args.device_for_rank(rank)
+        self.logger = Logger(TRAINING_LOG_FILE_NAME_PREFIX_TEMPLATE.format(self.device))
 
         self.args = args
         self.config, self.model = self._build_empty_model()
@@ -69,7 +69,6 @@ class ExpBasic(object):
             ValueError: If the specified model type is not supported.
         """
         # Build a raw model
-        # TODO: The ModelManager should take over this process
         if "timer" == self.args.model_type:
             config = self.config_dict[self.args.model_type].TimerConfig(
                 input_token_len=self.args.input_token_len,
@@ -87,14 +86,19 @@ class ExpBasic(object):
 
         num_params = model.num_parameters()
         self.logger.info(
-            f"[Training][GPU-{self.gpu_id}] Model has {num_params:,} parameters."
+            f"[Training][{self.device}] Model has {num_params:,} parameters."
         )
-        # Convert to DDP model
-        model = DDP(
-            model.cuda(),
-            device_ids=[self.gpu_id],
-            find_unused_parameters=False,
-        )
+
+        # Wrap with DDP using backend abstraction; FSDP hook can be added here later
+        if self.args.dist_mode == "ddp":
+            model = DDP(
+                model.to(self.device),
+                device_ids=self.args.ddp_device_ids(self.rank),
+                find_unused_parameters=False,
+            )
+        else:
+            # placeholder for future fsdp integration
+            model = model.to(self.device)
         return config, model
 
     def _load_weights_with_adaptation(self):
@@ -107,10 +111,10 @@ class ExpBasic(object):
             config=self.config,
             ignore_mismatched_sizes=True,
             torch_dtype=torch.float32,
-        ).to(self.gpu_id)
+        ).to(self.device)
         self.logger.info(
-            "[Training][GPU-{}] Finetune model type: {} model id: {} with adaptation: {}".format(
-                self.gpu_id,
+            "[Training][{}] Finetune model type: {} model id: {} with adaptation: {}".format(
+                self.device,
                 self.args.model_type,
                 self.args.model_id,
                 self.args.adaptation,
@@ -140,8 +144,8 @@ class ExpBasic(object):
                     # logger.info(f"{name}: {param.requires_grad}")
         else:
             raise NotImplementedError(
-                "[Training][GPU-{}]Adaptation method {} is not implemented.".format(
-                    self.gpu_id, self.args.adaptation
+                "[Training][{}]Adaptation method {} is not implemented.".format(
+                    self.device, self.args.adaptation
                 )
             )
 
@@ -185,8 +189,8 @@ class ExpBasic(object):
             num_workers=self.args.num_workers,
         )
         self.logger.info(
-            "[Training][GPU-{}] Init tuning dataset (len: {}), vali dataset (len: {})".format(
-                self.gpu_id, len(training_dataloader), len(vali_dataloader)
+            "[Training][{}] Init tuning dataset (len: {}), vali dataset (len: {})".format(
+                self.device, len(training_dataloader), len(vali_dataloader)
             )
         )
         return training_dataset, training_dataloader, vali_dataset, vali_dataloader

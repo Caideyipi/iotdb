@@ -29,6 +29,7 @@ class BackendType(Enum):
     """
 
     CUDA = "cuda"
+    NPU = "npu"
     CPU = "cpu"
 
 

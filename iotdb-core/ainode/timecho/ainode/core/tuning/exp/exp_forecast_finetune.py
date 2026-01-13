@@ -9,8 +9,11 @@ import torch.nn.functional as F
 from torch import optim
 from transformers import get_scheduler
 
+from iotdb.ainode.core.manager.device_manager import DeviceManager
 from timecho.ainode.core.tuning.exp.exp_basic import ExpBasic
 from timecho.ainode.core.tuning.training_parameters import TuningParameters
+
+BACKEND = DeviceManager()
 
 
 class ExpForecastFinetune(ExpBasic):
@@ -46,9 +49,9 @@ class ExpForecastFinetune(ExpBasic):
             for i, (batch_x, batch_y, loss_mask) in enumerate(self.training_dataloader):
                 iter_count += 1
                 model_optim.zero_grad()
-                batch_x = batch_x.float().to(self.gpu_id)
-                batch_y = batch_y.float().to(self.gpu_id)
-                loss_mask = loss_mask.float().to(self.gpu_id)
+                batch_x = batch_x.float().to(self.device)
+                batch_y = batch_y.float().to(self.device)
+                loss_mask = loss_mask.float().to(self.device)
 
                 outputs = self.model(
                     input_ids=batch_x,
@@ -57,9 +60,6 @@ class ExpForecastFinetune(ExpBasic):
                     revin=self.args.revin,
                 )
                 loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
-                # criterion = torch.nn.MSELoss()
-                # loss = criterion(outputs, batch_y)
-                # logger.info('\nmodel loss:\n', loss)
 
                 loss.backward()
                 model_optim.step()
@@ -69,8 +69,8 @@ class ExpForecastFinetune(ExpBasic):
                     speed = (time.time() - iter_log_start_time) / iter_count
                     left_time = speed * (len(self.training_dataloader) - i)
                     self.logger.info(
-                        "[Training][GPU-{}] Iters: {}, speed: {:.4f}s/iter, left time: {:.4f}s".format(
-                            self.gpu_id, i + 1, speed, left_time
+                        "[Training][{}] Iters: {}, speed: {:.4f}s/iter, left time: {:.4f}s".format(
+                            self.device, i + 1, speed, left_time
                         )
                     )
                     iter_count = 0
@@ -81,8 +81,8 @@ class ExpForecastFinetune(ExpBasic):
                 self.mse_loss_list.append(epoch_mse)
                 self.mae_loss_list.append(epoch_mae)
                 self.logger.info(
-                    "[Training][GPU-{}] Epoch: {} cost time: {}, speed: {:.4f}s/epoch, lr = {:.10f}".format(
-                        self.gpu_id,
+                    "[Training][{}] Epoch: {} cost time: {}, speed: {:.4f}s/epoch, lr = {:.10f}".format(
+                        self.device,
                         epoch,
                         time.time() - epoch_start_time,
                         (time.time() - time_start) / (epoch + 1),
@@ -90,17 +90,14 @@ class ExpForecastFinetune(ExpBasic):
                     )
                 )
                 self.logger.info(
-                    "[Training][GPU-{}] Epoch: {}, current loss: {:.7f}, mse_list: {}".format(
-                        self.gpu_id,
+                    "[Training][{}] Epoch: {}, current loss: {:.7f}, mse_list: {}".format(
+                        self.device,
                         epoch,
                         loss.item(),
                         self.mse_loss_list,
-                        # self.mae_loss_list,
                     )
                 )
-                # save the current model ckpt
-                torch.cuda.empty_cache()
-                # TODO: The ModelManager should take over this process
+                BACKEND.empty_cache()
                 save_dir = os.path.join(
                     self._model_dir, self.args.model_id + "_" + str(epoch)
                 )
@@ -112,9 +109,8 @@ class ExpForecastFinetune(ExpBasic):
                     )
                 )
 
-            dist.barrier()
+            BACKEND.barrier()
         if self.rank == 0:
-            # Save the best model, TODO: The ModelManager should take over this process
             best_index = np.argmin(np.array(self.mse_loss_list))
             final_dir = os.path.join(self._fine_tuned_model_dir, self.args.model_id)
             for i in range(0, self.args.train_epochs):
@@ -122,11 +118,9 @@ class ExpForecastFinetune(ExpBasic):
                     self._model_dir, self.args.model_id + "_" + str(i)
                 )
                 if i != best_index and self.args.only_preserve_best:
-                    # delete sub-optimal model checkpoints
                     if os.path.exists(save_dir):
                         shutil.rmtree(save_dir)
                 else:
-                    # move the best model checkpoint
                     if os.path.exists(save_dir):
                         if os.path.exists(final_dir):
                             shutil.rmtree(final_dir)
@@ -144,23 +138,22 @@ class ExpForecastFinetune(ExpBasic):
                 )
             )
 
-    # * Model Evaluation Function
     def validation(self, log_chunk=100):
-        total_mse_loss = torch.tensor(0.0).to(self.gpu_id)
-        total_mae_loss = torch.tensor(0.0).to(self.gpu_id)
-        total_count = torch.tensor(0.0).to(self.gpu_id)
+        total_mse_loss = torch.tensor(0.0).to(self.device)
+        total_mae_loss = torch.tensor(0.0).to(self.device)
+        total_count = torch.tensor(0.0).to(self.device)
         iter_count = 0
         time_now = time.time()
         test_steps = len(self.vali_dataloader)
         self.model.eval()
         with torch.no_grad():
-            chunk_mse_loss = torch.tensor(0.0).to(self.gpu_id)
-            chunk_mae_loss = torch.tensor(0.0).to(self.gpu_id)
-            chunk_count = torch.tensor(0.0).to(self.gpu_id)
+            chunk_mse_loss = torch.tensor(0.0).to(self.device)
+            chunk_mae_loss = torch.tensor(0.0).to(self.device)
+            chunk_count = torch.tensor(0.0).to(self.device)
             for i, (batch_x, batch_y, loss_mask) in enumerate(self.vali_dataloader):
                 iter_count += 1
-                batch_x = batch_x.float().to(self.gpu_id)
-                batch_y = batch_y.float().to(self.gpu_id)
+                batch_x = batch_x.float().to(self.device)
+                batch_y = batch_y.float().to(self.device)
 
                 B = batch_x.shape[0]
                 if "timer" == self.args.model_type:
@@ -197,17 +190,15 @@ class ExpForecastFinetune(ExpBasic):
                 chunk_count += B
 
                 if (i + 1) % log_chunk == 0 or (i + 1) == len(self.vali_dataloader):
-                    dist.barrier()
-                    dist.reduce(chunk_mse_loss, dst=0, op=dist.ReduceOp.SUM)
-                    dist.reduce(chunk_mae_loss, dst=0, op=dist.ReduceOp.SUM)
-                    dist.reduce(chunk_count, dst=0, op=dist.ReduceOp.SUM)
+                    BACKEND.barrier()
+                    BACKEND.reduce(chunk_mse_loss, dst=0, op=dist.ReduceOp.SUM)
+                    BACKEND.reduce(chunk_mae_loss, dst=0, op=dist.ReduceOp.SUM)
+                    BACKEND.reduce(chunk_count, dst=0, op=dist.ReduceOp.SUM)
 
-                    # Accumulate global loss
                     total_mse_loss += chunk_mse_loss
                     total_mae_loss += chunk_mae_loss
                     total_count += chunk_count
 
-                    # Reset chunk metrics
                     chunk_mse_loss.zero_()
                     chunk_mae_loss.zero_()
                     chunk_count.zero_()
@@ -215,8 +206,8 @@ class ExpForecastFinetune(ExpBasic):
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * (test_steps - i)
                     self.logger.info(
-                        "[Validation][GPU-{}] Iters: {}, speed: {:.4f}s/iter, left time: {:.4f}s".format(
-                            self.gpu_id, i + 1, speed, left_time
+                        "[Validation][{}] Iters: {}, speed: {:.4f}s/iter, left time: {:.4f}s".format(
+                            self.device, i + 1, speed, left_time
                         )
                     )
                     iter_count = 0

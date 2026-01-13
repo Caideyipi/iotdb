@@ -17,6 +17,7 @@
 #
 
 import torch
+import torch.distributed as dist
 
 from iotdb.ainode.core.device.backend.base import BackendAdapter, BackendType
 from iotdb.ainode.core.device.backend.cpu_backend import CPUBackend
@@ -24,6 +25,7 @@ from iotdb.ainode.core.device.backend.cuda_backend import CUDABackend
 from iotdb.ainode.core.device.device_utils import DeviceLike, parse_device_like
 from iotdb.ainode.core.device.env import DistEnv, read_dist_env
 from iotdb.ainode.core.util.decorator import singleton
+from timecho.ainode.core.device.backend.npu_backend import NPUBackend
 
 
 @singleton
@@ -43,6 +45,7 @@ class DeviceManager:
         self.backends: dict[BackendType, BackendAdapter] = {
             BackendType.CUDA: CUDABackend(),
             BackendType.CPU: CPUBackend(),
+            BackendType.NPU: NPUBackend(),
         }
 
         self.type: BackendType
@@ -106,3 +109,55 @@ class DeviceManager:
         self, tensor: torch.Tensor, device: DeviceLike = None
     ) -> torch.Tensor:
         return tensor.to(self.torch_device(device))
+
+    # ==================== tuning API ====================
+
+    def set_device(self, index: int) -> None:
+        """Set device for current backend; CPU is no-op."""
+        if self.backend.type == BackendType.CPU:
+            return
+        self.backend.set_device(index)
+
+    def _current_dist_backend(self) -> str:
+        """Recommend torch.distributed backend name for current device type."""
+        if self.backend.type == BackendType.CPU:
+            return "gloo"
+        if self.backend.type == BackendType.NPU:
+            return "hccl" if hasattr(torch, "npu") else "nccl"
+        return "nccl"
+
+    def init_process_group(
+        self, rank: int, world_size: int, master_addr: str, master_port: str
+    ) -> None:
+        """Initialize torch process group using backend chosen by device manager."""
+        dist.init_process_group(
+            backend=self._current_dist_backend(),
+            init_method=f"tcp://{master_addr}:{master_port}",
+            world_size=world_size,
+            rank=rank,
+        )
+
+    def destroy_process_group(self) -> None:
+        if dist.is_initialized():
+            dist.destroy_process_group()
+
+    def ddp_device_ids(self, device_index: int) -> list[int] | None:
+        """Return device_ids list for DDP wrapper. CPU returns None (DDP will use cpu)."""
+        if self.backend.type == BackendType.CPU:
+            return None
+        return [device_index]
+
+    def barrier(self):
+        if dist.is_initialized():
+            dist.barrier()
+
+    def reduce(self, tensor: torch.Tensor, dst: int, op=dist.ReduceOp.SUM):
+        if dist.is_initialized():
+            dist.reduce(tensor, dst=dst, op=op)
+
+    def empty_cache(self) -> None:
+        """Release cached memory for current backend if supported."""
+        if self.backend.type == BackendType.CUDA and hasattr(torch, "cuda"):
+            torch.cuda.empty_cache()
+        elif self.backend.type == BackendType.NPU and hasattr(torch, "npu"):
+            torch.npu.empty_cache()

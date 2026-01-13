@@ -1,7 +1,8 @@
 from iotdb.ainode.core.log import Logger
-from iotdb.ainode.core.util.gpu_mapping import parse_devices
+from iotdb.ainode.core.manager.device_manager import DeviceManager
 
 logger = Logger()
+BACKEND = DeviceManager()
 
 
 class TuningParameters:
@@ -44,6 +45,7 @@ class TuningParameters:
         self.devices = ""  # The device ids of GPU for tuning, set None or "" to occupy all available devices by default TODO: we have problems when parsing this
         self.gpu_ids = []  # The list of GPU ids used for tuning, parsed from devices
         self.world_size = 0  # The number of GPUs used for tuning
+        self.dist_mode = "ddp"  # training parallel mode: ddp now, fsdp in future
 
         # tuning
         self.train_epochs = 5  # help='train epochs'
@@ -104,9 +106,21 @@ class TuningParameters:
         """
         Initialize the GPU configuration for DDP tuning.
         """
-        self.devices = parse_devices(self.devices)
-        self.gpu_ids = [int(gpu) for gpu in self.devices.split(",")]
+        self.gpu_ids = BACKEND.device_ids()
         self.world_size = len(self.gpu_ids)
+
+    def device_for_rank(self, rank: int):
+        """Return torch.device for the given rank using DeviceManager."""
+        if not self.gpu_ids:
+            self.init_gpu_config()
+        idx = self.gpu_ids[rank] if rank < len(self.gpu_ids) else 0
+        return BACKEND.torch_device(idx)
+
+    def ddp_device_ids(self, rank: int):
+        if not self.gpu_ids:
+            self.init_gpu_config()
+        idx = self.gpu_ids[rank] if rank < len(self.gpu_ids) else 0
+        return BACKEND.ddp_device_ids(idx)
 
 
 def get_default_training_args() -> TuningParameters:
