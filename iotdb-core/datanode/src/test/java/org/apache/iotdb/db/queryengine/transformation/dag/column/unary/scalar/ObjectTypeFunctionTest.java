@@ -25,6 +25,7 @@ import org.apache.iotdb.db.exception.DiskSpaceInsufficientException;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ColumnTransformer;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 
+import com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.unary.ReadObjectColumnTransformer;
 import org.apache.tsfile.block.TsBlockBuilderStatus;
 import org.apache.tsfile.block.column.Column;
 import org.apache.tsfile.block.column.ColumnBuilderStatus;

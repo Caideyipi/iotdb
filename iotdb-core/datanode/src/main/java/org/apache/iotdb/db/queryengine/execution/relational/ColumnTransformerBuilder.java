@@ -85,7 +85,6 @@ import org.apache.iotdb.db.queryengine.transformation.dag.column.binary.CompareL
 import org.apache.iotdb.db.queryengine.transformation.dag.column.binary.CompareNonEqualColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.binary.HmacColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.binary.Like2ColumnTransformer;
-import org.apache.iotdb.db.queryengine.transformation.dag.column.binary.ReadObject2ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.binary.factory.HmacStrategiesFactory;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.leaf.ConstantColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.leaf.IdentityColumnTransformer;
@@ -106,7 +105,6 @@ import org.apache.iotdb.db.queryengine.transformation.dag.column.multi.LogicalOr
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ternary.BetweenColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ternary.Like3ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ternary.LpadColumnTransformer;
-import org.apache.iotdb.db.queryengine.transformation.dag.column.ternary.ReadObject3ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ternary.RpadColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.udf.UserDefineScalarFunctionTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.IsNullColumnTransformer;
@@ -170,7 +168,6 @@ import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.Ob
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.RTrim2ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.RTrimColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.RadiansColumnTransformer;
-import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.ReadObjectColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.RegexpLike2ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.RegexpLikeColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.Replace2ColumnTransformer;
@@ -203,6 +200,9 @@ import org.apache.iotdb.udf.api.customizer.analysis.ScalarFunctionAnalysis;
 import org.apache.iotdb.udf.api.customizer.parameter.FunctionArguments;
 import org.apache.iotdb.udf.api.relational.ScalarFunction;
 
+import com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.binary.ReadObject2ColumnTransformer;
+import com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.ternary.ReadObject3ColumnTransformer;
+import com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.unary.ReadObjectColumnTransformer;
 import org.apache.tsfile.common.conf.TSFileConfig;
 import org.apache.tsfile.common.regexp.LikePattern;
 import org.apache.tsfile.enums.TSDataType;

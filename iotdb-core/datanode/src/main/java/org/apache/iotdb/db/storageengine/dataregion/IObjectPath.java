@@ -22,6 +22,8 @@ package org.apache.iotdb.db.storageengine.dataregion;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 
+import com.timecho.iotdb.db.storageengine.dataregion.Base32ObjectPath;
+import com.timecho.iotdb.db.storageengine.dataregion.PlainObjectPath;
 import org.apache.tsfile.file.metadata.IDeviceID;
 
 import java.io.IOException;

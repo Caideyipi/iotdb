@@ -17,10 +17,11 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.queryengine.transformation.dag.column.ternary;
+package com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.ternary;
 
 import org.apache.iotdb.db.queryengine.execution.fragment.FragmentInstanceContext;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ColumnTransformer;
+import org.apache.iotdb.db.queryengine.transformation.dag.column.ternary.TernaryColumnTransformer;
 
 import org.apache.tsfile.block.column.Column;
 import org.apache.tsfile.block.column.ColumnBuilder;
@@ -28,7 +29,7 @@ import org.apache.tsfile.read.common.type.Type;
 
 import java.util.Optional;
 
-import static org.apache.iotdb.db.queryengine.transformation.dag.column.unary.scalar.ReadObjectColumnTransformer.transform;
+import static com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.unary.ReadObjectColumnTransformer.transform;
 
 public class ReadObject3ColumnTransformer extends TernaryColumnTransformer {
 

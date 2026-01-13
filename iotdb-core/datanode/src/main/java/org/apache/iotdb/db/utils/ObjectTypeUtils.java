@@ -30,13 +30,13 @@ import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.plan.Coordinator;
 import org.apache.iotdb.db.queryengine.plan.analyze.ClusterPartitionFetcher;
 import org.apache.iotdb.db.service.metrics.FileMetrics;
-import org.apache.iotdb.db.storageengine.dataregion.Base32ObjectPath;
 import org.apache.iotdb.db.storageengine.dataregion.IObjectPath;
-import org.apache.iotdb.db.storageengine.dataregion.PlainObjectPath;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 import org.apache.iotdb.mpp.rpc.thrift.TReadObjectReq;
 import org.apache.iotdb.rpc.TSStatusCode;
 
+import com.timecho.iotdb.db.storageengine.dataregion.Base32ObjectPath;
+import com.timecho.iotdb.db.storageengine.dataregion.PlainObjectPath;
 import org.apache.tsfile.encoding.decoder.Decoder;
 import org.apache.tsfile.encoding.decoder.DecoderWrapper;
 import org.apache.tsfile.utils.Binary;

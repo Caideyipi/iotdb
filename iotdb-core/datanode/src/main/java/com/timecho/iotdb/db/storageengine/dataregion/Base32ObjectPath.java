@@ -17,7 +17,9 @@
  * under the License.
  */
 
-package org.apache.iotdb.db.storageengine.dataregion;
+package com.timecho.iotdb.db.storageengine.dataregion;
+
+import org.apache.iotdb.db.storageengine.dataregion.IObjectPath;
 
 import com.google.common.io.BaseEncoding;
 import org.apache.tsfile.file.metadata.IDeviceID;
