@@ -36,7 +36,7 @@ class AINodeThreadPoolServer(TServer.TThreadPoolServer):
 
     def serve(self) -> None:
         self._stop_event.clear()
-        logger.info("The RPC service thread pool of IoTDB-AINode begins to serve...")
+        logger.info("The RPC service thread pool of TimechoDB-AINode begins to serve...")
         """Start a fixed number of worker threads and put client into a queue"""
         for i in range(self.threads):
             try:
@@ -49,19 +49,19 @@ class AINodeThreadPoolServer(TServer.TThreadPoolServer):
         self.serverTransport.listen()
         while not self._stop_event.is_set():
             try:
-                client = self.serverTransport.accept()  # TODO: Fix the block problem
+                client = self.serverTransport.accept()
                 if not client:
                     continue
                 self.clients.put(client)
             except Exception as x:
                 logger.error(x)
         logger.info(
-            "The RPC service thread pool of IoTDB-AINode has successfully stopped."
+            "The RPC service thread pool of TimechoDB-AINode has successfully stopped."
         )
 
     def stop(self) -> None:
         if not self._stop_event.is_set():
-            logger.info("Stopping the RPC service thread pool of IoTDB-AINode...")
+            logger.info("Stopping the RPC service thread pool of TimechoDB-AINode...")
             self._stop_event.set()
             self.serverTransport.close()
 
@@ -111,18 +111,17 @@ class AINodeRPCService(threading.Thread):
         )
 
     def run(self) -> None:
-        logger.info("The RPC service of IoTDB-AINode begins to run...")
+        logger.info("The RPC service of TimechoDB-AINode begins to run...")
         try:
             self.__pool_server.serve()
         except Exception as e:
             self.exit_code = 1
             logger.error(e)
         finally:
-            logger.info("The RPC service of IoTDB-AINode exited.")
+            logger.info("The RPC service of TimechoDB-AINode exited.")
 
     def stop(self) -> None:
         if not self._stop_event.is_set():
-            logger.info("Stopping the RPC service of IoTDB-AINode...")
+            logger.info("Stopping the RPC service of TimechoDB-AINode...")
             self._stop_event.set()
             self.__pool_server.stop()
-            self._handler.stop()

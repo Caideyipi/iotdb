@@ -59,7 +59,7 @@ class AINodeRPCServiceHandler(IAINodeRPCService.Iface):
     # ==================== Cluster Management ====================
 
     def stop(self):
-        logger.info("Stopping the RPC service handler of IoTDB-AINode...")
+        logger.info("Stopping the RPC service handler of TimechoDB-AINode...")
         self._inference_manager.stop()
 
     def stopAINode(self) -> TSStatus:

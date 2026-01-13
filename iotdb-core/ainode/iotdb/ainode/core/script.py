@@ -34,7 +34,7 @@ def main():
         python_args_to_filter = ["-I", "-B", "-S", "-E", "-O", "-OO"]
         sys.argv = [arg for arg in sys.argv if arg not in python_args_to_filter]
 
-    logger.info(f"Starting IoTDB-AINode process with sys argv {sys.argv}.")
+    logger.info(f"Starting TimechoDB-AINode process with sys argv {sys.argv}.")
     arguments = sys.argv
     if len(arguments) == 1:
         logger.info("Command line argument must be specified.")
