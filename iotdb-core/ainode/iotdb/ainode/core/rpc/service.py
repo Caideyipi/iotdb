@@ -36,7 +36,9 @@ class AINodeThreadPoolServer(TServer.TThreadPoolServer):
 
     def serve(self) -> None:
         self._stop_event.clear()
-        logger.info("The RPC service thread pool of TimechoDB-AINode begins to serve...")
+        logger.info(
+            "The RPC service thread pool of TimechoDB-AINode begins to serve..."
+        )
         """Start a fixed number of worker threads and put client into a queue"""
         for i in range(self.threads):
             try:
