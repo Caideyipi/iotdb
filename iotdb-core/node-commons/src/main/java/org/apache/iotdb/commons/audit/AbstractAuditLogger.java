@@ -70,6 +70,11 @@ public abstract class AbstractAuditLogger {
           return true;
         }
       }
+    } else {
+      // default to GLOBAL level if no privilege type is set
+      if (AUDITABLE_OPERATION_LEVEL == PrivilegeLevel.OBJECT) {
+        return true;
+      }
     }
     if (result && !AUDITABLE_OPERATION_RESULT.contains("SUCCESS")) {
       return true;
