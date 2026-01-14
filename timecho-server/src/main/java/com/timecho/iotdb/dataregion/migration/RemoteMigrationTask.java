@@ -48,6 +48,21 @@ public class RemoteMigrationTask extends MigrationTask {
     filesShouldDelete.addAll(Arrays.asList(destTsFile, destResourceFile, destModsFile));
     cleanup();
 
+    // migrate TsFile
+    tsFileResource.readLock();
+    try {
+      migratedFileSize += srcFile.length();
+      MigrationTaskManager.getInstance()
+          .acquireMigrateSpeedLimiter(destTierLevel - 1, srcFile.length());
+      migrateFile(srcFile, destTsFile);
+    } catch (Exception e) {
+      cleanup();
+      throw e;
+    } finally {
+      tsFileResource.readUnlock();
+    }
+
+    // set Remote info
     tsFileResource.writeLock();
     try {
       tsFileResource.setRemoteStorageBlock(
@@ -61,20 +76,16 @@ public class RemoteMigrationTask extends MigrationTask {
       tsFileResource.writeUnlock();
     }
 
-    // copy TsFile and resource file
+    // migrate resource file
     tsFileResource.readLock();
     try {
-      migratedFileSize += srcFile.length();
-      MigrationTaskManager.getInstance()
-          .acquireMigrateSpeedLimiter(destTierLevel - 1, srcFile.length());
-      migrateFile(srcFile, destTsFile);
       migratedFileSize += srcResourceFile.length();
       MigrationTaskManager.getInstance()
           .acquireMigrateSpeedLimiter(destTierLevel - 1, srcResourceFile.length());
       migrateFile(srcResourceFile, destResourceFile);
     } catch (Exception e) {
       if (!tsFileResource.isDeleted()) {
-        logger.error("Fail to copy TsFile from local {} to remote {}", srcFile, destTsFile, e);
+        logger.error("Fail to migrate resource from local {} to remote {}", srcFile, destTsFile, e);
       }
       cleanup();
       throw e;
