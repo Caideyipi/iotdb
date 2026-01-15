@@ -39,6 +39,7 @@ import org.apache.iotdb.confignode.client.async.handlers.rpc.DataNodeAsyncReques
 import org.apache.iotdb.confignode.client.async.handlers.rpc.DataNodeTSStatusRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.FetchSchemaBlackListRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.FetchSessionNumInfoRPCHandler;
+import org.apache.iotdb.confignode.client.async.handlers.rpc.GetBuiltInExternalServiceRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.PipeHeartbeatRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.PipePushMetaRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.SchemaUpdateRPCHandler;
@@ -491,6 +492,10 @@ public class CnToDnInternalServiceAsyncRequestManager
         CnToDnAsyncRequestType.FETCH_SESSIONS_NUM_INFO,
         (req, client, handler) ->
             client.fetchSessionsInfo((FetchSessionNumInfoRPCHandler) handler));
+    actionMapBuilder.put(
+        CnToDnAsyncRequestType.GET_BUILTIN_SERVICE,
+        (req, client, handler) ->
+            client.getBuiltInService((GetBuiltInExternalServiceRPCHandler) handler));
   }
 
   @Override
