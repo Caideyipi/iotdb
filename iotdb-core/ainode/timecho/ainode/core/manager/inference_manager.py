@@ -79,6 +79,13 @@ class TimechoInferenceManager(InferenceManager):
                 raise ValueError("Tag other than default tag not supported now.")
             else:
                 history_covs = history_covs_all[DEFAULT_TAG_VALUE]
+                if not history_covs:
+                    logger.error(
+                        "[Inference] The history covariates are specified but no history data are selected."
+                    )
+                    raise ValueError(
+                        "The history covariates are specified but no history data are selected."
+                    )
                 history_timestamps = history_timestamps_all[DEFAULT_TAG_VALUE]
                 if timestamps != history_timestamps:
                     logger.error(
@@ -91,9 +98,6 @@ class TimechoInferenceManager(InferenceManager):
                     logger.warning(
                         "[Inference] Tag other than default tag will be ignored now."
                     )
-            if not history_covs:
-                logger.error("[Inference] No history covariates found.")
-                raise ValueError("No history covariates found.")
 
             # Fetch future covariates if provided
             if future_covs_sql:
@@ -107,6 +111,13 @@ class TimechoInferenceManager(InferenceManager):
                     raise ValueError("Tag other than default tag not supported now.")
                 else:
                     future_covs = future_covs_all[DEFAULT_TAG_VALUE]
+                    if not future_covs:
+                        logger.error(
+                            "[Inference] The future covariates are specified but no future data are selected."
+                        )
+                        raise ValueError(
+                            "The future covariates are specified but no future data are selected."
+                        )
                     future_timestamps = future_timestamps_all[DEFAULT_TAG_VALUE]
                     history_max_timestamp = max(history_timestamps)
                     future_min_timestamp = min(future_timestamps)
@@ -121,9 +132,6 @@ class TimechoInferenceManager(InferenceManager):
                         logger.warning(
                             "[Inference] Tag other than default tag will be ignored now."
                         )
-                if not future_covs:
-                    logger.error("[Inference] No future covariates found.")
-                    raise ValueError("No future covariates found.")
 
         model_inputs.append({"targets": inputs[0]})
         # Combine covariates if available
@@ -174,7 +182,7 @@ class TimechoInferenceManager(InferenceManager):
                     output_length,
                 )
 
-            if self._pool_controller.has_request_pools(model_id):
+            if self._pool_controller.has_request_pools(model_id=model_id):
                 # TODO: support concurrent covariate forecasting in the future
                 infer_req = InferenceRequest(
                     req_id=generate_req_id(),
@@ -187,7 +195,9 @@ class TimechoInferenceManager(InferenceManager):
                 outputs = self._process_request(infer_req)
             else:
                 model_info = self._model_manager.get_model_info(model_id)
-                inference_pipeline = load_pipeline(model_info, device="cpu")
+                inference_pipeline = load_pipeline(
+                    model_info, device=self._backend.torch_device("cpu")
+                )
                 inputs = inference_pipeline.preprocess(
                     model_inputs_list, output_length=output_length
                 )
@@ -212,7 +222,7 @@ class TimechoInferenceManager(InferenceManager):
 
             return resp_cls(
                 get_status(TSStatusCode.SUCCESS_STATUS),
-                output_list[0] if single_batch else output_list,
+                [output_list[0]] if single_batch else output_list,
             )
 
         except Exception as e:

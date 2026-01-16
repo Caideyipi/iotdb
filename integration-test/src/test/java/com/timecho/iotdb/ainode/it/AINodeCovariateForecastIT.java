@@ -156,21 +156,22 @@ public class AINodeCovariateForecastIT {
         "1599: Error occurred while executing forecast:[Key 's1' in 'future_covariates' is not in 'past_covariates' at index 0.]");
 
     // Invalid history covariates timestamps
-    String invalidHistoryCovsSQL = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 2881, 2880);
-    String invalidHistoryCovariateSQL =
+    String invalidHistoryCovsTimestampsSQL =
+        String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 2881, 2880);
+    String invalidHistoryCovariateTimestampsSQL =
         String.format(
             FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
             modelInfo.getModelId(),
             "s0,s1",
             2880,
             2880,
-            invalidHistoryCovsSQL,
+            invalidHistoryCovsTimestampsSQL,
             futureCovsSQL,
             2880,
             96);
     errorTest(
         statement,
-        invalidHistoryCovariateSQL,
+        invalidHistoryCovariateTimestampsSQL,
         "1599: Error occurred while executing forecast:[The timestamps of history covariates should be aligned with target variables'.]");
 
     // Invalid future covariates timestamps
@@ -190,5 +191,41 @@ public class AINodeCovariateForecastIT {
         statement,
         invalidFutureCovariateTimestampsSQL,
         "1599: Error occurred while executing forecast:[The minimum timestamp of future covariates should be bigger than the maximum of history covariates.]");
+
+    // Empty set - history covariates
+    String invalidHistoryCovsEmptySetSQL = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 0, 96);
+    String invalidHistoryCovariateEmptySetSQL =
+        String.format(
+            FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
+            modelInfo.getModelId(),
+            "s0,s1",
+            2880,
+            2880,
+            invalidHistoryCovsEmptySetSQL,
+            futureCovsSQL,
+            2880,
+            96);
+    errorTest(
+        statement,
+        invalidHistoryCovariateEmptySetSQL,
+        "1599: Error occurred while executing forecast:[The history covariates are specified but no history data are selected.]");
+
+    // Empty set - future covariates
+    String invalidFutureCovsEmptySetSQL = String.format(FUTURE_COVS_TEMPLATE, "s3", 5760, 96);
+    String invalidFutureCovariateEmptySetSQL =
+        String.format(
+            FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
+            modelInfo.getModelId(),
+            "s0,s1",
+            2880,
+            2880,
+            historyCovsSQL,
+            invalidFutureCovsEmptySetSQL,
+            2880,
+            96);
+    errorTest(
+        statement,
+        invalidFutureCovariateEmptySetSQL,
+        "1599: Error occurred while executing forecast:[The future covariates are specified but no future data are selected.]");
   }
 }
