@@ -224,6 +224,11 @@ public enum Metric {
   // memory related
   MEMORY_THRESHOLD_SIZE("memory_threshold_size"),
   MEMORY_ACTUAL_SIZE("memory_actual_size"),
+  ASYNC_BATCH_QUEUE_BYTES("async_batch_queue_bytes"),
+  ASYNC_BATCH_FLUSHED_BYTES_TOTAL("async_batch_flushed_bytes_total"),
+  ASYNC_BATCH_FLUSHED_FAILED_NUM_TOTAL("async_batch_flush_failed_num_total"),
+  ASYNC_BATCH_FLUSHED_FAILED_BYTES_TOTAL("async_batch_flush_failed_bytes_total"),
+  ASYNC_BATCH_FLUSHED_LATENCY_MS("async_batch_flush_latency_ms"),
   ;
 
   final String value;

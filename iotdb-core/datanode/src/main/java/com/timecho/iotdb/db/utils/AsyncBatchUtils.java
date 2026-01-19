@@ -117,6 +117,7 @@ public class AsyncBatchUtils<T extends Accountable> {
         IoTDBThreadPoolFactory.newSingleThreadScheduledExecutor(
             ThreadName.ASYNC_BATCH_WRITE_SCHEDULER_IN_TIME.getName() + "-" + name);
     this.queue = new LinkedBlockingQueue<>();
+    AsyncBatchMetrics.getInstance().register(name);
   }
 
   /** Start the periodic flush scheduler */
@@ -156,6 +157,7 @@ public class AsyncBatchUtils<T extends Accountable> {
       }
       queue.offer(item);
       long afterAdd = currentQueueBytes.addAndGet(bytes);
+      AsyncBatchMetrics.getInstance().updateAsyncBatchQueueBytes(name, afterAdd);
 
       if (afterAdd >= flushWatermarkBytes) {
         triggerFlushAsync();
@@ -187,8 +189,11 @@ public class AsyncBatchUtils<T extends Accountable> {
 
   /** Flush implementation: drain all data and retry on failure */
   private void flushInternal() {
+    long startNs = System.nanoTime();
+
     List<BatchItem<T>> items = new ArrayList<>();
     queue.drainTo(items);
+    AsyncBatchMetrics.getInstance().recordAsyncBatchFlushNum(name, items.size());
 
     if (items.isEmpty()) {
       return;
@@ -200,6 +205,7 @@ public class AsyncBatchUtils<T extends Accountable> {
       batch.add(item.data);
       releasedBytes += item.data.ramBytesUsed();
     }
+    AsyncBatchMetrics.getInstance().recordAsyncBatchFlushBytes(name, releasedBytes);
 
     try {
       ExecutionResult insertResult = null;
@@ -226,9 +232,13 @@ public class AsyncBatchUtils<T extends Accountable> {
     } catch (Exception e) {
       handlePermanentFailure(items, e);
     } finally {
+      long latencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
+      AsyncBatchMetrics.getInstance().recordAsyncBatchFlushLatencyMs(name, latencyMs);
+      AsyncBatchMetrics.getInstance().incAsyncBatchFlushedBytesTotal(name, releasedBytes);
       lock.lock();
       try {
-        currentQueueBytes.addAndGet(-releasedBytes);
+        long afterRelease = currentQueueBytes.addAndGet(-releasedBytes);
+        AsyncBatchMetrics.getInstance().updateAsyncBatchQueueBytes(name, afterRelease);
         notEnoughMemory.signalAll();
       } finally {
         lock.unlock();
@@ -240,10 +250,13 @@ public class AsyncBatchUtils<T extends Accountable> {
   private void handlePermanentFailure(List<BatchItem<T>> items, Exception e) {
 
     logger.warn("[AsyncBatchUtils] {} Failed to write because", name, e);
-
+    AsyncBatchMetrics.getInstance().incAsyncBatchFlushFailedNumTotal(name, items.size());
+    long failedBytes = 0;
     for (BatchItem<T> item : items) {
+      failedBytes += item.data.ramBytesUsed();
       item.future.completeExceptionally(e);
     }
+    AsyncBatchMetrics.getInstance().incAsyncBatchFlushFailedBytesTotal(name, failedBytes);
   }
 
   /** Gracefully shut down all background threads */

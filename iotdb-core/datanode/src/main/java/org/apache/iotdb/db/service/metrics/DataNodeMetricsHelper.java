@@ -53,6 +53,8 @@ import org.apache.iotdb.metrics.metricsets.logback.LogbackMetrics;
 import org.apache.iotdb.metrics.metricsets.net.NetMetrics;
 import org.apache.iotdb.metrics.metricsets.system.SystemMetrics;
 
+import com.timecho.iotdb.db.utils.AsyncBatchMetrics;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -108,6 +110,9 @@ public class DataNodeMetricsHelper {
 
     // bind memory related metrics
     metricService.addMetricSet(GlobalMemoryMetrics.getInstance());
+
+    // bind async batch write related metrics
+    metricService.addMetricSet(AsyncBatchMetrics.getInstance());
   }
 
   private static void initSystemMetrics(MetricService metricService) {
