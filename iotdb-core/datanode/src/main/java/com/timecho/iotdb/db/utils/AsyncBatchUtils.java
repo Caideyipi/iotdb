@@ -140,11 +140,11 @@ public class AsyncBatchUtils<T extends Accountable> {
           new IllegalStateException(String.format("[AsyncBatchUtils] %s already shutdown", name)));
       return f;
     }
-    activePushes.incrementAndGet();
     long bytes = data.ramBytesUsed();
     if (bytes > maxQueueBytes) {
       return synchronousFlush(data);
     }
+    activePushes.incrementAndGet();
     lock.lockInterruptibly();
     try {
       BatchItem<T> item = new BatchItem<>(data);
