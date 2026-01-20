@@ -22,6 +22,7 @@ package org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.exception.IoTDBRuntimeException;
 import org.apache.iotdb.commons.schema.table.TsTable;
+import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.protocol.session.SessionManager;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
@@ -255,6 +256,9 @@ public class TableDeviceSchemaValidator {
     if (!CommonDescriptor.getInstance().getConfig().isRestrictObjectLimit()) {
       return;
     }
+    if (hasMultipleTiers()) {
+      throw new SemanticException("The tiered storage does not support object type yet.");
+    }
     for (final Object part : deviceId) {
       final String value = (String) part;
       if (Objects.nonNull(value) && TsTable.isInvalid4ObjectType(value)) {
@@ -262,6 +266,19 @@ public class TableDeviceSchemaValidator {
             TsTable.getObjectStringError("deviceId", Arrays.toString(deviceId)));
       }
     }
+  }
+
+  public static boolean hasMultipleTiers() {
+    final String[][] tierDataDirs = IoTDBDescriptor.getInstance().getConfig().getTierDataDirs();
+    int count = 0;
+    for (int i = 0; i < tierDataDirs.length; ++i) {
+      for (int j = 0; j < tierDataDirs[i].length; ++j) {
+        if (++count > 1) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private static class ValidateResult {

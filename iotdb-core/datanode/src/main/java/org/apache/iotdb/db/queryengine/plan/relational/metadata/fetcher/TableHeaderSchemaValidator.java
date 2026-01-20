@@ -69,6 +69,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import static org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.TableDeviceSchemaValidator.hasMultipleTiers;
 import static org.apache.iotdb.db.queryengine.plan.relational.type.InternalTypeManager.getTSDataType;
 import static org.apache.iotdb.db.utils.EncodingInferenceUtils.getDefaultEncoding;
 
@@ -734,6 +735,9 @@ public class TableHeaderSchemaValidator {
         if (Objects.nonNull(from)) {
           TreeViewSchema.setOriginalName(schema, from);
         }
+        if (dataType == TSDataType.OBJECT && hasMultipleTiers()) {
+          throw new SemanticException("The tiered storage does not support object type yet.");
+        }
         break;
       default:
         throw new IllegalArgumentException();
@@ -802,6 +806,9 @@ public class TableHeaderSchemaValidator {
           break;
         case FIELD:
           final TSDataType dataType = InternalTypeManager.getTSDataType(inputColumn.getType());
+          if (dataType == TSDataType.OBJECT && hasMultipleTiers()) {
+            throw new SemanticException("The tiered storage does not support object type yet.");
+          }
           columnSchemaList.add(
               new FieldColumnSchema(
                   inputColumn.getName(),
