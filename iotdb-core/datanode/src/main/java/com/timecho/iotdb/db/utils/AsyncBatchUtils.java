@@ -250,6 +250,7 @@ public class AsyncBatchUtils<T extends Accountable> {
   }
 
   public CompletableFuture<TSStatus> synchronousFlush(T data) {
+    long startNs = System.nanoTime();
     // Directly consume the statement without buffering
     List<T> batch = new ArrayList<>(1);
     batch.add(data);
@@ -257,6 +258,8 @@ public class AsyncBatchUtils<T extends Accountable> {
     List<BatchItem<T>> items = new ArrayList<>(1);
     items.add(item);
     long releasedBytes = data.ramBytesUsed();
+    AsyncBatchMetrics.getInstance().recordAsyncBatchFlushNum(name, items.size());
+    AsyncBatchMetrics.getInstance().recordAsyncBatchFlushBytes(name, releasedBytes);
     try {
       ExecutionResult insertResult = null;
       for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
@@ -279,6 +282,8 @@ public class AsyncBatchUtils<T extends Accountable> {
     } catch (Exception e) {
       handlePermanentFailure(items, e);
     } finally {
+      long latencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
+      AsyncBatchMetrics.getInstance().recordAsyncBatchFlushLatencyMs(name, latencyMs);
       AsyncBatchMetrics.getInstance().incAsyncBatchFlushedBytesTotal(name, releasedBytes);
     }
     return item.future;
