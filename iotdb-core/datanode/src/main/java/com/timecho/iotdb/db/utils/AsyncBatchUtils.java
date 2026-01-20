@@ -141,10 +141,13 @@ public class AsyncBatchUtils<T extends Accountable> {
       return f;
     }
     activePushes.incrementAndGet();
+    long bytes = data.ramBytesUsed();
+    if (bytes > maxQueueBytes) {
+      return synchronousFlush(data);
+    }
     lock.lockInterruptibly();
     try {
       BatchItem<T> item = new BatchItem<>(data);
-      long bytes = data.ramBytesUsed();
       while (!forcedClose.get() && currentQueueBytes.get() + bytes > maxQueueBytes) {
         notEnoughMemory.await();
       }
@@ -244,6 +247,41 @@ public class AsyncBatchUtils<T extends Accountable> {
         lock.unlock();
       }
     }
+  }
+
+  public CompletableFuture<TSStatus> synchronousFlush(T data) {
+    // Directly consume the statement without buffering
+    List<T> batch = new ArrayList<>(1);
+    batch.add(data);
+    BatchItem<T> item = new BatchItem<>(data);
+    List<BatchItem<T>> items = new ArrayList<>(1);
+    items.add(item);
+    long releasedBytes = data.ramBytesUsed();
+    try {
+      ExecutionResult insertResult = null;
+      for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
+        insertResult = consumer.consume(batch);
+        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+          item.future.complete(insertResult.status);
+          return item.future;
+        }
+        if (insertResult.status.isNeedRetry()) {
+          TimeUnit.MILLISECONDS.sleep(INSERT_RETRY_INTERVAL_MS);
+        } else {
+          break;
+        }
+      }
+      Exception e = new IoTDBRuntimeException(insertResult.status);
+      handlePermanentFailure(items, e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      handlePermanentFailure(items, e);
+    } catch (Exception e) {
+      handlePermanentFailure(items, e);
+    } finally {
+      AsyncBatchMetrics.getInstance().incAsyncBatchFlushedBytesTotal(name, releasedBytes);
+    }
+    return item.future;
   }
 
   /** Handle permanently failed batches */
