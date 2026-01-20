@@ -35,6 +35,7 @@ import org.apache.iotdb.db.protocol.session.IClientSession;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
 import org.apache.iotdb.db.queryengine.common.SessionInfo;
 import org.apache.iotdb.db.queryengine.plan.execution.config.ConfigTaskResult;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.LoadBalanceTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ExtendRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.MigrateRegionTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.region.ReconstructRegionTask;
@@ -63,6 +64,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveDataNodeSta
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowDatabaseStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowMigrationsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowRegionStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.pipe.AlterPipeStatement;
@@ -183,6 +185,9 @@ public interface IConfigTaskExecutor {
   SettableFuture<ConfigTaskResult> showRegion(
       final ShowRegionStatement showRegionStatement, final boolean isTableModel);
 
+  SettableFuture<ConfigTaskResult> showMigrations(
+      final ShowMigrationsStatement showMigrationsStatement, final boolean isTableModel);
+
   SettableFuture<ConfigTaskResult> showDataNodes();
 
   SettableFuture<ConfigTaskResult> showAvailableUrls();
@@ -276,6 +281,8 @@ public interface IConfigTaskExecutor {
       CountTimeSlotListStatement countTimeSlotListStatement);
 
   SettableFuture<ConfigTaskResult> migrateRegion(MigrateRegionTask migrateRegionTask);
+
+  SettableFuture<ConfigTaskResult> loadBalance(LoadBalanceTask loadBalanceTask);
 
   SettableFuture<ConfigTaskResult> reconstructRegion(ReconstructRegionTask reconstructRegionTask);
 

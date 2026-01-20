@@ -119,6 +119,7 @@ statement
     // Cluster Management Statement
     | showClusterStatement
     | showRegionsStatement
+    | showMigrationsStatement
     | showDataNodesStatement
     | showAvailableUrlsStatement
     | showConfigNodesStatement
@@ -128,6 +129,7 @@ statement
     | showTimeSlotListStatement
     | countTimeSlotListStatement
     | showSeriesSlotListStatement
+    | loadBalanceStatement
     | migrateRegionStatement
     | reconstructRegionStatement
     | extendRegionStatement
@@ -586,6 +588,10 @@ showRegionsStatement
           // ((LIKE pattern=string (ESCAPE escape=string)) | (WHERE expression))?
     ;
 
+showMigrationsStatement
+    : SHOW MIGRATIONS
+    ;
+
 showDataNodesStatement
     : SHOW DATANODES
     ;
@@ -620,6 +626,10 @@ countTimeSlotListStatement
 
 showSeriesSlotListStatement
     : SHOW (DATA | SCHEMA) SERIESSLOTID WHERE DATABASE EQ database=identifier
+    ;
+
+loadBalanceStatement
+    : LOAD BALANCE (TO DATANODE targetNodeIds+=INTEGER_VALUE (',' targetNodeIds+=INTEGER_VALUE)*)?
     ;
 
 migrateRegionStatement
@@ -1531,6 +1541,7 @@ ATTRIBUTE: 'ATTRIBUTE';
 AUTHORIZATION: 'AUTHORIZATION';
 BEGIN: 'BEGIN';
 BERNOULLI: 'BERNOULLI';
+BALANCE: 'BALANCE';
 BETWEEN: 'BETWEEN';
 BOTH: 'BOTH';
 BY: 'BY';
@@ -1716,6 +1727,7 @@ METHOD: 'METHOD';
 MERGE: 'MERGE';
 MICROSECOND: 'US';
 MIGRATE: 'MIGRATE';
+MIGRATIONS: 'MIGRATIONS';
 MILLISECOND: 'MS';
 MINUTE: 'MINUTE' | 'M';
 MODEL: 'MODEL';

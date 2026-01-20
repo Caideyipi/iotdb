@@ -92,6 +92,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ExtendRegion;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Flush;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.KillQuery;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Literal;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadBalance;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadConfiguration;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadModel;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.MigrateRegion;
@@ -129,6 +130,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowDB;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowDataNodes;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowFunctions;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowLoadedModels;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowMigrations;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowModels;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowRegions;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowSystemInfo;
@@ -562,6 +564,7 @@ public class Coordinator {
         || statement instanceof CliActivate
         || statement instanceof ShowActivation
         || statement instanceof ShowRegions
+        || statement instanceof ShowMigrations
         || statement instanceof ShowDataNodes
         || statement instanceof ShowAvailableUrls
         || statement instanceof ShowConfigNodes
@@ -596,6 +599,7 @@ public class Coordinator {
         || statement instanceof StopExternalService
         || statement instanceof DropExternalService
         || statement instanceof RelationalAuthorStatement
+        || statement instanceof LoadBalance
         || statement instanceof MigrateRegion
         || statement instanceof ReconstructRegion
         || statement instanceof ExtendRegion

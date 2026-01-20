@@ -417,6 +417,10 @@ public abstract class AstVisitor<R, C> {
     return visitStatement(node, context);
   }
 
+  protected R visitShowMigrations(ShowMigrations node, C context) {
+    return visitStatement(node, context);
+  }
+
   protected R visitShowDataNodes(ShowDataNodes node, C context) {
     return visitStatement(node, context);
   }
@@ -762,6 +766,10 @@ public abstract class AstVisitor<R, C> {
   }
 
   protected R visitRelationalAuthorPlan(RelationalAuthorStatement node, C context) {
+    return visitStatement(node, context);
+  }
+
+  protected R visitLoadBalance(LoadBalance node, C context) {
     return visitStatement(node, context);
   }
 

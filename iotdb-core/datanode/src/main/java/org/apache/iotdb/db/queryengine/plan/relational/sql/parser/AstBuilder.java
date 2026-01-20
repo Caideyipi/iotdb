@@ -125,6 +125,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.KillQuery;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LikePredicate;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Limit;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.Literal;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadBalance;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadConfiguration;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadModel;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.LoadTsFile;
@@ -199,6 +200,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowExternalServi
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowFunctions;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowIndex;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowLoadedModels;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowMigrations;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowModels;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowPipePlugins;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowPipes;
@@ -1470,6 +1472,11 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   }
 
   @Override
+  public Node visitShowMigrationsStatement(RelationalSqlParser.ShowMigrationsStatementContext ctx) {
+    return new ShowMigrations();
+  }
+
+  @Override
   public Node visitShowDataNodesStatement(RelationalSqlParser.ShowDataNodesStatementContext ctx) {
     return new ShowDataNodes();
   }
@@ -1517,6 +1524,18 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitShowSeriesSlotListStatement(
       RelationalSqlParser.ShowSeriesSlotListStatementContext ctx) {
     throw new SemanticException("SHOW SERIES SLOT is not supported yet.");
+  }
+
+  @Override
+  public Node visitLoadBalanceStatement(RelationalSqlParser.LoadBalanceStatementContext ctx) {
+    List<Integer> targetNodeIds = null;
+    if (ctx.targetNodeIds != null && !ctx.targetNodeIds.isEmpty()) {
+      targetNodeIds =
+          ctx.targetNodeIds.stream()
+              .map(token -> Integer.parseInt(token.getText()))
+              .collect(java.util.stream.Collectors.toList());
+    }
+    return new LoadBalance(targetNodeIds);
   }
 
   @Override
