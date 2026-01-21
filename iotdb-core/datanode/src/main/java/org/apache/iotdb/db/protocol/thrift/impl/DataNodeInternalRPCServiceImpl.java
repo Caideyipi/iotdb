@@ -62,8 +62,10 @@ import org.apache.iotdb.commons.consensus.SchemaRegionId;
 import org.apache.iotdb.commons.consensus.index.ProgressIndex;
 import org.apache.iotdb.commons.consensus.index.ProgressIndexType;
 import org.apache.iotdb.commons.exception.IllegalPathException;
+import org.apache.iotdb.commons.exception.IoTDBRuntimeException;
 import org.apache.iotdb.commons.exception.LicenseException;
 import org.apache.iotdb.commons.exception.MetadataException;
+import org.apache.iotdb.commons.exception.ObjectFileNotExist;
 import org.apache.iotdb.commons.path.ExtendedPartialPath;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
@@ -294,6 +296,7 @@ import org.apache.iotdb.mpp.rpc.thrift.TPushTopicMetaReq;
 import org.apache.iotdb.mpp.rpc.thrift.TPushTopicMetaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TPushTopicMetaRespExceptionMessage;
 import org.apache.iotdb.mpp.rpc.thrift.TReadObjectReq;
+import org.apache.iotdb.mpp.rpc.thrift.TReadObjectResp;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionLeaderChangeReq;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionLeaderChangeResp;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionMigrateResult;
@@ -3158,9 +3161,22 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   }
 
   @Override
-  public ByteBuffer readObject(TReadObjectReq req) {
-    return ObjectTypeUtils.readObjectContent(
-        req.getRelativePath(), req.getOffset(), req.getSize(), false);
+  public TReadObjectResp readObject(TReadObjectReq req) {
+    TReadObjectResp resp = new TReadObjectResp();
+    try {
+      ByteBuffer content =
+          ObjectTypeUtils.readObjectContent(
+              req.getRelativePath(), req.getOffset(), req.getSize(), false);
+      resp.setContent(content);
+      resp.setStatus(RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS));
+    } catch (IoTDBRuntimeException e) {
+      resp.setStatus(e.getStatus());
+      if (!(e instanceof ObjectFileNotExist)) {
+        LOGGER.warn(e.getMessage(), e);
+      }
+      return resp;
+    }
+    return resp;
   }
 
   public void handleClientExit() {

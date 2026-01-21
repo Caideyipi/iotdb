@@ -789,6 +789,11 @@ struct TReadObjectReq {
   3: i32 size
 }
 
+struct TReadObjectResp {
+  1: optional binary content
+  2: required common.TSStatus status
+}
+
 /**
 * END: Used for EXPLAIN ANALYZE
 **/
@@ -1325,7 +1330,7 @@ service IDataNodeRPCService {
    */
   common.TSStatus writeAuditLog(TAuditLogReq req);
 
-  binary readObject(TReadObjectReq req);
+  TReadObjectResp readObject(TReadObjectReq req);
 }
 
 service MPPDataExchangeService {

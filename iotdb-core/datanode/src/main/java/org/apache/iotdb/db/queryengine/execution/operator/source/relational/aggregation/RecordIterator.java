@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.db.queryengine.execution.operator.source.relational.aggregation;
 
+import org.apache.iotdb.commons.exception.ObjectFileNotExist;
 import org.apache.iotdb.commons.udf.utils.UDFDataTypeTransformer;
 import org.apache.iotdb.db.utils.ObjectTypeUtils;
 import org.apache.iotdb.udf.api.relational.access.Record;
@@ -179,7 +180,11 @@ public class RecordIterator implements Iterator<Record> {
         throw new UnsupportedOperationException("current column is not object column");
       }
       Binary binary = getBinarySafely(columnIndex);
-      return new Binary(ObjectTypeUtils.readObjectContent(binary, offset, length, true).array());
+      try {
+        return new Binary(ObjectTypeUtils.readObjectContent(binary, offset, length, true).array());
+      } catch (ObjectFileNotExist e) {
+        return new Binary(new byte[0]);
+      }
     }
 
     @Override

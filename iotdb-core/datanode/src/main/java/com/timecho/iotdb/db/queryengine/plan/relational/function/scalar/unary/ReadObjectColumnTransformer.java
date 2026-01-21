@@ -19,6 +19,7 @@
 
 package com.timecho.iotdb.db.queryengine.plan.relational.function.scalar.unary;
 
+import org.apache.iotdb.commons.exception.ObjectFileNotExist;
 import org.apache.iotdb.db.queryengine.execution.fragment.FragmentInstanceContext;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.ColumnTransformer;
 import org.apache.iotdb.db.queryengine.transformation.dag.column.unary.UnaryColumnTransformer;
@@ -120,7 +121,11 @@ public class ReadObjectColumnTransformer extends UnaryColumnTransformer {
         ObjectTypeUtils.getActualReadSize(relativePath, fileLength, offset, length);
     fragmentInstanceContext.ifPresent(
         context -> context.getMemoryReservationContext().reserveMemoryCumulatively(actualReadSize));
-    return new Binary(
-        ObjectTypeUtils.readObjectContent(relativePath, offset, actualReadSize, true).array());
+    try {
+      return new Binary(
+          ObjectTypeUtils.readObjectContent(relativePath, offset, actualReadSize, true).array());
+    } catch (ObjectFileNotExist e) {
+      return new Binary(new byte[0]);
+    }
   }
 }

@@ -33,6 +33,7 @@ import org.apache.iotdb.db.service.metrics.FileMetrics;
 import org.apache.iotdb.db.storageengine.dataregion.IObjectPath;
 import org.apache.iotdb.db.storageengine.rescon.disk.TierManager;
 import org.apache.iotdb.mpp.rpc.thrift.TReadObjectReq;
+import org.apache.iotdb.mpp.rpc.thrift.TReadObjectResp;
 import org.apache.iotdb.rpc.TSStatusCode;
 
 import com.timecho.iotdb.db.storageengine.dataregion.Base32ObjectPath;
@@ -139,9 +140,17 @@ public class ObjectTypeUtils {
           req.setOffset(offset + buffer.position());
           req.setSize(Math.min(toReadSizeInCurrentDataNode, batchSize));
           toReadSizeInCurrentDataNode -= req.getSize();
-          ByteBuffer partial = client.readObject(req);
-          buffer.put(partial);
+          TReadObjectResp resp = client.readObject(req);
+          if (resp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+            buffer.put(resp.content);
+          } else if (resp.getStatus().getCode() == TSStatusCode.OBJECT_NOT_EXISTS.getStatusCode()) {
+            throw new ObjectFileNotExist(relativePath);
+          } else {
+            throw new IoTDBRuntimeException(resp.status);
+          }
         }
+      } catch (ObjectFileNotExist e) {
+        throw e;
       } catch (Exception e) {
         logger.warn("Failed to read object from datanode: {}", dataNodeLocation, e);
         if (i == regionReplicaSet.getDataNodeLocations().size() - 1) {
