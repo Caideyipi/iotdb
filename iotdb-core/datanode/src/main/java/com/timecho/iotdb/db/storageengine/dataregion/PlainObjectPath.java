@@ -30,9 +30,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PlainObjectPath implements IObjectPath {
 
+  private final IDeviceID deviceID;
+  private final long timestamp;
+  private final String measurement;
   private final String filePath;
 
   private static final Deserializer DESERIALIZER =
@@ -57,6 +62,15 @@ public class PlainObjectPath implements IObjectPath {
 
   public PlainObjectPath(String filePath) {
     this.filePath = filePath;
+    Path path = Paths.get(filePath);
+    String[] ideviceIdSegments = new String[path.getNameCount() - 3];
+    for (int i = 0; i < ideviceIdSegments.length; i++) {
+      ideviceIdSegments[i] = path.getName(i + 1).toString();
+    }
+    deviceID = IDeviceID.Factory.DEFAULT_FACTORY.create(ideviceIdSegments);
+    measurement = path.getName(path.getNameCount() - 2).toString();
+    String fileName = path.getFileName().toString();
+    timestamp = Long.parseLong(fileName.substring(0, fileName.indexOf('.')));
   }
 
   public PlainObjectPath(int regionId, long time, IDeviceID iDeviceID, String measurement) {
@@ -71,6 +85,9 @@ public class PlainObjectPath implements IObjectPath {
     }
     relativePathString.append(measurement).append(File.separator);
     relativePathString.append(objectFileName);
+    this.deviceID = iDeviceID;
+    this.timestamp = time;
+    this.measurement = measurement;
     this.filePath = relativePathString.toString();
   }
 
@@ -116,6 +133,26 @@ public class PlainObjectPath implements IObjectPath {
   @Override
   public String toString() {
     return filePath;
+  }
+
+  @Override
+  public long getTime() {
+    return timestamp;
+  }
+
+  @Override
+  public IDeviceID getDeviceID() {
+    return deviceID;
+  }
+
+  @Override
+  public String getMeasurement() {
+    return measurement;
+  }
+
+  @Override
+  public Path getPath() {
+    return Paths.get(filePath);
   }
 
   public static Factory getFACTORY() {

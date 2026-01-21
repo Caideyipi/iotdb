@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 
 public interface IObjectPath {
 
@@ -44,6 +45,14 @@ public interface IObjectPath {
   void serializeToObjectValue(ByteBuffer byteBuffer);
 
   int getSerializeSizeToObjectValue();
+
+  long getTime();
+
+  IDeviceID getDeviceID();
+
+  String getMeasurement();
+
+  Path getPath();
 
   interface Factory {
 

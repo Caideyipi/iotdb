@@ -36,6 +36,9 @@ import java.nio.file.Paths;
 
 public class Base32ObjectPath implements IObjectPath {
 
+  private final long timestamp;
+  private final IDeviceID deviceID;
+  private final String measurement;
   private final Path path;
   private int serializedSize = -1;
 
@@ -60,10 +63,38 @@ public class Base32ObjectPath implements IObjectPath {
   private static final Factory FACTORY = Base32ObjectPath::new;
 
   private Base32ObjectPath(String first, String... more) {
+    String[] deviceIdSegments = new String[more.length - 2];
+    for (int i = 0; i < more.length - 2; i++) {
+      deviceIdSegments[i] =
+          new String(BaseEncoding.base32().omitPadding().decode(more[i]), StandardCharsets.UTF_8);
+    }
+    deviceID = IDeviceID.Factory.DEFAULT_FACTORY.create(deviceIdSegments);
+    measurement =
+        new String(
+            BaseEncoding.base32().omitPadding().decode(more[more.length - 2]),
+            StandardCharsets.UTF_8);
+    timestamp =
+        Long.parseLong(more[more.length - 1].substring(0, more[more.length - 1].indexOf('.')));
     path = Paths.get(first, more);
   }
 
   public Base32ObjectPath(Path path) {
+    String[] ideviceIdSegments = new String[path.getNameCount() - 3];
+    for (int i = 0; i < ideviceIdSegments.length; i++) {
+      ideviceIdSegments[i] =
+          new String(
+              BaseEncoding.base32().omitPadding().decode(path.getName(i + 1).toString()),
+              StandardCharsets.UTF_8);
+    }
+    deviceID = IDeviceID.Factory.DEFAULT_FACTORY.create(ideviceIdSegments);
+    measurement =
+        new String(
+            BaseEncoding.base32()
+                .omitPadding()
+                .decode(path.getName(path.getNameCount() - 2).toString()),
+            StandardCharsets.UTF_8);
+    String fileName = path.getFileName().toString();
+    timestamp = Long.parseLong(fileName.substring(0, fileName.indexOf('.')));
     this.path = path;
   }
 
@@ -81,7 +112,10 @@ public class Base32ObjectPath implements IObjectPath {
     pathSegments[pathSegments.length - 2] =
         BaseEncoding.base32().omitPadding().encode(measurement.getBytes(StandardCharsets.UTF_8));
     pathSegments[pathSegments.length - 1] = time + ".bin";
-    path = Paths.get(String.valueOf(regionId), pathSegments);
+    this.path = Paths.get(String.valueOf(regionId), pathSegments);
+    this.timestamp = time;
+    this.deviceID = iDeviceID;
+    this.measurement = measurement;
   }
 
   @Override
@@ -157,6 +191,22 @@ public class Base32ObjectPath implements IObjectPath {
     return path.toString();
   }
 
+  @Override
+  public long getTime() {
+    return timestamp;
+  }
+
+  @Override
+  public IDeviceID getDeviceID() {
+    return deviceID;
+  }
+
+  @Override
+  public String getMeasurement() {
+    return measurement;
+  }
+
+  @Override
   public Path getPath() {
     return path;
   }

@@ -31,6 +31,7 @@ import org.apache.iotdb.udf.api.type.Type;
 import org.apache.tsfile.block.TsBlockBuilderStatus;
 import org.apache.tsfile.block.column.Column;
 import org.apache.tsfile.block.column.ColumnBuilderStatus;
+import org.apache.tsfile.external.commons.io.FileUtils;
 import org.apache.tsfile.read.common.block.column.BinaryColumnBuilder;
 import org.apache.tsfile.read.common.type.ObjectType;
 import org.apache.tsfile.utils.Binary;
@@ -75,7 +76,7 @@ public class RecordObjectTypeTest {
     File[] files = objectDir.listFiles();
     if (files != null) {
       for (File file : files) {
-        Files.delete(file.toPath());
+        FileUtils.deleteQuietly(file);
       }
     }
     config.setRestrictObjectLimit(false);
@@ -140,13 +141,16 @@ public class RecordObjectTypeTest {
   }
 
   private ByteBuffer createObjectBinary() throws IOException {
-    Path testFile1 = Files.createTempFile(objectDir.toPath(), "test_", ".bin");
+    File file = new File(objectDir, "1" + File.separator + "a" + File.separator + "b");
+    file.mkdirs();
+    File testFile = new File(file, "1.bin");
+    Path testFile1 = Files.createFile(testFile.toPath());
     byte[] content = new byte[100];
     for (int i = 0; i < 100; i++) {
       content[i] = (byte) i;
     }
     Files.write(testFile1, content);
-    String relativePath = testFile1.toFile().getName();
+    String relativePath = objectDir.toPath().relativize(testFile1).toString();
     ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES + relativePath.length());
     buffer.putLong(100L);
     buffer.put(BytesUtils.stringToBytes(relativePath));

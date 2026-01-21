@@ -45,8 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.iotdb.db.utils.ObjectTypeUtils.generateObjectBinary;
-
 public class RelationalInsertRowsNode extends InsertRowsNode {
   // deviceId cache for Table-view insertion
   private IDeviceID[] deviceIDs;
@@ -226,13 +224,7 @@ public class RelationalInsertRowsNode extends InsertRowsNode {
         ObjectNode objectNode = new ObjectNode(isEoF, offset, content, relativePath);
         objectNode.setDataRegionReplicaSet(dataRegionReplicaSet);
         writePlanNodeList.add(objectNode);
-        if (isEoF) {
-          ((Binary) values[j])
-              .setValues(generateObjectBinary(offset + content.length, relativePath).getValues());
-          insertRowNode.setValues(values);
-        } else {
-          values[j] = null;
-        }
+        values[j] = null;
       }
     }
   }

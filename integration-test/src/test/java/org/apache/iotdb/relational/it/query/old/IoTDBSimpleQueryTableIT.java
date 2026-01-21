@@ -24,6 +24,7 @@ import org.apache.iotdb.it.framework.IoTDBTestRunner;
 import org.apache.iotdb.itbase.category.TableClusterIT;
 import org.apache.iotdb.itbase.category.TableLocalStandaloneIT;
 import org.apache.iotdb.itbase.env.BaseEnv;
+import org.apache.iotdb.rpc.TSStatusCode;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.tsfile.enums.TSDataType;
@@ -54,6 +55,7 @@ import static org.apache.iotdb.db.it.utils.TestUtils.defaultFormatDataTime;
 import static org.apache.iotdb.db.it.utils.TestUtils.tableResultSetEqualTest;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -754,6 +756,57 @@ public class IoTDBSimpleQueryTableIT {
       }
 
     } catch (SQLException e) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testObjectDataType2() {
+    try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
+        Statement statement = connection.createStatement()) {
+      statement.execute("CREATE DATABASE test");
+      statement.execute("use test");
+      statement.execute("CREATE TABLE table1(device_id STRING TAG, s1 OBJECT FIELD)");
+      statement.execute(
+          "insert into table1(time, device_id, s1) values(1, 'd1', to_object(false, 0, X'cafe'))");
+
+      try {
+        statement.execute(
+            "insert into table1(time, device_id, s1) values(1, 'd1', to_object(true, 3, X'babe'))");
+        fail();
+      } catch (SQLException e) {
+        assertEquals(TSStatusCode.OBJECT_INSERT_ERROR.getStatusCode(), e.getErrorCode());
+      }
+
+      try (ResultSet resultSet = statement.executeQuery("select * from table1")) {
+        while (resultSet.next()) {
+          String objectSizeString = resultSet.getString(3);
+          assertNull(objectSizeString);
+        }
+      }
+
+      statement.execute(
+          "insert into table1(time, device_id, s1) values(1, 'd1', to_object(true, 2, X'babe'))");
+
+      try (ResultSet resultSet = statement.executeQuery("select * from table1")) {
+        while (resultSet.next()) {
+          String objectSizeString = resultSet.getString(3);
+          assertEquals("(Object) 4 B", objectSizeString);
+        }
+      }
+      try (ResultSet resultSet = statement.executeQuery("select read_object(s1) from table1")) {
+        final ResultSetMetaData metaData = resultSet.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        assertEquals(1, columnCount);
+        byte[] byteArray = new byte[] {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE};
+        while (resultSet.next()) {
+          byte[] blob = resultSet.getBytes(1);
+          assertArrayEquals(byteArray, blob);
+        }
+      }
+
+    } catch (SQLException e) {
+      e.printStackTrace();
       fail();
     }
   }
