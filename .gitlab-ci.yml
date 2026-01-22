@@ -63,17 +63,20 @@ stages:
   - owasp-dependency-check
 #  - sonarqube-vulnerability-report
 
+before_script:
+  - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+  - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+  - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+  - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+  - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+  - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
+  - 'grep -rlZ "\u0000" ~/.m2 | xargs -0 -I {} rm -fv {} || true'
+
 unit-test:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
+
   script:
     - 'mvn clean install -Dtest.port.closed=true -Djarsigner.skip=true -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -84,13 +87,6 @@ session-builder-coverage-check:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'chmod +x check_session_builder.sh'
     - './check_session_builder.sh'
@@ -106,13 +102,6 @@ integration-test-1c1d:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -P SimpleIT -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -131,13 +120,6 @@ integration-test-1c3d:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -155,13 +137,6 @@ table-integration-test-1c1d:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=8 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableSimpleIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -180,13 +155,6 @@ table-integration-test-1c3d:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=6 -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -pl integration-test -am -PTableClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -205,13 +173,6 @@ ainode-test-1c1d1a:
   image: timechodb:AICluster
   tags:
     - gpu
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -P with-integration-tests,with-ainode -DskipUTs -DConfigNodeMaxHeapSize=1024 -DDataNodeMaxHeapSize=1024 -DaiNodeMaxHeapSize=1024 -pl integration-test,iotdb-core/ainode -am -PAIClusterIT -s $MAVEN_SETTINGS_XML'
   interruptible: true
@@ -230,13 +191,6 @@ pipe-single:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT1 -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -259,13 +213,6 @@ pipe-dual-tree-auto-basic:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeAutoBasic -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -288,13 +235,6 @@ pipe-dual-tree-auto-enhanced:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeAutoEnhanced -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -317,13 +257,6 @@ pipe-dual-tree-manual:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTreeManual -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -346,13 +279,6 @@ pipe-dual-table-manual-basic:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTableManualBasic -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -375,13 +301,6 @@ pipe-dual-table-manual-enhanced:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2DualTableManualEnhanced -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -404,13 +323,6 @@ pipe-subscription:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn clean verify -P with-integration-tests -DskipUTs -DintegrationTest.forkCount=1 -DConfigNodeMaxHeapSize=256 -DDataNodeMaxHeapSize=768 -DClusterConfigurations=$CLUSTER1,$CLUSTER2 -pl integration-test -am -PMultiClusterIT2SubscriptionTreeArchVerification -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -433,13 +345,6 @@ dependencies:
   stage: test
   tags:
     - timechodb
-  before_script:
-    - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-    - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-    - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-    - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-    - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-    - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   script:
     - 'mvn verify -Dmaven.test.skip=true -Dmdep.analyze.skip=true -P enable-sbom-check -s $MAVEN_SETTINGS_XML'
   parallel:
@@ -453,7 +358,6 @@ dependencies:
 
 sonarqube-check:
   stage: sonarqube-check
-
   script:
     - mvn clean verify sonar:sonar -Dsonar.projectKey=timechodb -Dsonar.projectName='timechodb' -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} -DskipTests -pl '!example/jdbc,!example/mqtt,!example/mqtt-customize,!example/pipe-count-point-processor,!example/pipe-opc-ua-sink,!example/rest-java-example,!example/schema,!example/session,!example/trigger,!example/udf,!library-udf' -am  -s $MAVEN_SETTINGS_XML
   allow_failure: true
