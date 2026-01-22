@@ -476,15 +476,20 @@ cd-deploy:
       
       COMMITS_RANGE="$CURRENT_SHA"
       if [ -n "${CI_COMMIT_BEFORE_SHA:-}" ] && [ "$CI_COMMIT_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
-        COMMITS_RANGE="${CI_COMMIT_BEFORE_SHA}..${CURRENT_SHA}"
+        COMMITS_RANGE="${CI_COMMIT_BEFORE_SHA}..${CI_COMMIT_SHA}"
       fi
-      
-      git log --reverse --pretty=format:'%H|%an|%ae|%s' "$COMMITS_RANGE" | while IFS='|' read -r COMMIT_ID AUTHOR_NAME AUTHOR_EMAIL COMMIT_MESSAGE; do
+      log_output=$(git --no-pager log --reverse --pretty=format:'%H|%an|%ae|%s' "$COMMITS_RANGE")
+
+      if [ -z "$log_output" ]; then
+          log_output="git --no-pager log --reverse --pretty=format:'%H|%an|%ae|%s' -n 20"
+      fi
+
+      while IFS='|' read -r COMMIT_ID AUTHOR_NAME AUTHOR_EMAIL COMMIT_MESSAGE; do
         SAFE_AUTHOR_NAME=$(printf '%s' "$AUTHOR_NAME" | tr -d '"')
         SAFE_AUTHOR_EMAIL=$(printf '%s' "$AUTHOR_EMAIL" | tr -d '"')
         SAFE_MESSAGE=$(printf '%s' "$COMMIT_MESSAGE" | sed 's/"/""/g' | tr -d '\n\r')
         printf '"%s","%s","%s","%s"\n' "$COMMIT_ID" "$SAFE_AUTHOR_NAME" "$SAFE_AUTHOR_EMAIL" "$SAFE_MESSAGE" >> "$METADATA_FILE"
-      done
+      done <<< "$log_output"
       
       echo "元数据文件预览:"
       head -3 "$METADATA_FILE"
@@ -495,10 +500,10 @@ cd-deploy:
         echo "错误: 部署变量未设置"
         exit 1
       fi
-      if [ -z "$DEPLOY_HOST_2_USER" ] || [ -z "$DEPLOY_HOST_2" ] || [ -z "$DEPLOY_HOST_2_TARGET_DIR" ]; then
-        echo "错误: 部署变量未设置"
-        exit 1
-      fi
+      # if [ -z "$DEPLOY_HOST_2_USER" ] || [ -z "$DEPLOY_HOST_2" ] || [ -z "$DEPLOY_HOST_2_TARGET_DIR" ]; then
+        # echo "错误: 部署变量未设置"
+        # exit 1
+      # fi
       
       # 测试SSH连接
       echo "测试SSH连接到 $DEPLOY_USER@$DEPLOY_HOST..."
@@ -506,31 +511,31 @@ cd-deploy:
         echo "错误: SSH连接失败"
         exit 1
       fi
-      echo "测试SSH连接到 $DEPLOY_HOST_2_USER@$DEPLOY_HOST_2..."
-      if ! ssh -o ConnectTimeout=10 -o BatchMode=yes "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2" "echo 'SSH连接成功'"; then
-        echo "错误: SSH连接失败"
-        exit 1
-      fi
+      # echo "测试SSH连接到 $DEPLOY_HOST_2_USER@$DEPLOY_HOST_2..."
+      # if ! ssh -o ConnectTimeout=10 -o BatchMode=yes "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2" "echo 'SSH连接成功'"; then
+      #   echo "错误: SSH连接失败"
+      #   exit 1
+      # fi
       
       # 创建目标目录
       echo "在目标服务器创建目录: $DEPLOY_TARGET_DIR"
       ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p $DEPLOY_TARGET_DIR"
-      echo "在目标服务器创建目录: $DEPLOY_HOST_2_TARGET_DIR"
-      ssh "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2" "mkdir -p $DEPLOY_HOST_2_TARGET_DIR"
+      # echo "在目标服务器创建目录: $DEPLOY_HOST_2_TARGET_DIR"
+      # ssh "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2" "mkdir -p $DEPLOY_HOST_2_TARGET_DIR"
       
       # 部署文件
       echo "开始部署文件..."
       echo "传输ZIP文件..."
       scp -o ConnectTimeout=30 "$RENAMED_ZIP" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET_DIR/"
-      scp -o ConnectTimeout=30 "$RENAMED_ZIP" "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2:$DEPLOY_HOST_2_TARGET_DIR/"
+      # scp -o ConnectTimeout=30 "$RENAMED_ZIP" "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2:$DEPLOY_HOST_2_TARGET_DIR/"
       
       echo "传输元数据文件..."
       scp -o ConnectTimeout=30 "$METADATA_FILE" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET_DIR/"
-      scp -o ConnectTimeout=30 "$METADATA_FILE" "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2:$DEPLOY_HOST_2_TARGET_DIR/"
+      # scp -o ConnectTimeout=30 "$METADATA_FILE" "$DEPLOY_HOST_2_USER@$DEPLOY_HOST_2:$DEPLOY_HOST_2_TARGET_DIR/"
       
       echo "=== 部署完成 ==="
       echo "文件已部署到: $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET_DIR/"
-      echo "文件已部署到: $DEPLOY_HOST_2_USER@$DEPLOY_HOST_2:$DEPLOY_HOST_2_TARGET_DIR/"
+      # echo "文件已部署到: $DEPLOY_HOST_2_USER@$DEPLOY_HOST_2:$DEPLOY_HOST_2_TARGET_DIR/"
 
   environment:
     name: atmos
