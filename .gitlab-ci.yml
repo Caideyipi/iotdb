@@ -433,38 +433,8 @@ cd-deploy:
     - timechodb-release
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"'
+  image: maven:3.8.1-openjdk-17-slim-lsof-release
   before_script:
-    - |
-      APT_SOURCES_PREPARED=0
-      prepare_apt_sources() {
-        if [ "$APT_SOURCES_PREPARED" -eq 0 ]; then
-          printf '%s\n' \
-            'deb http://mirrors.aliyun.com/debian bullseye main contrib non-free' \
-            'deb http://mirrors.aliyun.com/debian bullseye-updates main contrib non-free' \
-            'deb http://mirrors.aliyun.com/debian-security bullseye-security main contrib non-free' \
-            >/etc/apt/sources.list
-          if [ -d /etc/apt/sources.list.d ]; then
-            find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's#http://deb.debian.org/debian#http://mirrors.aliyun.com/debian#g' {} +
-            find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's#http://security.debian.org/debian-security#http://mirrors.aliyun.com/debian-security#g' {} +
-            find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's/buster/bullseye/g' {} +
-            find /etc/apt/sources.list.d -maxdepth 1 -type f -name '*.list' -exec sed -i 's#bullseye/updates#bullseye-security#g' {} +
-          fi
-          apt-get update
-          APT_SOURCES_PREPARED=1
-        fi
-      }
-      
-      ensure_package() {
-        local package="$1"
-        local bin_name="$2"
-        if ! command -v "$bin_name" >/dev/null 2>&1; then
-          prepare_apt_sources
-          apt-get install -y "$package"
-        fi
-      }
-      
-      ensure_package openssh-client ssh-agent
-      ensure_package git git
     - eval $(ssh-agent -s)
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
