@@ -266,6 +266,10 @@ public class NodeManager {
       auditConfig.setAuditableOperationType(COMMON_CONFIG.getAuditableOperationTypeInStr());
       auditConfig.setAuditableOperationLevel(COMMON_CONFIG.getAuditableOperationLevelInStr());
       auditConfig.setAuditableOperationResult(COMMON_CONFIG.getAuditableOperationResult());
+      auditConfig.setAuditableDdlEventType(COMMON_CONFIG.getAuditableDdlEventTypeInStr());
+      auditConfig.setAuditableDmlEventType(COMMON_CONFIG.getAuditableDmlEventTypeInStr());
+      auditConfig.setAuditableQueryEventType(COMMON_CONFIG.getAuditableQueryEventTypeInStr());
+      auditConfig.setAuditableControlEventType(COMMON_CONFIG.getAuditableControlEventTypeInStr());
     }
     return auditConfig;
   }

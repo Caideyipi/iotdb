@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.commons.conf;
 
+import org.apache.iotdb.commons.audit.AuditEventType;
 import org.apache.iotdb.commons.audit.AuditLogOperation;
 import org.apache.iotdb.commons.audit.PrivilegeLevel;
 import org.apache.iotdb.commons.client.property.ClientPoolProperty.DefaultProperty;
@@ -471,6 +472,23 @@ public class CommonConfig {
           AuditLogOperation.DDL,
           AuditLogOperation.QUERY,
           AuditLogOperation.CONTROL);
+
+  /** Indicates the auditable event types for each auditableOperationType * */
+  private List<AuditEventType> auditableDmlEventType =
+      Arrays.asList(AuditEventType.OBJECT_AUTHENTICATION, AuditEventType.SLOW_OPERATION);
+
+  private List<AuditEventType> auditableDdlEventType =
+      Arrays.asList(AuditEventType.OBJECT_AUTHENTICATION, AuditEventType.SLOW_OPERATION);
+  private List<AuditEventType> auditableQueryEventType =
+      Arrays.asList(AuditEventType.OBJECT_AUTHENTICATION, AuditEventType.SLOW_OPERATION);
+  private List<AuditEventType> auditableControlEventType =
+      Arrays.asList(
+          AuditEventType.CHANGE_AUDIT_OPTION,
+          AuditEventType.OBJECT_AUTHENTICATION,
+          AuditEventType.SLOW_OPERATION,
+          AuditEventType.LOGIN,
+          AuditEventType.LOGOUT,
+          AuditEventType.DN_SHUTDOWN);
 
   /** The level of privilege required to record audit logs * */
   private PrivilegeLevel auditableOperationLevel = PrivilegeLevel.GLOBAL;
@@ -2772,6 +2790,131 @@ public class CommonConfig {
       }
     }
     this.auditableOperationType = auditableOperationType;
+  }
+
+  public String getAuditableDdlEventTypeInStr() {
+    StringBuilder result = new StringBuilder();
+    for (AuditEventType eventType : auditableDdlEventType) {
+      result.append(eventType.name()).append(",");
+    }
+    result.deleteCharAt(result.length() - 1);
+    return result.toString();
+  }
+
+  public List<AuditEventType> getAuditableDdlEventType() {
+    return auditableDdlEventType;
+  }
+
+  public void setAuditableDdlEventType(String auditableDDLEventTypeStr) {
+    List<AuditEventType> auditableDDLEventType = new ArrayList<>();
+    if (auditableDDLEventTypeStr == null || auditableDDLEventTypeStr.isEmpty()) {
+      this.auditableDdlEventType = auditableDDLEventType;
+      return;
+    }
+    String[] eventTypes = auditableDDLEventTypeStr.split(",");
+    for (String eventType : eventTypes) {
+      try {
+        auditableDDLEventType.add(AuditEventType.valueOf(eventType.trim().toUpperCase()));
+      } catch (IllegalArgumentException e) {
+        logger.warn("Unsupported audit log DDL event type: {}", eventType);
+        throw new IllegalArgumentException("Unsupported audit log DDL event type: " + eventType);
+      }
+    }
+    this.auditableDdlEventType = auditableDDLEventType;
+  }
+
+  public String getAuditableDmlEventTypeInStr() {
+    StringBuilder result = new StringBuilder();
+    for (AuditEventType eventType : auditableDmlEventType) {
+      result.append(eventType.name()).append(",");
+    }
+    result.deleteCharAt(result.length() - 1);
+    return result.toString();
+  }
+
+  public List<AuditEventType> getAuditableDmlEventType() {
+    return auditableDmlEventType;
+  }
+
+  public void setAuditableDmlEventType(String auditableDMLEventTypeStr) {
+    List<AuditEventType> auditableDMLEventType = new ArrayList<>();
+    if (auditableDMLEventTypeStr == null || auditableDMLEventTypeStr.isEmpty()) {
+      this.auditableDmlEventType = auditableDMLEventType;
+      return;
+    }
+    String[] eventTypes = auditableDMLEventTypeStr.split(",");
+    for (String eventType : eventTypes) {
+      try {
+        auditableDMLEventType.add(AuditEventType.valueOf(eventType.trim().toUpperCase()));
+      } catch (IllegalArgumentException e) {
+        logger.warn("Unsupported audit log DML event type: {}", eventType);
+        throw new IllegalArgumentException("Unsupported audit log DML event type: " + eventType);
+      }
+    }
+    this.auditableDmlEventType = auditableDMLEventType;
+  }
+
+  public String getAuditableQueryEventTypeInStr() {
+    StringBuilder result = new StringBuilder();
+    for (AuditEventType eventType : auditableQueryEventType) {
+      result.append(eventType.name()).append(",");
+    }
+    result.deleteCharAt(result.length() - 1);
+    return result.toString();
+  }
+
+  public List<AuditEventType> getAuditableQueryEventType() {
+    return auditableQueryEventType;
+  }
+
+  public void setAuditableQueryEventType(String auditableQUERYEventTypeStr) {
+    List<AuditEventType> auditableQUERYEventType = new ArrayList<>();
+    if (auditableQUERYEventTypeStr == null || auditableQUERYEventTypeStr.isEmpty()) {
+      this.auditableQueryEventType = auditableQUERYEventType;
+      return;
+    }
+    String[] eventTypes = auditableQUERYEventTypeStr.split(",");
+    for (String eventType : eventTypes) {
+      try {
+        auditableQUERYEventType.add(AuditEventType.valueOf(eventType.trim().toUpperCase()));
+      } catch (IllegalArgumentException e) {
+        logger.warn("Unsupported audit log QUERY event type: {}", eventType);
+        throw new IllegalArgumentException("Unsupported audit log QUERY event type: " + eventType);
+      }
+    }
+    this.auditableQueryEventType = auditableQUERYEventType;
+  }
+
+  public String getAuditableControlEventTypeInStr() {
+    StringBuilder result = new StringBuilder();
+    for (AuditEventType eventType : auditableControlEventType) {
+      result.append(eventType.name()).append(",");
+    }
+    result.deleteCharAt(result.length() - 1);
+    return result.toString();
+  }
+
+  public List<AuditEventType> getAuditableControlEventType() {
+    return auditableControlEventType;
+  }
+
+  public void setAuditableControlEventType(String auditableCONTROLEventTypeStr) {
+    List<AuditEventType> auditableCONTROLEventType = new ArrayList<>();
+    if (auditableCONTROLEventTypeStr == null || auditableCONTROLEventTypeStr.isEmpty()) {
+      this.auditableControlEventType = auditableCONTROLEventType;
+      return;
+    }
+    String[] eventTypes = auditableCONTROLEventTypeStr.split(",");
+    for (String eventType : eventTypes) {
+      try {
+        auditableCONTROLEventType.add(AuditEventType.valueOf(eventType.trim().toUpperCase()));
+      } catch (IllegalArgumentException e) {
+        logger.warn("Unsupported audit log CONTROL event type: {}", eventType);
+        throw new IllegalArgumentException(
+            "Unsupported audit log CONTROL event type: " + eventType);
+      }
+    }
+    this.auditableControlEventType = auditableCONTROLEventType;
   }
 
   public String getAuditableOperationLevelInStr() {

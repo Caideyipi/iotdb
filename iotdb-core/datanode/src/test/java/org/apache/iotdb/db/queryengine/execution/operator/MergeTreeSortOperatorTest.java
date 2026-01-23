@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.path.NonAlignedFullPath;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.protocol.session.IClientSession;
 import org.apache.iotdb.db.queryengine.common.FragmentInstanceId;
+import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
 import org.apache.iotdb.db.queryengine.common.PlanFragmentId;
 import org.apache.iotdb.db.queryengine.common.QueryId;
 import org.apache.iotdb.db.queryengine.common.header.DatasetHeader;
@@ -1914,6 +1915,11 @@ public class MergeTreeSortOperatorTest {
     @Override
     public String getClientHostname() {
       return SessionConfig.DEFAULT_HOST;
+    }
+
+    @Override
+    public MPPQueryContext getContext() {
+      return null;
     }
   }
 }

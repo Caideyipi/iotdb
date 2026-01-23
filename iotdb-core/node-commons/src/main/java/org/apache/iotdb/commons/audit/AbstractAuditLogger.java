@@ -46,6 +46,16 @@ public abstract class AbstractAuditLogger {
   protected static final boolean IS_AUDIT_LOG_ENABLED = CONFIG.isEnableAuditLog();
   private static final List<AuditLogOperation> AUDITABLE_OPERATION_TYPE =
       CONFIG.getAuditableOperationType();
+
+  private static final List<AuditEventType> AUDITABLE_DML_EVENT_TYPE =
+      CONFIG.getAuditableDmlEventType();
+  private static final List<AuditEventType> AUDITABLE_DDL_EVENT_TYPE =
+      CONFIG.getAuditableDdlEventType();
+  private static final List<AuditEventType> AUDITABLE_QUERY_EVENT_TYPE =
+      CONFIG.getAuditableQueryEventType();
+  private static final List<AuditEventType> AUDITABLE_CONTROL_EVENT_TYPE =
+      CONFIG.getAuditableControlEventType();
+
   private static final PrivilegeLevel AUDITABLE_OPERATION_LEVEL =
       CONFIG.getAuditableOperationLevel();
   private static final String AUDITABLE_OPERATION_RESULT = CONFIG.getAuditableOperationResult();
@@ -62,6 +72,35 @@ public abstract class AbstractAuditLogger {
     if (AUDITABLE_OPERATION_TYPE == null || !AUDITABLE_OPERATION_TYPE.contains(operation)) {
       return true;
     }
+    switch (operation) {
+      case DML:
+        if (AUDITABLE_DML_EVENT_TYPE == null
+            || !AUDITABLE_DML_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+          return true;
+        }
+        break;
+      case DDL:
+        if (AUDITABLE_DDL_EVENT_TYPE == null
+            || !AUDITABLE_DDL_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+          return true;
+        }
+        break;
+      case QUERY:
+        if (AUDITABLE_QUERY_EVENT_TYPE == null
+            || !AUDITABLE_QUERY_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+          return true;
+        }
+        break;
+      case CONTROL:
+        if (AUDITABLE_CONTROL_EVENT_TYPE == null
+            || !AUDITABLE_CONTROL_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+          return true;
+        }
+        break;
+      default:
+        break;
+    }
+
     if (auditLogFields.getPrivilegeTypes() != null) {
       for (PrivilegeType privilegeType : auditLogFields.getPrivilegeTypes()) {
         PrivilegeLevel privilegeLevel = judgePrivilegeLevel(privilegeType);

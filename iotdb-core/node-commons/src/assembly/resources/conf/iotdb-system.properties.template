@@ -1213,7 +1213,7 @@ max_tsblock_line_number=1000
 # Time cost(ms) threshold for slow query
 # effectiveMode: hot_reload
 # Datatype: long
-slow_query_threshold=10000
+slow_query_threshold=3000
 
 # Time window threshold(min) for record of history queries.
 # effectiveMode: hot_reload
@@ -2336,6 +2336,31 @@ enable_audit_log=false
 # effectiveMode: restart
 # Privilege: AUDIT
 auditable_operation_type=DML,DDL,QUERY,CONTROL
+
+# auditable event type when auditing dml operations
+# Datatype: String
+# effectiveMode: restart
+# Privilege: AUDIT
+auditable_dml_event_type=OBJECT_AUTHENTICATION,SLOW_OPERATION
+
+# auditable event type when auditing ddl operations
+# Datatype: String
+# effectiveMode: restart
+# Privilege: AUDIT
+auditable_ddl_event_type=OBJECT_AUTHENTICATION,SLOW_OPERATION
+
+# auditable event type when auditing query operations
+# Datatype: String
+# effectiveMode: restart
+# Privilege: AUDIT
+auditable_query_event_type=OBJECT_AUTHENTICATION,SLOW_OPERATION
+
+# auditable event type when auditing control operations
+# Datatype: String
+# effectiveMode: restart
+# Privilege: AUDIT
+auditable_control_event_type=CHANGE_AUDIT_OPTION,OBJECT_AUTHENTICATION,LOGIN,LOGOUT,DN_SHUTDOWN,SLOW_OPERATION
+
 
 # the level of auditable operation, including global, object
 # global: audit log for all operations

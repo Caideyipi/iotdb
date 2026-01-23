@@ -20,6 +20,10 @@
 package org.apache.iotdb.db.queryengine.plan;
 
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
+import org.apache.iotdb.commons.audit.AuditEventType;
+import org.apache.iotdb.commons.audit.AuditLogFields;
+import org.apache.iotdb.commons.audit.AuditLogOperation;
+import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.client.ClientPoolFactory;
 import org.apache.iotdb.commons.client.IClientManager;
 import org.apache.iotdb.commons.client.async.AsyncDataNodeInternalServiceClient;
@@ -32,6 +36,7 @@ import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.memory.IMemoryBlock;
 import org.apache.iotdb.commons.memory.MemoryBlockType;
+import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
@@ -154,6 +159,7 @@ import org.apache.iotdb.db.queryengine.plan.relational.type.TypeManager;
 import org.apache.iotdb.db.queryengine.plan.statement.IConfigStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.Statement;
 import org.apache.iotdb.db.utils.SetThreadName;
+import org.apache.iotdb.rpc.TSStatusCode;
 
 import org.apache.thrift.TBase;
 import org.apache.tsfile.utils.Accountable;
@@ -744,6 +750,31 @@ public class Coordinator {
         queryExecutionMap.remove(queryId);
         if (isUserQuery) {
           recordQueries(queryExecution::getTotalExecutionTime, contentOfQuerySupplier, t);
+        }
+        if (isUserQuery
+            && queryExecution.getTotalExecutionTime() / 1_000_000
+                >= CONFIG.getSlowQueryThreshold()) {
+          AuditLogFields auditLogFields =
+              new AuditLogFields(
+                  queryExecution.getContext().getUserId(),
+                  queryExecution.getUser(),
+                  queryExecution.getClientHostname(),
+                  AuditEventType.SLOW_OPERATION,
+                  AuditLogOperation.QUERY,
+                  PrivilegeType.READ_DATA,
+                  queryExecution.getStatus().status != null
+                      && queryExecution.getStatus().status.getCode()
+                          == TSStatusCode.SUCCESS_STATUS.getStatusCode(),
+                  queryExecution.getContext().getDatabaseName().orElse(""),
+                  queryExecution.getExecuteSQL().orElse(""));
+          DNAuditLogger.getInstance()
+              .log(
+                  auditLogFields,
+                  () ->
+                      String.format(
+                          "SLOW_QUERY: cost %d ms, %s",
+                          queryExecution.getTotalExecutionTime() / 1_000_000,
+                          queryExecution.getExecuteSQL().orElse("")));
         }
       }
     }

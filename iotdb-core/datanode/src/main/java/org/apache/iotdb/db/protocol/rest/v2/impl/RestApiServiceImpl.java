@@ -18,7 +18,12 @@
 package org.apache.iotdb.db.protocol.rest.v2.impl;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.audit.AuditEventType;
+import org.apache.iotdb.commons.audit.AuditLogFields;
+import org.apache.iotdb.commons.audit.AuditLogOperation;
+import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.conf.rest.IoTDBRestServiceDescriptor;
@@ -240,6 +245,26 @@ public class RestApiServiceImpl extends RestApiService {
             clientSession.getUsername(),
             clientSession.getClientAddress());
         recordQueries(() -> costTime, contentOfQuerySupplier, t);
+        if (costTime / 1_000_000 > CONFIG.getSlowQueryThreshold()) {
+          AuditLogFields auditLogFields =
+              new AuditLogFields(
+                  clientSession.getUserId(),
+                  clientSession.getUsername(),
+                  clientSession.getClientAddress(),
+                  AuditEventType.SLOW_OPERATION,
+                  AuditLogOperation.QUERY,
+                  PrivilegeType.READ_DATA,
+                  t == null,
+                  clientSession.getDatabaseName(),
+                  null);
+          DNAuditLogger.getInstance()
+              .log(
+                  auditLogFields,
+                  () ->
+                      String.format(
+                          "SLOW_QUERY: cost %d ms, %s",
+                          costTime / 1_000_000, contentOfQuerySupplier.get()));
+        }
       }
     }
   }

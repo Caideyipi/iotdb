@@ -28,6 +28,7 @@ import org.apache.iotdb.common.rpc.thrift.TShowConfigurationTemplateResp;
 import org.apache.iotdb.commons.audit.AuditEventType;
 import org.apache.iotdb.commons.audit.AuditLogFields;
 import org.apache.iotdb.commons.audit.AuditLogOperation;
+import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
@@ -1122,6 +1123,23 @@ public class ClientRPCServiceImpl implements IClientRPCServiceWithHandler {
           clientSession.getUsername(),
           clientSession.getClientAddress());
       recordQueries(() -> costTime, () -> statement, null);
+      if (costTime / 1_000_000 > config.getSlowQueryThreshold()) {
+        AuditLogFields auditLogFields =
+            new AuditLogFields(
+                clientSession.getUserId(),
+                clientSession.getUsername(),
+                clientSession.getClientAddress(),
+                AuditEventType.SLOW_OPERATION,
+                AuditLogOperation.QUERY,
+                PrivilegeType.READ_DATA,
+                true,
+                clientSession.getDatabaseName(),
+                null);
+        DNAuditLogger.getInstance()
+            .log(
+                auditLogFields,
+                () -> String.format("SLOW_QUERY: cost %d ms, %s", costTime / 1_000_000, statement));
+      }
       return resp;
     } catch (final Exception e) {
       return RpcUtils.getTSExecuteStatementResp(

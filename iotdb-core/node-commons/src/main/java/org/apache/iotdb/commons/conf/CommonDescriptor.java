@@ -224,6 +224,26 @@ public class CommonDescriptor {
                 .trim()));
     config.setAuditableOperationType(
         properties.getProperty("auditable_operation_type", "DDL,DML,QUERY,CONTROL").trim());
+    config.setAuditableDdlEventType(
+        properties
+            .getProperty("auditable_ddl_event_type", config.getAuditableDdlEventTypeInStr())
+            .trim()
+            .toUpperCase());
+    config.setAuditableDmlEventType(
+        properties
+            .getProperty("auditable_dml_event_type", config.getAuditableDmlEventTypeInStr())
+            .trim()
+            .toUpperCase());
+    config.setAuditableQueryEventType(
+        properties
+            .getProperty("auditable_query_event_type", config.getAuditableQueryEventTypeInStr())
+            .trim()
+            .toUpperCase());
+    config.setAuditableControlEventType(
+        properties
+            .getProperty("auditable_control_event_type", config.getAuditableControlEventTypeInStr())
+            .trim()
+            .toUpperCase());
     config.setAuditableOperationLevel(
         properties
             .getProperty(
@@ -562,6 +582,10 @@ public class CommonDescriptor {
       config.setAuditableOperationType(auditConfig.getAuditableOperationType());
       config.setAuditableOperationLevel(auditConfig.getAuditableOperationLevel());
       config.setAuditableOperationResult(auditConfig.getAuditableOperationResult());
+      config.setAuditableDmlEventType(auditConfig.getAuditableDmlEventType());
+      config.setAuditableDdlEventType(auditConfig.getAuditableDdlEventType());
+      config.setAuditableQueryEventType(auditConfig.getAuditableQueryEventType());
+      config.setAuditableControlEventType(auditConfig.getAuditableControlEventType());
     }
   }
 

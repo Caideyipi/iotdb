@@ -34,6 +34,10 @@ struct TAuditConfig {
   2: optional string auditableOperationType
   3: optional string auditableOperationLevel
   4: optional string auditableOperationResult
+  5: optional string auditableDdlEventType
+  6: optional string auditableDmlEventType
+  7: optional string auditableQueryEventType
+  8: optional string auditableControlEventType
 }
 
 struct TGlobalConfig {
