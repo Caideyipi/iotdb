@@ -31,6 +31,7 @@ import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.column.ColumnHeader;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.commons.service.metric.PerformanceOverviewMetrics;
+import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.rpc.thrift.TAuthorizerResp;
 import org.apache.iotdb.confignode.rpc.thrift.TCheckMaxClientNumResp;
 import org.apache.iotdb.confignode.rpc.thrift.TDBPrivilege;
@@ -115,6 +116,7 @@ public class AuthorityChecker {
     return accessControl;
   }
 
+  @TestOnly
   public static void setAccessControl(AccessControl accessControl) {
     AuthorityChecker.accessControl = accessControl;
   }
