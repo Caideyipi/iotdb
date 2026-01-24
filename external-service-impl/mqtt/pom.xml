@@ -35,8 +35,9 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.github.moquette-io.moquette</groupId>
+            <groupId>com.timecho.moquette</groupId>
             <artifactId>moquette-broker</artifactId>
+            <version>0.19-SNAPSHOT</version>
             <exclusions>
                 <!-- exclude dependencies has included by iotdb-server -->
                 <exclusion>

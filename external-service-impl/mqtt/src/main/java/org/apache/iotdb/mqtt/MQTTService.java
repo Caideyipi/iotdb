@@ -96,6 +96,8 @@ public class MQTTService implements IExternalService {
     properties.setProperty(
         BrokerConstants.NETTY_MAX_BYTES_PROPERTY_NAME,
         String.valueOf(iotDBConfig.getMqttMaxMessageSize()));
+    properties.setProperty(
+        "metrics_provider_class", "org.apache.iotdb.mqtt.IoTDBMoquetteMetricsProvider");
     return new MemoryConfig(properties);
   }
 
