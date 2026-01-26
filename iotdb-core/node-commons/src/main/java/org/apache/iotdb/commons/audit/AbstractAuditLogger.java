@@ -23,7 +23,6 @@ import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 public abstract class AbstractAuditLogger {
@@ -43,22 +42,6 @@ public abstract class AbstractAuditLogger {
   public static final String AUDIT_LOG_LOG = "log";
 
   private static final CommonConfig CONFIG = CommonDescriptor.getInstance().getConfig();
-  protected static final boolean IS_AUDIT_LOG_ENABLED = CONFIG.isEnableAuditLog();
-  private static final List<AuditLogOperation> AUDITABLE_OPERATION_TYPE =
-      CONFIG.getAuditableOperationType();
-
-  private static final List<AuditEventType> AUDITABLE_DML_EVENT_TYPE =
-      CONFIG.getAuditableDmlEventType();
-  private static final List<AuditEventType> AUDITABLE_DDL_EVENT_TYPE =
-      CONFIG.getAuditableDdlEventType();
-  private static final List<AuditEventType> AUDITABLE_QUERY_EVENT_TYPE =
-      CONFIG.getAuditableQueryEventType();
-  private static final List<AuditEventType> AUDITABLE_CONTROL_EVENT_TYPE =
-      CONFIG.getAuditableControlEventType();
-
-  private static final PrivilegeLevel AUDITABLE_OPERATION_LEVEL =
-      CONFIG.getAuditableOperationLevel();
-  private static final String AUDITABLE_OPERATION_RESULT = CONFIG.getAuditableOperationResult();
 
   public abstract void log(IAuditEntity auditLogFields, Supplier<String> log);
 
@@ -69,31 +52,34 @@ public abstract class AbstractAuditLogger {
     // to do: check whether this event should be logged.
     // if whitelist or blacklist is used, only ip on the whitelist or blacklist can be logged
 
-    if (AUDITABLE_OPERATION_TYPE == null || !AUDITABLE_OPERATION_TYPE.contains(operation)) {
+    if (CONFIG.getAuditableOperationType() == null
+        || !CONFIG.getAuditableOperationType().contains(operation)) {
       return true;
     }
     switch (operation) {
       case DML:
-        if (AUDITABLE_DML_EVENT_TYPE == null
-            || !AUDITABLE_DML_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+        if (CONFIG.getAuditableDmlEventType() == null
+            || !CONFIG.getAuditableDmlEventType().contains(auditLogFields.getAuditEventType())) {
           return true;
         }
         break;
       case DDL:
-        if (AUDITABLE_DDL_EVENT_TYPE == null
-            || !AUDITABLE_DDL_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+        if (CONFIG.getAuditableDdlEventType() == null
+            || !CONFIG.getAuditableDdlEventType().contains(auditLogFields.getAuditEventType())) {
           return true;
         }
         break;
       case QUERY:
-        if (AUDITABLE_QUERY_EVENT_TYPE == null
-            || !AUDITABLE_QUERY_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+        if (CONFIG.getAuditableQueryEventType() == null
+            || !CONFIG.getAuditableQueryEventType().contains(auditLogFields.getAuditEventType())) {
           return true;
         }
         break;
       case CONTROL:
-        if (AUDITABLE_CONTROL_EVENT_TYPE == null
-            || !AUDITABLE_CONTROL_EVENT_TYPE.contains(auditLogFields.getAuditEventType())) {
+        if (CONFIG.getAuditableControlEventType() == null
+            || !CONFIG
+                .getAuditableControlEventType()
+                .contains(auditLogFields.getAuditEventType())) {
           return true;
         }
         break;
@@ -104,21 +90,21 @@ public abstract class AbstractAuditLogger {
     if (auditLogFields.getPrivilegeTypes() != null) {
       for (PrivilegeType privilegeType : auditLogFields.getPrivilegeTypes()) {
         PrivilegeLevel privilegeLevel = judgePrivilegeLevel(privilegeType);
-        if (AUDITABLE_OPERATION_LEVEL == PrivilegeLevel.OBJECT
+        if (CONFIG.getAuditableOperationLevel() == PrivilegeLevel.OBJECT
             && privilegeLevel == PrivilegeLevel.GLOBAL) {
           return true;
         }
       }
     } else {
       // default to GLOBAL level if no privilege type is set
-      if (AUDITABLE_OPERATION_LEVEL == PrivilegeLevel.OBJECT) {
+      if (CONFIG.getAuditableOperationLevel() == PrivilegeLevel.OBJECT) {
         return true;
       }
     }
-    if (result && !AUDITABLE_OPERATION_RESULT.contains("SUCCESS")) {
+    if (result && !CONFIG.getAuditableOperationResult().contains("SUCCESS")) {
       return true;
     }
-    return !result && !AUDITABLE_OPERATION_RESULT.contains("FAIL");
+    return !result && !CONFIG.getAuditableOperationResult().contains("FAIL");
   }
 
   public static PrivilegeLevel judgePrivilegeLevel(PrivilegeType type) {

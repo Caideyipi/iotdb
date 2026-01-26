@@ -847,6 +847,129 @@ public class ConfigNodeDescriptor {
                 properties.getProperty(
                     "enforce_strong_password",
                     String.valueOf(commonDescriptor.getConfig().isEnforceStrongPassword()))));
+    // update audit log config
+    commonDescriptor
+        .getConfig()
+        .setEnableAuditLog(
+            Boolean.parseBoolean(
+                properties.getProperty(
+                    "enable_audit_log",
+                    String.valueOf(commonDescriptor.getConfig().isEnableAuditLog()))));
+
+    commonDescriptor
+        .getConfig()
+        .setAuditableOperationType(
+            String.valueOf(
+                    properties.getProperty(
+                        "auditable_operation_type",
+                        commonDescriptor.getConfig().getAuditableOperationTypeInStr()))
+                .trim()
+                .toUpperCase());
+
+    commonDescriptor
+        .getConfig()
+        .setAuditableOperationLevel(
+            properties
+                .getProperty(
+                    "auditable_operation_level",
+                    commonDescriptor.getConfig().getAuditableOperationLevelInStr())
+                .trim()
+                .toUpperCase());
+
+    commonDescriptor
+        .getConfig()
+        .setAuditableOperationResult(
+            properties
+                .getProperty(
+                    "auditable_operation_result",
+                    String.valueOf(commonDescriptor.getConfig().getAuditableOperationResult()))
+                .trim()
+                .toUpperCase());
+
+    commonDescriptor
+        .getConfig()
+        .setAuditableDdlEventType(
+            properties
+                .getProperty(
+                    "auditable_ddl_event_type",
+                    commonDescriptor.getConfig().getAuditableDdlEventTypeInStr())
+                .trim()
+                .toUpperCase());
+    commonDescriptor
+        .getConfig()
+        .setAuditableDmlEventType(
+            properties
+                .getProperty(
+                    "auditable_dml_event_type",
+                    commonDescriptor.getConfig().getAuditableDmlEventTypeInStr())
+                .trim()
+                .toUpperCase());
+    commonDescriptor
+        .getConfig()
+        .setAuditableQueryEventType(
+            properties
+                .getProperty(
+                    "auditable_query_event_type",
+                    commonDescriptor.getConfig().getAuditableQueryEventTypeInStr())
+                .trim()
+                .toUpperCase());
+    commonDescriptor
+        .getConfig()
+        .setAuditableControlEventType(
+            properties
+                .getProperty(
+                    "auditable_control_event_type",
+                    commonDescriptor.getConfig().getAuditableControlEventTypeInStr())
+                .trim()
+                .toUpperCase());
+    double auditLogSpaceTlInGB =
+        Double.parseDouble(
+            properties
+                .getProperty(
+                    "audit_log_space_tl_in_GB",
+                    String.valueOf(commonDescriptor.getConfig().getAuditLogSpaceTlInGB()))
+                .trim());
+    if (auditLogSpaceTlInGB <= 0) {
+      LOGGER.warn(
+          "Invalid audit log space threshold: {}, set to unlimited Double.MAX_VALUE",
+          auditLogSpaceTlInGB);
+      auditLogSpaceTlInGB = Double.MAX_VALUE;
+    }
+    commonDescriptor.getConfig().setAuditLogSpaceTlInGB(auditLogSpaceTlInGB);
+
+    double auditLogTtlInDays =
+        Double.parseDouble(
+            properties
+                .getProperty(
+                    "audit_log_ttl_in_days",
+                    String.valueOf(commonDescriptor.getConfig().getAuditLogTtlInDays()))
+                .trim());
+    // Prevent overflow when converting days to milliseconds
+    if (auditLogTtlInDays > Long.MAX_VALUE * 1.0 / (24L * 3600 * 1000)) {
+      LOGGER.warn("audit_log_ttl_in_days is too large, setting to maximum allowed value");
+      auditLogTtlInDays = Long.MAX_VALUE;
+    }
+    commonDescriptor.getConfig().setAuditLogTtlInDays(auditLogTtlInDays);
+
+    commonDescriptor
+        .getConfig()
+        .setAuditLogBatchIntervalInMs(
+            Long.parseLong(
+                properties
+                    .getProperty(
+                        "audit_log_batch_interval_in_ms",
+                        String.valueOf(commonDescriptor.getConfig().getAuditLogBatchIntervalInMs()))
+                    .trim()));
+    commonDescriptor
+        .getConfig()
+        .setAuditLogBatchMaxQueueBytes(
+            Long.parseLong(
+                properties
+                    .getProperty(
+                        "audit_log_batch_max_queue_bytes",
+                        String.valueOf(
+                            commonDescriptor.getConfig().getAuditLogBatchMaxQueueBytes()))
+                    .trim()));
   }
 
   public static ConfigNodeDescriptor getInstance() {

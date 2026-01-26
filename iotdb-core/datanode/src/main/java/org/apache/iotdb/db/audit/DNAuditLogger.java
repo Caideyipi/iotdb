@@ -30,6 +30,7 @@ import org.apache.iotdb.commons.audit.UserEntity;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 import org.apache.iotdb.commons.client.IClientManager;
 import org.apache.iotdb.commons.client.exception.ClientManagerException;
+import org.apache.iotdb.commons.conf.CommonConfig;
 import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
 import org.apache.iotdb.commons.consensus.ConfigRegionId;
@@ -90,12 +91,11 @@ public class DNAuditLogger extends AbstractAuditLogger {
 
   private static final IoTDBConfig config = IoTDBDescriptor.getInstance().getConfig();
 
+  private static final CommonConfig commonConfig = CommonDescriptor.getInstance().getConfig();
   private static final String AUDIT_LOG_DEVICE = "root.__audit.log.node_%s.u_%s";
   private static final String AUDIT_CN_LOG_DEVICE = "root.__audit.log.node_%s.u_all";
 
   private static final String AUDIT_LOG_DEVICE_PATH = "root.__audit.log.**";
-  private static final double auditLogTtlInDays =
-      CommonDescriptor.getInstance().getConfig().getAuditLogTtlInDays();
   private static final SessionInfo sessionInfo =
       new SessionInfo(
           0,
@@ -116,45 +116,51 @@ public class DNAuditLogger extends AbstractAuditLogger {
 
   private Coordinator coordinator;
 
-  private final AsyncBatchUtils<InsertRowStatement> asyncBatchUtils;
+  private AsyncBatchUtils<InsertRowStatement> asyncBatchUtils;
+
+  private final Object asyncBatchLock = new Object();
 
   private DNAuditLogger() {
     // Empty constructor
-    if (IS_AUDIT_LOG_ENABLED) {
-      asyncBatchUtils =
-          new AsyncBatchUtils<>(
-              "DNAuditLogger",
-              CommonDescriptor.getInstance()
-                  .getConfig()
-                  .getAuditLogBatchIntervalInMs(), // flush interval ms
-              CommonDescriptor.getInstance()
-                  .getConfig()
-                  .getAuditLogBatchMaxQueueBytes(), // max queue bytes
-              batch -> {
-                InsertRowsStatement stmt = new InsertRowsStatement();
-                stmt.setInsertRowStatementList(batch);
-                return coordinator.executeForTreeModel(
-                    stmt,
-                    SESSION_MANAGER.requestQueryId(),
-                    sessionInfo,
-                    "",
-                    ClusterPartitionFetcher.getInstance(),
-                    SCHEMA_FETCHER);
-              });
-    } else {
-      asyncBatchUtils = null;
-    }
+    asyncBatchUtils = null;
   }
 
   public void stop() {
-    if (asyncBatchUtils != null) {
-      asyncBatchUtils.shutdown();
+    synchronized (asyncBatchLock) {
+      if (asyncBatchUtils != null) {
+        asyncBatchUtils.shutdown();
+        asyncBatchUtils = null;
+      }
     }
   }
 
   public void start() {
-    if (asyncBatchUtils != null) {
-      asyncBatchUtils.start();
+    synchronized (asyncBatchLock) {
+      if (asyncBatchUtils == null) {
+        if (CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
+          asyncBatchUtils =
+              new AsyncBatchUtils<>(
+                  "DNAuditLogger",
+                  CommonDescriptor.getInstance()
+                      .getConfig()
+                      .getAuditLogBatchIntervalInMs(), // flush interval ms
+                  CommonDescriptor.getInstance()
+                      .getConfig()
+                      .getAuditLogBatchMaxQueueBytes(), // max queue bytes
+                  batch -> {
+                    InsertRowsStatement stmt = new InsertRowsStatement();
+                    stmt.setInsertRowStatementList(batch);
+                    return coordinator.executeForTreeModel(
+                        stmt,
+                        SESSION_MANAGER.requestQueryId(),
+                        sessionInfo,
+                        "",
+                        ClusterPartitionFetcher.getInstance(),
+                        SCHEMA_FETCHER);
+                  });
+          asyncBatchUtils.start();
+        }
+      }
     }
   }
 
@@ -299,25 +305,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
         if (result.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
             || result.status.getCode() == TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode()) {
 
-          if (auditLogTtlInDays > 0) {
-            long auditLogTtlInMs;
-            if (auditLogTtlInDays == Long.MAX_VALUE) {
-              auditLogTtlInMs = Long.MAX_VALUE;
-            } else {
-              auditLogTtlInMs = (long) (auditLogTtlInDays * 24 * 3600 * 1000);
-            }
-            statement =
-                StatementGenerator.createStatement(
-                    "SET TTL TO " + AUDIT_LOG_DEVICE_PATH + " " + auditLogTtlInMs,
-                    ZoneId.systemDefault());
-            coordinator.executeForTreeModel(
-                statement,
-                SESSION_MANAGER.requestQueryId(),
-                sessionInfo,
-                "",
-                ClusterPartitionFetcher.getInstance(),
-                SCHEMA_FETCHER);
-          }
+          setTTL();
           SqlParser relationSqlParser = new SqlParser();
           IClientSession session =
               new InternalClientSession(
@@ -414,9 +402,32 @@ public class DNAuditLogger extends AbstractAuditLogger {
     }
   }
 
+  public void setTTL() {
+    double auditLogTtlInDays = CommonDescriptor.getInstance().getConfig().getAuditLogTtlInDays();
+    if (auditLogTtlInDays > 0) {
+      long auditLogTtlInMs;
+      if (auditLogTtlInDays == Long.MAX_VALUE) {
+        auditLogTtlInMs = Long.MAX_VALUE;
+      } else {
+        auditLogTtlInMs = (long) (auditLogTtlInDays * 24 * 3600 * 1000);
+      }
+      Statement statement =
+          StatementGenerator.createStatement(
+              "SET TTL TO " + AUDIT_LOG_DEVICE_PATH + " " + auditLogTtlInMs,
+              ZoneId.systemDefault());
+      coordinator.executeForTreeModel(
+          statement,
+          SESSION_MANAGER.requestQueryId(),
+          sessionInfo,
+          "",
+          ClusterPartitionFetcher.getInstance(),
+          SCHEMA_FETCHER);
+    }
+  }
+
   @Override
   public void log(IAuditEntity auditLogFields, Supplier<String> log) {
-    if (!IS_AUDIT_LOG_ENABLED) {
+    if (!commonConfig.isEnableAuditLog()) {
       return;
     }
     try {
@@ -462,7 +473,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
 
   public void logFromCN(AuditLogFields auditLogFields, String log, int nodeId)
       throws IllegalPathException {
-    if (!IS_AUDIT_LOG_ENABLED) {
+    if (!commonConfig.isEnableAuditLog()) {
       return;
     }
     try {

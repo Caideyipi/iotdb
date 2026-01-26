@@ -25,6 +25,7 @@ import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.commons.audit.AbstractAuditLogger;
 import org.apache.iotdb.commons.audit.IAuditEntity;
+import org.apache.iotdb.commons.conf.CommonDescriptor;
 import org.apache.iotdb.confignode.client.async.AsyncDataNodeHeartbeatClientPool;
 import org.apache.iotdb.confignode.client.async.handlers.audit.DataNodeWriteAuditLogHandler;
 import org.apache.iotdb.confignode.conf.ConfigNodeConfig;
@@ -51,7 +52,7 @@ public class CNAuditLogger extends AbstractAuditLogger {
 
   @Override
   public void log(IAuditEntity auditLogFields, Supplier<String> log) {
-    if (!IS_AUDIT_LOG_ENABLED) {
+    if (!CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
       return;
     }
     if (noNeedInsertAuditLog(auditLogFields)) {
@@ -83,7 +84,7 @@ public class CNAuditLogger extends AbstractAuditLogger {
             log.get(),
             CONF.getConfigNodeId());
     // refer the implementation of HeartbeatService.pingRegisteredDataNode(). By appending a new
-    // writeAudtiLog() interface in AsyncDataNodeHeartbeatClientPool, the main thread is not
+    // writeAuditLog() interface in AsyncDataNodeHeartbeatClientPool, the main thread is not
     // required to wait until the write audit log request to be complete.
     AsyncDataNodeHeartbeatClientPool.getInstance()
         .writeAuditLog(

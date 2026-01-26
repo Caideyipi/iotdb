@@ -2323,7 +2323,7 @@ mqtt_max_message_size=1048576
 ####################
 
 # whether to enable the audit log.
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Datatype: Boolean
 # Privilege: AUDIT
 enable_audit_log=false
@@ -2333,31 +2333,31 @@ enable_audit_log=false
 # whether enable audit log for QUERY operation of data and schema
 # whether enable audit log for system's CONTROL operation
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_operation_type=DML,DDL,QUERY,CONTROL
 
 # auditable event type when auditing dml operations
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_dml_event_type=OBJECT_AUTHENTICATION,SLOW_OPERATION
 
 # auditable event type when auditing ddl operations
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_ddl_event_type=OBJECT_AUTHENTICATION,SLOW_OPERATION
 
 # auditable event type when auditing query operations
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_query_event_type=OBJECT_AUTHENTICATION,SLOW_OPERATION
 
 # auditable event type when auditing control operations
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_control_event_type=CHANGE_AUDIT_OPTION,OBJECT_AUTHENTICATION,LOGIN,LOGOUT,DN_SHUTDOWN,SLOW_OPERATION
 
@@ -2366,7 +2366,7 @@ auditable_control_event_type=CHANGE_AUDIT_OPTION,OBJECT_AUTHENTICATION,LOGIN,LOG
 # global: audit log for all operations
 # object: audit log for operations on specified objects, e.g., database, time series, table
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_operation_level=global
 
@@ -2374,32 +2374,32 @@ auditable_operation_level=global
 # success: audit log for successful operations
 # fail: audit log for failed operations
 # Datatype: String
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 auditable_operation_result=success, fail
 
 # max space threshold of audit log file, default value is 1.0 GB
 # Datatype: double
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 audit_log_space_tl_in_GB=1.0
 
 # max time threshold of audit log file, default value is -1.0, means audit log file will never be deleted according to time
 # Datatype: double
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 audit_log_ttl_in_days=-1.0
 
 # Batch write interval for audit logs, default value is 1000 ms
 # Datatype: long
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 audit_log_batch_interval_in_ms=1000
 
 # Maximum size in byte of the queue used for batching audit logs, default value is 268435456 bytes (256MB)
 # If the size exceeds this value, further writes will be blocked.
 # Datatype: long
-# effectiveMode: restart
+# effectiveMode: hot_reload
 # Privilege: AUDIT
 audit_log_batch_max_queue_bytes=268435456
 
