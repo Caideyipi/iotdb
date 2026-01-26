@@ -359,11 +359,16 @@ dependencies:
 sonarqube-check:
   stage: sonarqube-check
   script:
-    - mvn clean verify sonar:sonar -Dsonar.projectKey=timechodb -Dsonar.projectName='timechodb' -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} -DskipTests -pl '!example/jdbc,!example/mqtt,!example/mqtt-customize,!example/pipe-count-point-processor,!example/pipe-opc-ua-sink,!example/rest-java-example,!example/schema,!example/session,!example/trigger,!example/udf,!library-udf' -am  -s $MAVEN_SETTINGS_XML
+    - mvn clean verify sonar:sonar -Dsonar.projectKey=timechodb -Dsonar.projectName='timechodb' -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.token=${SONAR_TOKEN} $SONAR_SCAN_OPTS -DskipTests -pl '!example/jdbc,!example/mqtt,!example/mqtt-customize,!example/pipe-count-point-processor,!example/pipe-opc-ua-sink,!example/rest-java-example,!example/schema,!example/session,!example/trigger,!example/udf,!library-udf' -am  -s $MAVEN_SETTINGS_XML
   allow_failure: true
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_COMMIT_BRANCH == 'master'
+      variables:
+        SONAR_SCAN_OPTS: "-Dsonar.pullrequest.key=$CI_MERGE_REQUEST_IID -Dsonar.pullrequest.branch=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME -Dsonar.pullrequest.base=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    # 规则2：如果是主干分支（如main/master）的推送事件，则执行，并注入分支专用参数
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        SONAR_SCAN_OPTS: "-Dsonar.branch.name=$CI_COMMIT_REF_NAME"
     - if: $CI_COMMIT_BRANCH == 'enable_sonar'
 
 
