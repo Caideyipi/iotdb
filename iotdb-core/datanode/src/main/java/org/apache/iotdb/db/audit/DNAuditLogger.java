@@ -402,6 +402,12 @@ public class DNAuditLogger extends AbstractAuditLogger {
     }
   }
 
+  public void checkAndSetTTL() {
+    if (tableViewIsInitialized.get()) {
+      setTTL();
+    }
+  }
+
   public void setTTL() {
     double auditLogTtlInDays = CommonDescriptor.getInstance().getConfig().getAuditLogTtlInDays();
     if (auditLogTtlInDays > 0) {

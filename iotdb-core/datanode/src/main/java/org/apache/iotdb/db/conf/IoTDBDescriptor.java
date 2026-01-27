@@ -2792,11 +2792,10 @@ public class IoTDBDescriptor {
         DNAuditLogger.getInstance().log(fields, () -> logMessage);
       } else if (!commonDescriptor.getConfig().isEnableAuditLog() && beforeEnableAuditLog) {
         DNAuditLogger.getInstance().stop();
-      } else if (commonDescriptor.getConfig().isEnableAuditLog() && beforeEnableAuditLog) {
-        DNAuditLogger.getInstance().setTTL();
       } else {
         // do nothing
       }
+      DNAuditLogger.getInstance().checkAndSetTTL();
     } catch (Exception e) {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();

@@ -922,54 +922,6 @@ public class ConfigNodeDescriptor {
                     commonDescriptor.getConfig().getAuditableControlEventTypeInStr())
                 .trim()
                 .toUpperCase());
-    double auditLogSpaceTlInGB =
-        Double.parseDouble(
-            properties
-                .getProperty(
-                    "audit_log_space_tl_in_GB",
-                    String.valueOf(commonDescriptor.getConfig().getAuditLogSpaceTlInGB()))
-                .trim());
-    if (auditLogSpaceTlInGB <= 0) {
-      LOGGER.warn(
-          "Invalid audit log space threshold: {}, set to unlimited Double.MAX_VALUE",
-          auditLogSpaceTlInGB);
-      auditLogSpaceTlInGB = Double.MAX_VALUE;
-    }
-    commonDescriptor.getConfig().setAuditLogSpaceTlInGB(auditLogSpaceTlInGB);
-
-    double auditLogTtlInDays =
-        Double.parseDouble(
-            properties
-                .getProperty(
-                    "audit_log_ttl_in_days",
-                    String.valueOf(commonDescriptor.getConfig().getAuditLogTtlInDays()))
-                .trim());
-    // Prevent overflow when converting days to milliseconds
-    if (auditLogTtlInDays > Long.MAX_VALUE * 1.0 / (24L * 3600 * 1000)) {
-      LOGGER.warn("audit_log_ttl_in_days is too large, setting to maximum allowed value");
-      auditLogTtlInDays = Long.MAX_VALUE;
-    }
-    commonDescriptor.getConfig().setAuditLogTtlInDays(auditLogTtlInDays);
-
-    commonDescriptor
-        .getConfig()
-        .setAuditLogBatchIntervalInMs(
-            Long.parseLong(
-                properties
-                    .getProperty(
-                        "audit_log_batch_interval_in_ms",
-                        String.valueOf(commonDescriptor.getConfig().getAuditLogBatchIntervalInMs()))
-                    .trim()));
-    commonDescriptor
-        .getConfig()
-        .setAuditLogBatchMaxQueueBytes(
-            Long.parseLong(
-                properties
-                    .getProperty(
-                        "audit_log_batch_max_queue_bytes",
-                        String.valueOf(
-                            commonDescriptor.getConfig().getAuditLogBatchMaxQueueBytes()))
-                    .trim()));
   }
 
   public static ConfigNodeDescriptor getInstance() {
