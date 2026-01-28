@@ -2369,9 +2369,9 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
     // Construct temporary pipe static meta for validation
     final String pipeName = alterPipeStatement.getPipeName();
-    final Map<String, String> extractorAttributes;
+    final Map<String, String> sourceAttributes;
     final Map<String, String> processorAttributes;
-    final Map<String, String> connectorAttributes;
+    final Map<String, String> sinkAttributes;
     try {
       if (!alterPipeStatement.getSourceAttributes().isEmpty()) {
         // We don't allow changing the extractor plugin type
@@ -2383,7 +2383,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
               new PipeParameters(alterPipeStatement.getSourceAttributes()));
         }
         if (alterPipeStatement.isReplaceAllSourceAttributes()) {
-          extractorAttributes = alterPipeStatement.getSourceAttributes();
+          sourceAttributes = alterPipeStatement.getSourceAttributes();
         } else {
           final boolean onlyContainsUser =
               onlyContainsUser(alterPipeStatement.getSourceAttributes());
@@ -2392,14 +2392,14 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
               .getSourceParameters()
               .addOrReplaceEquivalentAttributes(
                   new PipeParameters(alterPipeStatement.getSourceAttributes()));
-          extractorAttributes =
+          sourceAttributes =
               pipeMetaFromCoordinator.getStaticMeta().getSourceParameters().getAttribute();
           if (onlyContainsUser) {
-            checkSourceType(alterPipeStatement.getPipeName(), extractorAttributes);
+            checkSourceType(alterPipeStatement.getPipeName(), sourceAttributes);
           }
         }
       } else {
-        extractorAttributes =
+        sourceAttributes =
             pipeMetaFromCoordinator.getStaticMeta().getSourceParameters().getAttribute();
       }
 
@@ -2422,7 +2422,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
       if (!alterPipeStatement.getSinkAttributes().isEmpty()) {
         if (alterPipeStatement.isReplaceAllSinkAttributes()) {
-          connectorAttributes = alterPipeStatement.getSinkAttributes();
+          sinkAttributes = alterPipeStatement.getSinkAttributes();
         } else {
           final boolean onlyContainsUser = onlyContainsUser(alterPipeStatement.getSinkAttributes());
           pipeMetaFromCoordinator
@@ -2430,19 +2430,18 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
               .getSinkParameters()
               .addOrReplaceEquivalentAttributes(
                   new PipeParameters(alterPipeStatement.getSinkAttributes()));
-          connectorAttributes =
+          sinkAttributes =
               pipeMetaFromCoordinator.getStaticMeta().getSinkParameters().getAttribute();
           if (onlyContainsUser) {
-            checkSinkType(alterPipeStatement.getPipeName(), connectorAttributes);
+            checkSinkType(alterPipeStatement.getPipeName(), sinkAttributes);
           }
         }
       } else {
-        connectorAttributes =
-            pipeMetaFromCoordinator.getStaticMeta().getSinkParameters().getAttribute();
+        sinkAttributes = pipeMetaFromCoordinator.getStaticMeta().getSinkParameters().getAttribute();
       }
 
       PipeDataNodeAgent.plugin()
-          .validate(pipeName, extractorAttributes, processorAttributes, connectorAttributes);
+          .validate(pipeName, sourceAttributes, processorAttributes, sinkAttributes);
     } catch (final Exception e) {
       future.setException(
           new IoTDBException(e.getMessage(), TSStatusCode.PIPE_ERROR.getStatusCode()));

@@ -142,7 +142,11 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
           env,
           Arrays.asList(
               "create aligned timeSeries root.db.opc(value double, quality boolean, other int32)",
-              "insert into root.db.opc(time, value, quality, other) values (0, 0, true, 1)"),
+              "create aligned timeSeries root.db.opc1(value double, quality boolean, other int32)",
+              "create aligned timeSeries root.db.opc2(value double, quality boolean, other int32)",
+              "insert into root.db.opc(time, value, quality, other) values (0, 0, true, 1)",
+              "insert into root.db.opc1(time, value, quality, other) values (0, 0, true, 1)",
+              "insert into root.db.opc2(time, value, quality, other) values (0, 0, true, 1)"),
           null);
 
       while (true) {
@@ -181,9 +185,13 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
         break;
       }
 
-      TestUtils.executeNonQuery(
+      // Test multiple regions
+      TestUtils.executeNonQueries(
           env,
-          "insert into root.db.opc(time, value, quality, other) values (1, 1, false, 1)",
+          Arrays.asList(
+              "insert into root.db.opc(time, value, quality, other) values (1, 1, false, 1)",
+              "insert into root.db.opc1(time, value, quality, other) values (1, 1, false, 1)",
+              "insert into root.db.opc2(time, value, quality, other) values (1, 1, false, 1)"),
           null);
 
       long startTime = System.currentTimeMillis();
@@ -191,6 +199,22 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
         try {
           value =
               opcUaClient.readValue(0, TimestampsToReturn.Both, new NodeId(2, "root/db/opc")).get();
+          Assert.assertEquals(new Variant(1.0), value.getValue());
+          Assert.assertEquals(StatusCode.BAD, value.getStatusCode());
+          Assert.assertEquals(new DateTime(timestampToUtc(1)), value.getSourceTime());
+
+          value =
+              opcUaClient
+                  .readValue(0, TimestampsToReturn.Both, new NodeId(2, "root/db/opc1"))
+                  .get();
+          Assert.assertEquals(new Variant(1.0), value.getValue());
+          Assert.assertEquals(StatusCode.BAD, value.getStatusCode());
+          Assert.assertEquals(new DateTime(timestampToUtc(1)), value.getSourceTime());
+
+          value =
+              opcUaClient
+                  .readValue(0, TimestampsToReturn.Both, new NodeId(2, "root/db/opc2"))
+                  .get();
           Assert.assertEquals(new Variant(1.0), value.getValue());
           Assert.assertEquals(StatusCode.BAD, value.getStatusCode());
           Assert.assertEquals(new DateTime(timestampToUtc(1)), value.getSourceTime());
@@ -351,7 +375,7 @@ public class IoTDBPipeOPCUAIT extends AbstractPipeSingleIT {
             + UUID.nameUUIDFromBytes(nodeUrl.getBytes(TSFileConfig.STRING_CHARSET));
 
     client = new IoTDBOpcUaClient(nodeUrl, policy, provider, false);
-    new ClientRunner(client, securityDir, password).run();
+    new ClientRunner(client, securityDir, password, userName, 10).run();
     return client.getClient();
   }
 }
