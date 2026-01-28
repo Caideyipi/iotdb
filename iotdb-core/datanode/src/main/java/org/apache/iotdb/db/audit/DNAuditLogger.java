@@ -265,6 +265,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
         if (tableViewIsInitialized.get()) {
           return;
         }
+        boolean dbInTreeModelExists = false;
         Statement statement =
             StatementGenerator.createStatement(
                 "SHOW DATABASES " + SystemConstant.AUDIT_DATABASE, ZoneId.systemDefault());
@@ -279,32 +280,53 @@ public class DNAuditLogger extends AbstractAuditLogger {
                   .setIsTableModel(false);
           final TShowDatabaseResp resp = client.showDatabase(req);
           if (resp.getDatabaseInfoMapSize() > 0) {
-            tableViewIsInitialized.set(true);
-            return;
+            dbInTreeModelExists = true;
+            statement =
+                StatementGenerator.createStatement("SHOW DATABASES ", ZoneId.systemDefault());
+            showStatement = (ShowDatabaseStatement) statement;
+            final List<String> allDatabasePathPattern =
+                Arrays.asList(showStatement.getPathPattern().getNodes());
+            final TGetDatabaseReq tableModelReq =
+                new TGetDatabaseReq(
+                        allDatabasePathPattern, showStatement.getAuthorityScope().serialize())
+                    .setIsTableModel(true)
+                    .setCanSeeAuditDB(true);
+            final TShowDatabaseResp tableResp = client.showDatabase(tableModelReq);
+            if (tableResp.getDatabaseInfoMapSize() > 0
+                && tableResp.getDatabaseInfoMap().containsKey(SystemConstant.AUDIT_PREFIX_KEY)) {
+              logger.info(
+                  "[AUDIT] Database {} already exists for audit log",
+                  SystemConstant.AUDIT_PREFIX_KEY);
+              tableViewIsInitialized.set(true);
+              return;
+            }
           }
         } catch (ClientManagerException | TException | IOException e) {
           logger.warn(
               "[AUDIT] Failed to show database before creating database {} for audit log",
               SystemConstant.AUDIT_DATABASE);
         }
-
-        statement =
-            StatementGenerator.createStatement(
-                "CREATE DATABASE "
-                    + SystemConstant.AUDIT_DATABASE
-                    + " WITH SCHEMA_REGION_GROUP_NUM=1, DATA_REGION_GROUP_NUM=1",
-                ZoneId.systemDefault());
-        ExecutionResult result =
-            coordinator.executeForTreeModel(
-                statement,
-                SESSION_MANAGER.requestQueryId(),
-                sessionInfo,
-                "",
-                ClusterPartitionFetcher.getInstance(),
-                SCHEMA_FETCHER);
-        if (result.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
-            || result.status.getCode() == TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode()) {
-
+        if (!dbInTreeModelExists) {
+          statement =
+              StatementGenerator.createStatement(
+                  "CREATE DATABASE "
+                      + SystemConstant.AUDIT_DATABASE
+                      + " WITH SCHEMA_REGION_GROUP_NUM=1, DATA_REGION_GROUP_NUM=1",
+                  ZoneId.systemDefault());
+          ExecutionResult result =
+              coordinator.executeForTreeModel(
+                  statement,
+                  SESSION_MANAGER.requestQueryId(),
+                  sessionInfo,
+                  "",
+                  ClusterPartitionFetcher.getInstance(),
+                  SCHEMA_FETCHER);
+          if (result.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
+              || result.status.getCode() == TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode()) {
+            dbInTreeModelExists = true;
+          }
+        }
+        if (dbInTreeModelExists) {
           setTtl();
           SqlParser relationSqlParser = new SqlParser();
           IClientSession session =
