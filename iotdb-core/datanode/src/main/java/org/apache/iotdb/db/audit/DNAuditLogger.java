@@ -136,30 +136,30 @@ public class DNAuditLogger extends AbstractAuditLogger {
 
   public void start() {
     synchronized (asyncBatchLock) {
-      if (asyncBatchUtils == null) {
-        if (CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
-          asyncBatchUtils =
-              new AsyncBatchUtils<>(
-                  "DNAuditLogger",
-                  CommonDescriptor.getInstance()
-                      .getConfig()
-                      .getAuditLogBatchIntervalInMs(), // flush interval ms
-                  CommonDescriptor.getInstance()
-                      .getConfig()
-                      .getAuditLogBatchMaxQueueBytes(), // max queue bytes
-                  batch -> {
-                    InsertRowsStatement stmt = new InsertRowsStatement();
-                    stmt.setInsertRowStatementList(batch);
-                    return coordinator.executeForTreeModel(
-                        stmt,
-                        SESSION_MANAGER.requestQueryId(),
-                        sessionInfo,
-                        "",
-                        ClusterPartitionFetcher.getInstance(),
-                        SCHEMA_FETCHER);
-                  });
-          asyncBatchUtils.start();
-        }
+      if (asyncBatchUtils == null
+          && CommonDescriptor.getInstance().getConfig().isEnableAuditLog()) {
+
+        asyncBatchUtils =
+            new AsyncBatchUtils<>(
+                "DNAuditLogger",
+                CommonDescriptor.getInstance()
+                    .getConfig()
+                    .getAuditLogBatchIntervalInMs(), // flush interval ms
+                CommonDescriptor.getInstance()
+                    .getConfig()
+                    .getAuditLogBatchMaxQueueBytes(), // max queue bytes
+                batch -> {
+                  InsertRowsStatement stmt = new InsertRowsStatement();
+                  stmt.setInsertRowStatementList(batch);
+                  return coordinator.executeForTreeModel(
+                      stmt,
+                      SESSION_MANAGER.requestQueryId(),
+                      sessionInfo,
+                      "",
+                      ClusterPartitionFetcher.getInstance(),
+                      SCHEMA_FETCHER);
+                });
+        asyncBatchUtils.start();
       }
     }
   }
@@ -305,7 +305,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
         if (result.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
             || result.status.getCode() == TSStatusCode.DATABASE_ALREADY_EXISTS.getStatusCode()) {
 
-          setTTL();
+          setTtl();
           SqlParser relationSqlParser = new SqlParser();
           IClientSession session =
               new InternalClientSession(
@@ -402,13 +402,13 @@ public class DNAuditLogger extends AbstractAuditLogger {
     }
   }
 
-  public void checkAndSetTTL() {
+  public void checkAndSetTtl() {
     if (tableViewIsInitialized.get()) {
-      setTTL();
+      setTtl();
     }
   }
 
-  public void setTTL() {
+  public void setTtl() {
     double auditLogTtlInDays = CommonDescriptor.getInstance().getConfig().getAuditLogTtlInDays();
     if (auditLogTtlInDays > 0) {
       long auditLogTtlInMs;

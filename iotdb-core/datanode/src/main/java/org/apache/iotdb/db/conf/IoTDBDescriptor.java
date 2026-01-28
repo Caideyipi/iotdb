@@ -2643,7 +2643,7 @@ public class IoTDBDescriptor {
       if (maxRowsInCteBuffer > 0) {
         conf.setMaxRowsInCteBuffer(maxRowsInCteBuffer);
       }
-      boolean beforeEnableAuditLog = commonDescriptor.getConfig().isEnableAuditLog();
+      final boolean beforeEnableAuditLog = commonDescriptor.getConfig().isEnableAuditLog();
       // update audit log config
       commonDescriptor
           .getConfig()
@@ -2784,7 +2784,8 @@ public class IoTDBDescriptor {
                 null);
         String logMessage =
             String.format(
-                "Successfully start the Audit service with configurations (auditableOperationType %s, auditableOperationLevel %s, auditableOperationResult %s) in DataNode %d",
+                "Successfully start the Audit service with configurations "
+                    + "(auditableOperationType %s, auditableOperationLevel %s, auditableOperationResult %s) in DataNode %d",
                 CommonDescriptor.getInstance().getConfig().getAuditableOperationType().toString(),
                 CommonDescriptor.getInstance().getConfig().getAuditableOperationLevel().toString(),
                 CommonDescriptor.getInstance().getConfig().getAuditableOperationResult(),
@@ -2795,7 +2796,7 @@ public class IoTDBDescriptor {
       } else {
         // do nothing
       }
-      DNAuditLogger.getInstance().checkAndSetTTL();
+      DNAuditLogger.getInstance().checkAndSetTtl();
     } catch (Exception e) {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
