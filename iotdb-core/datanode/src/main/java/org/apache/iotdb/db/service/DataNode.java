@@ -76,7 +76,6 @@ import org.apache.iotdb.db.conf.DataNodeSystemPropertiesHandler;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.conf.IoTDBStartCheck;
-import org.apache.iotdb.db.conf.rest.IoTDBRestServiceDescriptor;
 import org.apache.iotdb.db.consensus.DataRegionConsensusImpl;
 import org.apache.iotdb.db.consensus.SchemaRegionConsensusImpl;
 import org.apache.iotdb.db.pipe.agent.PipeDataNodeAgent;
@@ -1391,10 +1390,7 @@ public class DataNode extends ServerCommandLine implements DataNodeMBean {
     }
   }
 
-  protected void initProtocols() throws StartupException {
-    if (IoTDBRestServiceDescriptor.getInstance().getConfig().isEnableRestService()) {
-      registerManager.register(RestService.getInstance());
-    }
+  private void initProtocols() throws StartupException {
     prepareExternalServiceResources();
     if (PipeConfig.getInstance().getPipeAirGapReceiverEnabled()) {
       registerManager.register(PipeDataNodeAgent.receiver().airGap());

@@ -133,6 +133,10 @@
             <outputDirectory>conf</outputDirectory>
             <destName>iotdb-system.properties.template.safe</destName>
         </file>
+        <file>
+            <source>${maven.multiModuleProjectDirectory}/external-service-impl/rest/target/rest-${project.version}-jar-with-dependencies.jar</source>
+            <outputDirectory>lib</outputDirectory>
+        </file>
     </files>
     <componentDescriptors>
         <componentDescriptor>common-files.xml</componentDescriptor>
