@@ -388,7 +388,25 @@ public class SessionManager implements SessionManagerMBean {
       LOGGER.info("{}: Not login. ", IoTDBConstant.GLOBAL_DB_NAME);
     } else if (idleSessionTimeoutInMinutes > 0) {
       long idleInNanos = idleSessionTimeoutInMinutes * 60 * 1000 * 1000 * 1000L;
-      if (System.nanoTime() - currSessionIdleTime.get() > idleInNanos) {
+      long idleDuration = System.nanoTime() - currSessionIdleTime.get();
+
+      if (idleDuration > idleInNanos) {
+        AUDIT_LOGGER.log(
+            new AuditLogFields(
+                session.getUserId(),
+                session.getUsername(),
+                session.getClientAddress(),
+                AuditEventType.CONNECTION_EVICTED,
+                AuditLogOperation.CONTROL,
+                false),
+            () ->
+                String.format(
+                    "User %s (ID=%d) connection evicted due to idle timeout. "
+                        + "No activity for %.1f minutes (exceeds threshold: %d minutes)",
+                    session.getUsername(),
+                    session.getUserId(),
+                    idleDuration / (60.0 * 1_000_000_000.0),
+                    idleSessionTimeoutInMinutes));
         closeSession(session, Coordinator.getInstance()::cleanupQueryExecution);
         return false;
       }

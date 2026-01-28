@@ -22,6 +22,7 @@ package org.apache.iotdb.commons.audit;
 public enum AuditEventType {
   CHANGE_AUDIT_OPTION,
   AUDIT_STORAGE_FULL,
+  CONNECTION_EVICTED,
   GENERATE_KEY,
   DESTROY_KEY,
   EXECUTE_ENCRYPT,

@@ -17,6 +17,10 @@
  */
 package com.timecho.iotdb.rpc;
 
+import org.apache.iotdb.commons.audit.AuditEventType;
+import org.apache.iotdb.commons.audit.AuditLogFields;
+import org.apache.iotdb.commons.audit.AuditLogOperation;
+import org.apache.iotdb.db.audit.DNAuditLogger;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.protocol.session.SessionManager;
@@ -54,7 +58,8 @@ public class IPFilter {
 
   static {
     logger.info("Initializing white/black list update call back");
-    conf.setOnBlackListUpdated(
+
+    Runnable updateSessionCallback =
         () -> {
           if (!conf.isEnableBlackList() && !conf.isEnableWhiteList()) {
             return;
@@ -63,21 +68,28 @@ public class IPFilter {
               .removeSessions(
                   session -> {
                     String clientAddress = session.getClientAddress();
-                    return isDeniedConnect(clientAddress);
+                    boolean shouldRemove = isDeniedConnect(clientAddress);
+                    if (shouldRemove) {
+                      DNAuditLogger.getInstance()
+                          .log(
+                              new AuditLogFields(
+                                  session.getUserId(),
+                                  session.getUsername(),
+                                  session.getClientAddress(),
+                                  AuditEventType.CONNECTION_EVICTED,
+                                  AuditLogOperation.CONTROL,
+                                  false),
+                              () ->
+                                  String.format(
+                                      "User %s (ID=%d) connection evicted. ",
+                                      session.getUsername(), session.getUserId()));
+                    }
+                    return shouldRemove;
                   });
-        });
-    conf.setOnWhiteListUpdated(
-        () -> {
-          if (!conf.isEnableBlackList() && !conf.isEnableWhiteList()) {
-            return;
-          }
-          SessionManager.getInstance()
-              .removeSessions(
-                  session -> {
-                    String clientAddress = session.getClientAddress();
-                    return isDeniedConnect(clientAddress);
-                  });
-        });
+        };
+
+    conf.setOnBlackListUpdated(updateSessionCallback);
+    conf.setOnWhiteListUpdated(updateSessionCallback);
   }
 
   public static boolean isInWhiteList(String ip) {
