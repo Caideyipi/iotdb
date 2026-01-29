@@ -1,23 +1,10 @@
 import torch
 
-from iotdb.ainode.core.config import AINodeDescriptor
 from iotdb.ainode.core.constant import TSStatusCode
-from iotdb.ainode.core.exception import NumericalRangeException
-from iotdb.ainode.core.inference.inference_request import InferenceRequest
-from iotdb.ainode.core.inference.pipeline.basic_pipeline import (
-    ChatPipeline,
-    ClassificationPipeline,
-    ForecastPipeline,
-)
-from iotdb.ainode.core.inference.pipeline.pipeline_loader import load_pipeline
-from iotdb.ainode.core.inference.utils import generate_req_id
 from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.manager.inference_manager import InferenceManager
 from iotdb.ainode.core.rpc.status import get_status
-from iotdb.ainode.core.util.serde import (
-    convert_tensor_to_tsblock,
-    convert_tsblock_to_tensor,
-)
+from iotdb.ainode.core.util.serde import convert_tsblock_to_tensor
 from iotdb.thrift.ainode.ttypes import TForecastReq, TForecastResp
 from timecho.ainode.core.ingress.data_fetcher import IoTDBDataFetcher
 
@@ -144,65 +131,23 @@ class TimechoInferenceManager(InferenceManager):
             output_length = int(inference_attrs.pop("output_length", 96))
             history_covs_sql = str(inference_attrs.pop("history_covs", ""))
             future_covs_sql = str(inference_attrs.pop("future_covs", ""))
+            auto_adapt = bool(inference_attrs.pop("auto_adapt", True))
 
             model_inputs_list: list[
                 dict[str, torch.Tensor | dict[str, torch.Tensor]]
             ] = self._get_covariate_if_needed(inputs, history_covs_sql, future_covs_sql)
 
-            if (
-                output_length
-                > AINodeDescriptor().get_config().get_ain_inference_max_output_length()
-            ):
-                raise NumericalRangeException(
-                    "output_length",
-                    output_length,
-                    1,
-                    AINodeDescriptor()
-                    .get_config()
-                    .get_ain_inference_max_output_length(),
-                )
-
-            if self._pool_controller.has_running_pools(model_id):
-                # TODO: support concurrent covariate forecasting in the future
-                infer_req = InferenceRequest(
-                    req_id=generate_req_id(),
-                    model_id=model_id,
-                    inputs=torch.stack(
-                        [data["targets"] for data in model_inputs_list], dim=0
-                    ),
-                    output_length=output_length,
-                )
-                outputs = self._process_request(infer_req)
-            else:
-                model_info = self._model_manager.get_model_info(model_id)
-                inference_pipeline = load_pipeline(
-                    model_info, device=self._backend.torch_device("cpu")
-                )
-                inputs = inference_pipeline.preprocess(
-                    model_inputs_list, output_length=output_length
-                )
-                if isinstance(inference_pipeline, ForecastPipeline):
-                    outputs = inference_pipeline.forecast(
-                        inputs, output_length=output_length, **inference_attrs
-                    )
-                elif isinstance(inference_pipeline, ClassificationPipeline):
-                    outputs = inference_pipeline.classify(inputs)
-                elif isinstance(inference_pipeline, ChatPipeline):
-                    outputs = inference_pipeline.chat(inputs)
-                else:
-                    outputs = None
-                    logger.error("[Inference] Unsupported pipeline type.")
-                outputs = inference_pipeline.postprocess(outputs)
-
-            # convert tensor into tsblock for the output in each batch
-            output_list = []
-            for batch_idx, output in enumerate(outputs):
-                output = convert_tensor_to_tsblock(output)
-                output_list.append(output)
+            resp_list = self._do_inference_and_construct_resp(
+                model_id,
+                model_inputs_list,
+                output_length,
+                inference_attrs,
+                auto_adapt=auto_adapt,
+            )
 
             return resp_cls(
                 get_status(TSStatusCode.SUCCESS_STATUS),
-                [output_list[0]] if single_batch else output_list,
+                [resp_list[0]] if single_batch else resp_list,
             )
 
         except Exception as e:
@@ -219,6 +164,7 @@ class TimechoInferenceManager(InferenceManager):
                 "output_length": r.outputLength,
                 "history_covs": r.historyCovs or "",
                 "future_covs": r.futureCovs or "",
+                "auto_adapt": r.autoAdapt,
                 **(r.options or {}),
             },
             resp_cls=TForecastResp,

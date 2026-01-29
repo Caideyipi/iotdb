@@ -370,6 +370,7 @@ public class TableFunctionTest {
                 .requiredSymbols("time_0", "s3_1")
                 .handle(
                     new TimechoForecastTableFunction.TimechoForecastTableFunctionHandle(
+                        true,
                         false,
                         2880,
                         "timer_xl",
@@ -432,6 +433,7 @@ public class TableFunctionTest {
                 .requiredSymbols("time_0", "s3_1")
                 .handle(
                     new TimechoForecastTableFunction.TimechoForecastTableFunctionHandle(
+                        true,
                         false,
                         2880,
                         "timer_xl",

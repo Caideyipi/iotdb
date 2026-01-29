@@ -32,7 +32,8 @@ public class AINodeCovariateForecastIT {
           + "history_covs=>'%s',"
           + "future_covs=>'%s',"
           + "output_start_time=>%d, "
-          + "output_length=>%d"
+          + "output_length=>%d, "
+          + "auto_adapt=>%s"
           + ")";
   private static final String HISTORY_COVS_TEMPLATE =
       "(SELECT time, %s FROM db.AI WHERE time < %d ORDER BY time DESC LIMIT %d) ORDER BY time";
@@ -76,14 +77,38 @@ public class AINodeCovariateForecastIT {
             historyCovsSQL,
             futureCovsSQL,
             2880,
-            480);
-    // Invoke forecast table function for specified models, there should exist result.
+            480,
+            "false");
+    // Invoke forecast table function for specified models and check the count of results.
     try (ResultSet resultSet = statement.executeQuery(forecastTableFunctionSQL)) {
       int count = 0;
       while (resultSet.next()) {
         count++;
       }
-      // Ensure the forecast sentence return results
+      Assert.assertEquals(480, count);
+    }
+
+    String historyCovsSQLAutoAdapt = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 2881, 2881);
+    String futureCovsSQLAutoAdapt = String.format(FUTURE_COVS_TEMPLATE, "s3", 2880, 479);
+
+    String forecastTableFunctionSQLAutoAdapt =
+        String.format(
+            FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
+            modelInfo.getModelId(),
+            "s0,s1",
+            2880,
+            2880,
+            historyCovsSQLAutoAdapt,
+            futureCovsSQLAutoAdapt,
+            2880,
+            480,
+            "true");
+    // Invoke forecast table function for specified models and check the count of results.
+    try (ResultSet resultSet = statement.executeQuery(forecastTableFunctionSQLAutoAdapt)) {
+      int count = 0;
+      while (resultSet.next()) {
+        count++;
+      }
       Assert.assertEquals(480, count);
     }
   }
@@ -113,11 +138,31 @@ public class AINodeCovariateForecastIT {
             "",
             futureCovsSQL,
             2880,
-            96);
+            96,
+            "true");
     errorTest(
         statement,
         invalidSyntaxSQL,
         "1599: Error occurred while executing forecast:[Future_covs_sql is specified yet history_covs_sql is None.]");
+
+    // Invalid history covariates length
+    String invalidHistoryCovsLengthSQL = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 2879, 2879);
+    String invalidHistoryCovariateLengthSQL =
+        String.format(
+            FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
+            modelInfo.getModelId(),
+            "s0,s1",
+            2880,
+            2880,
+            invalidHistoryCovsLengthSQL,
+            futureCovsSQL,
+            2880,
+            96,
+            "false");
+    errorTest(
+        statement,
+        invalidHistoryCovariateLengthSQL,
+        "1599: Error occurred while executing forecast:[Individual `past_covariates` must be 1-d with length equal to the length of `target` (= 2880), found: s2 with shape (2879,) in element at index 0.]");
 
     // Invalid future covariates length
     String invalidFutureCovsLengthSQL = String.format(FUTURE_COVS_TEMPLATE, "s3", 2880, 95);
@@ -131,11 +176,12 @@ public class AINodeCovariateForecastIT {
             historyCovsSQL,
             invalidFutureCovsLengthSQL,
             2880,
-            96);
+            96,
+            "false");
     errorTest(
         statement,
         invalidFutureCovariateLengthSQL,
-        "1599: Error occurred while executing forecast:[Each covariate in 'future_covariates' must have shape (96,), but got shape torch.Size([95]) for key 's3' at index 0.]");
+        "1599: Error occurred while executing forecast:[Individual `future_covariates` must be 1-d with length equal to `output_length` (= 96), found: s3 with shape (95,) in element at index 0.]");
 
     // Invalid future covariates set
     String invalidFutureCovsSetSQL = String.format(FUTURE_COVS_TEMPLATE, "s1", 2880, 96);
@@ -149,11 +195,12 @@ public class AINodeCovariateForecastIT {
             historyCovsSQL,
             invalidFutureCovsSetSQL,
             2880,
-            96);
+            96,
+            "false");
     errorTest(
         statement,
         invalidFutureCovariateSetSQL,
-        "1599: Error occurred while executing forecast:[Key 's1' in 'future_covariates' is not in 'past_covariates' at index 0.]");
+        "1599: Error occurred while executing forecast:[Expected keys in `future_covariates` to be a subset of `past_covariates` ['s2', 's3'], but found s1 in element at index 0.]");
 
     // Empty set - history covariates
     String invalidHistoryCovsEmptySetSQL = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 0, 96);
@@ -167,7 +214,8 @@ public class AINodeCovariateForecastIT {
             invalidHistoryCovsEmptySetSQL,
             futureCovsSQL,
             2880,
-            96);
+            96,
+            "true");
     errorTest(
         statement,
         invalidHistoryCovariateEmptySetSQL,
@@ -185,7 +233,8 @@ public class AINodeCovariateForecastIT {
             historyCovsSQL,
             invalidFutureCovsEmptySetSQL,
             2880,
-            96);
+            96,
+            "true");
     errorTest(
         statement,
         invalidFutureCovariateEmptySetSQL,
