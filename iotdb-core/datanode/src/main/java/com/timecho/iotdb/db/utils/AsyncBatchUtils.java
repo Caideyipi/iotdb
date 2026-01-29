@@ -214,7 +214,9 @@ public class AsyncBatchUtils<T extends Accountable> {
       ExecutionResult insertResult = null;
       for (int retry = 0; retry < INSERT_RETRY_COUNT; retry++) {
         insertResult = consumer.consume(batch);
-        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        if (insertResult.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
+            || insertResult.status.getCode()
+                == TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode()) {
           for (BatchItem<T> item : items) {
             item.future.complete(insertResult.status);
           }
