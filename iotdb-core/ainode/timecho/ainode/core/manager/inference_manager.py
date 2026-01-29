@@ -14,10 +14,12 @@ from iotdb.ainode.core.inference.utils import generate_req_id
 from iotdb.ainode.core.log import Logger
 from iotdb.ainode.core.manager.inference_manager import InferenceManager
 from iotdb.ainode.core.rpc.status import get_status
-from iotdb.ainode.core.util.serde import convert_tensor_to_tsblock
+from iotdb.ainode.core.util.serde import (
+    convert_tensor_to_tsblock,
+    convert_tsblock_to_tensor,
+)
 from iotdb.thrift.ainode.ttypes import TForecastReq, TForecastResp
 from timecho.ainode.core.ingress.data_fetcher import IoTDBDataFetcher
-from timecho.ainode.core.util.serde import convert_tsblock_to_tensor_and_timestamps
 
 logger = Logger()
 
@@ -29,7 +31,6 @@ class TimechoInferenceManager(InferenceManager):
     def _get_covariate_if_needed(
         self,
         inputs: torch.Tensor,  # [batch_size(1), target_count, input_length]
-        timestamps: list[int],  # [input_length,]
         history_covs_sql: str,
         future_covs_sql: str,
     ) -> list[dict[str, torch.Tensor | dict[str, torch.Tensor]]]:
@@ -38,7 +39,6 @@ class TimechoInferenceManager(InferenceManager):
 
         Args:
             inputs (torch.Tensor): A tensor of shape [batch_size(1), target_count, input_length] representing the input data.
-            timestamps (list[int]): A list of integers representing the timestamps of inputs.
             history_covs_sql (str): SQL query to fetch historical covariates.
             future_covs_sql (str): SQL query to fetch future covariates.
 
@@ -86,14 +86,6 @@ class TimechoInferenceManager(InferenceManager):
                     raise ValueError(
                         "The history covariates are specified but no history data are selected."
                     )
-                history_timestamps = history_timestamps_all[DEFAULT_TAG_VALUE]
-                if timestamps != history_timestamps:
-                    logger.error(
-                        "[Inference] The timestamps of history covariates should be aligned with target variables'."
-                    )
-                    raise ValueError(
-                        "The timestamps of history covariates should be aligned with target variables'."
-                    )
                 if len(history_covs_all) > 1:
                     logger.warning(
                         "[Inference] Tag other than default tag will be ignored now."
@@ -117,16 +109,6 @@ class TimechoInferenceManager(InferenceManager):
                         )
                         raise ValueError(
                             "The future covariates are specified but no future data are selected."
-                        )
-                    future_timestamps = future_timestamps_all[DEFAULT_TAG_VALUE]
-                    history_max_timestamp = max(history_timestamps)
-                    future_min_timestamp = min(future_timestamps)
-                    if future_min_timestamp <= history_max_timestamp:
-                        logger.error(
-                            f"[Inference] The minimum timestamp of future covariates should be bigger than the maximum of history covariates."
-                        )
-                        raise ValueError(
-                            "The minimum timestamp of future covariates should be bigger than the maximum of history covariates."
                         )
                     if len(future_covs_all) > 1:
                         logger.warning(
@@ -155,8 +137,8 @@ class TimechoInferenceManager(InferenceManager):
         try:
             raw = data_getter(req)
 
-            # inputs: [batch_size(1), target_count, input_length], timestamps: [input_length,]
-            inputs, timestamps = convert_tsblock_to_tensor_and_timestamps(raw)
+            # inputs: [batch_size(1), target_count, input_length]
+            inputs = convert_tsblock_to_tensor(raw)
 
             inference_attrs = extract_attrs(req)
             output_length = int(inference_attrs.pop("output_length", 96))
@@ -165,9 +147,7 @@ class TimechoInferenceManager(InferenceManager):
 
             model_inputs_list: list[
                 dict[str, torch.Tensor | dict[str, torch.Tensor]]
-            ] = self._get_covariate_if_needed(
-                inputs, timestamps, history_covs_sql, future_covs_sql
-            )
+            ] = self._get_covariate_if_needed(inputs, history_covs_sql, future_covs_sql)
 
             if (
                 output_length
@@ -182,7 +162,7 @@ class TimechoInferenceManager(InferenceManager):
                     .get_ain_inference_max_output_length(),
                 )
 
-            if self._pool_controller.has_request_pools(model_id=model_id):
+            if self._pool_controller.has_running_pools(model_id):
                 # TODO: support concurrent covariate forecasting in the future
                 infer_req = InferenceRequest(
                     req_id=generate_req_id(),

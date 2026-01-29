@@ -21,7 +21,9 @@ package com.timecho.iotdb.db.queryengine.plan.relational.function.tvf;
 
 import org.apache.iotdb.ainode.rpc.thrift.TForecastReq;
 import org.apache.iotdb.ainode.rpc.thrift.TForecastResp;
+import org.apache.iotdb.commons.client.exception.ClientManagerException;
 import org.apache.iotdb.commons.exception.IoTDBRuntimeException;
+import org.apache.iotdb.db.exception.ainode.AINodeConnectionException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.protocol.client.an.AINodeClient;
 import org.apache.iotdb.db.protocol.client.an.AINodeClientManager;
@@ -41,6 +43,7 @@ import org.apache.iotdb.udf.api.relational.table.specification.ScalarParameterSp
 import org.apache.iotdb.udf.api.relational.table.specification.TableParameterSpecification;
 import org.apache.iotdb.udf.api.type.Type;
 
+import org.apache.thrift.TException;
 import org.apache.tsfile.read.common.block.TsBlock;
 import org.apache.tsfile.utils.PublicBAOS;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
@@ -60,7 +63,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.iotdb.commons.udf.builtin.relational.tvf.WindowTVFUtils.findColumnIndex;
-import static org.apache.iotdb.rpc.TSStatusCode.CAN_NOT_CONNECT_AINODE;
 
 public class TimechoForecastTableFunction extends ForecastTableFunction {
 
@@ -387,8 +389,10 @@ public class TimechoForecastTableFunction extends ForecastTableFunction {
                     .setHistoryCovs(historyCovs)
                     .setFutureCovs(futureCovs)
                     .setOptions(options));
-      } catch (Exception e) {
-        throw new IoTDBRuntimeException(e.getMessage(), CAN_NOT_CONNECT_AINODE.getStatusCode());
+      } catch (ClientManagerException | TException e) {
+        throw new AINodeConnectionException(e);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
 
       if (resp.getStatus().getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {

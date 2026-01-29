@@ -27,16 +27,12 @@ class IoTDBDataFetcher:
         password: str = AINodeDescriptor()
         .get_config()
         .get_ain_cluster_ingress_password(),
-        time_zone: str = AINodeDescriptor()
-        .get_config()
-        .get_ain_cluster_ingress_time_zone(),
     ):
         # Create a table session config
         table_session_config = TableSessionConfig(
             node_urls=[f"{ip}:{port}"],
             username=username,
             password=password,
-            time_zone=time_zone,
             use_ssl=AINodeDescriptor()
             .get_config()
             .get_ain_cluster_ingress_ssl_enabled(),

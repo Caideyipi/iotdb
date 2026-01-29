@@ -97,7 +97,7 @@ public class AINodeCovariateForecastIT {
   }
 
   public static void forecastTableFunctionWithCovariateErrorTest(
-      Statement statement, AINodeTestUtils.FakeModelInfo modelInfo) throws SQLException {
+      Statement statement, AINodeTestUtils.FakeModelInfo modelInfo) {
 
     String historyCovsSQL = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 2880, 2880);
     String futureCovsSQL = String.format(FUTURE_COVS_TEMPLATE, "s3", 2880, 96);
@@ -154,43 +154,6 @@ public class AINodeCovariateForecastIT {
         statement,
         invalidFutureCovariateSetSQL,
         "1599: Error occurred while executing forecast:[Key 's1' in 'future_covariates' is not in 'past_covariates' at index 0.]");
-
-    // Invalid history covariates timestamps
-    String invalidHistoryCovsTimestampsSQL =
-        String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 2881, 2880);
-    String invalidHistoryCovariateTimestampsSQL =
-        String.format(
-            FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
-            modelInfo.getModelId(),
-            "s0,s1",
-            2880,
-            2880,
-            invalidHistoryCovsTimestampsSQL,
-            futureCovsSQL,
-            2880,
-            96);
-    errorTest(
-        statement,
-        invalidHistoryCovariateTimestampsSQL,
-        "1599: Error occurred while executing forecast:[The timestamps of history covariates should be aligned with target variables'.]");
-
-    // Invalid future covariates timestamps
-    String invalidFutureCovsTimestampsSQL = String.format(FUTURE_COVS_TEMPLATE, "s3", 2879, 96);
-    String invalidFutureCovariateTimestampsSQL =
-        String.format(
-            FORECAST_TABLE_FUNCTION_WITH_COVARIATE_SQL_TEMPLATE,
-            modelInfo.getModelId(),
-            "s0,s1",
-            2880,
-            2880,
-            historyCovsSQL,
-            invalidFutureCovsTimestampsSQL,
-            2880,
-            96);
-    errorTest(
-        statement,
-        invalidFutureCovariateTimestampsSQL,
-        "1599: Error occurred while executing forecast:[The minimum timestamp of future covariates should be bigger than the maximum of history covariates.]");
 
     // Empty set - history covariates
     String invalidHistoryCovsEmptySetSQL = String.format(HISTORY_COVS_TEMPLATE, "s2,s3", 0, 96);
