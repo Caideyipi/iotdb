@@ -21,9 +21,8 @@ package org.apache.iotdb.db.it;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.ClusterIT;
-import org.apache.iotdb.itbase.category.LocalStandaloneIT;
-import org.apache.iotdb.itbase.category.RemoteIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplClusterIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplLocalStandaloneIT;
 import org.apache.iotdb.itbase.env.BaseEnv;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +55,7 @@ import static org.junit.Assert.fail;
 
 // move to integration-test
 @RunWith(IoTDBTestRunner.class)
-@Category({LocalStandaloneIT.class, ClusterIT.class, RemoteIT.class})
+@Category({ExternalServiceImplLocalStandaloneIT.class, ExternalServiceImplClusterIT.class})
 public class GrafanaApiServiceIT {
 
   private int port = 18080;

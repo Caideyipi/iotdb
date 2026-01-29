@@ -21,8 +21,8 @@ package org.apache.iotdb.relational.it.rest.it;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.TableClusterIT;
-import org.apache.iotdb.itbase.category.TableLocalStandaloneIT;
+import org.apache.iotdb.itbase.category.TableExternalServiceImplClusterIT;
+import org.apache.iotdb.itbase.category.TableExternalServiceImplLocalStandaloneIT;
 import org.apache.iotdb.itbase.env.BaseEnv;
 
 import com.google.gson.JsonArray;
@@ -49,7 +49,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({TableLocalStandaloneIT.class, TableClusterIT.class})
+@Category({
+  TableExternalServiceImplLocalStandaloneIT.class,
+  TableExternalServiceImplClusterIT.class
+})
 public class IoTDBRestServiceIT {
 
   private int port = 18080;
