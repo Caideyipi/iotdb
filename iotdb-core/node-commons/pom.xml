@@ -195,6 +195,22 @@
                 </includes>
                 <filtering>false</filtering>
             </resource>
+            <!-- Add resource filtering for module configuration -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>module-config.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+            <!-- Default resources without filtering -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>module-config.properties</exclude>
+                </excludes>
+                <filtering>false</filtering>
+            </resource>
         </resources>
         <plugins>
             <!--

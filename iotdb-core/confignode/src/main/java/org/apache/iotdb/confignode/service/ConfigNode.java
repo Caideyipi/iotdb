@@ -141,7 +141,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
   protected void start() throws IoTDBException {
     try {
       // Do ConfigNode startup checks
-      LOGGER.info("Starting IoTDB {}", IoTDBConstant.VERSION_WITH_BUILD);
+      LOGGER.info("Starting IoTDB {}", IoTDBConstant.getVersionWithBuildAndProfile());
       ConfigNodeStartupCheck checks = new ConfigNodeStartupCheck(IoTDBConstant.CN_ROLE);
       checks.startUpCheck();
     } catch (StartupException | ConfigurationException | IOException e) {

@@ -214,6 +214,10 @@
         <alias/>
         <jarsigner.skip>true</jarsigner.skip>
         <tsfile.version>2.2.1-260120-SNAPSHOT</tsfile.version>
+        <!-- Module configuration properties (default values) -->
+        <moduleA.enabled>true</moduleA.enabled>
+        <moduleB.enabled>true</moduleB.enabled>
+        <version.suffix/>
     </properties>
     <!--
     if we claim dependencies in dependencyManagement, then we do not claim
@@ -2046,6 +2050,15 @@
                 <storepass>Timecho2021</storepass>
                 <keypass>Timecho2021</keypass>
                 <alias>TCDBTCS</alias>
+            </properties>
+        </profile>
+        <!-- Basic feature profile -->
+        <profile>
+            <id>basic</id>
+            <properties>
+                <moduleA.enabled>false</moduleA.enabled>
+                <moduleB.enabled>true</moduleB.enabled>
+                <version.suffix>-basic</version.suffix>
             </properties>
         </profile>
     </profiles>
