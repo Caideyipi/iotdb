@@ -40,7 +40,6 @@ import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -58,7 +57,6 @@ import static org.junit.Assert.fail;
 // move to integration-test
 @RunWith(IoTDBTestRunner.class)
 @Category({LocalStandaloneIT.class, ClusterIT.class, RemoteIT.class})
-@Ignore
 public class GrafanaApiServiceIT {
 
   private int port = 18080;
