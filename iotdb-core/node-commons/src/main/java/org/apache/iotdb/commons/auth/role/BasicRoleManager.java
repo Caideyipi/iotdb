@@ -265,4 +265,8 @@ public abstract class BasicRoleManager implements IEntityManager, SnapshotProces
             })
         .sum();
   }
+
+  public IEntityAccessor getAccessor() {
+    return accessor;
+  }
 }
