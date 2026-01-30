@@ -141,7 +141,7 @@ public class InsertMultiTabletsStatement extends InsertBaseStatement {
   }
 
   @Override
-  public InsertBaseStatement removeLogicalView() {
+  public InsertBaseStatement removeLogicalViewAndAliasSeries() {
     List<InsertTabletStatement> mergedList = new ArrayList<>();
     boolean needSplit = false;
     for (InsertTabletStatement child : this.insertTabletStatementList) {

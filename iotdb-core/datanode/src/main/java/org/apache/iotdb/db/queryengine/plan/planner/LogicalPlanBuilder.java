@@ -996,6 +996,28 @@ public class LogicalPlanBuilder {
       boolean prefixPath,
       Map<Integer, Template> templateMap,
       PathPatternTree scope) {
+    return planTimeSeriesSchemaSource(
+        pathPattern,
+        schemaFilter,
+        limit,
+        offset,
+        orderByHeat,
+        prefixPath,
+        templateMap,
+        scope,
+        false);
+  }
+
+  public LogicalPlanBuilder planTimeSeriesSchemaSource(
+      PartialPath pathPattern,
+      SchemaFilter schemaFilter,
+      long limit,
+      long offset,
+      boolean orderByHeat,
+      boolean prefixPath,
+      Map<Integer, Template> templateMap,
+      PathPatternTree scope,
+      boolean showInvalidTimeSeries) {
     this.root =
         new TimeSeriesSchemaScanNode(
             context.getQueryId().genPlanNodeId(),
@@ -1006,7 +1028,8 @@ public class LogicalPlanBuilder {
             orderByHeat,
             prefixPath,
             templateMap,
-            scope);
+            scope,
+            showInvalidTimeSeries);
     return this;
   }
 
@@ -1172,6 +1195,7 @@ public class LogicalPlanBuilder {
 
   public LogicalPlanBuilder planNodePathsSchemaSource(
       PartialPath partialPath, Integer level, PathPatternTree scope) {
+    // skipInvalidSchema = true for show child nodes/paths to filter invalid series
     this.root =
         new NodePathsSchemaScanNode(
             context.getQueryId().genPlanNodeId(), partialPath, level, scope);
@@ -1366,19 +1390,34 @@ public class LogicalPlanBuilder {
   }
 
   public LogicalPlanBuilder planDeviceRegionScan(
-      Map<PartialPath, DeviceContext> devicePathToContextMap, boolean outputCount) {
+      Map<PartialPath, DeviceContext> devicePathToContextMap,
+      boolean outputCount,
+      Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesSchemaInfo,
+      boolean hasInvalidSeries,
+      boolean hasAliasSeries) {
     this.root =
         new DeviceRegionScanNode(
-            context.getQueryId().genPlanNodeId(), devicePathToContextMap, outputCount, null);
+            context.getQueryId().genPlanNodeId(),
+            devicePathToContextMap,
+            outputCount,
+            null,
+            deviceToTimeseriesSchemaInfo,
+            hasInvalidSeries,
+            hasAliasSeries);
     return this;
   }
 
   public LogicalPlanBuilder planTimeseriesRegionScan(
       Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesSchemaInfo,
-      boolean outputCount) {
+      boolean outputCount,
+      boolean onlyInvalidSchema) {
     TimeseriesRegionScanNode timeseriesRegionScanNode =
-        new TimeseriesRegionScanNode(context.getQueryId().genPlanNodeId(), outputCount, null);
-    timeseriesRegionScanNode.setDeviceToTimeseriesSchemaInfo(deviceToTimeseriesSchemaInfo);
+        new TimeseriesRegionScanNode(
+            context.getQueryId().genPlanNodeId(),
+            deviceToTimeseriesSchemaInfo,
+            outputCount,
+            null,
+            onlyInvalidSchema);
     this.root = timeseriesRegionScanNode;
     return this;
   }

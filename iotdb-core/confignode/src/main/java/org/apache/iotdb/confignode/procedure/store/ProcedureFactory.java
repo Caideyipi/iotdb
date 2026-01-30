@@ -49,6 +49,7 @@ import org.apache.iotdb.confignode.procedure.impl.schema.DeactivateTemplateProce
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteDatabaseProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteLogicalViewProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteTimeSeriesProcedure;
+import org.apache.iotdb.confignode.procedure.impl.schema.RenameTimeSeriesProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.SetTTLProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.SetTemplateProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.UnsetTemplateProcedure;
@@ -150,6 +151,9 @@ public class ProcedureFactory implements IProcedureFactory {
         break;
       case ALTER_TIMESERIES_DATATYPE_PROCEDURE:
         procedure = new AlterTimeSeriesDataTypeProcedure(false);
+        break;
+      case RENAME_TIMESERIES_PROCEDURE:
+        procedure = new RenameTimeSeriesProcedure(false);
         break;
       case DELETE_LOGICAL_VIEW_PROCEDURE:
         procedure = new DeleteLogicalViewProcedure(false);
@@ -360,6 +364,9 @@ public class ProcedureFactory implements IProcedureFactory {
       case PIPE_ENRICHED_ALTER_ENCODING_COMPRESSOR_PROCEDURE:
         procedure = new AlterEncodingCompressorProcedure(true);
         break;
+      case PIPE_ENRICHED_RENAME_TIMESERIES_PROCEDURE:
+        procedure = new RenameTimeSeriesProcedure(true);
+        break;
       case REMOVE_AI_NODE_PROCEDURE:
         procedure = new RemoveAINodeProcedure();
         break;
@@ -448,6 +455,8 @@ public class ProcedureFactory implements IProcedureFactory {
       return ProcedureType.DELETE_TIMESERIES_PROCEDURE;
     } else if (procedure instanceof AlterTimeSeriesDataTypeProcedure) {
       return ProcedureType.ALTER_TIMESERIES_DATATYPE_PROCEDURE;
+    } else if (procedure instanceof RenameTimeSeriesProcedure) {
+      return ProcedureType.RENAME_TIMESERIES_PROCEDURE;
     } else if (procedure instanceof ReconstructRegionProcedure) {
       return ProcedureType.RECONSTRUCT_REGION_PROCEDURE;
     } else if (procedure instanceof NotifyRegionMigrationProcedure) {

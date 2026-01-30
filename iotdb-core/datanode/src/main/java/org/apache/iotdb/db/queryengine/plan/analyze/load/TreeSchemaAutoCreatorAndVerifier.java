@@ -308,7 +308,7 @@ public class TreeSchemaAutoCreatorAndVerifier {
                   database.startsWith(databaseName)
                       || databaseName.startsWith(database.getFullPath()));
         }
-      } catch (IOException | TException | ClientManagerException e) {
+      } catch (TException | ClientManagerException e) {
         throw new LoadFileException(e);
       }
     }

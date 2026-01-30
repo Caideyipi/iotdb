@@ -97,7 +97,7 @@ public class SchemaTreeVisitorWithLimitOffsetWrapper<R> extends SchemaTreeVisito
   }
 
   @Override
-  protected boolean acceptFullMatchedNode(SchemaNode node) {
+  protected boolean acceptFullyMatchedNode(SchemaNode node) {
     // do nothing
     return false;
   }

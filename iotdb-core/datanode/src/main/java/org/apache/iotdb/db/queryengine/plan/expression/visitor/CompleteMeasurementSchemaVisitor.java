@@ -21,6 +21,7 @@ package org.apache.iotdb.db.queryengine.plan.expression.visitor;
 
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.db.exception.metadata.view.BrokenViewException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.queryengine.common.schematree.ISchemaTree;
@@ -30,6 +31,8 @@ import org.apache.iotdb.db.queryengine.plan.expression.leaf.TimeSeriesOperand;
 import org.apache.iotdb.db.queryengine.plan.expression.multi.FunctionExpression;
 import org.apache.iotdb.db.queryengine.plan.expression.ternary.TernaryExpression;
 import org.apache.iotdb.db.queryengine.plan.expression.unary.UnaryExpression;
+
+import org.apache.tsfile.write.schema.IMeasurementSchema;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,8 +93,9 @@ public class CompleteMeasurementSchemaVisitor extends ExpressionVisitor<Expressi
   public Expression visitTimeSeriesOperand(
       TimeSeriesOperand timeSeriesOperand, ISchemaTree schemaTree) {
     PartialPath path = timeSeriesOperand.getPath();
+    IMeasurementSchema schema = null;
     try {
-      path.getMeasurementSchema();
+      schema = path.getMeasurementSchema();
     } catch (Exception notAMeasurementPath) {
       List<MeasurementPath> actualPaths = schemaTree.searchMeasurementPaths(path).left;
       if (actualPaths.size() != 1) {
@@ -101,8 +105,55 @@ public class CompleteMeasurementSchemaVisitor extends ExpressionVisitor<Expressi
           throw new SemanticException(new BrokenViewException(path.getFullPath(), actualPaths));
         }
       }
-      return new TimeSeriesOperand(actualPaths.get(0));
+      MeasurementPath actualPath = actualPaths.get(0);
+      TimeSeriesOperand result =
+          handleMeasurementSchema(actualPath.getMeasurementSchema(), actualPath, schemaTree);
+      return result != null ? result : new TimeSeriesOperand(actualPath);
+    }
+    if (schema != null) {
+      TimeSeriesOperand result = handleMeasurementSchema(schema, path, schemaTree);
+      if (result != null) {
+        return result;
+      }
     }
     return timeSeriesOperand;
+  }
+
+  /**
+   * Handle measurement schema that may be disabled or renamed.
+   *
+   * @param schema the measurement schema to check
+   * @param path the path to use in error messages (usually the original query path)
+   * @param schemaTree the schema tree for searching actual paths
+   * @return TimeSeriesOperand if the schema is renamed and a replacement is found, null otherwise
+   * @throws SemanticException if the schema is invalid or if renamed schema cannot be resolved
+   */
+  private TimeSeriesOperand handleMeasurementSchema(
+      IMeasurementSchema schema, PartialPath path, ISchemaTree schemaTree) {
+    if (schema == null) {
+      return null;
+    }
+    if (MeasurementPropsUtils.isInvalid(schema.getProps())) {
+      throw new SemanticException(
+          new BrokenViewException(
+              path.getFullPath(), MeasurementPropsUtils.getAliasPathString(schema.getProps())));
+    }
+    if (MeasurementPropsUtils.isRenamed(schema.getProps())) {
+      List<MeasurementPath> actualPaths =
+          schemaTree.searchMeasurementPaths(
+                  MeasurementPropsUtils.getOriginalPath(schema.getProps()))
+              .left;
+      if (actualPaths.size() != 1) {
+        if (actualPaths.isEmpty()) {
+          throw new SemanticException(new BrokenViewException(path.getFullPath()));
+        } else {
+          throw new SemanticException(
+              new BrokenViewException(
+                  MeasurementPropsUtils.getOriginalPathString(schema.getProps()), actualPaths));
+        }
+      }
+      return new TimeSeriesOperand(actualPaths.get(0));
+    }
+    return null;
   }
 }

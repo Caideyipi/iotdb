@@ -73,6 +73,7 @@ import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.reader.impl.Schem
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.reader.impl.TimeseriesReaderWithViewFetch;
 import org.apache.iotdb.db.schemaengine.schemaregion.utils.MetaFormatUtils;
 import org.apache.iotdb.db.schemaengine.schemaregion.utils.filter.DeviceFilterVisitor;
+import org.apache.iotdb.db.schemaengine.schemaregion.write.resp.ConstructSchemaBlackListResult;
 import org.apache.iotdb.db.storageengine.rescon.quotas.DataNodeSpaceQuotaManager;
 import org.apache.iotdb.db.utils.SchemaUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -221,6 +222,20 @@ public class MTreeBelowSGMemoryImpl {
 
   // region time series operation, including creation and deletion
 
+  public IMeasurementMNode<IMemMNode> createTimeSeries(
+      final PartialPath path,
+      final TSDataType dataType,
+      final TSEncoding encoding,
+      final CompressionType compressor,
+      final Map<String, String> props,
+      final String alias,
+      final boolean withMerge,
+      final AtomicBoolean isAligned)
+      throws MetadataException {
+    return createTimeSeries(
+        path, dataType, encoding, compressor, props, alias, withMerge, isAligned, true);
+  }
+
   /**
    * Create a time series with a full path from root to leaf node. Before creating a time series,
    * the database should be set first, throw exception otherwise
@@ -240,7 +255,8 @@ public class MTreeBelowSGMemoryImpl {
       final Map<String, String> props,
       final String alias,
       final boolean withMerge,
-      final AtomicBoolean isAligned)
+      final AtomicBoolean isAligned,
+      final boolean setNonAlignedIfNull)
       throws MetadataException {
     final String[] nodeNames = path.getNodes();
     if (nodeNames.length <= 2) {
@@ -275,6 +291,8 @@ public class MTreeBelowSGMemoryImpl {
           final IMeasurementMNode<IMemMNode> measurementNode = node.getAsMeasurementMNode();
           if (measurementNode.isPreDeleted()) {
             throw new MeasurementInBlackListException(path);
+          } else if (measurementNode.isInvalid()) {
+            throw new MetadataException(String.format("timeseries %s is invalid", path));
           } else if (!withMerge || measurementNode.getDataType() != dataType) {
             // Report conflict if the types are different
             throw new MeasurementAlreadyExistException(
@@ -296,7 +314,7 @@ public class MTreeBelowSGMemoryImpl {
       }
 
       // create a non-aligned time series
-      if (entityMNode.isAlignedNullable() == null) {
+      if (setNonAlignedIfNull && entityMNode.isAlignedNullable() == null) {
         entityMNode.setAligned(false);
       }
 
@@ -698,6 +716,64 @@ public class MTreeBelowSGMemoryImpl {
     return result;
   }
 
+  /**
+   * Construct schema black list and collect referenced disabled paths information.
+   *
+   * @param pathPattern the path pattern to match
+   * @param isAllLogicalView output parameter indicating if all matched series are logical views
+   * @param isAllInvalidSeries output parameter indicating if all matched series are invalid
+   * @param referencedInvalidPaths output list to collect referenced invalid paths information
+   * @return list of pre-deleted series paths
+   * @throws MetadataException if an error occurs while constructing the schema black list
+   */
+  public List<PartialPath> constructSchemaBlackListWithAliasInfo(
+      final PartialPath pathPattern,
+      final AtomicBoolean isAllLogicalView,
+      final AtomicBoolean isAllInvalidSeries,
+      final AtomicBoolean hasInvalidSeries,
+      final List<ConstructSchemaBlackListResult.ReferencedInvalidPathInfo> referencedInvalidPaths)
+      throws MetadataException {
+    final List<PartialPath> result = new ArrayList<>();
+    final AtomicInteger timeSeriesNum = new AtomicInteger(0);
+    try (final MeasurementUpdater<IMemMNode> updater =
+        new MeasurementUpdater<IMemMNode>(
+            rootNode, pathPattern, store, false, SchemaConstant.ALL_MATCH_SCOPE) {
+          @Override
+          protected void updateMeasurement(final IMeasurementMNode<IMemMNode> node) {
+            if (!node.isLogicalView()) {
+              isAllLogicalView.set(false);
+            }
+
+            final PartialPath path = getPartialPathFromRootToNode(node.getAsMNode());
+
+            // Check if this is an invalid series (DISABLED=true)
+            // Invalid series don't need pre-delete, they should be deleted directly
+            if (node.isInvalid()) {
+              hasInvalidSeries.set(true);
+              // Don't set preDeleted for invalid series
+              return;
+            }
+
+            isAllInvalidSeries.set(false);
+
+            // Check if this is a renamed (alias) series
+            if (node.isRenamed()) {
+              final PartialPath originalPath = node.getOriginalPath();
+              referencedInvalidPaths.add(
+                  new ConstructSchemaBlackListResult.ReferencedInvalidPathInfo(
+                      path, originalPath, node.isRenamed()));
+            }
+
+            node.setPreDeleted(true);
+            result.add(path);
+          }
+        }) {
+      updater.update();
+    }
+    isAllInvalidSeries.set(isAllInvalidSeries.get() && timeSeriesNum.get() != 0);
+    return result;
+  }
+
   public List<PartialPath> rollbackSchemaBlackList(final PartialPath pathPattern)
       throws MetadataException {
     final List<PartialPath> result = new ArrayList<>();
@@ -723,7 +799,7 @@ public class MTreeBelowSGMemoryImpl {
             rootNode, pathPattern, store, false, SchemaConstant.ALL_MATCH_SCOPE) {
           @Override
           protected Void collectMeasurement(final IMeasurementMNode<IMemMNode> node) {
-            if (node.isPreDeleted()) {
+            if (node.isPreDeleted() || node.isInvalid()) {
               result.add(getPartialPathFromRootToNode(node.getAsMNode()));
             }
             return null;
@@ -1141,6 +1217,43 @@ public class MTreeBelowSGMemoryImpl {
             showDevicesPlan.getScope()) {
 
           @Override
+          protected boolean acceptFullyMatchedNode(final IMemMNode node) {
+            // Call parent to check device and template filter
+            if (!super.acceptFullyMatchedNode(node)) {
+              return false;
+            }
+
+            // If skipDevicesWithOnlyInvalidSeries is enabled, check if device has any enabled
+            // measurements
+            if (showDevicesPlan.shouldSkipDevicesWithOnlyInvalidSeries() && node.isDevice()) {
+              try {
+                IMNodeIterator<IMemMNode> iterator = store.getChildrenIterator(node);
+                try {
+                  boolean hasEnabledMeasurement = false;
+                  boolean deviceHasNoMeasurement = true;
+                  while (iterator.hasNext()) {
+                    IMemMNode child = iterator.next();
+                    if (child.isMeasurement()) {
+                      deviceHasNoMeasurement = false;
+                      if (!child.getAsMeasurementMNode().isInvalid()) {
+                        hasEnabledMeasurement = true;
+                        break;
+                      }
+                    }
+                  }
+                  return deviceHasNoMeasurement || hasEnabledMeasurement;
+                } finally {
+                  iterator.close();
+                }
+              } catch (MetadataException e) {
+                // If we can't check, accept the device to be safe
+                return true;
+              }
+            }
+            return true;
+          }
+
+          @Override
           protected IDeviceSchemaInfo collectEntity(final IDeviceMNode<IMemMNode> node) {
             final PartialPath device = getPartialPathFromRootToNode(node.getAsMNode());
             final ShowDevicesResult result =
@@ -1252,7 +1365,7 @@ public class MTreeBelowSGMemoryImpl {
     final EntityCollector<IDeviceSchemaInfo, IMemMNode> collector =
         new EntityCollector<IDeviceSchemaInfo, IMemMNode>(rootNode, pattern, store, false, null) {
           @Override
-          protected boolean acceptFullMatchedNode(final IMemMNode node) {
+          protected boolean acceptFullyMatchedNode(final IMemMNode node) {
             return node.isDevice() && !node.getAsDeviceMNode().isPreDeactivateSelfOrTemplate();
           }
 
@@ -1498,6 +1611,8 @@ public class MTreeBelowSGMemoryImpl {
         };
 
     collector.setTemplateMap(showTimeSeriesPlan.getRelatedTemplate(), nodeFactory);
+    collector.setSkipInvalidSchema(showTimeSeriesPlan.shouldSkipInvalidSchema());
+    collector.setOnlyInvalidSchema(showTimeSeriesPlan.shouldOnlyInvalidSchema());
     final ISchemaReader<ITimeSeriesSchemaInfo> reader =
         new TimeseriesReaderWithViewFetch(
             collector, showTimeSeriesPlan.getSchemaFilter(), showTimeSeriesPlan.needViewDetail());
@@ -1527,6 +1642,7 @@ public class MTreeBelowSGMemoryImpl {
           }
         };
     collector.setTargetLevel(showNodesPlan.getLevel());
+    collector.setSkipInvalidSchema(showNodesPlan.shouldSkipInvalidSchema());
 
     return new ISchemaReader<INodeSchemaInfo>() {
 

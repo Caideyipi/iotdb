@@ -102,6 +102,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDele
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.plugin.CreatePipePluginPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.plugin.DropPipePluginPlan;
@@ -191,7 +192,10 @@ import org.apache.tsfile.utils.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2012,6 +2016,27 @@ public class ConfigPhysicalPlanSerDeTest {
             new byte[] {0, 1, 2});
     Assert.assertEquals(
         originalPlan, ConfigPhysicalPlan.Factory.create(originalPlan.serializeToByteBuffer()));
+  }
+
+  @Test
+  public void pipeRenameTimeSeriesPlanTest() throws IOException, IllegalPathException {
+    final PartialPath oldPath = new PartialPath("root.sg1.d1.s1");
+    final PartialPath newPath = new PartialPath("root.sg1.d1.s1_alias");
+
+    final ByteArrayOutputStream oldPathStream = new ByteArrayOutputStream();
+    final ByteArrayOutputStream newPathStream = new ByteArrayOutputStream();
+    final DataOutputStream oldPathDataStream = new DataOutputStream(oldPathStream);
+    final DataOutputStream newPathDataStream = new DataOutputStream(newPathStream);
+    oldPath.serialize(oldPathDataStream);
+    newPath.serialize(newPathDataStream);
+    final ByteBuffer oldPathBytes = ByteBuffer.wrap(oldPathStream.toByteArray());
+    final ByteBuffer newPathBytes = ByteBuffer.wrap(newPathStream.toByteArray());
+
+    final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlan =
+        new PipeRenameTimeSeriesPlan(oldPathBytes, newPathBytes);
+    Assert.assertEquals(
+        pipeRenameTimeSeriesPlan,
+        ConfigPhysicalPlan.Factory.create(pipeRenameTimeSeriesPlan.serializeToByteBuffer()));
   }
 
   @Test

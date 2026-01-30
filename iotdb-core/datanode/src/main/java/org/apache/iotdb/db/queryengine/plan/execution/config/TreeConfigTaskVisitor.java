@@ -52,6 +52,7 @@ import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.LoadBalanc
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.RemoveAINodeTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.RemoveConfigNodeTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.RemoveDataNodeTask;
+import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.RenameTimeSeriesTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.SetTTLTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowAINodesTask;
 import org.apache.iotdb.db.queryengine.plan.execution.config.metadata.ShowAvailableUrlsTask;
@@ -156,6 +157,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.LoadBalanceStatem
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveAINodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveConfigNodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveDataNodeStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.RenameTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowAvailableUrlsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterIdStatement;
@@ -804,6 +806,12 @@ public class TreeConfigTaskVisitor extends StatementVisitor<IConfigTask, MPPQuer
   public IConfigTask visitAlterTimeSeries(
       AlterTimeSeriesDataTypeStatement alterTimeSeriesDataTypeStatement, MPPQueryContext context) {
     return new AlterTimeSeriesTask(context.getQueryId().getId(), alterTimeSeriesDataTypeStatement);
+  }
+
+  @Override
+  public IConfigTask visitRenameTimeSeriesStatement(
+      RenameTimeSeriesStatement renameTimeSeriesStatement, MPPQueryContext context) {
+    return new RenameTimeSeriesTask(renameTimeSeriesStatement, context);
   }
 
   @Override

@@ -111,4 +111,31 @@ public interface ISchemaTree extends Accountable {
   boolean hasLogicalViewMeasurement();
 
   void removeLogicalView();
+
+  /**
+   * Check whether there is at least one alias series in this schema tree.
+   *
+   * @return true if there is at least one alias series, else false
+   */
+  default boolean hasAliasSeries() {
+    return false;
+  }
+
+  /**
+   * Check whether there is at least one invalid series in this schema tree.
+   *
+   * @return true if there is at least one invalid series, else false
+   */
+  default boolean hasInvalidSeries() {
+    return false;
+  }
+
+  /**
+   * Check whether all series in this schema tree are invalid.
+   *
+   * @return true if all series are invalid, else false
+   */
+  default boolean allInvalidSeries() {
+    return false;
+  }
 }

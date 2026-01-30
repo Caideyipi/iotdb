@@ -99,7 +99,7 @@ public class TraverserWithLimitOffsetWrapper<R, N extends IMNode<N>> extends Tra
   }
 
   @Override
-  protected boolean acceptFullMatchedNode(N node) {
+  protected boolean acceptFullyMatchedNode(N node) {
     return false;
   }
 

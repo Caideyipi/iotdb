@@ -29,7 +29,7 @@ public interface ISchemaRegionStatistics {
 
   int getSchemaRegionId();
 
-  long getSeriesNumber(final boolean includeView);
+  long getSeriesNumber(final boolean includeView, final boolean includeInvalidSeries);
 
   long getDevicesNumber();
 
@@ -52,4 +52,11 @@ public interface ISchemaRegionStatistics {
   long getGlobalMemoryUsage();
 
   long getGlobalSeriesNumber();
+
+  /**
+   * Check if this SchemaRegion has any invalid series.
+   *
+   * @return true if there are invalid series in this SchemaRegion, false otherwise
+   */
+  boolean hasInvalidSeries();
 }

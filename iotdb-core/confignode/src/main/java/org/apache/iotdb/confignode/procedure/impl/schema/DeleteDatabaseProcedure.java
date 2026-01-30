@@ -24,7 +24,10 @@ import org.apache.iotdb.common.rpc.thrift.TConsensusGroupType;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.exception.runtime.ThriftSerDeException;
+import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.service.metric.MetricService;
 import org.apache.iotdb.commons.utils.ThriftConfigNodeSerDeUtils;
 import org.apache.iotdb.confignode.client.async.CnToDnAsyncRequestType;
@@ -34,6 +37,7 @@ import org.apache.iotdb.confignode.consensus.request.write.database.PreDeleteDat
 import org.apache.iotdb.confignode.consensus.request.write.region.OfferRegionMaintainTasksPlan;
 import org.apache.iotdb.confignode.manager.partition.PartitionMetrics;
 import org.apache.iotdb.confignode.persistence.partition.maintainer.RegionDeleteTask;
+import org.apache.iotdb.confignode.procedure.MetadataProcedureConflictCheckable;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.impl.StateMachineProcedure;
@@ -41,6 +45,8 @@ import org.apache.iotdb.confignode.procedure.state.schema.DeleteDatabaseState;
 import org.apache.iotdb.confignode.procedure.store.ProcedureType;
 import org.apache.iotdb.confignode.rpc.thrift.TDatabaseSchema;
 import org.apache.iotdb.consensus.exception.ConsensusException;
+import org.apache.iotdb.mpp.rpc.thrift.TCheckInvalidTimeSeriesReq;
+import org.apache.iotdb.mpp.rpc.thrift.TCheckInvalidTimeSeriesResp;
 import org.apache.iotdb.rpc.TSStatusCode;
 
 import org.apache.thrift.TException;
@@ -56,12 +62,54 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.apache.iotdb.commons.conf.IoTDBConstant.MULTI_LEVEL_PATH_WILDCARD;
+import static org.apache.iotdb.commons.conf.IoTDBConstant.PATH_SEPARATOR;
+
 public class DeleteDatabaseProcedure
-    extends StateMachineProcedure<ConfigNodeProcedureEnv, DeleteDatabaseState> {
+    extends StateMachineProcedure<ConfigNodeProcedureEnv, DeleteDatabaseState>
+    implements MetadataProcedureConflictCheckable {
   private static final Logger LOG = LoggerFactory.getLogger(DeleteDatabaseProcedure.class);
   private static final int RETRY_THRESHOLD = 5;
 
   private TDatabaseSchema deleteDatabaseSchema;
+
+  /**
+   * Result class for invalid time series check. Encapsulates the counts and paths of invalid time
+   * series and alias time series.
+   */
+  public static class InvalidTimeSeriesCheckResult {
+    private final boolean hasInvalidTimeSeries;
+    private final int invalidTimeSeriesCount;
+    private final int aliasTimeSeriesCount;
+    private final List<String> paths;
+
+    public InvalidTimeSeriesCheckResult(
+        boolean hasInvalidTimeSeries,
+        int invalidTimeSeriesCount,
+        int aliasTimeSeriesCount,
+        List<String> paths) {
+      this.hasInvalidTimeSeries = hasInvalidTimeSeries;
+      this.invalidTimeSeriesCount = invalidTimeSeriesCount;
+      this.aliasTimeSeriesCount = aliasTimeSeriesCount;
+      this.paths = paths != null ? new ArrayList<>(paths) : new ArrayList<>();
+    }
+
+    public boolean hasInvalidTimeSeries() {
+      return hasInvalidTimeSeries;
+    }
+
+    public int getInvalidTimeSeriesCount() {
+      return invalidTimeSeriesCount;
+    }
+
+    public int getAliasTimeSeriesCount() {
+      return aliasTimeSeriesCount;
+    }
+
+    public List<String> getPaths() {
+      return paths;
+    }
+  }
 
   public DeleteDatabaseProcedure(final boolean isGeneratedByPipe) {
     super(isGeneratedByPipe);
@@ -94,6 +142,53 @@ public class DeleteDatabaseProcedure
               "[DeleteDatabaseProcedure] Pre delete database: {}", deleteDatabaseSchema.getName());
           env.preDeleteDatabase(
               PreDeleteDatabasePlan.PreDeleteType.EXECUTE, deleteDatabaseSchema.getName());
+          setNextState(DeleteDatabaseState.CHECK_INVALID_TIME_SERIES);
+          break;
+        case CHECK_INVALID_TIME_SERIES:
+          LOG.info(
+              "[DeleteDatabaseProcedure] Check invalid time series for database: {}",
+              deleteDatabaseSchema.getName());
+          final InvalidTimeSeriesCheckResult checkResult =
+              checkInvalidTimeSeries(env, deleteDatabaseSchema.getName());
+
+          // Check if query failed (null indicates query failure)
+          if (checkResult == null) {
+            setFailure(
+                new ProcedureException(
+                    String.format(
+                        "Failed to check invalid time series for database %s",
+                        deleteDatabaseSchema.getName())));
+            return Flow.NO_MORE_STATE;
+          }
+
+          if (checkResult.hasInvalidTimeSeries()) {
+            final int invalidCount = checkResult.getInvalidTimeSeriesCount();
+            final int aliasCount = checkResult.getAliasTimeSeriesCount();
+            final List<String> allPaths = checkResult.getPaths();
+            String errorMessage;
+
+            // Limit to 5 paths for display
+            final int maxDisplayPaths = 5;
+            final List<String> displayPaths =
+                allPaths.size() > maxDisplayPaths ? allPaths.subList(0, maxDisplayPaths) : allPaths;
+
+            final StringBuilder pathsInfo = new StringBuilder();
+            if (!displayPaths.isEmpty()) {
+              pathsInfo.append(String.join(", ", displayPaths));
+              if (allPaths.size() > maxDisplayPaths) {
+                pathsInfo.append(
+                    String.format(" ... and %d more", allPaths.size() - maxDisplayPaths));
+              }
+            }
+            errorMessage =
+                String.format(
+                    "Cannot delete database %s: contains %d invalid and %d alias time series. "
+                        + "Sample paths: %s",
+                    deleteDatabaseSchema.getName(), invalidCount, aliasCount, pathsInfo);
+
+            setFailure(new ProcedureException(errorMessage));
+            return Flow.NO_MORE_STATE;
+          }
           setNextState(DeleteDatabaseState.INVALIDATE_CACHE);
           break;
         case INVALIDATE_CACHE:
@@ -243,6 +338,7 @@ public class DeleteDatabaseProcedure
       throws IOException, InterruptedException {
     switch (state) {
       case PRE_DELETE_DATABASE:
+      case CHECK_INVALID_TIME_SERIES:
       case INVALIDATE_CACHE:
         LOG.info(
             "[DeleteDatabaseProcedure] Rollback to preDeleted: {}", deleteDatabaseSchema.getName());
@@ -258,6 +354,7 @@ public class DeleteDatabaseProcedure
   protected boolean isRollbackSupported(final DeleteDatabaseState state) {
     switch (state) {
       case PRE_DELETE_DATABASE:
+      case CHECK_INVALID_TIME_SERIES:
       case INVALIDATE_CACHE:
         return true;
       default:
@@ -282,6 +379,209 @@ public class DeleteDatabaseProcedure
 
   public String getDatabase() {
     return deleteDatabaseSchema.getName();
+  }
+
+  @Override
+  public void applyPathPatterns(PathPatternTree patternTree) {
+    String databaseName = getDatabase();
+    if (databaseName == null || databaseName.isEmpty()) {
+      return;
+    }
+    try {
+      PartialPath databasePath =
+          new PartialPath(databaseName + PATH_SEPARATOR + MULTI_LEVEL_PATH_WILDCARD);
+      patternTree.appendPathPattern(databasePath);
+    } catch (IllegalPathException e) {
+      LOG.warn("Invalid database path: {}", databaseName, e);
+    }
+  }
+
+  @Override
+  public boolean shouldCheckConflict() {
+    return !isFinished();
+  }
+
+  /**
+   * Check if the database has invalid time series by querying all SchemaRegions in the database.
+   *
+   * @param env ConfigNodeProcedureEnv
+   * @param databaseName database name
+   * @return InvalidTimeSeriesCheckResult containing hasInvalidTimeSeries flag, counts, and paths
+   */
+  private InvalidTimeSeriesCheckResult checkInvalidTimeSeries(
+      final ConfigNodeProcedureEnv env, final String databaseName) {
+    try {
+      final List<TRegionReplicaSet> schemaRegions = filterSchemaRegions(env, databaseName);
+      if (schemaRegions.isEmpty()) {
+        return new InvalidTimeSeriesCheckResult(false, 0, 0, new ArrayList<>());
+      }
+
+      final RequestContext requestContext = createCheckRequests(schemaRegions, databaseName);
+      if (requestContext.isEmpty()) {
+        return new InvalidTimeSeriesCheckResult(false, 0, 0, new ArrayList<>());
+      }
+
+      sendCheckRequests(requestContext.handler);
+      return processCheckResponses(requestContext, databaseName);
+    } catch (final Exception e) {
+      LOG.error(
+          "[DeleteDatabaseProcedure] Error checking invalid time series for database: {}. "
+              + "This will trigger rollback.",
+          databaseName,
+          e);
+      return null;
+    }
+  }
+
+  private List<TRegionReplicaSet> filterSchemaRegions(
+      final ConfigNodeProcedureEnv env, final String databaseName) {
+    final List<TRegionReplicaSet> schemaRegions = new ArrayList<>();
+    for (final TRegionReplicaSet region : env.getAllReplicaSets(databaseName)) {
+      if (region.getRegionId().getType().equals(TConsensusGroupType.SchemaRegion)) {
+        schemaRegions.add(region);
+      }
+    }
+    return schemaRegions;
+  }
+
+  private static class RequestContext {
+    final DataNodeAsyncRequestContext<TCheckInvalidTimeSeriesReq, TCheckInvalidTimeSeriesResp>
+        handler;
+    final Map<Integer, TRegionReplicaSet> regionMap;
+
+    RequestContext(
+        final DataNodeAsyncRequestContext<TCheckInvalidTimeSeriesReq, TCheckInvalidTimeSeriesResp>
+            handler,
+        final Map<Integer, TRegionReplicaSet> regionMap) {
+      this.handler = handler;
+      this.regionMap = regionMap;
+    }
+
+    boolean isEmpty() {
+      return regionMap.isEmpty();
+    }
+  }
+
+  private RequestContext createCheckRequests(
+      final List<TRegionReplicaSet> schemaRegions, final String databaseName) {
+    final DataNodeAsyncRequestContext<TCheckInvalidTimeSeriesReq, TCheckInvalidTimeSeriesResp>
+        handler =
+            new DataNodeAsyncRequestContext<>(CnToDnAsyncRequestType.CHECK_INVALID_TIME_SERIES);
+    final Map<Integer, TRegionReplicaSet> regionMap = new HashMap<>();
+    int requestIndex = 0;
+
+    for (final TRegionReplicaSet region : schemaRegions) {
+      final List<TDataNodeLocation> locations = region.getDataNodeLocations();
+      if (locations.isEmpty()) {
+        continue;
+      }
+
+      try {
+        final TCheckInvalidTimeSeriesReq req = new TCheckInvalidTimeSeriesReq();
+        req.setSchemaRegionId(region.getRegionId());
+        req.setDatabaseName(databaseName);
+        handler.putRequest(requestIndex, req);
+        handler.putNodeLocation(requestIndex, locations.get(0));
+        regionMap.put(requestIndex, region);
+        requestIndex++;
+      } catch (final Exception e) {
+        LOG.error(
+            "[DeleteDatabaseProcedure] Error creating request for database: {} on SchemaRegion: {}",
+            databaseName,
+            region.getRegionId(),
+            e);
+      }
+    }
+
+    return new RequestContext(handler, regionMap);
+  }
+
+  private void sendCheckRequests(
+      final DataNodeAsyncRequestContext<TCheckInvalidTimeSeriesReq, TCheckInvalidTimeSeriesResp>
+          handler) {
+    CnToDnInternalServiceAsyncRequestManager.getInstance().sendAsyncRequestWithRetry(handler);
+  }
+
+  private InvalidTimeSeriesCheckResult processCheckResponses(
+      final RequestContext requestContext, final String databaseName) {
+    final List<String> invalidPaths = new ArrayList<>();
+    final List<String> aliasPaths = new ArrayList<>();
+    boolean hasInvalid = false;
+
+    for (final Map.Entry<Integer, TCheckInvalidTimeSeriesResp> entry :
+        requestContext.handler.getResponseMap().entrySet()) {
+      final TCheckInvalidTimeSeriesResp resp = entry.getValue();
+      final TRegionReplicaSet region = requestContext.regionMap.get(entry.getKey());
+
+      if (!isResponseSuccess(resp)) {
+        LOG.error(
+            "[DeleteDatabaseProcedure] Failed to check invalid time series for database: {} "
+                + "on SchemaRegion: {}, status: {}. This will trigger rollback.",
+            databaseName,
+            region.getRegionId(),
+            resp != null ? resp.getStatus() : "null");
+        return null;
+      }
+
+      if (resp.isHasInvalidTimeSeries()) {
+        hasInvalid = true;
+        collectPaths(resp, invalidPaths, aliasPaths);
+        logInvalidTimeSeries(resp, databaseName, region);
+      }
+    }
+
+    return buildResult(hasInvalid, invalidPaths, aliasPaths);
+  }
+
+  private boolean isResponseSuccess(final TCheckInvalidTimeSeriesResp resp) {
+    return resp != null
+        && resp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode();
+  }
+
+  private void collectPaths(
+      final TCheckInvalidTimeSeriesResp resp,
+      final List<String> invalidPaths,
+      final List<String> aliasPaths) {
+    if (resp.isSetInvalidTimeSeriesPaths() && !resp.getInvalidTimeSeriesPaths().isEmpty()) {
+      invalidPaths.addAll(resp.getInvalidTimeSeriesPaths());
+    }
+    if (resp.isSetAliasTimeSeriesPaths() && !resp.getAliasTimeSeriesPaths().isEmpty()) {
+      aliasPaths.addAll(resp.getAliasTimeSeriesPaths());
+    }
+  }
+
+  private void logInvalidTimeSeries(
+      final TCheckInvalidTimeSeriesResp resp,
+      final String databaseName,
+      final TRegionReplicaSet region) {
+    final int invalidCount =
+        resp.isSetInvalidTimeSeriesPaths() && !resp.getInvalidTimeSeriesPaths().isEmpty()
+            ? resp.getInvalidTimeSeriesPaths().size()
+            : 0;
+    final int aliasCount =
+        resp.isSetAliasTimeSeriesPaths() && !resp.getAliasTimeSeriesPaths().isEmpty()
+            ? resp.getAliasTimeSeriesPaths().size()
+            : 0;
+
+    LOG.warn(
+        "[DeleteDatabaseProcedure] Found {} invalid time series and {} alias time series "
+            + "in database: {} on SchemaRegion: {} (hasPaths={})",
+        invalidCount,
+        aliasCount,
+        databaseName,
+        region.getRegionId(),
+        invalidCount > 0 || aliasCount > 0);
+  }
+
+  private InvalidTimeSeriesCheckResult buildResult(
+      final boolean hasInvalid, final List<String> invalidPaths, final List<String> aliasPaths) {
+    final List<String> allPaths = new ArrayList<>();
+    if (hasInvalid) {
+      allPaths.addAll(invalidPaths);
+      allPaths.addAll(aliasPaths);
+    }
+    return new InvalidTimeSeriesCheckResult(
+        hasInvalid, invalidPaths.size(), aliasPaths.size(), allPaths);
   }
 
   @Override

@@ -42,11 +42,14 @@ public class ShowTimeSeriesStatement extends ShowStatement {
   // if is true, the result will be sorted according to the inserting frequency of the time series
   private final boolean orderByHeat;
   private WhereCondition timeCondition;
+  // if is true, only show disabled (invalid) time series
+  private boolean onlyShowDisable;
 
   public ShowTimeSeriesStatement(PartialPath pathPattern, boolean orderByHeat) {
     super();
     this.pathPattern = pathPattern;
     this.orderByHeat = orderByHeat;
+    this.onlyShowDisable = false;
   }
 
   public PartialPath getPathPattern() {
@@ -75,6 +78,14 @@ public class ShowTimeSeriesStatement extends ShowStatement {
 
   public boolean hasTimeCondition() {
     return timeCondition != null;
+  }
+
+  public boolean isOnlyShowDisable() {
+    return onlyShowDisable;
+  }
+
+  public void setOnlyShowDisable(boolean onlyShowDisable) {
+    this.onlyShowDisable = onlyShowDisable;
   }
 
   @Override

@@ -311,6 +311,13 @@ public class TagManager {
               if (plan.isPrefixMatch()
                   ? pathPattern.prefixMatchFullPath(node.getPartialPath())
                   : pathPattern.matchFullPath(node.getPartialPath())) {
+                if (plan.shouldSkipInvalidSchema() && node.isMeasurement() && node.isInvalid()) {
+                  continue;
+                }
+
+                if (plan.shouldOnlyInvalidSchema() && node.isMeasurement() && !node.isInvalid()) {
+                  continue;
+                }
                 final Pair<Map<String, String>, Map<String, String>> tagAndAttributePair =
                     readTagFile(node.getOffset());
                 nextMatched =

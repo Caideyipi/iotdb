@@ -23,4 +23,11 @@ package org.apache.iotdb.db.schemaengine.schemaregion.read.req;
 public interface IShowNodesPlan extends IShowSchemaPlan {
 
   int getLevel();
+
+  /**
+   * Whether to skip invalid measurement nodes (DISABLED=true). Default is true.
+   *
+   * @return true if invalid measurement nodes should be skipped, false otherwise
+   */
+  boolean shouldSkipInvalidSchema();
 }

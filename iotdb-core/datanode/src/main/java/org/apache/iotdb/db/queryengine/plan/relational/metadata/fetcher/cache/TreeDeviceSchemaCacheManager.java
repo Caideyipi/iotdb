@@ -20,6 +20,7 @@
 package org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.cache;
 
 import org.apache.iotdb.commons.conf.CommonDescriptor;
+import org.apache.iotdb.commons.exception.IoTDBRuntimeException;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternUtil;
@@ -28,9 +29,11 @@ import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
 import org.apache.iotdb.db.exception.metadata.view.InsertNonWritableViewException;
 import org.apache.iotdb.db.queryengine.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.queryengine.common.schematree.IMeasurementSchemaInfo;
+import org.apache.iotdb.db.queryengine.common.schematree.MeasurementSchemaInfo;
 import org.apache.iotdb.db.queryengine.plan.analyze.schema.ISchemaComputation;
 import org.apache.iotdb.db.schemaengine.template.ClusterTemplateManager;
 import org.apache.iotdb.db.schemaengine.template.ITemplateManager;
+import org.apache.iotdb.rpc.TSStatusCode;
 
 import org.apache.tsfile.file.metadata.IDeviceID;
 import org.apache.tsfile.read.TimeValuePair;
@@ -189,6 +192,7 @@ public class TreeDeviceSchemaCacheManager {
     }
     schemaComputation.computeDevice(treeSchema.isAligned());
     schemaComputation.recordRangeOfLogicalViewSchemaListNow();
+    schemaComputation.recordRangeOfAliasSeriesPathListNow();
     return indexOfMissingMeasurements;
   }
 
@@ -258,6 +262,78 @@ public class TreeDeviceSchemaCacheManager {
         indexOfMissingMeasurements,
         indexOfMissingMeasurements.stream()
             .map(index -> logicalViewSchemaList.get(index).getSourcePathStringIfWritable())
+            .collect(Collectors.toList()));
+  }
+
+  /**
+   * This function is used to process alias series schema list in statement. It will try to find the
+   * physical paths of those alias series in cache. If it found sources, measurement schemas of
+   * physical paths will be recorded in measurement schema list; else the alias series will be
+   * recorded as missed. The indexes of missed alias series and full paths of their physical paths
+   * will be returned.
+   *
+   * @param schemaComputation the statement you want to process
+   * @return The indexes of missed alias series and full paths of their physical paths will be
+   *     returned.
+   * @throws IoTDBRuntimeException if the source path of alias series is a view
+   */
+  public Pair<List<Integer>, List<String>> computeSourceOfAliasSeries(
+      final ISchemaComputation schemaComputation) {
+    if (!schemaComputation.hasAliasSeriesNeedProcess()) {
+      return new Pair<>(new ArrayList<>(), new ArrayList<>());
+    }
+
+    final List<Integer> indexOfMissingMeasurements = new ArrayList<>();
+    final Pair<Integer, Integer> beginToEnd =
+        schemaComputation.getRangeOfAliasSeriesPathListRecorded();
+    final List<PartialPath> aliasSeriesOriginalPathList =
+        schemaComputation.getAliasSeriesOriginalPathList();
+    final List<Integer> indexListOfAliasSeriesPaths =
+        schemaComputation.getIndexListOfAliasSeriesPaths();
+
+    for (int i = beginToEnd.left; i < beginToEnd.right; i++) {
+      final PartialPath fullPath = aliasSeriesOriginalPathList.get(i);
+      final int realIndex = indexListOfAliasSeriesPaths.get(i);
+
+      final IDeviceSchema schema =
+          tableDeviceSchemaCache.getDeviceSchema(fullPath.getDevicePath().getNodes());
+      if (!(schema instanceof TreeDeviceNormalSchema)) {
+        indexOfMissingMeasurements.add(i);
+      } else {
+        final TreeDeviceNormalSchema treeSchema = (TreeDeviceNormalSchema) schema;
+        final SchemaCacheEntry value = treeSchema.getSchemaCacheEntry(fullPath.getMeasurement());
+        if (Objects.isNull(value)) {
+          indexOfMissingMeasurements.add(i);
+        } else {
+          // Alias series should point to physical paths, not views or other alias series
+          if (value.isLogicalView()) {
+            throw new IoTDBRuntimeException(
+                String.format(
+                    "The source path [%s] of alias series is a view! "
+                        + "Alias series cannot point to views. Please check it.",
+                    fullPath.getFullPath()),
+                TSStatusCode.UNSUPPORTED_OPERATION.getStatusCode());
+          }
+
+          MeasurementPath originalSeriesMeasurementPath =
+              (MeasurementPath) schemaComputation.getAliasSeriesOriginalPathList().get(i);
+          schemaComputation.computeMeasurementOfAliasSeries(
+              realIndex,
+              new MeasurementSchemaInfo(
+                  originalSeriesMeasurementPath.getMeasurement(),
+                  originalSeriesMeasurementPath.getMeasurementSchema(),
+                  null,
+                  originalSeriesMeasurementPath.getTagMap(),
+                  null),
+              originalSeriesMeasurementPath.isUnderAlignedEntity());
+        }
+      }
+    }
+
+    return new Pair<>(
+        indexOfMissingMeasurements,
+        indexOfMissingMeasurements.stream()
+            .map(index -> aliasSeriesOriginalPathList.get(index).getFullPath())
             .collect(Collectors.toList()));
   }
 

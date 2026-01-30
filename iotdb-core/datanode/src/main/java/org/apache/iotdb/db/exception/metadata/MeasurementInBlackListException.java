@@ -31,7 +31,8 @@ public class MeasurementInBlackListException extends MetadataException {
   public MeasurementInBlackListException(PartialPath path) {
     super(
         String.format("Some task is deleting timeseries [%s]", path),
-        TSStatusCode.TIMESERIES_IN_BLACK_LIST.getStatusCode());
+        TSStatusCode.TIMESERIES_IN_BLACK_LIST.getStatusCode(),
+        true);
     this.path = path;
   }
 

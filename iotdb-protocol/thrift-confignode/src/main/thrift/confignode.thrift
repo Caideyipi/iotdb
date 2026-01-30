@@ -1012,6 +1012,12 @@ struct TAlterTimeSeriesReq {
   4: required binary updateInfo
 }
 
+struct TRenameTimeSeriesReq {
+  1: required string queryId
+  2: required binary oldPath
+  3: required binary newPath
+}
+
 struct TDeleteLogicalViewReq {
   1: required string queryId
   2: required binary pathPatternTree
@@ -1968,6 +1974,8 @@ service IConfigNodeRPCService {
    * Alter timeseries measurement
    **/
   common.TSStatus alterTimeSeriesDataType(TAlterTimeSeriesReq req)
+
+  common.TSStatus renameTimeSeries(TRenameTimeSeriesReq req)
 
   common.TSStatus deleteLogicalView(TDeleteLogicalViewReq req)
 

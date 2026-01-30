@@ -20,6 +20,8 @@
 package org.apache.iotdb.confignode.procedure;
 
 import org.apache.iotdb.commons.concurrent.ThreadName;
+import org.apache.iotdb.commons.exception.IoTDBException;
+import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.utils.RetryUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
@@ -29,6 +31,7 @@ import org.apache.iotdb.confignode.procedure.scheduler.SimpleProcedureScheduler;
 import org.apache.iotdb.confignode.procedure.state.ProcedureLockState;
 import org.apache.iotdb.confignode.procedure.state.ProcedureState;
 import org.apache.iotdb.confignode.procedure.store.IProcedureStore;
+import org.apache.iotdb.rpc.TSStatusCode;
 
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -962,6 +965,28 @@ public class ProcedureExecutor<Env> {
   public long submitProcedure(Procedure<Env> procedure) {
     Preconditions.checkArgument(procedure.getState() == ProcedureState.INITIALIZING);
     Preconditions.checkArgument(!procedure.hasParent(), "Unexpected parent", procedure);
+
+    // Check for conflicts with running procedures if this procedure implements
+    // MetadataProcedureConflictCheckable
+    if (procedure instanceof MetadataProcedureConflictCheckable) {
+      MetadataProcedureConflictCheckable checkable = (MetadataProcedureConflictCheckable) procedure;
+      if (checkable.shouldCheckConflict()) {
+        // Build pattern tree from all running procedures
+        PathPatternTree runningTasksTree =
+            MetadataProcedureConflictChecker.buildRunningTasksPatternTree(procedures.values());
+        // Check if this procedure conflicts with running tasks
+        if (!checkable.hasConflictWith(runningTasksTree)) {
+          // Set failure on the procedure instead of throwing exception
+          procedure.setFailure(
+              new ProcedureException(
+                  new IoTDBException(
+                      "Some other task is renaming some target timeseries.",
+                      TSStatusCode.OVERLAP_WITH_EXISTING_TASK.getStatusCode())));
+          return procedure.getProcId();
+        }
+      }
+    }
+
     // Initialize the procedure
     procedure.setProcId(store.getNextProcId());
     procedure.setProcRunnable();

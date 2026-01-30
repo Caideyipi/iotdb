@@ -62,6 +62,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.LoadBalanceStatem
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveAINodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveConfigNodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveDataNodeStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.RenameTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowAvailableUrlsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildNodesStatement;
@@ -207,6 +208,11 @@ public abstract class StatementVisitor<R, C> {
   // Alter TimeSeries
   public R visitAlterTimeSeries(AlterTimeSeriesStatement alterTimeSeriesStatement, C context) {
     return visitStatement(alterTimeSeriesStatement, context);
+  }
+
+  public R visitRenameTimeSeriesStatement(
+      RenameTimeSeriesStatement renameTimeSeriesStatement, C context) {
+    return visitStatement(renameTimeSeriesStatement, context);
   }
 
   public R visitAlterTimeSeries(

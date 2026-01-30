@@ -733,9 +733,47 @@ public class CachedMTreeStore implements IMTreeStore<ICachedMNode> {
         try {
           memoryManager.updateCacheStatusAfterMemoryRead(ansMNode);
         } catch (MNodeNotCachedException e) {
-          throw new RuntimeException(e);
+          // Node has been evicted from cache, try to reload from disk
+          // First check if parent still has this child (might have been reloaded by another thread)
+          ICachedMNode nodeInMem = parent.getChild(ansMNode.getName());
+          if (nodeInMem != null) {
+            try {
+              memoryManager.updateCacheStatusAfterMemoryRead(nodeInMem);
+              ansMNode = nodeInMem;
+            } catch (MNodeNotCachedException ignored) {
+              // Still evicted, need to load from disk
+              ansMNode = loadChildFromDiskSafely(parent, ansMNode.getName(), ansMNode);
+            }
+          } else {
+            // Node not in parent's children, need to load from disk
+            ansMNode = loadChildFromDiskSafely(parent, ansMNode.getName(), ansMNode);
+          }
         }
         return ansMNode;
+      }
+
+      /**
+       * Safely load a child node from disk when it has been evicted from cache. Returns the loaded
+       * node if successful, or the original node if loading fails.
+       */
+      private ICachedMNode loadChildFromDiskSafely(
+          ICachedMNode parent, String name, ICachedMNode fallbackNode) {
+        try {
+          ICachedMNode nodeFromDisk = loadChildFromDisk(parent, name);
+          if (nodeFromDisk != null) {
+            return nodeFromDisk;
+          }
+        } catch (MetadataException e) {
+          // If we can't load from disk (e.g., volatile container or IO error),
+          // log and return the fallback node
+          LOGGER.debug(
+              "Failed to load child {} from disk for parent {}: {}. Using fallback node.",
+              name,
+              parent,
+              e.getMessage());
+        }
+        // Return fallback node if loading from disk failed
+        return fallbackNode;
       }
 
       protected int decide() {

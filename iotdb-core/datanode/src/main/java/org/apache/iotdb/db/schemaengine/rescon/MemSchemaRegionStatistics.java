@@ -40,6 +40,7 @@ public class MemSchemaRegionStatistics implements ISchemaRegionStatistics {
   private final ConcurrentMap<String, Long> tableDeviceNumber = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, Long> tableAttributeMemory = new ConcurrentHashMap<>();
   private final AtomicLong viewNumber = new AtomicLong(0);
+  private final AtomicLong invalidSeriesNumber = new AtomicLong(0);
   private final ConcurrentMap<Integer, Integer> templateUsage = new ConcurrentHashMap<>();
 
   private long mLogLength = 0;
@@ -66,12 +67,18 @@ public class MemSchemaRegionStatistics implements ISchemaRegionStatistics {
   }
 
   @Override
-  public long getSeriesNumber(final boolean includeView) {
+  public long getSeriesNumber(final boolean includeView, final boolean includeInvalidSeries) {
+    long result;
     if (includeView) {
-      return viewNumber.get() + measurementNumber.get() + getTemplateSeriesNumber();
+      result = viewNumber.get() + measurementNumber.get() + getTemplateSeriesNumber();
     } else {
-      return measurementNumber.get() + getTemplateSeriesNumber();
+      result = measurementNumber.get() + getTemplateSeriesNumber();
     }
+    // Exclude invalid series if includeInvalidSeries is false
+    if (!includeInvalidSeries) {
+      result -= invalidSeriesNumber.get();
+    }
+    return result;
   }
 
   public void addMeasurement(final long addedNum) {
@@ -92,6 +99,21 @@ public class MemSchemaRegionStatistics implements ISchemaRegionStatistics {
   public void deleteView(final long deletedNum) {
     viewNumber.addAndGet(-deletedNum);
     schemaEngineStatistics.deleteView(deletedNum);
+  }
+
+  public void addInvalidSeries(final long addedNum) {
+    invalidSeriesNumber.addAndGet(addedNum);
+    schemaEngineStatistics.addInvalidSeries(addedNum);
+  }
+
+  public void deleteInvalidSeries(final long deletedNum) {
+    invalidSeriesNumber.addAndGet(-deletedNum);
+    schemaEngineStatistics.deleteInvalidSeries(deletedNum);
+  }
+
+  @Override
+  public boolean hasInvalidSeries() {
+    return invalidSeriesNumber.get() > 0;
   }
 
   @Override
@@ -210,11 +232,13 @@ public class MemSchemaRegionStatistics implements ISchemaRegionStatistics {
     schemaEngineStatistics.releaseMemory(memoryUsage.get());
     schemaEngineStatistics.deleteMeasurement(measurementNumber.get());
     schemaEngineStatistics.deleteView(viewNumber.get());
+    schemaEngineStatistics.deleteInvalidSeries(invalidSeriesNumber.get());
     schemaEngineStatistics.deleteDevice(devicesNumber.get());
     memoryUsage.getAndSet(0);
     measurementNumber.getAndSet(0);
     devicesNumber.getAndSet(0);
-    viewNumber.getAndAdd(0);
+    viewNumber.getAndSet(0);
+    invalidSeriesNumber.getAndSet(0);
     templateUsage.forEach(
         (templateId, cnt) -> schemaEngineStatistics.deactivateTemplate(templateId, cnt));
     templateUsage.clear();

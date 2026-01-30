@@ -21,7 +21,10 @@ package org.apache.iotdb.db.queryengine.plan.statement.crud;
 
 import org.apache.iotdb.common.rpc.thrift.TTimePartitionSlot;
 import org.apache.iotdb.commons.conf.IoTDBConstant;
+import org.apache.iotdb.commons.exception.IllegalPathException;
+import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
 import org.apache.iotdb.commons.utils.TimePartitionUtils;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
@@ -93,6 +96,8 @@ public class InsertRowStatement extends InsertBaseStatement implements ISchemaVa
     statementType = StatementType.INSERT;
     this.recordedBeginOfLogicalViewSchemaList = 0;
     this.recordedEndOfLogicalViewSchemaList = 0;
+    this.recordedBeginOfAliasSeriesPathList = 0;
+    this.recordedEndOfAliasSeriesPathList = 0;
   }
 
   @Override
@@ -320,7 +325,29 @@ public class InsertRowStatement extends InsertBaseStatement implements ISchemaVa
   }
 
   public boolean isNeedSplit() {
-    return hasLogicalViewNeedProcess();
+    return hasLogicalViewNeedProcess() || hasAliasSeriesNeedProcess();
+  }
+
+  @Override
+  public boolean hasAliasSeriesNeedProcess() {
+    if (this.indexOfAliasSeriesPaths == null) {
+      return false;
+    }
+    return !this.indexOfAliasSeriesPaths.isEmpty();
+  }
+
+  @Override
+  public void recordRangeOfAliasSeriesPathListNow() {
+    if (this.aliasSeriesOriginalPathList != null) {
+      this.recordedBeginOfAliasSeriesPathList = this.recordedEndOfAliasSeriesPathList;
+      this.recordedEndOfAliasSeriesPathList = this.aliasSeriesOriginalPathList.size();
+    }
+  }
+
+  @Override
+  public Pair<Integer, Integer> getRangeOfAliasSeriesPathListRecorded() {
+    return new Pair<>(
+        this.recordedBeginOfAliasSeriesPathList, this.recordedEndOfAliasSeriesPathList);
   }
 
   public List<InsertRowStatement> getSplitList() {
@@ -365,7 +392,7 @@ public class InsertRowStatement extends InsertBaseStatement implements ISchemaVa
   }
 
   @Override
-  public InsertBaseStatement removeLogicalView() {
+  public InsertBaseStatement removeLogicalViewAndAliasSeries() {
     if (!isNeedSplit()) {
       return this;
     }
@@ -440,7 +467,72 @@ public class InsertRowStatement extends InsertBaseStatement implements ISchemaVa
         indexOfSourcePathsOfLogicalViews.add(index);
         return;
       } else {
-        measurementSchemas[index] = measurementSchemaInfo.getSchemaAsMeasurementSchema();
+        MeasurementSchema schema = measurementSchemaInfo.getSchemaAsMeasurementSchema();
+        if (schema != null) {
+          // Check for alias series (renamed series)
+          Map<String, String> props = schema.getProps();
+          if (props != null) {
+            // Check if this is an invalid series - throw exception if so
+            if (MeasurementPropsUtils.isInvalid(props)) {
+              PartialPath fullPath = devicePath.concatAsMeasurementPath(measurements[index]);
+              throw new SemanticException(
+                  String.format(
+                      "Cannot insert data into invalid series: %s", fullPath.getFullPath()));
+            }
+            // Check if this is an alias series (IS_RENAMED=true)
+            if (MeasurementPropsUtils.isRenamed(props)) {
+              boolean isAligned = MeasurementPropsUtils.isOriginalPathAligned(props);
+              // Get ORIGINAL_PATH from props for path mapping
+              String originalPathStr = MeasurementPropsUtils.getOriginalPathString(props);
+              if (originalPathStr != null) {
+                try {
+                  PartialPath originalPath = new PartialPath(originalPathStr);
+                  // For alias series, schema info (except measurement name) should be the same as
+                  // the alias series schema. Create a new MeasurementSchema with the original
+                  // measurement name but keep all other schema info from the alias series.
+                  MeasurementSchema physicalSchema =
+                      new MeasurementSchema(
+                          originalPath.getMeasurement(),
+                          schema.getType(),
+                          schema.getEncodingType(),
+                          schema.getCompressor());
+                  // Copy props but filter out alias series specific properties
+                  Map<String, String> physicalProps = new HashMap<>();
+                  for (Map.Entry<String, String> entry : props.entrySet()) {
+                    String key = entry.getKey();
+                    // Filter out alias series specific properties
+                    if (!MeasurementPropsUtils.isInternalPropertyKey(key)) {
+                      physicalProps.put(key, entry.getValue());
+                    }
+                  }
+                  if (!physicalProps.isEmpty()) {
+                    physicalSchema.setProps(physicalProps);
+                  }
+                  // Use MeasurementPath to properly extract device path later
+                  MeasurementPath path =
+                      new MeasurementPath(originalPath.getNodes(), physicalSchema);
+                  path.setTagMap(measurementSchemaInfo.getTagMap());
+                  path.setUnderAlignedEntity(isAligned);
+                  // Store alias series info for path mapping
+                  if (aliasSeriesOriginalPathList == null || indexOfAliasSeriesPaths == null) {
+                    aliasSeriesOriginalPathList = new ArrayList<>();
+                    indexOfAliasSeriesPaths = new ArrayList<>();
+                  }
+                  aliasSeriesOriginalPathList.add(path);
+                  indexOfAliasSeriesPaths.add(index);
+                  return;
+                } catch (IllegalPathException e) {
+                  throw new SemanticException(
+                      String.format(
+                          "Invalid ORIGINAL_PATH '%s' for alias series %s",
+                          originalPathStr,
+                          devicePath.concatAsMeasurementPath(measurements[index])));
+                }
+              }
+            }
+          }
+        }
+        measurementSchemas[index] = schema;
       }
     }
     if (isNeedInferType) {
@@ -463,6 +555,29 @@ public class InsertRowStatement extends InsertBaseStatement implements ISchemaVa
       Arrays.fill(this.measurementIsAligned, this.isAligned);
     }
     this.measurementIsAligned[index] = isAligned;
+  }
+
+  @Override
+  public void computeMeasurementOfAliasSeries(
+      int index, IMeasurementSchemaInfo measurementSchemaInfo, boolean isAligned) {
+    // For alias series, the measurementSchemaInfo is the schema of the physical path,
+    // which cannot be disabled. So we directly set the schema without checking disabled.
+    if (measurementSchemas == null) {
+      measurementSchemas = new MeasurementSchema[measurements.length];
+    }
+    measurementSchemas[index] = measurementSchemaInfo.getSchemaAsMeasurementSchema();
+    if (this.measurementIsAligned == null) {
+      this.measurementIsAligned = new boolean[this.measurements.length];
+      Arrays.fill(this.measurementIsAligned, this.isAligned);
+    }
+    this.measurementIsAligned[index] = isAligned;
+    if (!isNeedInferType) {
+      try {
+        selfCheckDataTypes(index);
+      } catch (DataTypeMismatchException | PathNotExistException e) {
+        throw new SemanticException(e);
+      }
+    }
   }
 
   @Override

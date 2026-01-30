@@ -61,6 +61,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListSt
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveAINodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveConfigNodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveDataNodeStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.RenameTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowDatabaseStatement;
@@ -268,6 +269,9 @@ public interface IConfigTaskExecutor {
 
   TSStatus alterLogicalViewByPipe(
       AlterLogicalViewNode alterLogicalViewNode, boolean shouldMarkAsPipeRequest);
+
+  SettableFuture<ConfigTaskResult> renameTimeSeries(
+      RenameTimeSeriesStatement renameTimeSeriesStatement, MPPQueryContext context);
 
   SettableFuture<ConfigTaskResult> getRegionId(GetRegionIdStatement getRegionIdStatement);
 

@@ -28,6 +28,7 @@ import org.apache.iotdb.commons.schema.column.ColumnHeader;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.commons.schema.filter.SchemaFilter;
 import org.apache.iotdb.commons.schema.template.Template;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.commons.schema.view.ViewType;
 import org.apache.iotdb.db.schemaengine.schemaregion.ISchemaRegion;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.req.SchemaRegionReadPlanFactory;
@@ -54,6 +55,9 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
   private final SchemaFilter schemaFilter;
   private final Map<Integer, Template> templateMap;
   private final boolean needViewDetail;
+  private final boolean skipInvalidSchema;
+  private final boolean onlyInvalidSchema;
+  private final boolean showInvalidTimeSeries;
 
   TimeSeriesSchemaSource(
       PartialPath pathPattern,
@@ -63,7 +67,34 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
       SchemaFilter schemaFilter,
       Map<Integer, Template> templateMap,
       boolean needViewDetail,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      boolean skipInvalidSchema) {
+    this(
+        pathPattern,
+        isPrefixMatch,
+        limit,
+        offset,
+        schemaFilter,
+        templateMap,
+        needViewDetail,
+        scope,
+        skipInvalidSchema,
+        false,
+        false);
+  }
+
+  TimeSeriesSchemaSource(
+      PartialPath pathPattern,
+      boolean isPrefixMatch,
+      long limit,
+      long offset,
+      SchemaFilter schemaFilter,
+      Map<Integer, Template> templateMap,
+      boolean needViewDetail,
+      PathPatternTree scope,
+      boolean skipInvalidSchema,
+      boolean onlyInvalidSchema,
+      boolean showInvalidTimeSeries) {
     this.pathPattern = pathPattern;
     this.isPrefixMatch = isPrefixMatch;
     this.limit = limit;
@@ -72,6 +103,9 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
     this.templateMap = templateMap;
     this.needViewDetail = needViewDetail;
     this.scope = scope;
+    this.skipInvalidSchema = skipInvalidSchema;
+    this.onlyInvalidSchema = onlyInvalidSchema;
+    this.showInvalidTimeSeries = showInvalidTimeSeries;
   }
 
   @Override
@@ -86,7 +120,9 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
               isPrefixMatch,
               schemaFilter,
               needViewDetail,
-              scope));
+              scope,
+              skipInvalidSchema,
+              onlyInvalidSchema));
     } catch (MetadataException e) {
       throw new SchemaExecutionException(e.getMessage(), e);
     }
@@ -94,6 +130,9 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
 
   @Override
   public List<ColumnHeader> getInfoQueryColumnHeaders() {
+    if (showInvalidTimeSeries) {
+      return ColumnHeaderConstant.showInvalidTimeSeriesColumnHeaders;
+    }
     return ColumnHeaderConstant.showTimeSeriesColumnHeaders;
   }
 
@@ -108,18 +147,30 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
     if (series.isLogicalView()) {
       builder.writeNullableText(4, null);
       builder.writeNullableText(5, null);
-      builder.writeNullableText(10, ViewType.VIEW.name());
     } else {
       builder.writeNullableText(4, series.getSchema().getEncodingType().toString());
       builder.writeNullableText(5, series.getSchema().getCompressor().toString());
-      builder.writeNullableText(10, ViewType.BASE.name());
     }
     builder.writeNullableText(6, mapToString(series.getTags()));
     builder.writeNullableText(7, mapToString(series.getAttributes()));
     Pair<String, String> deadbandInfo = MetaUtils.parseDeadbandInfo(series.getSchema().getProps());
     builder.writeNullableText(8, deadbandInfo.left);
     builder.writeNullableText(9, deadbandInfo.right);
+    if (series.isLogicalView()) {
+      builder.writeNullableText(10, ViewType.VIEW.name());
+    } else {
+      builder.writeNullableText(10, ViewType.BASE.name());
+    }
+    if (showInvalidTimeSeries) {
+      // Get ALIAS_PATH from schema props for NewPath column
+      String aliasPath = getAliasPath(series.getSchema().getProps());
+      builder.writeNullableText(11, aliasPath);
+    }
     builder.declarePosition();
+  }
+
+  private String getAliasPath(Map<String, String> props) {
+    return MeasurementPropsUtils.getAliasPathString(props);
   }
 
   @Override
@@ -133,7 +184,7 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
 
   @Override
   public long getSchemaStatistic(ISchemaRegion schemaRegion) {
-    return schemaRegion.getSchemaRegionStatistics().getSeriesNumber(true);
+    return schemaRegion.getSchemaRegionStatistics().getSeriesNumber(true, false);
   }
 
   public static String mapToString(Map<String, String> map) {

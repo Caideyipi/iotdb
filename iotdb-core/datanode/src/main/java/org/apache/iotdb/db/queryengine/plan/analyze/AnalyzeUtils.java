@@ -101,7 +101,9 @@ public class AnalyzeUtils {
     validateSchema(analysis, insertBaseStatement, schemaValidation);
 
     InsertBaseStatement realStatement =
-        removeLogicalView ? removeLogicalView(analysis, insertBaseStatement) : insertBaseStatement;
+        removeLogicalView
+            ? removeLogicalViewAndAliasSeries(analysis, insertBaseStatement)
+            : insertBaseStatement;
     if (analysis.isFinishQueryAfterAnalyze()) {
       return realStatement;
     }
@@ -273,10 +275,10 @@ public class AnalyzeUtils {
     }
   }
 
-  public static InsertBaseStatement removeLogicalView(
+  public static InsertBaseStatement removeLogicalViewAndAliasSeries(
       IAnalysis analysis, InsertBaseStatement insertBaseStatement) {
     try {
-      return insertBaseStatement.removeLogicalView();
+      return insertBaseStatement.removeLogicalViewAndAliasSeries();
     } catch (SemanticException e) {
       analysis.setFinishQueryAfterAnalyze(true);
       if (e.getCause() instanceof IoTDBException) {

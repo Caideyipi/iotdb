@@ -162,13 +162,25 @@ public class SourceRewriter extends BaseSourceRewriter<DistributionPlanContext> 
     }
 
     IDeviceID device = node.getDevice();
+    // For logical views and alias series, use the physical device to get partition info
+    IDeviceID queriedDevice = device;
+    if (analysis.useLogicalView()) {
+      // Use the map for logical views
+      Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMap =
+          analysis.getOutputDeviceToQueriedDevicesMap();
+      if (outputDeviceToQueriedDevicesMap != null) {
+        queriedDevice = outputDeviceToQueriedDevicesMap.getOrDefault(device, device);
+      }
+    } else if (analysis.useAliasSeries()) {
+      // Use the separate map for alias series
+      Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMapForAlias =
+          analysis.getOutputDeviceToQueriedDevicesMapForAlias();
+      if (outputDeviceToQueriedDevicesMapForAlias != null) {
+        queriedDevice = outputDeviceToQueriedDevicesMapForAlias.getOrDefault(device, device);
+      }
+    }
     List<TRegionReplicaSet> regionReplicaSets =
-        !analysis.useLogicalView()
-            ? new ArrayList<>(analysis.getPartitionInfo(device, context.getPartitionTimeFilter()))
-            : new ArrayList<>(
-                analysis.getPartitionInfo(
-                    analysis.getOutputDeviceToQueriedDevicesMap().get(device),
-                    context.getPartitionTimeFilter()));
+        new ArrayList<>(analysis.getPartitionInfo(queriedDevice, context.getPartitionTimeFilter()));
 
     List<PlanNode> singleDeviceViewList = new ArrayList<>();
     for (TRegionReplicaSet tRegionReplicaSet : regionReplicaSets) {
@@ -208,14 +220,27 @@ public class SourceRewriter extends BaseSourceRewriter<DistributionPlanContext> 
     for (int i = 0; i < node.getDevices().size(); i++) {
       IDeviceID outputDevice = node.getDevices().get(i);
       PlanNode child = node.getChildren().get(i);
+      // For logical views and alias series, use the physical device to get partition info
+      IDeviceID queriedDevice = outputDevice;
+      if (analysis.useLogicalView()) {
+        // Use the map for logical views
+        Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMap =
+            analysis.getOutputDeviceToQueriedDevicesMap();
+        if (outputDeviceToQueriedDevicesMap != null) {
+          queriedDevice = outputDeviceToQueriedDevicesMap.getOrDefault(outputDevice, outputDevice);
+        }
+      } else if (analysis.useAliasSeries()) {
+        // Use the separate map for alias series
+        Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMapForAlias =
+            analysis.getOutputDeviceToQueriedDevicesMapForAlias();
+        if (outputDeviceToQueriedDevicesMapForAlias != null) {
+          queriedDevice =
+              outputDeviceToQueriedDevicesMapForAlias.getOrDefault(outputDevice, outputDevice);
+        }
+      }
       List<TRegionReplicaSet> regionReplicaSets =
-          analysis.useLogicalView()
-              ? new ArrayList<>(
-                  analysis.getPartitionInfo(
-                      analysis.getOutputDeviceToQueriedDevicesMap().get(outputDevice),
-                      context.getPartitionTimeFilter()))
-              : new ArrayList<>(
-                  analysis.getPartitionInfo(outputDevice, context.getPartitionTimeFilter()));
+          new ArrayList<>(
+              analysis.getPartitionInfo(queriedDevice, context.getPartitionTimeFilter()));
       if (regionReplicaSets.size() > 1 && !existDeviceCrossRegion) {
         existDeviceCrossRegion = true;
         if (analysis.isDeviceViewSpecialProcess() && cannotUseAggMergeSort()) {

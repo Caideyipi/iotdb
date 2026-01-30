@@ -96,7 +96,8 @@ public class ConfigRegionListeningFilter {
           Collections.unmodifiableList(
               Arrays.asList(
                   ConfigPhysicalPlanType.PipeAlterEncodingCompressor,
-                  ConfigPhysicalPlanType.PipeAlterTimeSeries)));
+                  ConfigPhysicalPlanType.PipeAlterTimeSeries,
+                  ConfigPhysicalPlanType.PipeRenameTimeSeries)));
       OPTION_PLAN_MAP.put(
           new PartialPath("schema.timeseries.ordinary.drop"),
           Collections.singletonList(ConfigPhysicalPlanType.PipeDeleteTimeSeries));

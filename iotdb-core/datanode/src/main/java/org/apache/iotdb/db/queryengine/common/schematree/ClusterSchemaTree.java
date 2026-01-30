@@ -22,6 +22,7 @@ package org.apache.iotdb.db.queryengine.common.schematree;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.schema.template.Template;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
 import org.apache.iotdb.commons.utils.PathUtils;
 import org.apache.iotdb.commons.utils.TestOnly;
@@ -43,6 +44,7 @@ import org.apache.tsfile.utils.Pair;
 import org.apache.tsfile.utils.RamUsageEstimator;
 import org.apache.tsfile.utils.ReadWriteIOUtils;
 import org.apache.tsfile.write.schema.IMeasurementSchema;
+import org.apache.tsfile.write.schema.MeasurementSchema;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +80,15 @@ public class ClusterSchemaTree implements ISchemaTree {
 
   /** used to judge schema tree type */
   private boolean hasNormalTimeSeries = false;
+
+  /** a flag recording whether there is alias series in this schema tree. */
+  private boolean hasAliasSeries = false;
+
+  /** a flag recording whether there is invalid series in this schema tree. */
+  private boolean hasInvalidSeries = false;
+
+  /** a flag recording whether all series are invalid in this schema tree. */
+  private boolean allInvalidSeries = true;
 
   private Map<Integer, Template> templateMap = new HashMap<>();
 
@@ -276,6 +287,57 @@ public class ClusterSchemaTree implements ISchemaTree {
   }
 
   /**
+   * This function compute alias series and fill source of these alias series. It returns nothing !
+   * If some source paths are missed, throw errors.
+   *
+   * @param schemaComputation the statement
+   * @param indexOfTargetAliasSeries the index list of aliasSeriesOriginalPathList that you want to
+   *     check
+   * @throws SemanticException path not exist or different source path of alias series
+   */
+  public void computeSourceOfAliasSeries(
+      ISchemaComputation schemaComputation, List<Integer> indexOfTargetAliasSeries)
+      throws SemanticException {
+    if (!schemaComputation.hasAliasSeriesNeedProcess()) {
+      return;
+    }
+    List<PartialPath> aliasSeriesOriginalPathList =
+        schemaComputation.getAliasSeriesOriginalPathList();
+    for (Integer index : indexOfTargetAliasSeries) {
+      PartialPath fullPath = aliasSeriesOriginalPathList.get(index);
+      Pair<List<MeasurementPath>, Integer> searchResult = this.searchMeasurementPaths(fullPath);
+      List<MeasurementPath> measurementPathList = searchResult.left;
+      if (measurementPathList.isEmpty()) {
+        throw new SemanticException(
+            new PathNotExistException(
+                fullPath.getFullPath(),
+                schemaComputation
+                    .getDevicePath()
+                    .concatAsMeasurementPath(fullPath.getMeasurement())
+                    .getFullPath()));
+      } else if (measurementPathList.size() > 1) {
+        throw new SemanticException(
+            String.format(
+                "The source paths [%s] of alias series are multiple.", fullPath.getFullPath()));
+      } else {
+        Integer realIndex = schemaComputation.getIndexListOfAliasSeriesPaths().get(index);
+        MeasurementPath originalSeriesMeasurementPath =
+            (MeasurementPath) schemaComputation.getAliasSeriesOriginalPathList().get(index);
+        MeasurementPath measurementPath = measurementPathList.get(0);
+        schemaComputation.computeMeasurementOfAliasSeries(
+            realIndex,
+            new MeasurementSchemaInfo(
+                originalSeriesMeasurementPath.getMeasurement(),
+                originalSeriesMeasurementPath.getMeasurementSchema(),
+                null,
+                originalSeriesMeasurementPath.getTagMap(),
+                null),
+            measurementPath.isUnderAlignedEntity());
+      }
+    }
+  }
+
+  /**
    * Append a template device to the schema tree.
    *
    * @param devicePath device path
@@ -359,6 +421,24 @@ public class ClusterSchemaTree implements ISchemaTree {
           if (schema.isLogicalView()) {
             this.hasLogicalMeasurementPath = true;
           }
+          // Check for alias series and invalid series
+          if (schema instanceof MeasurementSchema) {
+            Map<String, String> props = schema.getProps();
+            // Check if this is an alias series (MeasurementPropsUtils handles null props)
+            if (MeasurementPropsUtils.isRenamed(props)) {
+              this.hasAliasSeries = true;
+            }
+            // Check if this is an invalid series
+            if (MeasurementPropsUtils.isInvalid(props)) {
+              this.hasInvalidSeries = true;
+            } else {
+              // If this series is not invalid, then not all series are invalid
+              this.allInvalidSeries = false;
+            }
+          } else {
+            // If not MeasurementSchema (e.g., LogicalViewSchema), not all are invalid
+            this.allInvalidSeries = false;
+          }
         } else if (i == nodes.length - 2) {
           SchemaEntityNode entityNode = new SchemaEntityNode(nodes[i]);
           entityNode.setAligned(isAligned);
@@ -412,6 +492,10 @@ public class ClusterSchemaTree implements ISchemaTree {
     traverseAndMerge(this.root, null, schemaTree.root);
     this.templateMap.putAll(schemaTree.templateMap);
     this.hasNormalTimeSeries |= schemaTree.hasNormalTimeSeries;
+    this.hasAliasSeries = this.hasAliasSeries || schemaTree.hasAliasSeries;
+    this.hasInvalidSeries = this.hasInvalidSeries || schemaTree.hasInvalidSeries;
+    // allInvalidSeries is true only if both are true (all series in both trees are invalid)
+    this.allInvalidSeries = this.allInvalidSeries && schemaTree.allInvalidSeries;
   }
 
   @Override
@@ -483,9 +567,44 @@ public class ClusterSchemaTree implements ISchemaTree {
     }
   }
 
+  /**
+   * Check if there is at least one logical view measurement in this schema tree.
+   *
+   * @return true if there is at least one logical view measurement in this schema tree
+   */
   @Override
   public boolean hasLogicalViewMeasurement() {
     return this.hasLogicalMeasurementPath;
+  }
+
+  /**
+   * Check if there is at least one alias series in this schema tree.
+   *
+   * @return true if there is at least one alias series in this schema tree
+   */
+  @Override
+  public boolean hasAliasSeries() {
+    return this.hasAliasSeries;
+  }
+
+  /**
+   * Check if there is at least one invalid series in this schema tree.
+   *
+   * @return true if there is at least one invalid series in this schema tree
+   */
+  @Override
+  public boolean hasInvalidSeries() {
+    return this.hasInvalidSeries;
+  }
+
+  /**
+   * Check if all series in this schema tree are invalid.
+   *
+   * @return true if all series in this schema tree are invalid
+   */
+  @Override
+  public boolean allInvalidSeries() {
+    return this.hasInvalidSeries && this.allInvalidSeries;
   }
 
   public void serialize(OutputStream outputStream) throws IOException {
@@ -566,6 +685,9 @@ public class ClusterSchemaTree implements ISchemaTree {
     private SchemaNode child;
     private boolean hasLogicalView = false;
     private boolean hasNormalTimeSeries = false;
+    private boolean hasAliasSeries = false;
+    private boolean hasInvalidSeries = false;
+    private boolean allInvalidSeries = true;
     private Map<Integer, Template> templateMap = new HashMap<>();
     private boolean isFirstBatch = true;
 
@@ -584,6 +706,26 @@ public class ClusterSchemaTree implements ISchemaTree {
             hasLogicalView = true;
           }
           hasNormalTimeSeries = true;
+          // Check for alias series and invalid series
+          IMeasurementSchema schema = measurementNode.getSchema();
+          if (schema instanceof MeasurementSchema) {
+            Map<String, String> props = schema.getProps();
+            // Check if this is an alias series (MeasurementPropsUtils handles null props)
+            if (MeasurementPropsUtils.isRenamed(props)) {
+              hasAliasSeries = true;
+            }
+            // Check if this is an invalid series
+            if (MeasurementPropsUtils.isInvalid(props)) {
+              hasInvalidSeries = true;
+            } else {
+              // If this series is not invalid, then not all series are invalid
+              // (MeasurementPropsUtils.isInvalid returns false for null props)
+              allInvalidSeries = false;
+            }
+          } else {
+            // If not MeasurementSchema (e.g., LogicalViewSchema), not all are invalid
+            allInvalidSeries = false;
+          }
         } else {
           SchemaInternalNode internalNode;
           if (nodeType == SCHEMA_ENTITY_NODE) {
@@ -621,6 +763,9 @@ public class ClusterSchemaTree implements ISchemaTree {
         result.templateMap = templateMap;
         result.hasLogicalMeasurementPath = hasLogicalView;
         result.hasNormalTimeSeries = hasNormalTimeSeries;
+        result.hasAliasSeries = hasAliasSeries;
+        result.hasInvalidSeries = hasInvalidSeries;
+        result.allInvalidSeries = allInvalidSeries;
         return result;
       } finally {
         reset();
@@ -634,6 +779,9 @@ public class ClusterSchemaTree implements ISchemaTree {
       child = null;
       hasLogicalView = false;
       hasNormalTimeSeries = false;
+      hasAliasSeries = false;
+      hasInvalidSeries = false;
+      allInvalidSeries = true;
       // templateMap is set to the returned schema tree, so we should create a new one
       templateMap = new HashMap<>();
       isFirstBatch = true;

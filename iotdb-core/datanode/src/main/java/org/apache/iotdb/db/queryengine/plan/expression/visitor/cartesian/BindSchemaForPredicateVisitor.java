@@ -21,6 +21,7 @@ package org.apache.iotdb.db.queryengine.plan.expression.visitor.cartesian;
 
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
 import org.apache.iotdb.db.queryengine.common.schematree.ISchemaTree;
 import org.apache.iotdb.db.queryengine.plan.expression.Expression;
@@ -34,11 +35,14 @@ import org.apache.iotdb.db.queryengine.plan.expression.multi.FunctionExpression;
 import org.apache.iotdb.db.utils.constant.SqlConstant;
 
 import org.apache.tsfile.external.commons.lang3.Validate;
+import org.apache.tsfile.write.schema.IMeasurementSchema;
+import org.apache.tsfile.write.schema.MeasurementSchema;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.apache.iotdb.db.queryengine.plan.analyze.ExpressionUtils.cartesianProduct;
@@ -124,6 +128,7 @@ public class BindSchemaForPredicateVisitor
 
     List<MeasurementPath> nonViewPathList = new ArrayList<>();
     List<MeasurementPath> viewPathList = new ArrayList<>();
+    List<MeasurementPath> aliasSeriesPathList = new ArrayList<>();
     for (PartialPath concatPath : concatPaths) {
       List<MeasurementPath> actualPaths =
           context.getSchemaTree().searchMeasurementPaths(concatPath).left;
@@ -131,8 +136,14 @@ public class BindSchemaForPredicateVisitor
         return Collections.singletonList(new NullOperand());
       }
       for (MeasurementPath measurementPath : actualPaths) {
+        // Skip invalid series
+        if (isInvalidSeries(measurementPath)) {
+          continue;
+        }
         if (measurementPath.getMeasurementSchema().isLogicalView()) {
           viewPathList.add(measurementPath);
+        } else if (isAliasSeries(measurementPath)) {
+          aliasSeriesPathList.add(measurementPath);
         } else {
           nonViewPathList.add(measurementPath);
         }
@@ -141,12 +152,78 @@ public class BindSchemaForPredicateVisitor
     List<Expression> reconstructTimeSeriesOperands =
         reconstructTimeSeriesOperandsWithMemoryCheck(
             predicate, nonViewPathList, context.getQueryContext());
+    // handle alias series: convert to physical paths but preserve alias path for display
+    for (MeasurementPath aliasPath : aliasSeriesPathList) {
+      PartialPath physicalPath = getOriginalPathFromAliasSeries(aliasPath);
+      if (physicalPath != null) {
+        // Search for the physical path in schema tree
+        List<MeasurementPath> physicalPaths =
+            context.getSchemaTree().searchMeasurementPaths(physicalPath).left;
+        List<Expression> physicalExpressions =
+            reconstructTimeSeriesOperandsWithMemoryCheck(
+                new TimeSeriesOperand(physicalPath), physicalPaths, context.getQueryContext());
+        // Set the alias path as viewPath to preserve it for display in query results
+        for (Expression expr : physicalExpressions) {
+          expr.setViewPath(aliasPath);
+        }
+        reconstructTimeSeriesOperands.addAll(physicalExpressions);
+      }
+    }
+    // handle logical views
     for (MeasurementPath measurementPath : viewPathList) {
       Expression replacedExpression = transformViewPath(measurementPath, context.getSchemaTree());
       replacedExpression.setViewPath(measurementPath);
       reconstructTimeSeriesOperands.add(replacedExpression);
     }
     return reconstructTimeSeriesOperands;
+  }
+
+  /**
+   * Check if a MeasurementPath represents an alias series (renamed series).
+   *
+   * @param measurementPath the MeasurementPath to check
+   * @return true if it's an alias series, false otherwise
+   */
+  private static boolean isAliasSeries(MeasurementPath measurementPath) {
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      return false;
+    }
+    Map<String, String> props = schema.getProps();
+    return MeasurementPropsUtils.isRenamed(props);
+  }
+
+  /**
+   * Check if a MeasurementPath represents an invalid series.
+   *
+   * @param measurementPath the MeasurementPath to check
+   * @return true if it's invalid, false otherwise
+   */
+  private static boolean isInvalidSeries(MeasurementPath measurementPath) {
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      return false;
+    }
+    Map<String, String> props = schema.getProps();
+    return MeasurementPropsUtils.isInvalid(props);
+  }
+
+  /**
+   * Get the original physical path from an alias series MeasurementPath.
+   *
+   * @param measurementPath the alias series MeasurementPath
+   * @return the original physical path, or null if not an alias series
+   */
+  private static PartialPath getOriginalPathFromAliasSeries(MeasurementPath measurementPath) {
+    if (!isAliasSeries(measurementPath)) {
+      return null;
+    }
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      return null;
+    }
+    Map<String, String> props = schema.getProps();
+    return MeasurementPropsUtils.getOriginalPath(props);
   }
 
   @Override

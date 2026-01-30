@@ -205,6 +205,18 @@ struct TSchemaFetchResponse {
   1: required binary serializedSchemaTree
 }
 
+struct TCheckInvalidTimeSeriesReq {
+  1: required common.TConsensusGroupId schemaRegionId
+  2: required string databaseName
+}
+
+struct TCheckInvalidTimeSeriesResp {
+  1: required common.TSStatus status
+  2: required bool hasInvalidTimeSeries
+  3: optional list<string> invalidTimeSeriesPaths  // List of paths that have invalid time series (disabled)
+  4: optional list<string> aliasTimeSeriesPaths  // List of paths that have alias time series
+}
+
 struct TCleanDataNodeCacheReq {
   1: required list<common.TDataNodeLocation> dataNodeLocations
 }
@@ -433,6 +445,26 @@ struct TConstructSchemaBlackListReq {
   2: required binary pathPatternTree
 }
 
+// Alias series information for constructSchemaBlackList response
+// This structure contains information about alias series and physical series.
+// - If isRenamed=true: this is an alias series, aliasSeries is the alias path, originalPath is the physical path
+// - If isRenamed=false: this is a physical series, aliasSeries is the physical path, originalPath is null
+struct TAliasSeriesInfo {
+  1: required binary aliasSeries  // Serialized PartialPath (alias path if isRenamed=true, physical path if isRenamed=false)
+  2: optional binary originalPath  // ORIGINAL_PATH: physical path if this is an alias series (isRenamed=true)
+  3: required bool isDisabled  // DISABLED flag
+  4: required bool isRenamed  // IS_RENAMED flag: true for alias series, false for physical series
+}
+
+struct TConstructSchemaBlackListResp {
+  1: required common.TSStatus status
+  2: required i64 preDeletedNum
+  3: required list<TAliasSeriesInfo> aliasSeriesInfoList  // Alias series information (别名序列信息): contains both alias series and physical series info
+  4: required list<binary> preDeletedPaths  // Active deletion paths (生效的删除路径)
+  5: required bool hasInvalidSeries  // Whether there are any invalid series
+  6: required bool isAllInvalidSeries  // Whether all matched series are invalid series
+}
+
 struct TRollbackSchemaBlackListReq {
   1: required list<common.TConsensusGroupId> schemaRegionIdList
   2: required binary pathPatternTree
@@ -463,6 +495,89 @@ struct TDeleteTimeSeriesReq {
   1: required list<common.TConsensusGroupId> schemaRegionIdList
   2: required binary pathPatternTree
   3: optional bool isGeneratedByPipe
+}
+
+struct TTimeSeriesInfo {
+  1: required binary path  // Serialized MeasurementPath
+  2: required i32 dataType  // TSDataType ordinal value
+  3: required i32 encoding  // TSEncoding ordinal value
+  4: required i32 compressor  // CompressionType ordinal value
+  5: optional string measurementAlias
+  6: optional map<string, string> props
+  7: optional map<string, string> tags
+  8: optional map<string, string> attributes
+}
+
+struct TRenameTimeSeriesReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary oldPath
+  3: required binary newPath
+  4: optional bool isGeneratedByPipe
+}
+
+struct TRenameTimeSeriesResp {
+  1: required common.TSStatus status
+  2: optional TTimeSeriesInfo timeSeriesInfo  // Schema info from phase 1
+  3: optional bool isRenamed  // Whether oldPath is an alias series
+  4: optional binary physicalPath  // Physical path if oldPath is alias
+  5: optional bool isAligned  // Whether the physical series is aligned
+}
+
+// Phase 1: Lock and get schema info
+struct TLockAndGetSchemaInfoForAliasReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary oldPath
+  3: required binary newPath
+  4: optional bool isGeneratedByPipe
+}
+
+// Phase 2: Transform metadata - Scenario A: Create alias series
+struct TCreateAliasSeriesReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary oldPath  // Physical path
+  3: required binary newPath  // Alias path
+  4: required TTimeSeriesInfo timeSeriesInfo
+  5: optional bool isGeneratedByPipe
+  6: optional bool isRollback  // If true, this is a rollback operation
+}
+
+// Phase 2: Transform metadata - Scenario A: Mark old series as invalid
+struct TMarkSeriesInvalidReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary oldPath  // Physical path to mark as invalid
+  3: required binary newPath  // Alias path to set in ALIAS_PATH
+  4: optional bool isGeneratedByPipe
+  5: optional bool isRollback  // If true, this is a rollback operation
+}
+
+// Phase 2: Transform metadata - Scenario B: Create new alias and update physical reference
+struct TUpdatePhysicalAliasRefReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary physicalPath  // Physical path to update
+  3: required binary newAliasPath  // New alias path to set in ALIAS_PATH
+  4: optional bool isGeneratedByPipe
+  5: optional bool isRollback  // If true, this is a rollback operation
+  6: optional binary oldAliasPath  // Old alias path (for rollback)
+}
+
+// Phase 2: Transform metadata - Scenario B/C: Drop old alias series
+struct TDropAliasSeriesReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary aliasPath  // old Alias path to drop
+  3: optional bool isGeneratedByPipe
+  4: optional bool isRollback  // If true, this is a rollback operation
+  5: optional binary physicalPath  // Physical path (for rollback)
+  6: optional TTimeSeriesInfo timeSeriesInfo  // Schema info for recreating alias series
+}
+
+// Phase 2: Transform metadata - Scenario C: Mark series enabled
+struct TMarkSeriesEnabledReq {
+  1: required list<common.TConsensusGroupId> schemaRegionIdList
+  2: required binary physicalPath  // Physical path to mark as enabled
+  3: optional bool isGeneratedByPipe
+  4: optional bool isRollback  // If true, this is a rollback operation
+  5: optional binary aliasPath  // Original alias path (for rollback)
+  6: optional TTimeSeriesInfo timeSeriesInfo  // Schema info for updating physical series
 }
 
 struct TAlterEncodingCompressorReq {
@@ -1107,6 +1222,12 @@ service IDataNodeRPCService {
   common.TSStatus constructSchemaBlackList(TConstructSchemaBlackListReq req)
 
   /**
+   * Construct schema black list and return invalid series information.
+   * Invalid series don't need pre-delete because they are already invalid.
+   */
+  TConstructSchemaBlackListResp constructSchemaBlackListWithAliasInfo(TConstructSchemaBlackListReq req)
+
+  /**
    * Remove the schema black list to recover R/W on matched timeseries
    */
   common.TSStatus rollbackSchemaBlackList(TRollbackSchemaBlackListReq req)
@@ -1134,6 +1255,41 @@ service IDataNodeRPCService {
    * Delete matched timeseries and remove according schema black list in target schemRegion
    */
   common.TSStatus deleteTimeSeries(TDeleteTimeSeriesReq req)
+
+  /**
+   * Alias time series: lock and get schema info (phase 1)
+   */
+  TRenameTimeSeriesResp lockAndGetSchemaInfoForAlias(TLockAndGetSchemaInfoForAliasReq req)
+
+  /**
+   * Alias time series: transform metadata - Scenario A: Create alias series
+   */
+  common.TSStatus createAliasSeries(TCreateAliasSeriesReq req)
+
+  /**
+   * Alias time series: transform metadata - Scenario A: Mark old series as invalid
+   */
+  common.TSStatus markSeriesInvalid(TMarkSeriesInvalidReq req)
+
+  /**
+   * Alias time series: transform metadata - Scenario B: Update physical alias reference
+   */
+  common.TSStatus updatePhysicalAliasRef(TUpdatePhysicalAliasRefReq req)
+
+  /**
+   * Alias time series: transform metadata - Scenario B/C: Drop alias series
+   */
+  common.TSStatus dropAliasSeries(TDropAliasSeriesReq req)
+
+  /**
+   * Alias time series: transform metadata - Scenario C: Mark series enabled
+   */
+  common.TSStatus markSeriesEnabled(TMarkSeriesEnabledReq req)
+
+  /**
+   * Alias time series: unlock (phase 3)
+   */
+  common.TSStatus unlockForAlias(TRenameTimeSeriesReq req)
 
   /**
    * Alter matched timeseries to specific encoding and compressor in target schemaRegions
@@ -1166,6 +1322,11 @@ service IDataNodeRPCService {
   TCheckSchemaRegionUsingTemplateResp checkSchemaRegionUsingTemplate(TCheckSchemaRegionUsingTemplateReq req)
 
   TCheckTimeSeriesExistenceResp checkTimeSeriesExistence(TCheckTimeSeriesExistenceReq req)
+
+  /**
+   * Check if the schema region has invalid time series (disabled time series)
+   */
+  TCheckInvalidTimeSeriesResp checkInvalidTimeSeries(TCheckInvalidTimeSeriesReq req)
 
   common.TSStatus constructViewSchemaBlackList(TConstructViewSchemaBlackListReq req)
 

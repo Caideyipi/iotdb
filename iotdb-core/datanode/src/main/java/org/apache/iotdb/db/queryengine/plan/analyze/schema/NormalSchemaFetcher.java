@@ -118,15 +118,27 @@ class NormalSchemaFetcher {
         schemaCache.computeSourceOfLogicalView(schemaComputationWithAutoCreation);
     List<Integer> indexOfMissingLogicalView = missedIndexAndPathString.left;
     List<String> missedPathStringOfLogicalView = missedIndexAndPathString.right;
+    // [Step 2b] Cache 2b. process recorded alias series. If there is no alias series now, it
+    // returns
+    // empty lists.
+    Pair<List<Integer>, List<String>> missedIndexAndPathStringOfAliasSeries =
+        schemaCache.computeSourceOfAliasSeries(schemaComputationWithAutoCreation);
+    List<Integer> indexOfMissingAliasSeries = missedIndexAndPathStringOfAliasSeries.left;
+    List<String> missedPathStringOfAliasSeries = missedIndexAndPathStringOfAliasSeries.right;
     // all schema can be taken from cache
-    if (indexOfMissingMeasurements.isEmpty() && indexOfMissingLogicalView.isEmpty()) {
+    if (indexOfMissingMeasurements.isEmpty()
+        && indexOfMissingLogicalView.isEmpty()
+        && indexOfMissingAliasSeries.isEmpty()) {
       return indexOfMissingMeasurements;
     }
-    // [Step 3] Fetch 1. fetch schema from remote. Process logical view first; then process
-    // measurements.
+    // [Step 3] Fetch 1. fetch schema from remote. Process logical view and alias series first; then
+    // process measurements.
     // try fetch the missing raw schema from remote and cache fetched schema
     ClusterSchemaTree remoteSchemaTree;
-    if (missedPathStringOfLogicalView.isEmpty()) {
+    List<String> allMissedPathStrings = new ArrayList<>();
+    allMissedPathStrings.addAll(missedPathStringOfLogicalView);
+    allMissedPathStrings.addAll(missedPathStringOfAliasSeries);
+    if (allMissedPathStrings.isEmpty()) {
       remoteSchemaTree =
           clusterSchemaFetchExecutor.fetchSchemaOfOneDevice(
               schemaComputationWithAutoCreation.getDevicePath(),
@@ -139,29 +151,42 @@ class NormalSchemaFetcher {
               schemaComputationWithAutoCreation.getDevicePath(),
               schemaComputationWithAutoCreation.getMeasurements(),
               indexOfMissingMeasurements,
-              missedPathStringOfLogicalView);
+              allMissedPathStrings);
       remoteSchemaTree =
           clusterSchemaFetchExecutor.fetchSchemaWithPatternTreeAndCache(patternTree, context);
     }
     // make sure all missed views are computed.
     remoteSchemaTree.computeSourceOfLogicalView(
         schemaComputationWithAutoCreation, indexOfMissingLogicalView);
+    // make sure all missed alias series are computed.
+    remoteSchemaTree.computeSourceOfAliasSeries(
+        schemaComputationWithAutoCreation, indexOfMissingAliasSeries);
     // check and compute the fetched schema
     indexOfMissingMeasurements =
         remoteSchemaTree.compute(schemaComputationWithAutoCreation, indexOfMissingMeasurements);
     schemaComputationWithAutoCreation.recordRangeOfLogicalViewSchemaListNow();
+    schemaComputationWithAutoCreation.recordRangeOfAliasSeriesPathListNow();
 
-    // [Step 4] Fetch 2. Some fetched measurements in [Step 3] are views. Process them.
+    // [Step 4] Fetch 2. Some fetched measurements in [Step 3] are views or alias series. Process
+    // them.
     missedIndexAndPathString =
         schemaCache.computeSourceOfLogicalView(schemaComputationWithAutoCreation);
     indexOfMissingLogicalView = missedIndexAndPathString.left;
     missedPathStringOfLogicalView = missedIndexAndPathString.right;
-    if (!missedPathStringOfLogicalView.isEmpty()) {
+    missedIndexAndPathStringOfAliasSeries =
+        schemaCache.computeSourceOfAliasSeries(schemaComputationWithAutoCreation);
+    indexOfMissingAliasSeries = missedIndexAndPathStringOfAliasSeries.left;
+    missedPathStringOfAliasSeries = missedIndexAndPathStringOfAliasSeries.right;
+    allMissedPathStrings = new ArrayList<>();
+    allMissedPathStrings.addAll(missedPathStringOfLogicalView);
+    allMissedPathStrings.addAll(missedPathStringOfAliasSeries);
+    if (!allMissedPathStrings.isEmpty()) {
       ClusterSchemaTree viewSchemaTree =
-          clusterSchemaFetchExecutor.fetchSchemaWithFullPaths(
-              missedPathStringOfLogicalView, context);
+          clusterSchemaFetchExecutor.fetchSchemaWithFullPaths(allMissedPathStrings, context);
       viewSchemaTree.computeSourceOfLogicalView(
           schemaComputationWithAutoCreation, indexOfMissingLogicalView);
+      viewSchemaTree.computeSourceOfAliasSeries(
+          schemaComputationWithAutoCreation, indexOfMissingAliasSeries);
     }
 
     // all schema has been taken and processed
@@ -222,25 +247,40 @@ class NormalSchemaFetcher {
     boolean hasUnFetchedLogicalView = false;
     List<Pair<List<Integer>, List<String>>> missedIndexAndPathStringOfViewList =
         new ArrayList<>(schemaComputationWithAutoCreationList.size());
-    for (ISchemaComputationWithAutoCreation iSchemaComputationWithAutoCreation :
+    for (ISchemaComputationWithAutoCreation schemaComputationWithAutoCreation :
         schemaComputationWithAutoCreationList) {
       Pair<List<Integer>, List<String>> missedIndexAndPathString =
-          schemaCache.computeSourceOfLogicalView(iSchemaComputationWithAutoCreation);
+          schemaCache.computeSourceOfLogicalView(schemaComputationWithAutoCreation);
       if (!missedIndexAndPathString.left.isEmpty()) {
         hasUnFetchedLogicalView = true;
       }
       missedIndexAndPathStringOfViewList.add(missedIndexAndPathString);
     }
+    // [Step 2b] Cache 2b. process recorded alias series.
+    boolean hasUnFetchedAliasSeries = false;
+    List<Pair<List<Integer>, List<String>>> missedIndexAndPathStringOfAliasSeriesList =
+        new ArrayList<>(schemaComputationWithAutoCreationList.size());
+    for (ISchemaComputationWithAutoCreation schemaComputationWithAutoCreation :
+        schemaComputationWithAutoCreationList) {
+      Pair<List<Integer>, List<String>> missedIndexAndPathString =
+          schemaCache.computeSourceOfAliasSeries(schemaComputationWithAutoCreation);
+      if (!missedIndexAndPathString.left.isEmpty()) {
+        hasUnFetchedAliasSeries = true;
+      }
+      missedIndexAndPathStringOfAliasSeriesList.add(missedIndexAndPathString);
+    }
     // all schema can be taken from cache
-    if (indexOfDevicesWithMissingMeasurements.isEmpty() && (!hasUnFetchedLogicalView)) {
+    if (indexOfDevicesWithMissingMeasurements.isEmpty()
+        && (!hasUnFetchedLogicalView)
+        && (!hasUnFetchedAliasSeries)) {
       return;
     }
-    // [Step 3] Fetch 1.fetch schema from remote. Process logical view first; then process
-    // measurements.
+    // [Step 3] Fetch 1.fetch schema from remote. Process logical view and alias series first; then
+    // process measurements.
     // try fetch the missing schema from remote
     ISchemaComputationWithAutoCreation schemaComputationWithAutoCreation;
     ClusterSchemaTree remoteSchemaTree;
-    if (!hasUnFetchedLogicalView) {
+    if (!hasUnFetchedLogicalView && !hasUnFetchedAliasSeries) {
       remoteSchemaTree =
           clusterSchemaFetchExecutor.fetchSchemaOfMultiDevices(
               schemaComputationWithAutoCreationList.stream()
@@ -267,6 +307,9 @@ class NormalSchemaFetcher {
       for (Pair<List<Integer>, List<String>> pair : missedIndexAndPathStringOfViewList) {
         fullPathsNeedReFetch.addAll(pair.right);
       }
+      for (Pair<List<Integer>, List<String>> pair : missedIndexAndPathStringOfAliasSeriesList) {
+        fullPathsNeedReFetch.addAll(pair.right);
+      }
       computePatternTreeNeededReFetch(patternTree, fullPathsNeedReFetch);
       remoteSchemaTree =
           clusterSchemaFetchExecutor.fetchSchemaWithPatternTreeAndCache(patternTree, context);
@@ -276,6 +319,8 @@ class NormalSchemaFetcher {
       schemaComputationWithAutoCreation = schemaComputationWithAutoCreationList.get(i);
       remoteSchemaTree.computeSourceOfLogicalView(
           schemaComputationWithAutoCreation, missedIndexAndPathStringOfViewList.get(i).left);
+      remoteSchemaTree.computeSourceOfAliasSeries(
+          schemaComputationWithAutoCreation, missedIndexAndPathStringOfAliasSeriesList.get(i).left);
     }
     // check and compute the fetched schema
     List<Integer> indexOfDevicesNeedAutoCreateSchema = new ArrayList<>();
@@ -287,13 +332,15 @@ class NormalSchemaFetcher {
           remoteSchemaTree.compute(
               schemaComputationWithAutoCreation, indexOfMissingMeasurementsList.get(i));
       schemaComputationWithAutoCreation.recordRangeOfLogicalViewSchemaListNow();
+      schemaComputationWithAutoCreation.recordRangeOfAliasSeriesPathListNow();
       if (!indexOfMissingMeasurements.isEmpty()) {
         indexOfDevicesNeedAutoCreateSchema.add(indexOfDevicesWithMissingMeasurements.get(i));
         indexOfMeasurementsNeedAutoCreate.add(indexOfMissingMeasurements);
       }
     }
 
-    // [Step 4] Fetch 2. Some fetched measurements in [Step 3] are views. Process them.
+    // [Step 4] Fetch 2. Some fetched measurements in [Step 3] are views or alias series. Process
+    // them.
     hasUnFetchedLogicalView = false;
     for (int i = 0, size = schemaComputationWithAutoCreationList.size(); i < size; i++) {
       Pair<List<Integer>, List<String>> missedIndexAndPathString =
@@ -304,9 +351,22 @@ class NormalSchemaFetcher {
       missedIndexAndPathStringOfViewList.get(i).left = missedIndexAndPathString.left;
       missedIndexAndPathStringOfViewList.get(i).right = missedIndexAndPathString.right;
     }
-    if (hasUnFetchedLogicalView) {
+    hasUnFetchedAliasSeries = false;
+    for (int i = 0, size = schemaComputationWithAutoCreationList.size(); i < size; i++) {
+      Pair<List<Integer>, List<String>> missedIndexAndPathString =
+          schemaCache.computeSourceOfAliasSeries(schemaComputationWithAutoCreationList.get(i));
+      if (!missedIndexAndPathString.left.isEmpty()) {
+        hasUnFetchedAliasSeries = true;
+      }
+      missedIndexAndPathStringOfAliasSeriesList.get(i).left = missedIndexAndPathString.left;
+      missedIndexAndPathStringOfAliasSeriesList.get(i).right = missedIndexAndPathString.right;
+    }
+    if (hasUnFetchedLogicalView || hasUnFetchedAliasSeries) {
       List<String> fullPathsNeedRefetch = new ArrayList<>();
       for (Pair<List<Integer>, List<String>> pair : missedIndexAndPathStringOfViewList) {
+        fullPathsNeedRefetch.addAll(pair.right);
+      }
+      for (Pair<List<Integer>, List<String>> pair : missedIndexAndPathStringOfAliasSeriesList) {
         fullPathsNeedRefetch.addAll(pair.right);
       }
       ClusterSchemaTree viewSchemaTree =
@@ -315,6 +375,9 @@ class NormalSchemaFetcher {
         schemaComputationWithAutoCreation = schemaComputationWithAutoCreationList.get(i);
         viewSchemaTree.computeSourceOfLogicalView(
             schemaComputationWithAutoCreation, missedIndexAndPathStringOfViewList.get(i).left);
+        viewSchemaTree.computeSourceOfAliasSeries(
+            schemaComputationWithAutoCreation,
+            missedIndexAndPathStringOfAliasSeriesList.get(i).left);
       }
     }
 

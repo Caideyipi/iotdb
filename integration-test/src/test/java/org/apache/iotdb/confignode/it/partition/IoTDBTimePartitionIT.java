@@ -41,7 +41,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -76,17 +75,13 @@ public class IoTDBTimePartitionIT {
   private static final TGetDatabaseReq showAllDatabasesReq;
 
   static {
-    try {
-      showAllDatabasesReq =
-          new TGetDatabaseReq(
-              Arrays.asList(
-                  new ShowDatabaseStatement(new PartialPath(SqlConstant.getSingleRootArray()))
-                      .getPathPattern()
-                      .getNodes()),
-              SchemaConstant.ALL_MATCH_SCOPE.serialize());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    showAllDatabasesReq =
+        new TGetDatabaseReq(
+            Arrays.asList(
+                new ShowDatabaseStatement(new PartialPath(SqlConstant.getSingleRootArray()))
+                    .getPathPattern()
+                    .getNodes()),
+            SchemaConstant.ALL_MATCH_SCOPE.serialize());
   }
 
   @Before

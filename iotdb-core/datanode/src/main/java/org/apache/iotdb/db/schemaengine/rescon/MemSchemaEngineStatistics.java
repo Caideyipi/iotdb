@@ -48,6 +48,7 @@ public class MemSchemaEngineStatistics implements ISchemaEngineStatistics {
 
   private final AtomicLong totalMeasurementNumber = new AtomicLong(0);
   private final AtomicLong totalViewNumber = new AtomicLong(0);
+  private final AtomicLong totalInvalidSeriesNumber = new AtomicLong(0);
   private final AtomicLong totalDeviceNumber = new AtomicLong(0);
   private final Map<Integer, Integer> templateUsage = new ConcurrentHashMap<>();
   private volatile boolean allowToCreateNewSeries = true;
@@ -177,6 +178,14 @@ public class MemSchemaEngineStatistics implements ISchemaEngineStatistics {
 
   public void deleteView(long deletedNum) {
     totalViewNumber.addAndGet(-deletedNum);
+  }
+
+  public void addInvalidSeries(long addedNum) {
+    totalInvalidSeriesNumber.addAndGet(addedNum);
+  }
+
+  public void deleteInvalidSeries(long deletedNum) {
+    totalInvalidSeriesNumber.addAndGet(-deletedNum);
   }
 
   public void addDevice() {

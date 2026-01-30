@@ -32,6 +32,7 @@ import org.apache.iotdb.confignode.client.async.CnToDnAsyncRequestType;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeAlterEncodingCompressorPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
 import org.apache.iotdb.confignode.manager.ClusterManager;
+import org.apache.iotdb.confignode.procedure.MetadataProcedureConflictCheckable;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.impl.StateMachineProcedure;
@@ -58,11 +59,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.apache.iotdb.confignode.procedure.impl.schema.DeleteTimeSeriesProcedure.invalidateCache;
-import static org.apache.iotdb.confignode.procedure.impl.schema.DeleteTimeSeriesProcedure.preparePatternTreeBytesData;
+import static org.apache.iotdb.confignode.procedure.impl.schema.SchemaUtils.invalidateCache;
 
 public class AlterEncodingCompressorProcedure
-    extends StateMachineProcedure<ConfigNodeProcedureEnv, AlterEncodingCompressorState> {
+    extends StateMachineProcedure<ConfigNodeProcedureEnv, AlterEncodingCompressorState>
+    implements MetadataProcedureConflictCheckable {
   private static final Logger LOGGER =
       LoggerFactory.getLogger(AlterEncodingCompressorProcedure.class);
   private String queryId;
@@ -105,10 +106,25 @@ public class AlterEncodingCompressorProcedure
     return patternTree;
   }
 
+  @Override
+  public void applyPathPatterns(PathPatternTree patternTree) {
+    if (this.patternTree != null && !this.patternTree.isEmpty()) {
+      // Merge all patterns from the procedure's pattern tree
+      for (PartialPath pattern : this.patternTree.getAllPathPatterns()) {
+        patternTree.appendPathPattern(pattern);
+      }
+    }
+  }
+
+  @Override
+  public boolean shouldCheckConflict() {
+    return !isFinished();
+  }
+
   public void setPatternTree(final PathPatternTree patternTree) {
     this.patternTree = patternTree;
     requestMessage = patternTree.getAllPathPatterns().toString();
-    patternTreeBytes = preparePatternTreeBytesData(patternTree);
+    patternTreeBytes = patternTree.serialize();
   }
 
   @Override

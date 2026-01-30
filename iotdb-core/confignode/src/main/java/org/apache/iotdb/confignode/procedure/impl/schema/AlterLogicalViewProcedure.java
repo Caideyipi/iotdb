@@ -33,6 +33,7 @@ import org.apache.iotdb.commons.schema.view.viewExpression.ViewExpression;
 import org.apache.iotdb.confignode.client.async.CnToDnAsyncRequestType;
 import org.apache.iotdb.confignode.client.async.CnToDnInternalServiceAsyncRequestManager;
 import org.apache.iotdb.confignode.client.async.handlers.DataNodeAsyncRequestContext;
+import org.apache.iotdb.confignode.procedure.MetadataProcedureConflictCheckable;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.impl.StateMachineProcedure;
@@ -62,7 +63,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class AlterLogicalViewProcedure
-    extends StateMachineProcedure<ConfigNodeProcedureEnv, AlterLogicalViewState> {
+    extends StateMachineProcedure<ConfigNodeProcedureEnv, AlterLogicalViewState>
+    implements MetadataProcedureConflictCheckable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AlterLogicalViewProcedure.class);
 
@@ -318,6 +320,21 @@ public class AlterLogicalViewProcedure
         isGeneratedByPipe,
         queryId,
         viewPathToSourceMap);
+  }
+
+  @Override
+  public void applyPathPatterns(PathPatternTree patternTree) {
+    if (pathPatternTree != null && !pathPatternTree.isEmpty()) {
+      // Merge all patterns from the procedure's pattern tree
+      for (PartialPath pattern : pathPatternTree.getAllPathPatterns()) {
+        patternTree.appendPathPattern(pattern);
+      }
+    }
+  }
+
+  @Override
+  public boolean shouldCheckConflict() {
+    return true;
   }
 
   private class AlterLogicalViewRegionTaskExecutor<Q>

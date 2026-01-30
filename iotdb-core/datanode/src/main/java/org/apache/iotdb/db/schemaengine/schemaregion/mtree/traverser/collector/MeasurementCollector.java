@@ -48,6 +48,24 @@ public abstract class MeasurementCollector<R, N extends IMNode<N>>
   }
 
   @Override
+  protected boolean acceptFullyMatchedNode(N node) {
+    // Only accept measurement nodes
+    if (!node.isMeasurement()) {
+      return false;
+    }
+    IMeasurementMNode<N> measurementMNode = node.getAsMeasurementMNode();
+    // Only return invalid series if onlyInvalidSchema is enabled
+    if (onlyInvalidSchema) {
+      return measurementMNode.isInvalid();
+    }
+    // Skip invalid series if skipInvalidSchema is enabled
+    if (skipInvalidSchema) {
+      return !measurementMNode.isInvalid();
+    }
+    return true;
+  }
+
+  @Override
   protected R generateResult(N nextMatchedNode) {
     return collectMeasurement(nextMatchedNode.getAsMeasurementMNode());
   }

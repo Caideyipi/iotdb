@@ -31,6 +31,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeac
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteDevicesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.table.AddTableColumnPlan;
 import org.apache.iotdb.confignode.consensus.request.write.table.AlterColumnDataTypePlan;
@@ -74,6 +75,8 @@ public abstract class ConfigPhysicalPlanVisitor<R, C> {
         return visitPipeUnsetSchemaTemplate((PipeUnsetSchemaTemplatePlan) plan, context);
       case PipeDeleteTimeSeries:
         return visitPipeDeleteTimeSeries((PipeDeleteTimeSeriesPlan) plan, context);
+      case PipeRenameTimeSeries:
+        return visitPipeRenameTimeSeries((PipeRenameTimeSeriesPlan) plan, context);
       case PipeDeleteLogicalView:
         return visitPipeDeleteLogicalView((PipeDeleteLogicalViewPlan) plan, context);
       case PipeDeactivateTemplate:
@@ -250,6 +253,11 @@ public abstract class ConfigPhysicalPlanVisitor<R, C> {
   public R visitPipeDeleteTimeSeries(
       final PipeDeleteTimeSeriesPlan pipeDeleteTimeSeriesPlan, final C context) {
     return visitPlan(pipeDeleteTimeSeriesPlan, context);
+  }
+
+  public R visitPipeRenameTimeSeries(
+      final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlan, final C context) {
+    return visitPlan(pipeRenameTimeSeriesPlan, context);
   }
 
   public R visitPipeDeleteLogicalView(

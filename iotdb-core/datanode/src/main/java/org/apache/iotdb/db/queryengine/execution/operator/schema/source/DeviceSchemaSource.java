@@ -55,6 +55,7 @@ public class DeviceSchemaSource implements ISchemaSource<IDeviceSchemaInfo> {
   private final boolean hasSgCol;
 
   private final SchemaFilter schemaFilter;
+  private final boolean skipDevicesWithOnlyInvalidSeries;
 
   DeviceSchemaSource(
       PartialPath pathPattern,
@@ -63,7 +64,8 @@ public class DeviceSchemaSource implements ISchemaSource<IDeviceSchemaInfo> {
       long offset,
       boolean hasSgCol,
       SchemaFilter schemaFilter,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      boolean skipDevicesWithOnlyInvalidSeries) {
     this.pathPattern = pathPattern;
     this.isPrefixMatch = isPrefixPath;
 
@@ -73,6 +75,7 @@ public class DeviceSchemaSource implements ISchemaSource<IDeviceSchemaInfo> {
     this.hasSgCol = hasSgCol;
     this.schemaFilter = schemaFilter;
     this.scope = scope;
+    this.skipDevicesWithOnlyInvalidSeries = skipDevicesWithOnlyInvalidSeries;
   }
 
   @Override
@@ -80,7 +83,13 @@ public class DeviceSchemaSource implements ISchemaSource<IDeviceSchemaInfo> {
     try {
       return schemaRegion.getDeviceReader(
           SchemaRegionReadPlanFactory.getShowDevicesPlan(
-              pathPattern, limit, offset, isPrefixMatch, schemaFilter, scope));
+              pathPattern,
+              limit,
+              offset,
+              isPrefixMatch,
+              schemaFilter,
+              scope,
+              skipDevicesWithOnlyInvalidSeries));
     } catch (MetadataException e) {
       throw new SchemaExecutionException(e.getMessage(), e);
     }
@@ -143,6 +152,13 @@ public class DeviceSchemaSource implements ISchemaSource<IDeviceSchemaInfo> {
 
   @Override
   public boolean hasSchemaStatistic(ISchemaRegion schemaRegion) {
+    // If we need to skip devices with only invalid series, check if this SchemaRegion
+    // has any invalid series. If it does, we cannot use statistics because statistics
+    // don't track which devices have invalid series.
+    if (skipDevicesWithOnlyInvalidSeries
+        && schemaRegion.getSchemaRegionStatistics().hasInvalidSeries()) {
+      return false;
+    }
     return (pathPattern.equals(ALL_MATCH_PATTERN)
             || pathPattern.include(
                 new PartialPath((schemaRegion.getDatabaseFullPath() + ".**").split("\\."))))

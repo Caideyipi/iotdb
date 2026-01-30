@@ -41,18 +41,25 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.Alt
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.AlterTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.BatchActivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.ConstructSchemaBlackListNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateAliasSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateAlignedTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateMultiTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DeactivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DeleteTimeSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DropAliasSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.InternalBatchActivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.InternalCreateMultiTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.InternalCreateTimeSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.LockAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesEnabledNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesInvalidNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MeasurementGroup;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.PreDeactivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.RollbackPreDeactivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.RollbackSchemaBlackListNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UnlockForAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UpdatePhysicalAliasRefNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.AlterLogicalViewNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.ConstructLogicalViewBlackListNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.CreateLogicalViewNode;
@@ -548,13 +555,14 @@ public class SchemaExecutionVisitor extends PlanVisitor<TSStatus, ISchemaRegion>
   public TSStatus visitConstructSchemaBlackList(
       final ConstructSchemaBlackListNode node, final ISchemaRegion schemaRegion) {
     try {
-      final Pair<Long, Boolean> preDeletedNumAndIsAllLogicalView =
-          schemaRegion.constructSchemaBlackList(node.getPatternTree());
+      final org.apache.iotdb.db.schemaengine.schemaregion.write.resp.ConstructSchemaBlackListResult
+          result = schemaRegion.constructSchemaBlackListWithAliasInfo(node.getPatternTree());
+      if (result.isAllLogicalView()) {
+        return RpcUtils.getStatus(
+            TSStatusCode.ONLY_LOGICAL_VIEW, String.valueOf(result.getPreDeletedNum()));
+      }
       return RpcUtils.getStatus(
-          Boolean.TRUE.equals(preDeletedNumAndIsAllLogicalView.getRight())
-              ? TSStatusCode.ONLY_LOGICAL_VIEW
-              : TSStatusCode.SUCCESS_STATUS,
-          String.valueOf(preDeletedNumAndIsAllLogicalView.getLeft()));
+          TSStatusCode.SUCCESS_STATUS, String.valueOf(result.getPreDeletedNum()));
     } catch (final MetadataException e) {
       logMetaDataException(e);
       return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
@@ -852,6 +860,89 @@ public class SchemaExecutionVisitor extends PlanVisitor<TSStatus, ISchemaRegion>
       queue.close();
     }
     return new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+  }
+
+  @Override
+  public TSStatus visitLockAlias(final LockAliasNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.validateAndPrepareForAliasSeries(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
+  }
+
+  @Override
+  public TSStatus visitCreateAliasSeries(
+      final CreateAliasSeriesNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.createAliasSeries(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
+  }
+
+  @Override
+  public TSStatus visitMarkSeriesInvalid(
+      final MarkSeriesInvalidNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.markSeriesInvalid(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
+  }
+
+  @Override
+  public TSStatus visitUpdatePhysicalAliasRef(
+      final UpdatePhysicalAliasRefNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.updatePhysicalAliasRef(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
+  }
+
+  @Override
+  public TSStatus visitDropAliasSeries(
+      final DropAliasSeriesNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.dropAliasSeries(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
+  }
+
+  @Override
+  public TSStatus visitMarkSeriesEnabled(
+      final MarkSeriesEnabledNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.markSeriesEnabled(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
+  }
+
+  @Override
+  public TSStatus visitUnlockForAlias(
+      final UnlockForAliasNode node, final ISchemaRegion schemaRegion) {
+    try {
+      schemaRegion.unlockForAlias(node);
+      return RpcUtils.getStatus(TSStatusCode.SUCCESS_STATUS);
+    } catch (final MetadataException e) {
+      logMetaDataException(e);
+      return RpcUtils.getStatus(e.getErrorCode(), e.getMessage());
+    }
   }
 
   @Override

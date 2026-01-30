@@ -286,6 +286,15 @@ public class Analysis implements IAnalysis {
 
   private boolean useLogicalView = false;
 
+  // Alias Series Analysis (for renamed time series)
+  private boolean useAliasSeries = false;
+
+  // Disabled Series Analysis (for disabled time series)
+  private boolean hasInvalidSeries = false;
+
+  // Map from output device (alias device) to queried device (physical device) for alias series
+  private Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMapForAlias;
+
   private List<Pair<Expression, String>> outputExpressions = null;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -882,6 +891,31 @@ public class Analysis implements IAnalysis {
 
   public boolean useLogicalView() {
     return this.useLogicalView;
+  }
+
+  public boolean useAliasSeries() {
+    return this.useAliasSeries;
+  }
+
+  public void setUseAliasSeries(boolean useAliasSeries) {
+    this.useAliasSeries = useAliasSeries;
+  }
+
+  public boolean hasInvalidSeries() {
+    return this.hasInvalidSeries;
+  }
+
+  public void setHasInvalidSeries(boolean hasInvalidSeries) {
+    this.hasInvalidSeries = hasInvalidSeries;
+  }
+
+  public Map<IDeviceID, IDeviceID> getOutputDeviceToQueriedDevicesMapForAlias() {
+    return outputDeviceToQueriedDevicesMapForAlias;
+  }
+
+  public void setOutputDeviceToQueriedDevicesMapForAlias(
+      Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMapForAlias) {
+    this.outputDeviceToQueriedDevicesMapForAlias = outputDeviceToQueriedDevicesMapForAlias;
   }
 
   public void setOutputExpressions(List<Pair<Expression, String>> outputExpressions) {

@@ -32,24 +32,32 @@ import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.Act
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.AlterTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.BatchActivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.ConstructSchemaBlackListNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateAliasSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateAlignedTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateMultiTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DeactivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DeleteTimeSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DropAliasSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.InternalBatchActivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.InternalCreateMultiTimeSeriesNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.InternalCreateTimeSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.LockAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesEnabledNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesInvalidNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MeasurementGroup;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.PreDeactivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.RollbackPreDeactivateTemplateNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.RollbackSchemaBlackListNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UnlockForAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UpdatePhysicalAliasRefNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.AlterLogicalViewNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.ConstructLogicalViewBlackListNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.CreateLogicalViewNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.DeleteLogicalViewNode;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.view.RollbackLogicalViewBlackListNode;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.AlterTimeSeriesStatement;
+import org.apache.iotdb.mpp.rpc.thrift.TTimeSeriesInfo;
 
 import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
@@ -58,6 +66,8 @@ import org.apache.tsfile.utils.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -382,5 +392,200 @@ public class MetadataWriteNodeSerDeTest {
     byteBuffer.flip();
     PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
     Assert.assertEquals(rollbackLogicalViewBlackListNode, deserializedNode);
+  }
+
+  @Test
+  public void testCreateAliasSeriesNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("CreateAliasSeriesNode");
+    PartialPath oldPath = new PartialPath("root.sg.d1.s1");
+    PartialPath newPath = new PartialPath("root.sg.d1.alias_s1");
+
+    // Test without TTimeSeriesInfo
+    CreateAliasSeriesNode createAliasSeriesNode =
+        new CreateAliasSeriesNode(planNodeId, oldPath, newPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    createAliasSeriesNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(createAliasSeriesNode, deserializedNode);
+
+    // Test with TTimeSeriesInfo
+    TTimeSeriesInfo timeSeriesInfo = createTTimeSeriesInfo(oldPath);
+    CreateAliasSeriesNode createAliasSeriesNodeWithInfo =
+        new CreateAliasSeriesNode(planNodeId, oldPath, newPath, timeSeriesInfo);
+    byteBuffer = ByteBuffer.allocate(1024);
+    createAliasSeriesNodeWithInfo.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(createAliasSeriesNodeWithInfo, deserializedNode);
+
+    // Test with TTimeSeriesInfo and isRollback=true
+    CreateAliasSeriesNode createAliasSeriesNodeRollback =
+        new CreateAliasSeriesNode(planNodeId, oldPath, newPath, timeSeriesInfo, true);
+    byteBuffer = ByteBuffer.allocate(1024);
+    createAliasSeriesNodeRollback.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(createAliasSeriesNodeRollback, deserializedNode);
+  }
+
+  @Test
+  public void testMarkSeriesDisabledNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("MarkSeriesDisabledNode");
+    PartialPath oldPath = new PartialPath("root.sg.d1.s1");
+    PartialPath newPath = new PartialPath("root.sg.d1.alias_s1");
+
+    // Test without isRollback
+    MarkSeriesInvalidNode markSeriesDisabledNode =
+        new MarkSeriesInvalidNode(planNodeId, oldPath, newPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    markSeriesDisabledNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(markSeriesDisabledNode, deserializedNode);
+
+    // Test with isRollback=true
+    MarkSeriesInvalidNode markSeriesDisabledNodeRollback =
+        new MarkSeriesInvalidNode(planNodeId, oldPath, newPath, true);
+    byteBuffer = ByteBuffer.allocate(1024);
+    markSeriesDisabledNodeRollback.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(markSeriesDisabledNodeRollback, deserializedNode);
+  }
+
+  @Test
+  public void testUpdatePhysicalAliasRefNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("UpdatePhysicalAliasRefNode");
+    PartialPath physicalPath = new PartialPath("root.sg.d1.s1");
+    PartialPath newAliasPath = new PartialPath("root.sg.d1.new_alias");
+    PartialPath oldAliasPath = new PartialPath("root.sg.d1.old_alias");
+
+    // Test without oldAliasPath
+    UpdatePhysicalAliasRefNode updatePhysicalAliasRefNode =
+        new UpdatePhysicalAliasRefNode(planNodeId, physicalPath, newAliasPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    updatePhysicalAliasRefNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(updatePhysicalAliasRefNode, deserializedNode);
+
+    // Test with isRollback=true (without oldAliasPath)
+    UpdatePhysicalAliasRefNode updatePhysicalAliasRefNodeRollback =
+        new UpdatePhysicalAliasRefNode(planNodeId, physicalPath, newAliasPath, true);
+    byteBuffer = ByteBuffer.allocate(1024);
+    updatePhysicalAliasRefNodeRollback.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(updatePhysicalAliasRefNodeRollback, deserializedNode);
+
+    // Test with oldAliasPath and isRollback=true
+    UpdatePhysicalAliasRefNode updatePhysicalAliasRefNodeWithOld =
+        new UpdatePhysicalAliasRefNode(planNodeId, physicalPath, newAliasPath, oldAliasPath, true);
+    byteBuffer = ByteBuffer.allocate(1024);
+    updatePhysicalAliasRefNodeWithOld.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(updatePhysicalAliasRefNodeWithOld, deserializedNode);
+  }
+
+  @Test
+  public void testDropAliasSeriesNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("DropAliasSeriesNode");
+    PartialPath aliasPath = new PartialPath("root.sg.d1.alias_s1");
+    PartialPath physicalPath = new PartialPath("root.sg.d1.s1");
+
+    // Test without physicalPath and TTimeSeriesInfo
+    DropAliasSeriesNode dropAliasSeriesNode = new DropAliasSeriesNode(planNodeId, aliasPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    dropAliasSeriesNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(dropAliasSeriesNode, deserializedNode);
+
+    // Test with physicalPath and TTimeSeriesInfo and isRollback=true
+    TTimeSeriesInfo timeSeriesInfo = createTTimeSeriesInfo(physicalPath);
+    DropAliasSeriesNode dropAliasSeriesNodeWithInfo =
+        new DropAliasSeriesNode(planNodeId, aliasPath, physicalPath, timeSeriesInfo, true);
+    byteBuffer = ByteBuffer.allocate(1024);
+    dropAliasSeriesNodeWithInfo.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(dropAliasSeriesNodeWithInfo, deserializedNode);
+  }
+
+  @Test
+  public void testMarkSeriesEnabledNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("MarkSeriesEnabledNode");
+    PartialPath physicalPath = new PartialPath("root.sg.d1.s1");
+    PartialPath aliasPath = new PartialPath("root.sg.d1.alias_s1");
+
+    // Test without aliasPath and TTimeSeriesInfo
+    MarkSeriesEnabledNode markSeriesEnabledNode =
+        new MarkSeriesEnabledNode(planNodeId, physicalPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    markSeriesEnabledNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(markSeriesEnabledNode, deserializedNode);
+
+    // Test with aliasPath and TTimeSeriesInfo and isRollback=true
+    TTimeSeriesInfo timeSeriesInfo = createTTimeSeriesInfo(physicalPath);
+    MarkSeriesEnabledNode markSeriesEnabledNodeWithInfo =
+        new MarkSeriesEnabledNode(planNodeId, physicalPath, aliasPath, timeSeriesInfo, true);
+    byteBuffer = ByteBuffer.allocate(1024);
+    markSeriesEnabledNodeWithInfo.serialize(byteBuffer);
+    byteBuffer.flip();
+    deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(markSeriesEnabledNodeWithInfo, deserializedNode);
+  }
+
+  @Test
+  public void testUnlockForAliasNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("UnlockForAliasNode");
+    PartialPath oldPath = new PartialPath("root.sg.d1.s1");
+    PartialPath newPath = new PartialPath("root.sg.d1.alias_s1");
+
+    UnlockForAliasNode unlockForAliasNode = new UnlockForAliasNode(planNodeId, oldPath, newPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    unlockForAliasNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(unlockForAliasNode, deserializedNode);
+  }
+
+  @Test
+  public void testLockAliasNode() throws Exception {
+    PlanNodeId planNodeId = new PlanNodeId("LockAliasNode");
+    PartialPath oldPath = new PartialPath("root.sg.d1.s1");
+    PartialPath newPath = new PartialPath("root.sg.d1.alias_s1");
+
+    LockAliasNode lockAliasNode = new LockAliasNode(planNodeId, oldPath, newPath);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    lockAliasNode.serialize(byteBuffer);
+    byteBuffer.flip();
+    PlanNode deserializedNode = PlanNodeType.deserialize(byteBuffer);
+    Assert.assertEquals(lockAliasNode, deserializedNode);
+  }
+
+  private TTimeSeriesInfo createTTimeSeriesInfo(PartialPath path) throws Exception {
+    TTimeSeriesInfo timeSeriesInfo = new TTimeSeriesInfo();
+    // Serialize path to binary
+    MeasurementPath measurementPath = new MeasurementPath(path.getFullPath(), TSDataType.INT32);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DataOutputStream dos = new DataOutputStream(baos);
+    measurementPath.serialize(dos);
+    timeSeriesInfo.setPath(baos.toByteArray());
+    timeSeriesInfo.setDataType(TSDataType.INT32.ordinal());
+    timeSeriesInfo.setEncoding(TSEncoding.PLAIN.ordinal());
+    timeSeriesInfo.setCompressor(CompressionType.GZIP.ordinal());
+    timeSeriesInfo.setMeasurementAlias("alias");
+    Map<String, String> tags = new HashMap<>();
+    tags.put("tag1", "value1");
+    timeSeriesInfo.setTags(tags);
+    Map<String, String> attributes = new HashMap<>();
+    attributes.put("attr1", "value1");
+    timeSeriesInfo.setAttributes(attributes);
+    return timeSeriesInfo;
   }
 }

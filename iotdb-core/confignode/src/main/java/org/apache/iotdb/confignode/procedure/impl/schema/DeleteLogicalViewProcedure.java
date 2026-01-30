@@ -31,6 +31,7 @@ import org.apache.iotdb.confignode.client.async.CnToDnInternalServiceAsyncReques
 import org.apache.iotdb.confignode.client.async.handlers.DataNodeAsyncRequestContext;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
+import org.apache.iotdb.confignode.procedure.MetadataProcedureConflictCheckable;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.impl.StateMachineProcedure;
@@ -61,7 +62,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class DeleteLogicalViewProcedure
-    extends StateMachineProcedure<ConfigNodeProcedureEnv, DeleteLogicalViewState> {
+    extends StateMachineProcedure<ConfigNodeProcedureEnv, DeleteLogicalViewState>
+    implements MetadataProcedureConflictCheckable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DeleteLogicalViewProcedure.class);
 
@@ -317,6 +319,21 @@ public class DeleteLogicalViewProcedure
   public int hashCode() {
     return Objects.hash(
         getProcId(), getCurrentState(), getCycles(), isGeneratedByPipe, patternTree);
+  }
+
+  @Override
+  public void applyPathPatterns(PathPatternTree patternTree) {
+    if (this.patternTree != null && !this.patternTree.isEmpty()) {
+      // Merge all patterns from the procedure's pattern tree
+      for (PartialPath pattern : this.patternTree.getAllPathPatterns()) {
+        patternTree.appendPathPattern(pattern);
+      }
+    }
+  }
+
+  @Override
+  public boolean shouldCheckConflict() {
+    return true;
   }
 
   private class DeleteLogicalViewRegionTaskExecutor<Q> extends DataNodeTSStatusTaskExecutor<Q> {

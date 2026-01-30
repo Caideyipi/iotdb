@@ -92,6 +92,7 @@ import org.apache.iotdb.confignode.procedure.impl.schema.DeactivateTemplateProce
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteDatabaseProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteLogicalViewProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.DeleteTimeSeriesProcedure;
+import org.apache.iotdb.confignode.procedure.impl.schema.RenameTimeSeriesProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.SetTTLProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.SetTemplateProcedure;
 import org.apache.iotdb.confignode.procedure.impl.schema.UnsetTemplateProcedure;
@@ -272,7 +273,8 @@ public class ProcedureManager {
       boolean hasOverlappedTask = false;
       synchronized (this) {
         while (executor.isRunning()
-            && System.currentTimeMillis() - startCheckTimeForProcedures < PROCEDURE_WAIT_TIME_OUT) {
+            && System.currentTimeMillis() - startCheckTimeForProcedures < PROCEDURE_WAIT_TIME_OUT
+            && !hasOverlappedTask) {
           final Pair<Long, Boolean> procedureIdDuplicatePair =
               checkDuplicateTableTask(
                   database, null, null, null, null, ProcedureType.DELETE_DATABASE_PROCEDURE);
@@ -360,7 +362,6 @@ public class ProcedureManager {
       boolean mayDeleteAudit) {
     DeleteTimeSeriesProcedure procedure = null;
     synchronized (this) {
-      boolean hasOverlappedTask = false;
       ProcedureType type;
       DeleteTimeSeriesProcedure deleteTimeSeriesProcedure;
       for (Procedure<?> runningProcedure : executor.getProcedures().values()) {
@@ -373,20 +374,37 @@ public class ProcedureManager {
           procedure = deleteTimeSeriesProcedure;
           break;
         }
-        if (patternTree.isOverlapWith(deleteTimeSeriesProcedure.getPatternTree())) {
-          hasOverlappedTask = true;
+      }
+
+      if (procedure == null) {
+        procedure =
+            new DeleteTimeSeriesProcedure(queryId, patternTree, isGeneratedByPipe, mayDeleteAudit);
+        this.executor.submitProcedure(procedure);
+      }
+    }
+    return waitingProcedureFinished(procedure);
+  }
+
+  public TSStatus renameTimeSeries(
+      String queryId, PartialPath oldPath, PartialPath newPath, boolean isGeneratedByPipe) {
+    RenameTimeSeriesProcedure procedure = null;
+    synchronized (this) {
+      ProcedureType type;
+      RenameTimeSeriesProcedure renameTimeSeriesProcedure;
+      for (Procedure<?> runningProcedure : executor.getProcedures().values()) {
+        type = ProcedureFactory.getProcedureType(runningProcedure);
+        if (type == null || !type.equals(ProcedureType.RENAME_TIMESERIES_PROCEDURE)) {
+          continue;
+        }
+        renameTimeSeriesProcedure = ((RenameTimeSeriesProcedure) runningProcedure);
+        if (queryId.equals(renameTimeSeriesProcedure.getQueryId())) {
+          procedure = renameTimeSeriesProcedure;
           break;
         }
       }
 
       if (procedure == null) {
-        if (hasOverlappedTask) {
-          return RpcUtils.getStatus(
-              TSStatusCode.OVERLAP_WITH_EXISTING_TASK,
-              "Some other task is deleting some target timeseries.");
-        }
-        procedure =
-            new DeleteTimeSeriesProcedure(queryId, patternTree, isGeneratedByPipe, mayDeleteAudit);
+        procedure = new RenameTimeSeriesProcedure(queryId, oldPath, newPath, isGeneratedByPipe);
         this.executor.submitProcedure(procedure);
       }
     }

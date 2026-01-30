@@ -332,6 +332,9 @@ public class ColumnHeaderConstant {
   public static final String VIEW_TYPE = "ViewType";
   public static final String SOURCE = "Source";
 
+  // column name for invalid timeseries
+  public static final String NEW_PATH = "NewPath";
+
   // column names for show current timestamp
   public static final String CURRENT_TIMESTAMP = "CurrentTimestamp";
 
@@ -385,6 +388,21 @@ public class ColumnHeaderConstant {
           new ColumnHeader(DEADBAND, TSDataType.TEXT),
           new ColumnHeader(DEADBAND_PARAMETERS, TSDataType.TEXT),
           new ColumnHeader(VIEW_TYPE, TSDataType.TEXT));
+
+  public static final List<ColumnHeader> showInvalidTimeSeriesColumnHeaders =
+      ImmutableList.of(
+          new ColumnHeader(TIMESERIES, TSDataType.TEXT),
+          new ColumnHeader(ALIAS, TSDataType.TEXT),
+          new ColumnHeader(DATABASE, TSDataType.TEXT),
+          new ColumnHeader(DATATYPE, TSDataType.TEXT),
+          new ColumnHeader(ENCODING, TSDataType.TEXT),
+          new ColumnHeader(COMPRESSION, TSDataType.TEXT),
+          new ColumnHeader(TAGS, TSDataType.TEXT),
+          new ColumnHeader(ATTRIBUTES, TSDataType.TEXT),
+          new ColumnHeader(DEADBAND, TSDataType.TEXT),
+          new ColumnHeader(DEADBAND_PARAMETERS, TSDataType.TEXT),
+          new ColumnHeader(VIEW_TYPE, TSDataType.TEXT),
+          new ColumnHeader(NEW_PATH, TSDataType.TEXT));
 
   public static final List<ColumnHeader> showDevicesWithSgColumnHeaders =
       ImmutableList.of(

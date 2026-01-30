@@ -234,7 +234,7 @@ public abstract class AbstractTreeVisitor<N extends ITreeNode, R> implements Sch
 
       shouldVisitSubtree = false;
       if (currentStateMatchInfo.hasFinalState()) {
-        if (acceptFullMatchedNode(nextTempNode)) {
+        if (acceptFullyMatchedNode(nextTempNode)) {
           nextMatchedNode = nextTempNode;
         }
         shouldVisitSubtree = shouldVisitSubtreeOfFullMatchedNode(nextTempNode);
@@ -303,7 +303,7 @@ public abstract class AbstractTreeVisitor<N extends ITreeNode, R> implements Sch
   /**
    * Get full path of parent of current node. This method should be used in {@linkplain
    * AbstractTreeVisitor#acceptInternalMatchedNode}, {@linkplain
-   * AbstractTreeVisitor#acceptFullMatchedNode},{@linkplain
+   * AbstractTreeVisitor#acceptFullyMatchedNode},{@linkplain
    * AbstractTreeVisitor#shouldVisitSubtreeOfInternalMatchedNode} or {@linkplain
    * AbstractTreeVisitor#shouldVisitSubtreeOfFullMatchedNode}.
    *
@@ -447,7 +447,7 @@ public abstract class AbstractTreeVisitor<N extends ITreeNode, R> implements Sch
   protected abstract boolean acceptInternalMatchedNode(N node);
 
   /** Only accepted nodes will be considered for hasNext() and next() */
-  protected abstract boolean acceptFullMatchedNode(N node);
+  protected abstract boolean acceptFullyMatchedNode(N node);
 
   /** The method used for generating the result based on the matched node. */
   protected abstract R generateResult(N nextMatchedNode);

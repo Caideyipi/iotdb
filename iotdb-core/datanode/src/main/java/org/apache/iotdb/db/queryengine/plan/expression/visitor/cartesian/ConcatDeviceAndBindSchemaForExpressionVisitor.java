@@ -101,12 +101,19 @@ public class ConcatDeviceAndBindSchemaForExpressionVisitor
       return Collections.emptyList();
     }
 
-    // process logical view
+    // process logical view and alias series, skip invalid series
     List<MeasurementPath> nonViewActualPaths = new ArrayList<>();
     List<MeasurementPath> viewPaths = new ArrayList<>();
+    List<MeasurementPath> aliasSeriesPaths = new ArrayList<>();
     for (MeasurementPath measurementPath : actualPaths) {
+      // Skip invalid series
+      if (BindSchemaForExpressionVisitor.isInvalidSeries(measurementPath)) {
+        continue;
+      }
       if (measurementPath.getMeasurementSchema().isLogicalView()) {
         viewPaths.add(measurementPath);
+      } else if (BindSchemaForExpressionVisitor.isAliasSeries(measurementPath)) {
+        aliasSeriesPaths.add(measurementPath);
       } else {
         nonViewActualPaths.add(measurementPath);
       }
@@ -114,6 +121,24 @@ public class ConcatDeviceAndBindSchemaForExpressionVisitor
     List<Expression> reconstructTimeSeriesOperands =
         ExpressionUtils.reconstructTimeSeriesOperandsWithMemoryCheck(
             timeSeriesOperand, nonViewActualPaths, context.getQueryContext());
+    // handle alias series: convert to physical paths but preserve alias path for display
+    for (MeasurementPath aliasPath : aliasSeriesPaths) {
+      PartialPath physicalPath =
+          BindSchemaForExpressionVisitor.getOriginalPathFromAliasSeries(aliasPath);
+      if (physicalPath != null) {
+        // Search for the physical path in schema tree
+        List<MeasurementPath> physicalPaths =
+            context.getSchemaTree().searchMeasurementPaths(physicalPath).left;
+        List<Expression> physicalExpressions =
+            ExpressionUtils.reconstructTimeSeriesOperandsWithMemoryCheck(
+                new TimeSeriesOperand(physicalPath), physicalPaths, context.getQueryContext());
+        // Set the alias path as viewPath to preserve it for display in query results
+        for (Expression expr : physicalExpressions) {
+          expr.setViewPath(aliasPath);
+        }
+        reconstructTimeSeriesOperands.addAll(physicalExpressions);
+      }
+    }
     // handle logical views
     for (MeasurementPath measurementPath : viewPaths) {
       Expression replacedExpression = transformViewPath(measurementPath, context.getSchemaTree());

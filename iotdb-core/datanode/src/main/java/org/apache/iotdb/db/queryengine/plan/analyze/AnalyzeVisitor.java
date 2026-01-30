@@ -36,6 +36,7 @@ import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.column.ColumnHeader;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
 import org.apache.iotdb.commons.schema.template.Template;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
 import org.apache.iotdb.commons.schema.view.viewExpression.ViewExpression;
 import org.apache.iotdb.commons.utils.TimePartitionUtils;
@@ -52,6 +53,7 @@ import org.apache.iotdb.db.queryengine.common.MPPQueryContext.ExplainType;
 import org.apache.iotdb.db.queryengine.common.TimeseriesContext;
 import org.apache.iotdb.db.queryengine.common.header.DatasetHeader;
 import org.apache.iotdb.db.queryengine.common.header.DatasetHeaderFactory;
+import org.apache.iotdb.db.queryengine.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.queryengine.common.schematree.DeviceSchemaInfo;
 import org.apache.iotdb.db.queryengine.common.schematree.IMeasurementSchemaInfo;
 import org.apache.iotdb.db.queryengine.common.schematree.ISchemaTree;
@@ -119,6 +121,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.CountTimeSeriesSt
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.CreateAlignedTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.CreateMultiTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.CreateTimeSeriesStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.RenameTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildNodesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowChildPathsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterStatement;
@@ -150,6 +153,7 @@ import org.apache.tsfile.read.filter.basic.Filter;
 import org.apache.tsfile.utils.Pair;
 import org.apache.tsfile.utils.RamUsageEstimator;
 import org.apache.tsfile.write.schema.IMeasurementSchema;
+import org.apache.tsfile.write.schema.MeasurementSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,7 +185,6 @@ import static org.apache.iotdb.commons.schema.column.ColumnHeaderConstant.DEVICE
 import static org.apache.iotdb.commons.schema.column.ColumnHeaderConstant.ENDTIME;
 import static org.apache.iotdb.db.queryengine.metric.QueryPlanCostMetricSet.PARTITION_FETCHER;
 import static org.apache.iotdb.db.queryengine.metric.QueryPlanCostMetricSet.SCHEMA_FETCHER;
-import static org.apache.iotdb.db.queryengine.plan.analyze.AnalyzeUtils.removeLogicalView;
 import static org.apache.iotdb.db.queryengine.plan.analyze.AnalyzeUtils.validateSchema;
 import static org.apache.iotdb.db.queryengine.plan.analyze.ExpressionAnalyzer.bindSchemaForExpression;
 import static org.apache.iotdb.db.queryengine.plan.analyze.ExpressionAnalyzer.concatDeviceAndBindSchemaForExpression;
@@ -469,6 +472,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
       // make sure paths in logical view is fetched
       updateSchemaTreeByViews(analysis, schemaTree, context, canSeeAuditDB);
+      // make sure paths in alias series is fetched (fetch physical paths)
+      updateSchemaTreeByAliasSeries(analysis, schemaTree, context, canSeeAuditDB);
     } finally {
       logger.debug("[EndFetchSchema]");
       long schemaFetchCost = System.nanoTime() - startTime;
@@ -632,6 +637,15 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     return analysis;
   }
 
+  /**
+   * Update schema tree by processing logical views and fetching their source paths.
+   *
+   * @param analysis the analysis context
+   * @param originSchemaTree the original schema tree
+   * @param context the query context
+   * @param canSeeAuditDB whether audit database is visible
+   * @throws SemanticException if an error occurs while processing logical views
+   */
   private void updateSchemaTreeByViews(
       Analysis analysis,
       ISchemaTree originSchemaTree,
@@ -677,6 +691,339 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       allDatabases.addAll(originSchemaTree.getDatabases());
       originSchemaTree.setDatabases(allDatabases);
     }
+  }
+
+  /**
+   * Update schema tree by fetching physical paths for alias series. Similar to
+   * updateSchemaTreeByViews, but for alias series which have ORIGINAL_PATH property.
+   */
+  private void updateSchemaTreeByAliasSeries(
+      Analysis analysis,
+      ISchemaTree originSchemaTree,
+      MPPQueryContext context,
+      boolean canSeeAuditDB) {
+    // Update invalid series flag in analysis
+    analysis.setHasInvalidSeries(originSchemaTree.hasInvalidSeries());
+
+    // Early return if no alias series exist
+    if (!originSchemaTree.hasAliasSeries()) {
+      return;
+    }
+
+    // Collect alias series and their corresponding original paths
+    Pair<PathPatternTree, Map<PartialPath, MeasurementPath>> collectionResult =
+        collectAliasSeries(originSchemaTree);
+    if (collectionResult.left.isEmpty()) {
+      return;
+    }
+
+    analysis.setUseAliasSeries(true);
+    fetchAndMergePhysicalPaths(
+        collectionResult, originSchemaTree, analysis, context, canSeeAuditDB);
+  }
+
+  /**
+   * Collect all alias series from the schema tree and build mapping from original paths to alias
+   * measurement paths.
+   *
+   * @param originSchemaTree the original schema tree
+   * @return a pair containing original path pattern tree (left) and mapping from original paths to
+   *     alias measurement paths (right)
+   * @throws SemanticException if an error occurs while collecting alias series
+   */
+  private Pair<PathPatternTree, Map<PartialPath, MeasurementPath>> collectAliasSeries(
+      ISchemaTree originSchemaTree) {
+    PathPatternTree originalPathPatternTree = new PathPatternTree();
+    Map<PartialPath, MeasurementPath> originalPathToAliasMeasurementMap = new HashMap<>();
+    try {
+      for (MeasurementPath measurementPath :
+          originSchemaTree.searchMeasurementPaths(ALL_MATCH_PATTERN).left) {
+        // Skip logical views (handled separately) and invalid series
+        if (measurementPath.getMeasurementSchema().isLogicalView()
+            || isInvalidSeries(measurementPath)) {
+          continue;
+        }
+
+        // Check if this is an alias series and get its ORIGINAL_PATH
+        PartialPath originalPath = getOriginalPathFromAliasSeries(measurementPath);
+        if (originalPath != null) {
+          originalPathPatternTree.appendFullPath(originalPath);
+          originalPathToAliasMeasurementMap.put(originalPath, measurementPath);
+        }
+      }
+    } catch (Exception e) {
+      throw new SemanticException(e);
+    }
+    return new Pair<>(originalPathPatternTree, originalPathToAliasMeasurementMap);
+  }
+
+  /**
+   * Fetch physical paths for original paths and merge them with alias series information.
+   *
+   * @param collectionResult a pair containing original path pattern tree (left) and mapping from
+   *     original paths to alias measurement paths (right)
+   * @param originSchemaTree the original schema tree to be updated
+   * @param analysis the analysis context
+   * @param context the query context
+   * @param canSeeAuditDB whether audit database is visible
+   */
+  private void fetchAndMergePhysicalPaths(
+      Pair<PathPatternTree, Map<PartialPath, MeasurementPath>> collectionResult,
+      ISchemaTree originSchemaTree,
+      Analysis analysis,
+      MPPQueryContext context,
+      boolean canSeeAuditDB) {
+    // Fetch schema tree for original paths
+    ISchemaTree originalPathSchemaTree =
+        fetchOriginalPathSchemaTree(collectionResult.left, analysis, context, canSeeAuditDB);
+
+    // Merge alias series with physical paths
+    ClusterSchemaTree mergedSchemaTree =
+        buildMergedSchemaTree(collectionResult.right, originalPathSchemaTree);
+
+    // Update origin schema tree with merged results
+    originSchemaTree.mergeSchemaTree(mergedSchemaTree);
+    mergeDatabases(originSchemaTree, originalPathSchemaTree);
+  }
+
+  /**
+   * Fetch schema tree for original paths. Uses fetchSchemaWithTags if the query is a GROUP BY TAGS
+   * query.
+   *
+   * @param originalPathPatternTree the pattern tree containing original paths
+   * @param analysis the analysis context
+   * @param context the query context
+   * @param canSeeAuditDB whether audit database is visible
+   * @return the fetched schema tree for original paths
+   */
+  private ISchemaTree fetchOriginalPathSchemaTree(
+      PathPatternTree originalPathPatternTree,
+      Analysis analysis,
+      MPPQueryContext context,
+      boolean canSeeAuditDB) {
+    boolean isGroupByTag =
+        analysis.getTreeStatement() instanceof QueryStatement
+            && ((QueryStatement) analysis.getTreeStatement()).isGroupByTag();
+
+    if (isGroupByTag) {
+      return this.schemaFetcher.fetchSchemaWithTags(
+          originalPathPatternTree, true, context, canSeeAuditDB);
+    } else {
+      return this.schemaFetcher.fetchSchema(originalPathPatternTree, true, context, canSeeAuditDB);
+    }
+  }
+
+  /**
+   * Build merged schema tree by combining alias series information with physical path information.
+   *
+   * @param originalPathToAliasMeasurementMap mapping from original paths to alias measurement paths
+   * @param originalPathSchemaTree the schema tree containing physical paths
+   * @return the merged schema tree
+   */
+  private ClusterSchemaTree buildMergedSchemaTree(
+      Map<PartialPath, MeasurementPath> originalPathToAliasMeasurementMap,
+      ISchemaTree originalPathSchemaTree) {
+    ClusterSchemaTree mergedSchemaTree = new ClusterSchemaTree();
+
+    for (Map.Entry<PartialPath, MeasurementPath> entry :
+        originalPathToAliasMeasurementMap.entrySet()) {
+      PartialPath originalPath = entry.getKey();
+      MeasurementPath aliasMeasurementPath = entry.getValue();
+
+      // Find the corresponding physical measurement path
+      MeasurementPath physicalMeasurementPath =
+          findPhysicalMeasurementPath(originalPath, aliasMeasurementPath, originalPathSchemaTree);
+
+      // Create merged MeasurementPath:
+      // - Use alias path for: path nodes (name), isUnderAlignedEntity, measurementAlias
+      // - Use physical path for: data type, encoding, compressor, props, tagMap
+      MeasurementPath mergedMeasurementPath =
+          replacePathWithOriginal(physicalMeasurementPath, aliasMeasurementPath);
+      mergedSchemaTree.appendSingleMeasurementPath(mergedMeasurementPath);
+    }
+
+    return mergedSchemaTree;
+  }
+
+  /**
+   * Find the physical measurement path for the given original path.
+   *
+   * @param originalPath the original path
+   * @param aliasMeasurementPath the alias measurement path (for error messages)
+   * @param originalPathSchemaTree the schema tree to search in
+   * @return the physical measurement path
+   * @throws SemanticException if the path is not found or multiple paths are found
+   */
+  private MeasurementPath findPhysicalMeasurementPath(
+      PartialPath originalPath,
+      MeasurementPath aliasMeasurementPath,
+      ISchemaTree originalPathSchemaTree) {
+    Pair<List<MeasurementPath>, Integer> searchResult =
+        originalPathSchemaTree.searchMeasurementPaths(originalPath);
+
+    // Validate search result
+    if (searchResult == null || searchResult.left == null || searchResult.left.isEmpty()) {
+      throw new SemanticException(
+          String.format(
+              "Original path %s not found in schema tree for alias series %s",
+              originalPath.getFullPath(), aliasMeasurementPath.getFullPath()));
+    }
+
+    if (searchResult.left.size() > 1) {
+      throw new SemanticException(
+          String.format(
+              "Multiple paths found in schema tree for original path %s: %s",
+              originalPath.getFullPath(),
+              searchResult.left.stream()
+                  .map(MeasurementPath::getFullPath)
+                  .collect(Collectors.joining(", "))));
+    }
+
+    return searchResult.left.get(0);
+  }
+
+  /**
+   * Merge databases from both schema trees into the origin schema tree.
+   *
+   * @param originSchemaTree the origin schema tree to update
+   * @param originalPathSchemaTree the original path schema tree
+   */
+  private void mergeDatabases(ISchemaTree originSchemaTree, ISchemaTree originalPathSchemaTree) {
+    Set<String> allDatabases = new HashSet<>(originalPathSchemaTree.getDatabases());
+    allDatabases.addAll(originSchemaTree.getDatabases());
+    originSchemaTree.setDatabases(allDatabases);
+  }
+
+  /**
+   * Check if a MeasurementPath represents an invalid series.
+   *
+   * @param measurementPath the MeasurementPath to check
+   * @return true if it's invalid, false otherwise
+   */
+  private boolean isInvalidSeries(MeasurementPath measurementPath) {
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    return MeasurementPropsUtils.isInvalid(schema != null ? schema.getProps() : null);
+  }
+
+  /**
+   * Get the original physical path from an alias series MeasurementPath.
+   *
+   * @param measurementPath the alias series MeasurementPath
+   * @return the original physical path, or null if not an alias series
+   */
+  private PartialPath getOriginalPathFromAliasSeries(MeasurementPath measurementPath) {
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    return MeasurementPropsUtils.getOriginalPath(schema != null ? schema.getProps() : null);
+  }
+
+  private MeasurementPath replacePathWithOriginal(
+      PartialPath originalPath, MeasurementPath aliasPath) {
+    IMeasurementSchema aliasSchema = aliasPath.getMeasurementSchema();
+    IMeasurementSchema updatedSchema = aliasSchema;
+
+    if (aliasSchema instanceof MeasurementSchema) {
+      MeasurementSchema aliasMeasurementSchema = (MeasurementSchema) aliasSchema;
+      String physicalMeasurementName = originalPath.getMeasurement();
+      updatedSchema =
+          new MeasurementSchema(
+              physicalMeasurementName,
+              aliasMeasurementSchema.getType(),
+              aliasMeasurementSchema.getEncodingType(),
+              aliasMeasurementSchema.getCompressor(),
+              aliasMeasurementSchema.getProps());
+    }
+
+    MeasurementPath replacedPath = new MeasurementPath(originalPath.getNodes(), updatedSchema);
+    replacedPath.setUnderAlignedEntity(
+        MeasurementPropsUtils.isOriginalPathAligned(aliasSchema.getProps()));
+    replacedPath.setMeasurementAlias(aliasPath.getMeasurementAlias());
+    if (aliasPath.getTagMap() != null) {
+      replacedPath.setTagMap(aliasPath.getTagMap());
+    }
+    return replacedPath;
+  }
+
+  /**
+   * Process a matched path for pattern-based deletion. Returns the path to add to the processed
+   * list, or null if the path should be skipped (invalid series).
+   *
+   * @param matchedPath the matched path to process
+   * @param schemaTree the schema tree to update if needed
+   * @param context the query context
+   * @return the path to add, or null if should be skipped
+   */
+  private MeasurementPath processMatchedPathForPattern(
+      MeasurementPath matchedPath, ISchemaTree schemaTree, MPPQueryContext context) {
+    IMeasurementSchema schema = matchedPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      // Not a MeasurementSchema, keep the matched path
+      return matchedPath;
+    }
+
+    Map<String, String> props = schema.getProps();
+    // Skip invalid series
+    if (MeasurementPropsUtils.isInvalid(props)) {
+      return null;
+    }
+
+    // Replace alias series with physical path
+    if (MeasurementPropsUtils.isRenamed(props)) {
+      PartialPath originalPath = MeasurementPropsUtils.getOriginalPath(props);
+      if (originalPath != null) {
+        PathPatternTree newPatternTree = new PathPatternTree();
+        newPatternTree.appendFullPath(originalPath);
+        ISchemaTree newTree = schemaFetcher.fetchSchema(newPatternTree, true, context, false);
+        schemaTree.mergeSchemaTree(newTree);
+        return replacePathWithOriginal(originalPath, matchedPath);
+      }
+    }
+
+    // Not an invalid or alias series, keep the matched path
+    return matchedPath;
+  }
+
+  /**
+   * Process matched paths for exact path deletion. Returns the path to add to the processed list,
+   * or null if the path should be skipped (invalid series).
+   *
+   * @param originalPath the original path from the delete statement
+   * @param matchedPaths the list of matched paths from schema tree
+   * @return the path to add, or null if should be skipped
+   */
+  private MeasurementPath processMatchedPathForExact(
+      MeasurementPath originalPath, List<MeasurementPath> matchedPaths) {
+    for (MeasurementPath matchedPath : matchedPaths) {
+      // Verify exact match
+      if (!matchedPath.getFullPath().equals(originalPath.getFullPath())) {
+        continue;
+      }
+
+      IMeasurementSchema schema = matchedPath.getMeasurementSchema();
+      if (!(schema instanceof MeasurementSchema)) {
+        // Not a MeasurementSchema, keep original path
+        return originalPath;
+      }
+
+      Map<String, String> props = schema.getProps();
+      // Skip invalid series
+      if (MeasurementPropsUtils.isInvalid(props)) {
+        return null;
+      }
+
+      // Replace alias series with physical path
+      if (MeasurementPropsUtils.isRenamed(props)) {
+        PartialPath originalPhysicalPath = MeasurementPropsUtils.getOriginalPath(props);
+        if (originalPhysicalPath != null) {
+          return replacePathWithOriginal(originalPhysicalPath, matchedPath);
+        }
+      }
+
+      // Not an invalid or alias series, keep original path
+      return originalPath;
+    }
+
+    // No exact match found, keep original path
+    return originalPath;
   }
 
   /** process select component for align by time + group by level. */
@@ -866,6 +1213,11 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
           Expression lowerCaseMeasurementExpression = toLowerCaseExpression(measurementExpression);
           analyzeExpressionType(analysis, lowerCaseMeasurementExpression);
 
+          // For ALIGN BY DEVICE queries, column names should only show measurement name (e.g.,
+          // "temperature"), not the full path (e.g., "root.view.d1.temperature"). This is
+          // consistent with how physical series are displayed. So we use measurementExpression
+          // (which only contains measurement name) instead of the original expression with
+          // viewPath.
           outputExpressions.add(
               new Pair<>(
                   lowerCaseMeasurementExpression,
@@ -1433,6 +1785,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     }
 
     Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMap = new LinkedHashMap<>();
+    Map<IDeviceID, IDeviceID> outputDeviceToQueriedDevicesMapForAlias = new LinkedHashMap<>();
     for (Map.Entry<IDeviceID, Set<Expression>> entry : deviceToSourceExpressions.entrySet()) {
       IDeviceID deviceName = entry.getKey();
       Set<Expression> sourceExpressionsUnderDevice = entry.getValue();
@@ -1445,11 +1798,20 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         throw new SemanticException(
             "Cross-device queries are not supported in ALIGN BY DEVICE queries.");
       }
-      outputDeviceToQueriedDevicesMap.put(deviceName, queriedDevices.iterator().next());
+      IDeviceID queriedDevice = queriedDevices.iterator().next();
+      outputDeviceToQueriedDevicesMap.put(deviceName, queriedDevice);
+
+      // If this is an alias series (output device != queried device), add to alias map
+      if (!deviceName.equals(queriedDevice)) {
+        outputDeviceToQueriedDevicesMapForAlias.put(deviceName, queriedDevice);
+      }
     }
 
     analysis.setDeviceToSourceExpressions(deviceToSourceExpressions);
     analysis.setOutputDeviceToQueriedDevicesMap(outputDeviceToQueriedDevicesMap);
+    if (!outputDeviceToQueriedDevicesMapForAlias.isEmpty()) {
+      analysis.setOutputDeviceToQueriedDevicesMapForAlias(outputDeviceToQueriedDevicesMapForAlias);
+    }
   }
 
   private void analyzeSource(Analysis analysis, QueryStatement queryStatement) {
@@ -2733,6 +3095,46 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
   }
 
   @Override
+  public Analysis visitRenameTimeSeriesStatement(
+      RenameTimeSeriesStatement renameTimeSeriesStatement, MPPQueryContext context) {
+    context.setQueryType(QueryType.WRITE);
+    Analysis analysis = new Analysis();
+    analysis.setRealStatement(renameTimeSeriesStatement);
+
+    // Verify old path exists using fetchSchema
+    PathPatternTree oldPathPatternTree = new PathPatternTree();
+    oldPathPatternTree.appendFullPath(renameTimeSeriesStatement.getPath());
+    ISchemaTree oldPathSchemaTree =
+        schemaFetcher.fetchSchema(oldPathPatternTree, false, context, false);
+    if (oldPathSchemaTree.isEmpty()) {
+      throw new SemanticException(
+          String.format(
+              "Timeseries [%s] does not exist.",
+              renameTimeSeriesStatement.getPath().getFullPath()));
+    }
+
+    // Check if old path and new path are the same
+    if (renameTimeSeriesStatement.getPath().equals(renameTimeSeriesStatement.getNewPath())) {
+      // Old path and new path are the same, no need to rename
+      analysis.setFinishQueryAfterAnalyze(true);
+      return analysis;
+    }
+
+    // Verify new path does not exist using fetchSchema
+    PathPatternTree newPathPatternTree = new PathPatternTree();
+    newPathPatternTree.appendFullPath(renameTimeSeriesStatement.getNewPath());
+    ISchemaTree newPathSchemaTree =
+        schemaFetcher.fetchSchema(newPathPatternTree, false, context, false);
+    if (!newPathSchemaTree.isEmpty()) {
+      throw new SemanticException(
+          String.format(
+              "Timeseries [%s] already exists.",
+              renameTimeSeriesStatement.getNewPath().getFullPath()));
+    }
+    return analysis;
+  }
+
+  @Override
   public Analysis visitInsertTablet(
       InsertTabletStatement insertTabletStatement, MPPQueryContext context) {
     Analysis analysis = new Analysis();
@@ -2756,7 +3158,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         analysis,
         insertRowStatement,
         () -> SchemaValidator.validate(schemaFetcher, insertRowStatement, context));
-    InsertBaseStatement realInsertStatement = removeLogicalView(analysis, insertRowStatement);
+    InsertBaseStatement realInsertStatement =
+        AnalyzeUtils.removeLogicalViewAndAliasSeries(analysis, insertRowStatement);
     if (analysis.isFinishQueryAfterAnalyze()) {
       return analysis;
     }
@@ -2796,7 +3199,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         insertRowsStatement,
         () -> SchemaValidator.validate(schemaFetcher, insertRowsStatement, context));
     InsertRowsStatement realInsertRowsStatement =
-        (InsertRowsStatement) removeLogicalView(analysis, insertRowsStatement);
+        (InsertRowsStatement)
+            AnalyzeUtils.removeLogicalViewAndAliasSeries(analysis, insertRowsStatement);
     if (analysis.isFinishQueryAfterAnalyze()) {
       return analysis;
     }
@@ -2821,7 +3225,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         insertMultiTabletsStatement,
         () -> SchemaValidator.validate(schemaFetcher, insertMultiTabletsStatement, context));
     InsertMultiTabletsStatement realStatement =
-        (InsertMultiTabletsStatement) removeLogicalView(analysis, insertMultiTabletsStatement);
+        (InsertMultiTabletsStatement)
+            AnalyzeUtils.removeLogicalViewAndAliasSeries(analysis, insertMultiTabletsStatement);
     if (analysis.isFinishQueryAfterAnalyze()) {
       return analysis;
     }
@@ -2846,7 +3251,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         insertRowsOfOneDeviceStatement,
         () -> SchemaValidator.validate(schemaFetcher, insertRowsOfOneDeviceStatement, context));
     InsertBaseStatement realInsertStatement =
-        removeLogicalView(analysis, insertRowsOfOneDeviceStatement);
+        AnalyzeUtils.removeLogicalViewAndAliasSeries(analysis, insertRowsOfOneDeviceStatement);
     if (analysis.isFinishQueryAfterAnalyze()) {
       return analysis;
     }
@@ -2920,7 +3325,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       Analysis analysis,
       MPPQueryContext context,
       PathPatternTree authorityScope,
-      boolean canSeeAuditDB)
+      boolean canSeeAuditDB,
+      boolean isOnlyNeedInvalidTimeSeries)
       throws IllegalPathException {
     analyzeGlobalTimeConditionInShowMetaData(timeCondition, analysis);
     context.generateGlobalTimeFilter(analysis);
@@ -2928,60 +3334,81 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     ISchemaTree schemaTree =
         schemaFetcher.fetchRawSchemaInMeasurementLevel(
             patternTree, authorityScope, context, canSeeAuditDB);
+    if (!isOnlyNeedInvalidTimeSeries) {
+      updateSchemaTreeByAliasSeries(analysis, schemaTree, context, canSeeAuditDB);
+    }
 
     if (schemaTree.isEmpty()) {
       analysis.setFinishQueryAfterAnalyze(true);
       return false;
     }
     removeLogicViewMeasurement(schemaTree);
-    Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext =
-        new HashMap<>();
+    Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext;
     /**
      * Since we fetch raw time series schema without template(The template sequence will be treated
      * as a normal node, not a device+templateId. This means that all nodes are what we need.). We
      * can use ALL_MATCH_PATTERN to get result.
      */
     List<DeviceSchemaInfo> deviceSchemaInfoList = schemaTree.getMatchedDevices(ALL_MATCH_PATTERN);
-    Set<IDeviceID> deviceSet = new HashSet<>();
-    for (DeviceSchemaInfo deviceSchemaInfo : deviceSchemaInfoList) {
-      boolean isAligned = deviceSchemaInfo.isAligned();
-      PartialPath devicePath = deviceSchemaInfo.getDevicePath();
-      deviceSet.add(devicePath.getIDeviceIDAsFullDevice());
-      if (isAligned) {
-        List<String> measurementList = new ArrayList<>();
-        List<IMeasurementSchema> schemaList = new ArrayList<>();
-        List<TimeseriesContext> timeseriesContextList = new ArrayList<>();
-        for (IMeasurementSchemaInfo measurementSchemaInfo :
-            deviceSchemaInfo.getMeasurementSchemaInfoList()) {
-          schemaList.add(measurementSchemaInfo.getSchema());
-          measurementList.add(measurementSchemaInfo.getName());
-          timeseriesContextList.add(new TimeseriesContext(measurementSchemaInfo));
-        }
-        AlignedPath alignedPath =
-            new AlignedPath(devicePath.getNodes(), measurementList, schemaList);
-        deviceToTimeseriesContext
-            .computeIfAbsent(devicePath, k -> new HashMap<>())
-            .put(alignedPath, timeseriesContextList);
-      } else {
-        for (IMeasurementSchemaInfo measurementSchemaInfo :
-            deviceSchemaInfo.getMeasurementSchemaInfoList()) {
-          MeasurementPath measurementPath =
-              new MeasurementPath(
-                  devicePath.concatNode(measurementSchemaInfo.getName()).getNodes());
-          deviceToTimeseriesContext
-              .computeIfAbsent(devicePath, k -> new HashMap<>())
-              .put(
-                  measurementPath,
-                  Collections.singletonList(new TimeseriesContext(measurementSchemaInfo)));
-        }
-      }
-    }
+    Set<String> databases = schemaTree.getDatabases();
+
+    deviceToTimeseriesContext =
+        buildDeviceToTimeseriesContext(
+            deviceSchemaInfoList, patternTree, databases, false, isOnlyNeedInvalidTimeSeries);
 
     analysis.setDeviceToTimeseriesSchemas(deviceToTimeseriesContext);
     // fetch Data partition
-    DataPartition dataPartition = fetchDataPartitionByDevices(deviceSet, schemaTree, context);
+    DataPartition dataPartition =
+        fetchDataPartitionByDevices(
+            deviceToTimeseriesContext.keySet().stream()
+                .map(PartialPath::getIDeviceIDAsFullDevice)
+                .collect(Collectors.toSet()),
+            schemaTree,
+            context);
     analysis.setDataPartitionInfo(dataPartition);
     return true;
+  }
+
+  private String getDatabaseForMeasurement(
+      IMeasurementSchemaInfo measurementSchemaInfo,
+      PartialPath devicePath,
+      Set<String> databases,
+      boolean skipAliasSeries) {
+    if (databases == null || databases.isEmpty()) {
+      return null;
+    }
+
+    IMeasurementSchema schema = measurementSchemaInfo.getSchema();
+    if (schema == null) {
+      return null;
+    }
+
+    PartialPath path;
+    if (skipAliasSeries) {
+      path = devicePath;
+    } else {
+      if (MeasurementPropsUtils.isInvalid(schema.getProps())) {
+        path = MeasurementPropsUtils.getAliasPath(schema.getProps());
+      } else {
+        path = devicePath;
+      }
+    }
+
+    if (path == null) {
+      return null;
+    }
+
+    for (String db : databases) {
+      try {
+        PartialPath dbPath = new PartialPath(db);
+        if (path.matchPrefixPath(dbPath)) {
+          return db;
+        }
+      } catch (IllegalPathException ignore) {
+        // Skip invalid database path and continue checking other databases
+      }
+    }
+    return null;
   }
 
   @Override
@@ -2992,7 +3419,11 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
 
     if (showTimeSeriesStatement.getPathPattern().getNodeLength() <= 1) {
       analysis.setFinishQueryAfterAnalyze(true);
-      analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
+      if (showTimeSeriesStatement.isOnlyShowDisable()) {
+        analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowInvalidTimeSeriesHeader());
+      } else {
+        analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
+      }
       return analysis;
     }
 
@@ -3009,9 +3440,14 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
                 analysis,
                 context,
                 showTimeSeriesStatement.getAuthorityScope(),
-                showTimeSeriesStatement.isCanSeeAuditDB());
+                showTimeSeriesStatement.isCanSeeAuditDB(),
+                showTimeSeriesStatement.isOnlyShowDisable());
         if (!hasSchema) {
-          analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
+          if (showTimeSeriesStatement.isOnlyShowDisable()) {
+            analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowInvalidTimeSeriesHeader());
+          } else {
+            analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
+          }
           return analysis;
         }
       } catch (IllegalPathException e) {
@@ -3048,7 +3484,11 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
           context);
     }
 
-    analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
+    if (showTimeSeriesStatement.isOnlyShowDisable()) {
+      analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowInvalidTimeSeriesHeader());
+    } else {
+      analysis.setRespDatasetHeader(DatasetHeaderFactory.getShowTimeSeriesHeader());
+    }
     return analysis;
   }
 
@@ -3093,32 +3533,276 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       MPPQueryContext context,
       boolean canSeeAuditDB) {
     // If there is time condition in SHOW DEVICES, we need to scan the raw data
+    // Use TimeSeries level schema to support accurate scanning, especially for invalid series
     analyzeGlobalTimeConditionInShowMetaData(timeCondition, analysis);
     context.generateGlobalTimeFilter(analysis);
     PathPatternTree patternTree = new PathPatternTree();
-    patternTree.appendPathPattern(pattern);
+
+    PartialPath patternWithOneLevelWildcard =
+        pattern.concatAsMeasurementPath(IoTDBConstant.ONE_LEVEL_PATH_WILDCARD);
+    patternTree.appendPathPattern(patternWithOneLevelWildcard);
+    patternTree.constructTree();
+
     ISchemaTree schemaTree =
-        schemaFetcher.fetchRawSchemaInDeviceLevel(
+        schemaFetcher.fetchRawSchemaInMeasurementLevel(
             patternTree, authorityScope, context, canSeeAuditDB);
+    updateSchemaTreeByAliasSeries(analysis, schemaTree, context, canSeeAuditDB);
+
     if (schemaTree.isEmpty()) {
       analysis.setFinishQueryAfterAnalyze(true);
       return;
     }
 
-    // fetch Data partition
+    removeLogicViewMeasurement(schemaTree);
 
+    // Build deviceToTimeseriesSchemas only if there are invalid series or alias series
+    final boolean hasInvalidSeries = analysis.hasInvalidSeries();
+    final boolean hasAliasSeries = schemaTree.hasAliasSeries();
+    final boolean useTimeSeriesLevelPartition = hasInvalidSeries || hasAliasSeries;
+    List<DeviceSchemaInfo> deviceSchemaInfoList = schemaTree.getMatchedDevices(ALL_MATCH_PATTERN);
+    Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext =
+        new HashMap<>();
+
+    if (useTimeSeriesLevelPartition) {
+      deviceToTimeseriesContext =
+          buildDeviceToTimeseriesContext(
+              deviceSchemaInfoList, patternTree, schemaTree.getDatabases(), true, false);
+    }
+
+    // If there are alias series, rebuild patternTree using devices from deviceToTimeseriesContext
+    // and the original pattern; otherwise, use only the original pattern
+    PathPatternTree patternTreeForDeviceLevel = new PathPatternTree();
+    if (hasAliasSeries && !deviceToTimeseriesContext.isEmpty()) {
+      // Use devices from deviceToTimeseriesContext and merge with the original pattern
+      for (PartialPath devicePath : deviceToTimeseriesContext.keySet()) {
+        patternTreeForDeviceLevel.appendPathPattern(devicePath);
+      }
+    }
+    patternTreeForDeviceLevel.appendPathPattern(pattern);
+
+    patternTreeForDeviceLevel.constructTree();
+
+    ISchemaTree schemaTreeInDeviceLevel =
+        schemaFetcher.fetchRawSchemaInDeviceLevel(
+            patternTreeForDeviceLevel, authorityScope, context, canSeeAuditDB);
     Map<PartialPath, DeviceContext> devicePathsToInfoMap =
-        schemaTree.getMatchedDevices(pattern).stream()
+        schemaTreeInDeviceLevel.getMatchedDevices(pattern).stream()
             .collect(Collectors.toMap(DeviceSchemaInfo::getDevicePath, DeviceContext::new));
+
+    analysis.setDeviceToTimeseriesSchemas(deviceToTimeseriesContext);
     analysis.setDevicePathToContextMap(devicePathsToInfoMap);
-    DataPartition dataPartition =
-        fetchDataPartitionByDevices(
-            devicePathsToInfoMap.keySet().stream()
-                .map(PartialPath::getIDeviceIDAsFullDevice)
-                .collect(Collectors.toSet()),
-            schemaTree,
-            context);
+
+    // fetch Data partition - use TimeSeries level if there are invalid/alias series
+    final DataPartition dataPartition;
+    if (useTimeSeriesLevelPartition) {
+      dataPartition =
+          fetchDataPartitionByTimeSeriesContext(deviceToTimeseriesContext, schemaTree, context);
+    } else {
+      dataPartition =
+          fetchDataPartitionByDevices(
+              devicePathsToInfoMap.keySet().stream()
+                  .map(PartialPath::getIDeviceID)
+                  .collect(Collectors.toSet()),
+              schemaTree,
+              context);
+    }
     analysis.setDataPartitionInfo(dataPartition);
+  }
+
+  /**
+   * Build deviceToTimeseriesContext map. For alias series, skip them. For skipAliasSeries series,
+   * check if their alias path matches the pattern, only save if matched.
+   *
+   * @param deviceSchemaInfoList list of device schema info
+   * @param patternTree the pattern tree to match
+   * @param databases set of databases
+   * @param matchAtDeviceLevel whether to match alias path at device level (true) or timeseries
+   *     level (false)
+   * @return the device to timeseries context map
+   */
+  private Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>>
+      buildDeviceToTimeseriesContext(
+          List<DeviceSchemaInfo> deviceSchemaInfoList,
+          PathPatternTree patternTree,
+          Set<String> databases,
+          boolean matchAtDeviceLevel,
+          boolean skipAliasSeries) {
+    Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext =
+        new HashMap<>();
+
+    for (DeviceSchemaInfo deviceSchemaInfo : deviceSchemaInfoList) {
+      PartialPath devicePath = deviceSchemaInfo.getDevicePath();
+      boolean isAligned = deviceSchemaInfo.isAligned();
+
+      Pair<List<IMeasurementSchemaInfo>, List<String>> validMeasurements =
+          collectValidMeasurements(
+              deviceSchemaInfo.getMeasurementSchemaInfoList(),
+              devicePath,
+              patternTree,
+              databases,
+              matchAtDeviceLevel,
+              skipAliasSeries);
+
+      if (validMeasurements.left.isEmpty()) {
+        continue;
+      }
+
+      if (isAligned) {
+        addAlignedDeviceToContext(
+            deviceToTimeseriesContext, devicePath, validMeasurements.left, validMeasurements.right);
+      } else {
+        addNonAlignedDeviceToContext(
+            deviceToTimeseriesContext, devicePath, validMeasurements.left, validMeasurements.right);
+      }
+    }
+
+    return deviceToTimeseriesContext;
+  }
+
+  /**
+   * Collect valid measurements that should be included in the context.
+   *
+   * @param measurementSchemaInfoList list of measurement schema info
+   * @param devicePath the device path
+   * @param patternTree the pattern tree to match
+   * @param databases set of databases
+   * @param matchAtDeviceLevel whether to match at device level
+   * @param skipAliasSeries whether to skip alias series
+   * @return pair of valid measurement schema info list and corresponding database list
+   */
+  private Pair<List<IMeasurementSchemaInfo>, List<String>> collectValidMeasurements(
+      List<IMeasurementSchemaInfo> measurementSchemaInfoList,
+      PartialPath devicePath,
+      PathPatternTree patternTree,
+      Set<String> databases,
+      boolean matchAtDeviceLevel,
+      boolean skipAliasSeries) {
+    List<IMeasurementSchemaInfo> validMeasurementSchemaInfoList = new ArrayList<>();
+    List<String> validDatabaseList = new ArrayList<>();
+
+    for (IMeasurementSchemaInfo measurementSchemaInfo : measurementSchemaInfoList) {
+      String database =
+          getDatabaseForMeasurement(measurementSchemaInfo, devicePath, databases, skipAliasSeries);
+
+      boolean shouldInclude =
+          skipAliasSeries
+              ? MeasurementPropsUtils.isInvalid(measurementSchemaInfo.getSchema().getProps())
+              : shouldIncludeMeasurement(measurementSchemaInfo, patternTree, matchAtDeviceLevel);
+
+      if (shouldInclude) {
+        validMeasurementSchemaInfoList.add(measurementSchemaInfo);
+        validDatabaseList.add(database);
+      }
+    }
+
+    return new Pair<>(validMeasurementSchemaInfoList, validDatabaseList);
+  }
+
+  /** Add aligned device measurements to the context map. */
+  private void addAlignedDeviceToContext(
+      Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext,
+      PartialPath devicePath,
+      List<IMeasurementSchemaInfo> validMeasurementSchemaInfoList,
+      List<String> validDatabaseList) {
+    List<String> measurementList = new ArrayList<>();
+    List<IMeasurementSchema> schemaList = new ArrayList<>();
+    List<TimeseriesContext> timeseriesContextList = new ArrayList<>();
+
+    for (int i = 0; i < validMeasurementSchemaInfoList.size(); i++) {
+      IMeasurementSchemaInfo measurementSchemaInfo = validMeasurementSchemaInfoList.get(i);
+      String database = validDatabaseList.get(i);
+      measurementList.add(measurementSchemaInfo.getName());
+      schemaList.add(measurementSchemaInfo.getSchema());
+      timeseriesContextList.add(new TimeseriesContext(measurementSchemaInfo, database));
+    }
+
+    AlignedPath alignedPath = new AlignedPath(devicePath.getNodes(), measurementList, schemaList);
+    deviceToTimeseriesContext
+        .computeIfAbsent(devicePath, k -> new HashMap<>())
+        .put(alignedPath, timeseriesContextList);
+  }
+
+  /** Add non-aligned device measurements to the context map. */
+  private void addNonAlignedDeviceToContext(
+      Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext,
+      PartialPath devicePath,
+      List<IMeasurementSchemaInfo> validMeasurementSchemaInfoList,
+      List<String> validDatabaseList) {
+    for (int i = 0; i < validMeasurementSchemaInfoList.size(); i++) {
+      IMeasurementSchemaInfo measurementSchemaInfo = validMeasurementSchemaInfoList.get(i);
+      String database = validDatabaseList.get(i);
+      MeasurementPath measurementPath =
+          new MeasurementPath(devicePath.concatNode(measurementSchemaInfo.getName()).getNodes());
+      deviceToTimeseriesContext
+          .computeIfAbsent(devicePath, k -> new HashMap<>())
+          .put(
+              measurementPath,
+              Collections.singletonList(new TimeseriesContext(measurementSchemaInfo, database)));
+    }
+  }
+
+  /**
+   * Check if a measurement should be included in the deviceToTimeseriesContext map.
+   *
+   * <p>Rules:
+   * <li>Alias series (isRenamed) are never included
+   * <li>For invalid series, check if their alias path matches the pattern tree, only include if
+   *     matched
+   * <li>For normal series, since it is fetched by the pattern tree, always include
+   *
+   * @param measurementSchemaInfo the measurement schema info
+   * @param patternTree the pattern tree to match
+   * @param matchAtDeviceLevel whether to match the alias path at device level (true) or timeseries
+   *     level (false)
+   * @return true if the measurement should be included
+   */
+  private boolean shouldIncludeMeasurement(
+      IMeasurementSchemaInfo measurementSchemaInfo,
+      PathPatternTree patternTree,
+      boolean matchAtDeviceLevel) {
+    Map<String, String> props = measurementSchemaInfo.getSchema().getProps();
+
+    // Skip alias series (isRenamed)
+    if (MeasurementPropsUtils.isRenamed(props)) {
+      return false;
+    }
+
+    // For invalid series, check if alias path matches pattern tree
+    if (MeasurementPropsUtils.isInvalid(props)) {
+      PartialPath aliasPath = MeasurementPropsUtils.getAliasPath(props);
+      if (aliasPath != null) {
+        PartialPath pathToMatch = matchAtDeviceLevel ? aliasPath.getDevicePath() : aliasPath;
+        // Check if path matches any pattern in the pattern tree
+        return !patternTree.getOverlappedPathPatterns(pathToMatch).isEmpty();
+      }
+      // If no alias path, don't include invalid series
+      logger.warn(
+          "Invalid time series {} does not have an alias path", measurementSchemaInfo.getName());
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Fetch data partition based on TimeSeries context. Extract all device IDs from the
+   * deviceToTimeseriesContext map.
+   *
+   * @param deviceToTimeseriesContext the device to timeseries context map
+   * @param schemaTree the schema tree for getting database information
+   * @param context the query context
+   * @return the data partition
+   */
+  private DataPartition fetchDataPartitionByTimeSeriesContext(
+      Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesContext,
+      ISchemaTree schemaTree,
+      MPPQueryContext context) {
+    Set<IDeviceID> deviceSet =
+        deviceToTimeseriesContext.keySet().stream()
+            .map(PartialPath::getIDeviceIDAsFullDevice)
+            .collect(Collectors.toSet());
+    // Use the same fetchDataPartitionByDevices method, but with devices from TimeSeries context
+    return fetchDataPartitionByDevices(deviceSet, schemaTree, context);
   }
 
   @Override
@@ -3260,7 +3944,8 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
                 analysis,
                 context,
                 countTimeSeriesStatement.getAuthorityScope(),
-                countTimeSeriesStatement.isCanSeeAuditDB());
+                countTimeSeriesStatement.isCanSeeAuditDB(),
+                false);
         if (!hasSchema) {
           analysis.setRespDatasetHeader(DatasetHeaderFactory.getCountTimeSeriesHeader());
           return analysis;
@@ -3395,6 +4080,53 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
     ISchemaTree schemaTree = schemaFetcher.fetchSchema(patternTree, true, context, false);
     Set<IDeviceID> deduplicatedDeviceIDs = new HashSet<>();
 
+    // Check for invalid series and alias series
+    // If all series are invalid, throw exception
+    if (schemaTree.allInvalidSeries()) {
+      throw new SemanticException("Cannot delete data: all target series are invalid");
+    }
+
+    // If there are invalid series, remove them from deletion list
+    // If there are alias series, replace them with physical paths
+    if (schemaTree.hasInvalidSeries() || schemaTree.hasAliasSeries()) {
+      updateSchemaTreeByAliasSeries(analysis, schemaTree, context, false);
+      List<MeasurementPath> processedPathList = new ArrayList<>();
+      for (MeasurementPath path : deleteDataStatement.getPathList()) {
+        // Check if this path is a pattern (has wildcard) or exact path
+        boolean isPattern = path.hasWildcard();
+
+        // Search for all matching paths
+        Pair<List<MeasurementPath>, Integer> searchResult = schemaTree.searchMeasurementPaths(path);
+
+        if (isPattern) {
+          // For pattern paths, process each matched path individually
+          for (MeasurementPath matchedPath : searchResult.left) {
+            MeasurementPath pathToAdd =
+                processMatchedPathForPattern(matchedPath, schemaTree, context);
+            if (pathToAdd != null) {
+              processedPathList.add(pathToAdd);
+            }
+          }
+        } else {
+          // For exact paths, should match only one path
+          MeasurementPath processedPath = processMatchedPathForExact(path, searchResult.left);
+          if (processedPath != null) {
+            processedPathList.add(processedPath);
+          }
+        }
+      }
+      deleteDataStatement.setPathList(processedPathList);
+      // Rebuild patternTree with processed paths
+      patternTree = new PathPatternTree();
+      deleteDataStatement.getPathList().forEach(patternTree::appendPathPattern);
+
+      // Update deduplicatedDeviceIDs based on processed paths
+      // Extract DeviceIDs from all processed paths (including replaced physical paths)
+      for (MeasurementPath processedPath : processedPathList) {
+        deduplicatedDeviceIDs.add(processedPath.getIDeviceID());
+      }
+    }
+
     if (schemaTree.hasLogicalViewMeasurement()) {
       updateSchemaTreeByViews(analysis, schemaTree, context, false);
 
@@ -3430,7 +4162,7 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
         }
       }
       deleteDataStatement.setPathList(new ArrayList<>(deletePatternSet));
-    } else {
+    } else if (deduplicatedDeviceIDs.isEmpty()) {
       for (PartialPath devicePattern : patternTree.getAllDevicePaths()) {
         schemaTree
             .getMatchedDevices(devicePattern)
@@ -3822,6 +4554,14 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
           RpcUtils.getStatus(
               TSStatusCode.UNSUPPORTED_OPERATION.getStatusCode(),
               "Can not create a view based on non-exist time series."));
+      return;
+    }
+    if (schemaOfNeedToCheck.getLeft().hasInvalidSeries()) {
+      analysis.setFinishQueryAfterAnalyze(true);
+      analysis.setFailStatus(
+          RpcUtils.getStatus(
+              TSStatusCode.UNSUPPORTED_OPERATION.getStatusCode(),
+              "Can not create a view based on invalid time series."));
       return;
     }
     Pair<List<PartialPath>, PartialPath> viewInSourceCheckResult =

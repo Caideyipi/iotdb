@@ -55,23 +55,27 @@ import java.util.stream.Stream;
 public class TimeseriesRegionScanNode extends RegionScanNode {
   // IDeviceID -> (MeasurementPath -> TimeseriesSchemaInfo)
   private Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesSchemaInfo;
-
-  public TimeseriesRegionScanNode(
-      PlanNodeId planNodeId, boolean outputCount, TRegionReplicaSet regionReplicaSet) {
-    super(planNodeId);
-    this.regionReplicaSet = regionReplicaSet;
-    this.outputCount = outputCount;
-  }
+  private boolean onlyInvalidSchema;
 
   public TimeseriesRegionScanNode(
       PlanNodeId planNodeId,
       Map<PartialPath, Map<PartialPath, List<TimeseriesContext>>> deviceToTimeseriesSchemaInfo,
       boolean outputCount,
-      TRegionReplicaSet regionReplicaSet) {
+      TRegionReplicaSet regionReplicaSet,
+      boolean onlyInvalidSchema) {
     super(planNodeId);
     this.deviceToTimeseriesSchemaInfo = deviceToTimeseriesSchemaInfo;
     this.regionReplicaSet = regionReplicaSet;
     this.outputCount = outputCount;
+    this.onlyInvalidSchema = onlyInvalidSchema;
+  }
+
+  public boolean isOnlyInvalidSchema() {
+    return onlyInvalidSchema;
+  }
+
+  public void setOnlyInvalidSchema(boolean onlyInvalidSchema) {
+    this.onlyInvalidSchema = onlyInvalidSchema;
   }
 
   public void setDeviceToTimeseriesSchemaInfo(
@@ -97,18 +101,28 @@ public class TimeseriesRegionScanNode extends RegionScanNode {
   @Override
   public PlanNode clone() {
     return new TimeseriesRegionScanNode(
-        getPlanNodeId(), getDeviceToTimeseriesSchemaInfo(), isOutputCount(), getRegionReplicaSet());
+        getPlanNodeId(),
+        new HashMap<>(getDeviceToTimeseriesSchemaInfo()),
+        isOutputCount(),
+        getRegionReplicaSet(),
+        onlyInvalidSchema);
   }
 
   @Override
   public List<String> getOutputColumnNames() {
-    return outputCount
-        ? ColumnHeaderConstant.countTimeSeriesColumnHeaders.stream()
-            .map(ColumnHeader::getColumnName)
-            .collect(Collectors.toList())
-        : ColumnHeaderConstant.showTimeSeriesColumnHeaders.stream()
-            .map(ColumnHeader::getColumnName)
-            .collect(Collectors.toList());
+    if (outputCount) {
+      return ColumnHeaderConstant.countTimeSeriesColumnHeaders.stream()
+          .map(ColumnHeader::getColumnName)
+          .collect(Collectors.toList());
+    }
+    if (onlyInvalidSchema) {
+      return ColumnHeaderConstant.showInvalidTimeSeriesColumnHeaders.stream()
+          .map(ColumnHeader::getColumnName)
+          .collect(Collectors.toList());
+    }
+    return ColumnHeaderConstant.showTimeSeriesColumnHeaders.stream()
+        .map(ColumnHeader::getColumnName)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -148,8 +162,13 @@ public class TimeseriesRegionScanNode extends RegionScanNode {
       deviceToTimeseriesSchemaInfo.put(devicePath, measurementToSchemaInfo);
     }
     boolean outputCount = ReadWriteIOUtils.readBool(buffer);
+    boolean onlyInvalidSchema = ReadWriteIOUtils.readBool(buffer);
     return new TimeseriesRegionScanNode(
-        PlanNodeId.deserialize(buffer), deviceToTimeseriesSchemaInfo, outputCount, null);
+        PlanNodeId.deserialize(buffer),
+        deviceToTimeseriesSchemaInfo,
+        outputCount,
+        null,
+        onlyInvalidSchema);
   }
 
   @TestOnly
@@ -228,12 +247,14 @@ public class TimeseriesRegionScanNode extends RegionScanNode {
     }
     TimeseriesRegionScanNode that = (TimeseriesRegionScanNode) o;
     return deviceToTimeseriesSchemaInfo.equals(that.deviceToTimeseriesSchemaInfo)
-        && outputCount == that.isOutputCount();
+        && outputCount == that.isOutputCount()
+        && onlyInvalidSchema == that.onlyInvalidSchema;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), deviceToTimeseriesSchemaInfo, outputCount);
+    return Objects.hash(
+        super.hashCode(), deviceToTimeseriesSchemaInfo, outputCount, onlyInvalidSchema);
   }
 
   @Override
@@ -261,6 +282,7 @@ public class TimeseriesRegionScanNode extends RegionScanNode {
       }
     }
     ReadWriteIOUtils.write(outputCount, byteBuffer);
+    ReadWriteIOUtils.write(onlyInvalidSchema, byteBuffer);
   }
 
   @Override
@@ -288,6 +310,7 @@ public class TimeseriesRegionScanNode extends RegionScanNode {
       }
     }
     ReadWriteIOUtils.write(outputCount, stream);
+    ReadWriteIOUtils.write(onlyInvalidSchema, stream);
   }
 
   private static PartialPath deserializePartialPath(String[] deviceNodes, ByteBuffer buffer) {

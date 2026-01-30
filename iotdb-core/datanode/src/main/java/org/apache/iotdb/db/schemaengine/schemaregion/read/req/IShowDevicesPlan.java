@@ -29,4 +29,11 @@ public interface IShowDevicesPlan extends IShowSchemaPlan {
   boolean usingSchemaTemplate();
 
   int getSchemaTemplateId();
+
+  /**
+   * Whether to skip devices that only contain invalid series (DISABLED=true). Default is true.
+   *
+   * @return true if devices with only invalid series should be skipped, false otherwise
+   */
+  boolean shouldSkipDevicesWithOnlyInvalidSeries();
 }

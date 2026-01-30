@@ -418,9 +418,13 @@ public class PathPatternTree {
     root.serialize(buffer);
   }
 
-  public ByteBuffer serialize() throws IOException {
+  public ByteBuffer serialize() {
     PublicBAOS baos = new PublicBAOS();
-    serialize(baos);
+    try {
+      serialize(baos);
+    } catch (IOException e) {
+      // ignored
+    }
     ByteBuffer serializedPatternTree = ByteBuffer.allocate(baos.size());
     serializedPatternTree.put(baos.getBuf(), 0, baos.size());
     serializedPatternTree.flip();

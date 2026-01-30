@@ -68,6 +68,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDele
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.plugin.CreatePipePluginPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.plugin.DropPipePluginPlan;
@@ -562,6 +563,9 @@ public abstract class ConfigPhysicalPlan implements IConsensusRequest {
           break;
         case PipeAlterEncodingCompressor:
           plan = new PipeAlterEncodingCompressorPlan();
+          break;
+        case PipeRenameTimeSeries:
+          plan = new PipeRenameTimeSeriesPlan();
           break;
         case PipeAlterTimeSeries:
           plan = new PipeAlterTimeSeriesPlan();

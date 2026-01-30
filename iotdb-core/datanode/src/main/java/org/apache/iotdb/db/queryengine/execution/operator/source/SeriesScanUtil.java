@@ -164,7 +164,6 @@ public class SeriesScanUtil implements Accountable {
     this.seriesPath = seriesPath;
     this.deviceID = seriesPath.getDeviceId();
     this.dataType = seriesPath.getSeriesType();
-
     this.scanOptions = scanOptions;
     this.paginationController = scanOptions.getPaginationController();
 
@@ -854,7 +853,6 @@ public class SeriesScanUtil implements Accountable {
   }
 
   public TsBlock nextPage() throws IOException {
-
     if (hasCachedNextOverlappedPage) {
       hasCachedNextOverlappedPage = false;
       TsBlock res =

@@ -30,6 +30,7 @@ import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.IDeviceSchem
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.INodeSchemaInfo;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.ITimeSeriesSchemaInfo;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +48,7 @@ public class SchemaSourceFactory {
       Map<Integer, Template> templateMap,
       PathPatternTree scope) {
     return new TimeSeriesSchemaSource(
-        pathPattern, isPrefixMatch, 0, 0, schemaFilter, templateMap, false, scope);
+        pathPattern, isPrefixMatch, 0, 0, schemaFilter, templateMap, false, scope, true);
   }
 
   // show time series
@@ -60,13 +61,13 @@ public class SchemaSourceFactory {
       Map<Integer, Template> templateMap,
       PathPatternTree scope) {
     return new TimeSeriesSchemaSource(
-        pathPattern, isPrefixMatch, limit, offset, schemaFilter, templateMap, true, scope);
+        pathPattern, isPrefixMatch, limit, offset, schemaFilter, templateMap, true, scope, true);
   }
 
   // count device
   public static ISchemaSource<IDeviceSchemaInfo> getDeviceSchemaSource(
       PartialPath pathPattern, boolean isPrefixPath, PathPatternTree scope) {
-    return new DeviceSchemaSource(pathPattern, isPrefixPath, 0, 0, false, null, scope);
+    return new DeviceSchemaSource(pathPattern, isPrefixPath, 0, 0, false, null, scope, true);
   }
 
   // show device
@@ -79,13 +80,12 @@ public class SchemaSourceFactory {
       SchemaFilter schemaFilter,
       PathPatternTree scope) {
     return new DeviceSchemaSource(
-        pathPattern, isPrefixPath, limit, offset, hasSgCol, schemaFilter, scope);
+        pathPattern, isPrefixPath, limit, offset, hasSgCol, schemaFilter, scope, true);
   }
 
-  // show nodes
   public static ISchemaSource<INodeSchemaInfo> getNodeSchemaSource(
-      PartialPath pathPattern, int level, PathPatternTree scope) {
-    return new NodeSchemaSource(pathPattern, level, scope);
+      PartialPath pathPattern, int level, PathPatternTree scope, boolean skipInvalidSchema) {
+    return new NodeSchemaSource(pathPattern, level, scope, skipInvalidSchema);
   }
 
   public static ISchemaSource<IDeviceSchemaInfo> getPathsUsingTemplateSource(
@@ -126,5 +126,26 @@ public class SchemaSourceFactory {
         columnSchemaList,
         filter,
         needAligned);
+  }
+
+  // show invalid time series
+  public static ISchemaSource<ITimeSeriesSchemaInfo> getInvalidTimeSeriesSchemaScanSource(
+      PartialPath pathPattern,
+      boolean isPrefixMatch,
+      long limit,
+      long offset,
+      PathPatternTree scope) {
+    return new TimeSeriesSchemaSource(
+        pathPattern,
+        isPrefixMatch,
+        limit,
+        offset,
+        null, // schemaFilter
+        Collections.emptyMap(), // templateMap
+        true, // needViewDetail
+        scope,
+        false, // skipInvalidSchema=false to get all series (including invalid)
+        true, // onlyInvalidSchema=true to filter only invalid
+        true); // showInvalidTimeSeries=true to use invalid column headers
   }
 }

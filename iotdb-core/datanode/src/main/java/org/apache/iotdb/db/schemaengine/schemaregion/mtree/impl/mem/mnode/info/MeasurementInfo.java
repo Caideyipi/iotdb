@@ -18,11 +18,16 @@
  */
 package org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.mnode.info;
 
+import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.schema.node.info.IMeasurementInfo;
 import org.apache.iotdb.commons.schema.node.role.IMeasurementMNode;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 
 import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.write.schema.IMeasurementSchema;
+import org.apache.tsfile.write.schema.MeasurementSchema;
+
+import java.util.Map;
 
 public class MeasurementInfo implements IMeasurementInfo {
 
@@ -55,6 +60,12 @@ public class MeasurementInfo implements IMeasurementInfo {
     newMNode.setAlias(alias);
     newMNode.setOffset(offset);
     newMNode.setPreDeleted(preDeleted);
+    // Copy alias series properties
+    newMNode.setIsRenamed(this.isRenamed());
+    newMNode.setIsRenaming(this.isRenaming());
+    newMNode.setInvalid(this.isInvalid());
+    newMNode.setOriginalPath(this.getOriginalPath());
+    newMNode.setAliasPath(this.getAliasPath());
   }
 
   @Override
@@ -100,6 +111,82 @@ public class MeasurementInfo implements IMeasurementInfo {
   @Override
   public void setPreDeleted(boolean preDeleted) {
     this.preDeleted = preDeleted;
+  }
+
+  /** Get props from MeasurementSchema. Returns empty map if schema is not MeasurementSchema. */
+  private Map<String, String> getProps() {
+    if (schema instanceof MeasurementSchema) {
+      Map<String, String> props = ((MeasurementSchema) schema).getProps();
+      return props != null ? props : new java.util.HashMap<>();
+    }
+    return new java.util.HashMap<>();
+  }
+
+  /**
+   * Get or create props map from MeasurementSchema.
+   *
+   * @throws IllegalStateException if schema is not MeasurementSchema
+   */
+  private Map<String, String> getOrCreateProps() {
+    if (schema instanceof MeasurementSchema) {
+      Map<String, String> props = ((MeasurementSchema) schema).getProps();
+      if (props == null) {
+        props = new java.util.HashMap<>();
+        ((MeasurementSchema) schema).setProps(props);
+      }
+      return props;
+    }
+    throw new IllegalStateException("Schema is not MeasurementSchema, cannot access props");
+  }
+
+  @Override
+  public boolean isRenamed() {
+    return MeasurementPropsUtils.isRenamed(getProps());
+  }
+
+  @Override
+  public void setIsRenamed(boolean isRenamed) {
+    MeasurementPropsUtils.setIsRenamed(getOrCreateProps(), isRenamed);
+  }
+
+  @Override
+  public boolean isRenaming() {
+    return MeasurementPropsUtils.isRenaming(getProps());
+  }
+
+  @Override
+  public void setIsRenaming(boolean isRenaming) {
+    MeasurementPropsUtils.setIsRenaming(getOrCreateProps(), isRenaming);
+  }
+
+  @Override
+  public boolean isInvalid() {
+    return MeasurementPropsUtils.isInvalid(getProps());
+  }
+
+  @Override
+  public void setInvalid(boolean isDisabled) {
+    MeasurementPropsUtils.setInvalid(getOrCreateProps(), isDisabled);
+  }
+
+  @Override
+  public PartialPath getOriginalPath() {
+    return MeasurementPropsUtils.getOriginalPath(getProps());
+  }
+
+  @Override
+  public void setOriginalPath(PartialPath originalPath) {
+    MeasurementPropsUtils.setOriginalPath(getOrCreateProps(), originalPath);
+  }
+
+  @Override
+  public PartialPath getAliasPath() {
+    return MeasurementPropsUtils.getAliasPath(getProps());
+  }
+
+  @Override
+  public void setAliasPath(PartialPath aliasPath) {
+    MeasurementPropsUtils.setAliasPath(getOrCreateProps(), aliasPath);
   }
 
   /**

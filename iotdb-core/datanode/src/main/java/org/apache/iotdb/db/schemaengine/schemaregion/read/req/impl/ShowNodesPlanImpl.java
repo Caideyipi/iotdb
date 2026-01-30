@@ -27,15 +27,31 @@ import org.apache.iotdb.db.schemaengine.schemaregion.read.req.IShowNodesPlan;
 public class ShowNodesPlanImpl extends AbstractShowSchemaPlanImpl implements IShowNodesPlan {
 
   private final int level;
+  private final boolean skipInvalidSchema;
 
   public ShowNodesPlanImpl(
       PartialPath pathPattern, int level, boolean isPrefixMatch, PathPatternTree scope) {
+    this(pathPattern, level, isPrefixMatch, true, scope);
+  }
+
+  public ShowNodesPlanImpl(
+      PartialPath pathPattern,
+      int level,
+      boolean isPrefixMatch,
+      boolean skipInvalidSchema,
+      PathPatternTree scope) {
     super(pathPattern, 0, 0, isPrefixMatch, scope);
     this.level = level;
+    this.skipInvalidSchema = skipInvalidSchema;
   }
 
   @Override
   public int getLevel() {
     return level;
+  }
+
+  @Override
+  public boolean shouldSkipInvalidSchema() {
+    return skipInvalidSchema;
   }
 }

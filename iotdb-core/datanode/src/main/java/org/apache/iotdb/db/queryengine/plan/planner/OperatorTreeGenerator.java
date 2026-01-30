@@ -28,6 +28,7 @@ import org.apache.iotdb.commons.path.IFullPath;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.NonAlignedFullPath;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
 import org.apache.iotdb.db.exception.query.QueryProcessException;
 import org.apache.iotdb.db.queryengine.common.DeviceContext;
@@ -356,7 +357,6 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
   public Operator visitSeriesScan(SeriesScanNode node, LocalExecutionPlanContext context) {
     NonAlignedFullPath seriesPath =
         (NonAlignedFullPath) IFullPath.convertToIFullPath(node.getSeriesPath());
-
     SeriesScanOptions.Builder scanOptionsBuilder = getSeriesScanOptionsBuilder(context);
     scanOptionsBuilder.withAllSensors(
         context.getAllSensors(seriesPath.getDeviceId(), seriesPath.getMeasurement()));
@@ -903,17 +903,30 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
                 context.getNextOperatorId(),
                 node.getPlanNodeId(),
                 SchemaQueryScanOperator.class.getSimpleName());
-    return new SchemaQueryScanOperator<>(
-        node.getPlanNodeId(),
-        operatorContext,
-        SchemaSourceFactory.getTimeSeriesSchemaScanSource(
-            node.getPath(),
-            node.isPrefixPath(),
-            node.getLimit(),
-            node.getOffset(),
-            node.getSchemaFilter(),
-            node.getTemplateMap(),
-            node.getScope()));
+
+    if (node.isShowInvalidTimeSeries()) {
+      return new SchemaQueryScanOperator<>(
+          node.getPlanNodeId(),
+          operatorContext,
+          SchemaSourceFactory.getInvalidTimeSeriesSchemaScanSource(
+              node.getPath(),
+              node.isPrefixPath(),
+              node.getLimit(),
+              node.getOffset(),
+              node.getScope()));
+    } else {
+      return new SchemaQueryScanOperator<>(
+          node.getPlanNodeId(),
+          operatorContext,
+          SchemaSourceFactory.getTimeSeriesSchemaScanSource(
+              node.getPath(),
+              node.isPrefixPath(),
+              node.getLimit(),
+              node.getOffset(),
+              node.getSchemaFilter(),
+              node.getTemplateMap(),
+              node.getScope()));
+    }
   }
 
   @Override
@@ -1043,7 +1056,7 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
         node.getPlanNodeId(),
         operatorContext,
         SchemaSourceFactory.getNodeSchemaSource(
-            node.getPrefixPath(), node.getLevel(), node.getScope()));
+            node.getPrefixPath(), node.getLevel(), node.getScope(), true));
   }
 
   @Override
@@ -3738,27 +3751,59 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
                 ActiveDeviceRegionScanOperator.class.getSimpleName());
     Filter filter = context.getGlobalTimeFilter();
 
-    Map<IDeviceID, DeviceContext> deviceIDToContext = new HashMap<>();
-    Map<IDeviceID, Long> ttlCache = new HashMap<>();
+    final Map<IDeviceID, DeviceContext> deviceIdToContext = new HashMap<>();
+    final Map<IDeviceID, Long> ttlCache = new HashMap<>();
+    // Get flags from node
+    final boolean hasInvalidSeries = node.hasInvalidSeries();
+    final boolean hasAliasSeries = node.hasAliasSeries();
+    final boolean useTimeSeriesLevelScan = hasInvalidSeries || hasAliasSeries;
     for (Map.Entry<PartialPath, DeviceContext> entry :
         node.getDevicePathToContextMap().entrySet()) {
       PartialPath devicePath = entry.getKey();
       IDeviceID deviceID = devicePath.getIDeviceID();
-      deviceIDToContext.put(deviceID, entry.getValue());
+      DeviceContext deviceContext = entry.getValue();
+      deviceIdToContext.put(deviceID, deviceContext);
       ttlCache.put(deviceID, DataNodeTTLCache.getInstance().getTTLForTree(deviceID));
     }
+
+    final DataDriverContext dataDriverContext = (DataDriverContext) context.getDriverContext();
+    final Map<IDeviceID, Map<String, TimeseriesContext>> timeSeriesToSchemasInfo = new HashMap<>();
+    if (node.getDeviceToTimeseriesSchemaInfo() != null) {
+      for (Map.Entry<PartialPath, Map<PartialPath, List<TimeseriesContext>>> entryMap :
+          node.getDeviceToTimeseriesSchemaInfo().entrySet()) {
+        PartialPath devicePath = entryMap.getKey();
+        IDeviceID deviceID = devicePath.getIDeviceID();
+        Map<String, TimeseriesContext> timeseriesSchemaInfoMap =
+            getTimeseriesSchemaInfoMap(entryMap, dataDriverContext);
+        timeSeriesToSchemasInfo.put(deviceID, timeseriesSchemaInfoMap);
+        ttlCache.put(deviceID, DataNodeTTLCache.getInstance().getTTLForTree(deviceID));
+        for (Map.Entry<String, TimeseriesContext> entry : timeseriesSchemaInfoMap.entrySet()) {
+          if (MeasurementPropsUtils.isInvalid(entry.getValue().getProps())) {
+            final PartialPath aliasPath =
+                MeasurementPropsUtils.getAliasPath(entry.getValue().getProps());
+            if (aliasPath != null) {
+              final IDeviceID aliasDeviceID = aliasPath.getIDeviceID();
+              ttlCache.put(
+                  aliasDeviceID, DataNodeTTLCache.getInstance().getTTLForTree(aliasDeviceID));
+            }
+          }
+        }
+      }
+    }
+
     ActiveDeviceRegionScanOperator regionScanOperator =
         new ActiveDeviceRegionScanOperator(
             operatorContext,
             node.getPlanNodeId(),
-            deviceIDToContext,
+            deviceIdToContext,
             filter,
             ttlCache,
-            node.isOutputCount());
+            node.isOutputCount(),
+            useTimeSeriesLevelScan,
+            timeSeriesToSchemasInfo);
 
-    DataDriverContext dataDriverContext = (DataDriverContext) context.getDriverContext();
     dataDriverContext.addSourceOperator(regionScanOperator);
-    dataDriverContext.setDeviceIDToContext(deviceIDToContext);
+    dataDriverContext.setDeviceIDToContext(deviceIdToContext);
     dataDriverContext.setQueryDataSourceType(QueryDataSourceType.DEVICE_REGION_SCAN);
 
     return regionScanOperator;
@@ -3787,6 +3832,17 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
           getTimeseriesSchemaInfoMap(entryMap, dataDriverContext);
       timeseriesToSchemaInfo.put(deviceID, timeseriesSchemaInfoMap);
       ttlCache.put(deviceID, DataNodeTTLCache.getInstance().getTTLForTree(deviceID));
+      for (Map.Entry<String, TimeseriesContext> entry : timeseriesSchemaInfoMap.entrySet()) {
+        if (MeasurementPropsUtils.isInvalid(entry.getValue().getProps())) {
+          final PartialPath aliasPath =
+              MeasurementPropsUtils.getAliasPath(entry.getValue().getProps());
+          if (aliasPath != null) {
+            final IDeviceID aliasDeviceID = aliasPath.getIDeviceID();
+            ttlCache.put(
+                aliasDeviceID, DataNodeTTLCache.getInstance().getTTLForTree(aliasDeviceID));
+          }
+        }
+      }
     }
     ActiveTimeSeriesRegionScanOperator regionScanOperator =
         new ActiveTimeSeriesRegionScanOperator(
@@ -3795,7 +3851,8 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
             timeseriesToSchemaInfo,
             filter,
             ttlCache,
-            node.isOutputCount());
+            node.isOutputCount(),
+            node.isOnlyInvalidSchema());
 
     dataDriverContext.addSourceOperator(regionScanOperator);
     dataDriverContext.setQueryDataSourceType(QueryDataSourceType.TIME_SERIES_REGION_SCAN);

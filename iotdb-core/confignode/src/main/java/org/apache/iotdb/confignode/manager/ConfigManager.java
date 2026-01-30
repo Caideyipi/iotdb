@@ -222,6 +222,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TPipeConfigTransferResp;
 import org.apache.iotdb.confignode.rpc.thrift.TReconstructRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionRouteMapResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRemoveRegionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TRenameTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaNodeManagementResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaPartitionTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSetDataNodeStatusReq;
@@ -2258,6 +2259,21 @@ public class ConfigManager implements IManager {
           req.isIfExists(),
           req.isIsGeneratedByPipe(),
           req.isMayAlterAudit());
+    } else {
+      return status;
+    }
+  }
+
+  @Override
+  public TSStatus renameTimeSeries(TRenameTimeSeriesReq req) {
+    TSStatus status = confirmLeader();
+    if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+      String queryId = req.getQueryId();
+      PartialPath oldPath =
+          (PartialPath) PathDeserializeUtil.deserialize(ByteBuffer.wrap(req.getOldPath()));
+      PartialPath newPath =
+          (PartialPath) PathDeserializeUtil.deserialize(ByteBuffer.wrap(req.getNewPath()));
+      return procedureManager.renameTimeSeries(queryId, oldPath, newPath, false);
     } else {
       return status;
     }

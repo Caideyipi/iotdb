@@ -309,6 +309,7 @@ public enum ConfigPhysicalPlanType {
   PipeDeleteDevices((short) 1707),
   PipeAlterEncodingCompressor((short) 1708),
   PipeAlterTimeSeries((short) 1709),
+  PipeRenameTimeSeries((short) 1710),
 
   /** Subscription */
   CreateTopic((short) 1800),

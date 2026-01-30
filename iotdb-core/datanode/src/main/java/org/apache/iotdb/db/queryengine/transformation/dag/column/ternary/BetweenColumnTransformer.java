@@ -95,7 +95,6 @@ public class BetweenColumnTransformer extends CompareTernaryColumnTransformer {
                       <= 0))
               ^ isNotBetween;
     } else if (isBool(firstColumnTransformer.getType())) {
-
       flag =
           ((Boolean.compare(
                           firstColumnTransformer.getType().getBoolean(firstColumn, i),

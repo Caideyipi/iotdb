@@ -32,6 +32,7 @@ public class ShowDevicesPlanImpl extends AbstractShowSchemaPlanImpl implements I
   // templateId > -1 means the device should use template with given templateId
   private final int schemaTemplateId;
   private final SchemaFilter schemaFilter;
+  private final boolean skipDevicesWithOnlyInvalidSeries;
 
   public ShowDevicesPlanImpl(
       PartialPath path,
@@ -41,9 +42,22 @@ public class ShowDevicesPlanImpl extends AbstractShowSchemaPlanImpl implements I
       int schemaTemplateId,
       SchemaFilter schemaFilter,
       PathPatternTree scope) {
+    this(path, limit, offset, isPrefixMatch, schemaTemplateId, schemaFilter, true, scope);
+  }
+
+  public ShowDevicesPlanImpl(
+      PartialPath path,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      int schemaTemplateId,
+      SchemaFilter schemaFilter,
+      boolean skipDevicesWithOnlyInvalidSeries,
+      PathPatternTree scope) {
     super(path, limit, offset, isPrefixMatch, scope);
     this.schemaTemplateId = schemaTemplateId;
     this.schemaFilter = schemaFilter;
+    this.skipDevicesWithOnlyInvalidSeries = skipDevicesWithOnlyInvalidSeries;
   }
 
   @Override
@@ -62,16 +76,22 @@ public class ShowDevicesPlanImpl extends AbstractShowSchemaPlanImpl implements I
   }
 
   @Override
+  public boolean shouldSkipDevicesWithOnlyInvalidSeries() {
+    return skipDevicesWithOnlyInvalidSeries;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     ShowDevicesPlanImpl that = (ShowDevicesPlanImpl) o;
-    return schemaTemplateId == that.schemaTemplateId;
+    return schemaTemplateId == that.schemaTemplateId
+        && skipDevicesWithOnlyInvalidSeries == that.skipDevicesWithOnlyInvalidSeries;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), schemaTemplateId);
+    return Objects.hash(super.hashCode(), schemaTemplateId, skipDevicesWithOnlyInvalidSeries);
   }
 }

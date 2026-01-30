@@ -29,6 +29,13 @@ import org.apache.iotdb.commons.schema.template.Template;
 import org.apache.iotdb.db.exception.metadata.SchemaQuotaExceededException;
 import org.apache.iotdb.db.queryengine.common.schematree.ClusterSchemaTree;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.AlterEncodingCompressorNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateAliasSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DropAliasSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.LockAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesEnabledNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesInvalidNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UnlockForAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UpdatePhysicalAliasRefNode;
 import org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.cache.TableId;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.node.schema.ConstructTableDevicesBlackListNode;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.node.schema.CreateOrUpdateTableDeviceNode;
@@ -184,9 +191,25 @@ public interface ISchemaRegion {
    * @return {@link Pair}{@literal <}preDeletedNum, isAllLogicalView{@literal >}. If there are
    *     intersections of patterns in the patternTree, there may be more than are actually
    *     pre-deleted.
+   * @deprecated Use {@link #constructSchemaBlackListWithAliasInfo(PathPatternTree)} instead
    */
+  @Deprecated
   Pair<Long, Boolean> constructSchemaBlackList(final PathPatternTree patternTree)
       throws MetadataException;
+
+  /**
+   * Construct schema black list via setting matched time series to preDeleted, and collect disabled
+   * series information.
+   *
+   * @param patternTree the patterns to construct black list
+   * @throws MetadataException If write to mLog failed
+   * @return {@link ConstructSchemaBlackListResult} containing pre-deleted series count, whether all
+   *     are logical views, and disabled series information list. Disabled series don't need
+   *     pre-delete because they are already disabled.
+   */
+  org.apache.iotdb.db.schemaengine.schemaregion.write.resp.ConstructSchemaBlackListResult
+      constructSchemaBlackListWithAliasInfo(final PathPatternTree patternTree)
+          throws MetadataException;
 
   /**
    * Rollback schema black list via setting matched timeseries to not pre deleted.
@@ -213,6 +236,21 @@ public interface ISchemaRegion {
   void deleteTimeseriesInBlackList(final PathPatternTree patternTree) throws MetadataException;
 
   void alterEncodingCompressor(final AlterEncodingCompressorNode node) throws MetadataException;
+
+  // Alias Series Operations
+  void validateAndPrepareForAliasSeries(final LockAliasNode node) throws MetadataException;
+
+  void createAliasSeries(final CreateAliasSeriesNode node) throws MetadataException;
+
+  void markSeriesInvalid(final MarkSeriesInvalidNode node) throws MetadataException;
+
+  void updatePhysicalAliasRef(final UpdatePhysicalAliasRefNode node) throws MetadataException;
+
+  void dropAliasSeries(final DropAliasSeriesNode node) throws MetadataException;
+
+  void markSeriesEnabled(final MarkSeriesEnabledNode node) throws MetadataException;
+
+  void unlockForAlias(final UnlockForAliasNode node) throws MetadataException;
 
   // endregion
 

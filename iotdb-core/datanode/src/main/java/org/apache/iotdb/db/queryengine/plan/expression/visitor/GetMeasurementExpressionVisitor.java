@@ -32,6 +32,11 @@ public class GetMeasurementExpressionVisitor extends ReconstructVisitor<Analysis
   public Expression process(Expression expression, Analysis analysis) {
     if (expression.getViewPath() != null) {
       PartialPath viewPath = expression.getViewPath();
+      // Extract only the measurement name, without preserving viewPath
+      // This ensures that expressions with the same measurement name (even from different
+      // alias series) are grouped together in ALIGN BY DEVICE queries.
+      // The viewPath information is preserved in the original expression and will be used
+      // in analyzeAlias for display purposes.
       return new TimeSeriesOperand(
           new PartialPath(viewPath.getMeasurement(), false),
           ExpressionTypeAnalyzer.analyzeExpression(analysis, expression));

@@ -136,6 +136,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TPipeConfigTransferResp;
 import org.apache.iotdb.confignode.rpc.thrift.TReconstructRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionRouteMapResp;
 import org.apache.iotdb.confignode.rpc.thrift.TRemoveRegionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TRenameTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaNodeManagementResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSchemaPartitionTableResp;
 import org.apache.iotdb.confignode.rpc.thrift.TSetDataNodeStatusReq;
@@ -712,6 +713,9 @@ public interface IManager {
   TSStatus alterSchemaTemplate(TAlterSchemaTemplateReq req);
 
   TSStatus alterEncodingCompressor(TAlterEncodingCompressorReq req);
+
+  /** Rename timeseries. */
+  TSStatus renameTimeSeries(TRenameTimeSeriesReq req);
 
   /** Delete timeseries. */
   TSStatus deleteTimeSeries(TDeleteTimeSeriesReq req);

@@ -684,6 +684,7 @@ public class ConfigPlanExecutor {
       case PipeEnriched:
         return executeNonQueryPlan(((PipeEnrichedPlan) physicalPlan).getInnerPlan());
       case PipeDeleteTimeSeries:
+      case PipeRenameTimeSeries:
       case PipeDeleteLogicalView:
       case PipeDeactivateTemplate:
       case PipeDeleteDevices:

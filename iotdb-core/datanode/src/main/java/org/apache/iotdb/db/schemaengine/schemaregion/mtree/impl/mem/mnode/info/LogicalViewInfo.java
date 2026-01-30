@@ -169,5 +169,61 @@ public class LogicalViewInfo implements IMeasurementInfo {
             "Type of newMNode is not LogicalViewMNode! It's "
                 + newMNode.getMNodeType().toString()));
   }
+
+  // Alias series properties - Logical views don't support alias series
+  @Override
+  public boolean isRenamed() {
+    return false;
+  }
+
+  @Override
+  public void setIsRenamed(boolean isRenamed) {
+    // Logical views don't support alias series
+    throw new UnsupportedOperationException("Logical views don't support alias series");
+  }
+
+  @Override
+  public boolean isRenaming() {
+    return false;
+  }
+
+  @Override
+  public void setIsRenaming(boolean isRenaming) {
+    // Logical views don't support alias series
+    throw new UnsupportedOperationException("Logical views don't support alias series");
+  }
+
+  @Override
+  public boolean isInvalid() {
+    return false;
+  }
+
+  @Override
+  public void setInvalid(boolean isInvalid) {
+    // Logical views don't support alias series
+    throw new UnsupportedOperationException("Logical views don't support alias series");
+  }
+
+  @Override
+  public PartialPath getOriginalPath() {
+    return null;
+  }
+
+  @Override
+  public void setOriginalPath(PartialPath originalPath) {
+    // Logical views don't support alias series
+    throw new UnsupportedOperationException("Logical views don't support alias series");
+  }
+
+  @Override
+  public PartialPath getAliasPath() {
+    return null;
+  }
+
+  @Override
+  public void setAliasPath(PartialPath aliasPath) {
+    // Logical views don't support alias series
+    throw new UnsupportedOperationException("Logical views don't support alias series");
+  }
   // endregion
 }

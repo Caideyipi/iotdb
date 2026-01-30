@@ -115,7 +115,7 @@ public class SchemaTreeMeasurementVisitor extends SchemaTreeVisitor<MeasurementP
   }
 
   @Override
-  protected boolean acceptFullMatchedNode(SchemaNode node) {
+  protected boolean acceptFullyMatchedNode(SchemaNode node) {
     return node.isMeasurement();
   }
 

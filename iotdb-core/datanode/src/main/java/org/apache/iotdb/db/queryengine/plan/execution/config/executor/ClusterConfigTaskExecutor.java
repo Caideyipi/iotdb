@@ -150,6 +150,7 @@ import org.apache.iotdb.confignode.rpc.thrift.TPipeConfigTransferResp;
 import org.apache.iotdb.confignode.rpc.thrift.TReconstructRegionReq;
 import org.apache.iotdb.confignode.rpc.thrift.TRegionInfo;
 import org.apache.iotdb.confignode.rpc.thrift.TRemoveRegionReq;
+import org.apache.iotdb.confignode.rpc.thrift.TRenameTimeSeriesReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowAINodesResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowActivationResp;
 import org.apache.iotdb.confignode.rpc.thrift.TShowCQResp;
@@ -281,6 +282,7 @@ import org.apache.iotdb.db.queryengine.plan.statement.metadata.GetTimeSlotListSt
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveAINodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveConfigNodeStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.RemoveDataNodeStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.metadata.RenameTimeSeriesStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.SetTTLStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowClusterStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.metadata.ShowDatabaseStatement;
@@ -539,7 +541,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       final TShowDatabaseResp resp = client.showDatabase(req);
       // build TSBlock
       showDatabaseStatement.buildTSBlock(resp.getDatabaseInfoMap(), future);
-    } catch (final IOException | ClientManagerException | TException e) {
+    } catch (final ClientManagerException | TException e) {
       future.setException(e);
     }
     return future;
@@ -562,7 +564,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       databaseNum = resp.getCount();
       // build TSBlock
       CountDatabaseTask.buildTSBlock(databaseNum, future);
-    } catch (IOException | ClientManagerException | TException e) {
+    } catch (ClientManagerException | TException e) {
       future.setException(e);
     }
     return future;
@@ -3175,6 +3177,78 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
   }
 
   @Override
+  public SettableFuture<ConfigTaskResult> renameTimeSeries(
+      final RenameTimeSeriesStatement renameTimeSeriesStatement, final MPPQueryContext context) {
+    final SettableFuture<ConfigTaskResult> future = SettableFuture.create();
+
+    // Serialize the old path and new path
+    final ByteArrayOutputStream oldPathStream = new ByteArrayOutputStream();
+    final ByteArrayOutputStream newPathStream = new ByteArrayOutputStream();
+    try {
+      // Write old path
+      renameTimeSeriesStatement.getPath().serialize(oldPathStream);
+      // Write new path
+      renameTimeSeriesStatement.getNewPath().serialize(newPathStream);
+    } catch (final IOException e) {
+      future.setException(new RuntimeException("Failed to serialize paths", e));
+      return future;
+    }
+
+    final TRenameTimeSeriesReq req =
+        new TRenameTimeSeriesReq(
+            context.getQueryId().getId(),
+            ByteBuffer.wrap(oldPathStream.toByteArray()),
+            ByteBuffer.wrap(newPathStream.toByteArray()));
+
+    try (final ConfigNodeClient client =
+        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      TSStatus tsStatus;
+      do {
+        tsStatus = executeRenameTimeSeriesRequest(client, req);
+        // keep waiting until task ends
+      } while (TSStatusCode.OVERLAP_WITH_EXISTING_TASK.getStatusCode() == tsStatus.getCode());
+
+      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != tsStatus.getCode()) {
+        if (tsStatus.getCode() == TSStatusCode.MULTIPLE_ERROR.getStatusCode()) {
+          future.setException(
+              new BatchProcessException(tsStatus.subStatus.toArray(new TSStatus[0])));
+        } else {
+          future.setException(new IoTDBException(tsStatus));
+        }
+      } else {
+        future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
+      }
+    } catch (final ClientManagerException | TException e) {
+      future.setException(e);
+    }
+    return future;
+  }
+
+  /**
+   * Execute rename time series request with retry logic for timeout handling.
+   *
+   * @param client the ConfigNodeClient to use
+   * @param req the TRenameTimeSeriesReq request
+   * @return TSStatus the status of the operation
+   * @throws TTransportException if transport error occurs (non-timeout)
+   * @throws TException if other thrift exception occurs
+   */
+  private TSStatus executeRenameTimeSeriesRequest(
+      final ConfigNodeClient client, final TRenameTimeSeriesReq req) throws TException {
+    try {
+      return client.renameTimeSeries(req);
+    } catch (final TTransportException e) {
+      if (e.getType() == TTransportException.TIMED_OUT
+          || e.getCause() instanceof SocketTimeoutException) {
+        // time out mainly caused by slow execution, wait until
+        return RpcUtils.getStatus(TSStatusCode.OVERLAP_WITH_EXISTING_TASK);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  @Override
   public TSStatus alterLogicalViewByPipe(
       final AlterLogicalViewNode alterLogicalViewNode, final boolean shouldMarkAsPipeRequest) {
     final Map<PartialPath, ViewExpression> viewPathToSourceMap =
@@ -4149,7 +4223,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
       final TShowDatabaseResp resp = client.showDatabase(req);
       // build TSBlock
       ShowDBTask.buildTSBlock(resp.getDatabaseInfoMap(), future, showDB.isDetails(), canSeenDB);
-    } catch (final IOException | ClientManagerException | TException e) {
+    } catch (final ClientManagerException | TException e) {
       future.setException(e);
     }
     return future;
@@ -4192,7 +4266,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
                 TSStatusCode.DATABASE_NOT_EXIST.getStatusCode()));
         unsetDatabaseIfNotExist(useDB.getDatabaseId().getValue(), clientSession);
       }
-    } catch (final IOException | ClientManagerException | TException e) {
+    } catch (final ClientManagerException | TException e) {
       future.setException(e);
     }
     return future;

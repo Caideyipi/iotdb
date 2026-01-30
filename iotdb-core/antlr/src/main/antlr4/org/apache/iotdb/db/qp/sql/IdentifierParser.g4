@@ -133,6 +133,7 @@ keyWords
     | INFO
     | INSERT
     | INTO
+    | INVALID
     | IS
     | KILL
     | LABEL

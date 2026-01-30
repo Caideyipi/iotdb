@@ -74,7 +74,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 
-import java.io.IOException;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
@@ -301,7 +300,7 @@ public class DNAuditLogger extends AbstractAuditLogger {
               return;
             }
           }
-        } catch (ClientManagerException | TException | IOException e) {
+        } catch (ClientManagerException | TException e) {
           logger.warn(
               "[AUDIT] Failed to show database before creating database {} for audit log",
               SystemConstant.AUDIT_DATABASE);

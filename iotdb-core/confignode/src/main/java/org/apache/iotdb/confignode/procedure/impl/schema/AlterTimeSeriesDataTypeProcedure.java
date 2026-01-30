@@ -33,6 +33,7 @@ import org.apache.iotdb.confignode.client.async.handlers.DataNodeAsyncRequestCon
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeAlterTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
 import org.apache.iotdb.confignode.manager.ClusterManager;
+import org.apache.iotdb.confignode.procedure.MetadataProcedureConflictCheckable;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
 import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.confignode.procedure.impl.StateMachineProcedure;
@@ -63,7 +64,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class AlterTimeSeriesDataTypeProcedure
-    extends StateMachineProcedure<ConfigNodeProcedureEnv, AlterTimeSeriesDataTypeState> {
+    extends StateMachineProcedure<ConfigNodeProcedureEnv, AlterTimeSeriesDataTypeState>
+    implements MetadataProcedureConflictCheckable {
 
   private static final Logger LOGGER =
       LoggerFactory.getLogger(AlterTimeSeriesDataTypeProcedure.class);
@@ -316,6 +318,18 @@ public class AlterTimeSeriesDataTypeProcedure
 
   public MeasurementPath getmeasurementPath() {
     return measurementPath;
+  }
+
+  @Override
+  public void applyPathPatterns(PathPatternTree patternTree) {
+    if (measurementPath != null) {
+      patternTree.appendPathPattern(measurementPath);
+    }
+  }
+
+  @Override
+  public boolean shouldCheckConflict() {
+    return !isFinished();
   }
 
   public void setMeasurementPath(final MeasurementPath measurementPath) {

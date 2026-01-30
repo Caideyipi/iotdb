@@ -26,6 +26,10 @@ import java.util.List;
 
 public class BrokenViewException extends MetadataException {
 
+  public BrokenViewException(String disabledPath, String renamedPath) {
+    super(String.format("The source path [%s] is renamed to [%s]", disabledPath, renamedPath));
+  }
+
   public BrokenViewException(String sourcePath) {
     super(String.format("The source path [%s] is deleted", sourcePath));
   }

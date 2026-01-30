@@ -32,4 +32,19 @@ public interface IShowTimeSeriesPlan extends IShowSchemaPlan {
   SchemaFilter getSchemaFilter();
 
   Map<Integer, Template> getRelatedTemplate();
+
+  /**
+   * Whether to skip invalid series (DISABLED=true) in the result. Default is true.
+   *
+   * @return true if invalid series should be skipped, false otherwise
+   */
+  boolean shouldSkipInvalidSchema();
+
+  /**
+   * Whether to only return invalid series (DISABLED=true) in the result. Default is false. If true,
+   * only invalid series will be returned. This takes precedence over shouldSkipInvalidSchema.
+   *
+   * @return true if only invalid series should be returned, false otherwise
+   */
+  boolean shouldOnlyInvalidSchema();
 }

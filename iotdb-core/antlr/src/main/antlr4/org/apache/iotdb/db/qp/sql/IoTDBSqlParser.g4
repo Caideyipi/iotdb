@@ -173,14 +173,14 @@ alterTimeseries
     ;
 
 alterClause
-    : RENAME beforeName=attributeKey TO currentName=attributeKey
-    // Change into new data type
-    | SET DATA TYPE newType=attributeValue
-    | SET attributePair (COMMA attributePair)*
-    | DROP attributeKey (COMMA attributeKey)*
-    | ADD TAGS attributePair (COMMA attributePair)*
-    | ADD ATTRIBUTES attributePair (COMMA attributePair)*
-    | UPSERT aliasClause? tagClause? attributeClause?
+    : RENAME TO newPath=fullPath  #renameTimeseriesPath
+    | RENAME beforeName=attributeKey TO currentName=attributeKey  #renameTagOrAttribute
+    | SET DATA TYPE newType=attributeValue  #setDataTypeAlter
+    | SET attributePair (COMMA attributePair)*  #setAlter
+    | DROP attributeKey (COMMA attributeKey)*  #dropAlter
+    | ADD TAGS attributePair (COMMA attributePair)*  #addTagsAlter
+    | ADD ATTRIBUTES attributePair (COMMA attributePair)*  #addAttributesAlter
+    | UPSERT aliasClause? tagClause? attributeClause?  #upsertAlter
     ;
 
 alterEncodingCompressor
@@ -202,7 +202,7 @@ showDevices
 
 // ---- Show Timeseries
 showTimeseries
-    : SHOW LATEST? TIMESERIES prefixPath? timeseriesWhereClause? timeConditionClause? rowPaginationClause?
+    : SHOW (INVALID | LATEST)? TIMESERIES prefixPath? timeseriesWhereClause? timeConditionClause? rowPaginationClause?
     ;
 
 // ---- Show Child Paths

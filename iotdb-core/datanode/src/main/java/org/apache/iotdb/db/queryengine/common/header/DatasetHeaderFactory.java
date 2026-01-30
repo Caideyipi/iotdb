@@ -51,6 +51,10 @@ public class DatasetHeaderFactory {
     return new DatasetHeader(ColumnHeaderConstant.showTimeSeriesColumnHeaders, true);
   }
 
+  public static DatasetHeader getShowInvalidTimeSeriesHeader() {
+    return new DatasetHeader(ColumnHeaderConstant.showInvalidTimeSeriesColumnHeaders, true);
+  }
+
   public static DatasetHeader getShowDevicesHeader() {
     return new DatasetHeader(ColumnHeaderConstant.showDevicesColumnHeaders, true);
   }

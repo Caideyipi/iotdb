@@ -24,7 +24,6 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.path.fa.dfa.PatternDFA;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class SchemaConstant {
@@ -77,11 +76,7 @@ public class SchemaConstant {
   static {
     ALL_MATCH_SCOPE.appendPathPattern(ALL_MATCH_PATTERN);
     ALL_MATCH_SCOPE.constructTree();
-    try {
-      ALL_MATCH_SCOPE_BINARY = ALL_MATCH_SCOPE.serialize();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    ALL_MATCH_SCOPE_BINARY = ALL_MATCH_SCOPE.serialize();
   }
 
   public static final PartialPath SYSTEM_DATABASE_PATTERN =

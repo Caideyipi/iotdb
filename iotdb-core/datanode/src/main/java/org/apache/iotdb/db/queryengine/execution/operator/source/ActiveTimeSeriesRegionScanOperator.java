@@ -21,6 +21,7 @@ package org.apache.iotdb.db.queryengine.execution.operator.source;
 
 import org.apache.iotdb.commons.schema.column.ColumnHeader;
 import org.apache.iotdb.commons.schema.column.ColumnHeaderConstant;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.db.queryengine.common.TimeseriesContext;
 import org.apache.iotdb.db.queryengine.execution.operator.OperatorContext;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNodeId;
@@ -44,6 +45,7 @@ public class ActiveTimeSeriesRegionScanOperator extends AbstractRegionScanDataSo
   private final Map<IDeviceID, Map<String, TimeseriesContext>> timeSeriesToSchemasInfo;
   private static final Binary VIEW_TYPE = new Binary("BASE".getBytes());
   private final Binary dataBaseName;
+  private final boolean onlyInvalidSchema;
   private static final long INSTANCE_SIZE =
       RamUsageEstimator.shallowSizeOfInstance(ActiveTimeSeriesRegionScanOperator.class)
           + RamUsageEstimator.shallowSizeOfInstance(Map.class)
@@ -55,12 +57,14 @@ public class ActiveTimeSeriesRegionScanOperator extends AbstractRegionScanDataSo
       Map<IDeviceID, Map<String, TimeseriesContext>> timeSeriesToSchemasInfo,
       Filter timeFilter,
       Map<IDeviceID, Long> ttlCache,
-      boolean isOutputCount) {
+      boolean isOutputCount,
+      boolean onlyInvalidSchema) {
     this.outputCount = isOutputCount;
     this.operatorContext = operatorContext;
     this.sourceId = sourceId;
     this.timeSeriesToSchemasInfo = timeSeriesToSchemasInfo;
     this.regionScanUtil = new RegionScanForActiveTimeSeriesUtil(timeFilter, ttlCache);
+    this.onlyInvalidSchema = onlyInvalidSchema;
     this.dataBaseName =
         new Binary(
             operatorContext
@@ -114,12 +118,56 @@ public class ActiveTimeSeriesRegionScanOperator extends AbstractRegionScanDataSo
       Map<String, TimeseriesContext> timeSeriesInfo = timeSeriesToSchemasInfo.get(deviceID);
       for (String timeSeries : timeSeriesList) {
         TimeseriesContext schemaInfo = timeSeriesInfo.get(timeSeries);
+        // Check if this is an invalid series
+        final boolean isInvalid = MeasurementPropsUtils.isInvalid(schemaInfo.getProps());
+
+        // If onlyInvalidSchema is true, skip non-invalid series
+        if (onlyInvalidSchema && !isInvalid) {
+          continue;
+        }
+
+        // Determine timeseries path to display
+        byte[] timeseriesPath;
+        if (onlyInvalidSchema) {
+          // For onlyInvalidSchema mode: always show original path in Timeseries column
+          timeseriesPath = contactDeviceAndMeasurement(deviceStr, timeSeries);
+        } else if (isInvalid) {
+          // For invalid series in normal mode: show alias-path if available
+          String aliasPathString = MeasurementPropsUtils.getAliasPathString(schemaInfo.getProps());
+          timeseriesPath =
+              (aliasPathString != null && !aliasPathString.isEmpty())
+                  ? aliasPathString.getBytes(TSFileConfig.STRING_CHARSET)
+                  : contactDeviceAndMeasurement(deviceStr, timeSeries);
+        } else {
+          // For non-invalid series: show original path
+          timeseriesPath = contactDeviceAndMeasurement(deviceStr, timeSeries);
+        }
+
+        // Determine database to display
+        Binary database;
+        if (isInvalid && !onlyInvalidSchema) {
+          // For invalid series in normal mode: use database from TimeseriesContext
+          String databaseStr = schemaInfo.getDatabase();
+          database =
+              (databaseStr != null && !databaseStr.isEmpty())
+                  ? new Binary(databaseStr.getBytes(TSFileConfig.STRING_CHARSET))
+                  : this.dataBaseName;
+        } else {
+          // For other cases: use default database
+          database = this.dataBaseName;
+        }
+
+        // Get alias-path for NewPath column (only used in onlyInvalidSchema mode)
+        String aliasPathString =
+            onlyInvalidSchema
+                ? MeasurementPropsUtils.getAliasPathString(schemaInfo.getProps())
+                : null;
+
         timeColumnBuilder.writeLong(-1);
-        columnBuilders[0].writeBinary(
-            new Binary(contactDeviceAndMeasurement(deviceStr, timeSeries)));
+        columnBuilders[0].writeBinary(new Binary(timeseriesPath)); // Timeseries
 
         checkAndAppend(schemaInfo.getAlias(), columnBuilders[1]); // Measurement
-        columnBuilders[2].writeBinary(dataBaseName); // Database
+        columnBuilders[2].writeBinary(database); // Database
         checkAndAppend(schemaInfo.getDataType(), columnBuilders[3]); // DataType
         checkAndAppend(schemaInfo.getEncoding(), columnBuilders[4]); // Encoding
         checkAndAppend(schemaInfo.getCompression(), columnBuilders[5]); // Compression
@@ -128,6 +176,12 @@ public class ActiveTimeSeriesRegionScanOperator extends AbstractRegionScanDataSo
         checkAndAppend(schemaInfo.getDeadband(), columnBuilders[8]); // Description
         checkAndAppend(schemaInfo.getDeadbandParameters(), columnBuilders[9]); // DeadbandParameters
         columnBuilders[10].writeBinary(VIEW_TYPE); // ViewType
+
+        // For onlyInvalidSchema mode, add NewPath column (column 11) with alias-path
+        if (onlyInvalidSchema) {
+          checkAndAppend(aliasPathString, columnBuilders[11]); // NewPath
+        }
+
         resultTsBlockBuilder.declarePosition();
       }
       removeTimeseriesListFromDevice(deviceID, timeSeriesList);
@@ -152,6 +206,11 @@ public class ActiveTimeSeriesRegionScanOperator extends AbstractRegionScanDataSo
   protected List<TSDataType> getResultDataTypes() {
     if (outputCount) {
       return ColumnHeaderConstant.countTimeSeriesColumnHeaders.stream()
+          .map(ColumnHeader::getColumnType)
+          .collect(Collectors.toList());
+    }
+    if (onlyInvalidSchema) {
+      return ColumnHeaderConstant.showInvalidTimeSeriesColumnHeaders.stream()
           .map(ColumnHeader::getColumnType)
           .collect(Collectors.toList());
     }

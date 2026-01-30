@@ -36,6 +36,7 @@ import org.apache.iotdb.confignode.client.async.handlers.DataNodeAsyncRequestCon
 import org.apache.iotdb.confignode.consensus.request.ConfigPhysicalPlan;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.procedure.env.ConfigNodeProcedureEnv;
+import org.apache.iotdb.confignode.procedure.exception.ProcedureException;
 import org.apache.iotdb.consensus.exception.ConsensusException;
 import org.apache.iotdb.db.exception.metadata.PathNotExistException;
 import org.apache.iotdb.mpp.rpc.thrift.TCheckSchemaRegionUsingTemplateReq;
@@ -43,6 +44,7 @@ import org.apache.iotdb.mpp.rpc.thrift.TCheckSchemaRegionUsingTemplateResp;
 import org.apache.iotdb.mpp.rpc.thrift.TCountPathsUsingTemplateReq;
 import org.apache.iotdb.mpp.rpc.thrift.TCountPathsUsingTemplateResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSessionsNumInfo;
+import org.apache.iotdb.mpp.rpc.thrift.TInvalidateMatchedSchemaCacheReq;
 import org.apache.iotdb.mpp.rpc.thrift.TUpdateTableReq;
 import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -60,6 +62,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class SchemaUtils {
@@ -332,5 +335,72 @@ public class SchemaUtils {
             CnToDnAsyncRequestType.FETCH_SESSIONS_NUM_INFO, dataNodeLocationMap);
     CnToDnInternalServiceAsyncRequestManager.getInstance().sendAsyncRequestWithRetry(clientHandler);
     return clientHandler.getResponseMap();
+  }
+
+  /**
+   * Create a PathPatternTree from multiple paths and convert it to ByteBuffer.
+   *
+   * @param paths the paths to include in the pattern tree
+   * @return ByteBuffer containing the serialized PathPatternTree
+   */
+  public static ByteBuffer createPatternTreeBytesData(final PartialPath... paths) {
+    final PathPatternTree patternTree = new PathPatternTree();
+    for (final PartialPath path : paths) {
+      patternTree.appendFullPath(path);
+    }
+    patternTree.constructTree();
+    return patternTree.serialize();
+  }
+
+  /**
+   * Invalidate schema cache for the given paths.
+   *
+   * @param env the ConfigNodeProcedureEnv
+   * @param paths the paths to invalidate cache for
+   */
+  public static void invalidateCache(final ConfigNodeProcedureEnv env, final PartialPath... paths) {
+    final ByteBuffer patternTreeBytes = createPatternTreeBytesData(paths);
+    invalidateCache(env, patternTreeBytes, null, null, false);
+  }
+
+  /**
+   * Invalidate schema cache for the given pattern tree bytes.
+   *
+   * @param env the ConfigNodeProcedureEnv
+   * @param patternTreeBytes the serialized PathPatternTree
+   * @param requestMessage the request message for logging (nullable)
+   * @param setFailure the failure handler (nullable)
+   * @param needLock whether lock is needed
+   * @throws IllegalArgumentException if setFailure is not null but requestMessage is null
+   */
+  public static void invalidateCache(
+      final ConfigNodeProcedureEnv env,
+      final ByteBuffer patternTreeBytes,
+      final @Nullable String requestMessage,
+      final @Nullable Consumer<ProcedureException> setFailure,
+      final boolean needLock) {
+
+    final Map<Integer, TDataNodeLocation> dataNodeLocationMap =
+        env.getConfigManager().getNodeManager().getRegisteredDataNodeLocations();
+    final DataNodeAsyncRequestContext<TInvalidateMatchedSchemaCacheReq, TSStatus> clientHandler =
+        new DataNodeAsyncRequestContext<>(
+            CnToDnAsyncRequestType.INVALIDATE_MATCHED_SCHEMA_CACHE,
+            new TInvalidateMatchedSchemaCacheReq(patternTreeBytes).setNeedLock(needLock),
+            dataNodeLocationMap);
+    CnToDnInternalServiceAsyncRequestManager.getInstance().sendAsyncRequestWithRetry(clientHandler);
+    final Map<Integer, TSStatus> statusMap = clientHandler.getResponseMap();
+    for (final TSStatus status : statusMap.values()) {
+      // All dataNodes must clear the related schemaEngine cache
+      if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        if (setFailure != null) {
+          final Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaUtils.class);
+          logger.error("Failed to invalidate schemaEngine cache of timeSeries {}", requestMessage);
+          setFailure.accept(
+              new ProcedureException(
+                  new MetadataException("Invalidate schemaEngine cache failed")));
+        }
+        return;
+      }
+    }
   }
 }

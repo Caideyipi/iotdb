@@ -40,7 +40,7 @@ public class DataDriverContext extends DriverContext {
   // it will be set to null, after being merged into Parent FIContext
   private List<IFullPath> paths;
   private QueryDataSourceType queryDataSourceType = null;
-  private Map<IDeviceID, DeviceContext> deviceIDToContext;
+  private Map<IDeviceID, DeviceContext> deviceIdToContext;
   // it will be set to null, after QueryDataSource being inited
   private List<DataSourceOperator> sourceOperators;
 
@@ -48,27 +48,27 @@ public class DataDriverContext extends DriverContext {
     super(fragmentInstanceContext, pipelineId);
     this.paths = new ArrayList<>();
     this.sourceOperators = new ArrayList<>();
-    this.deviceIDToContext = null;
+    this.deviceIdToContext = null;
   }
 
   public DataDriverContext(DataDriverContext parentContext, int pipelineId) {
     super(parentContext.getFragmentInstanceContext(), pipelineId);
     this.paths = new ArrayList<>();
     this.sourceOperators = new ArrayList<>();
-    this.deviceIDToContext = null;
+    this.deviceIdToContext = null;
   }
 
   public void setQueryDataSourceType(QueryDataSourceType queryDataSourceType) {
     this.queryDataSourceType = queryDataSourceType;
   }
 
-  public void setDeviceIDToContext(Map<IDeviceID, DeviceContext> deviceIDToContext) {
-    this.deviceIDToContext = deviceIDToContext;
+  public void setDeviceIDToContext(Map<IDeviceID, DeviceContext> deviceIdToContext) {
+    this.deviceIdToContext = deviceIdToContext;
   }
 
   public void clearDeviceIDToContext() {
     // friendly for gc
-    deviceIDToContext = null;
+    deviceIdToContext = null;
   }
 
   public void addPath(IFullPath path) {
@@ -84,7 +84,7 @@ public class DataDriverContext extends DriverContext {
   }
 
   public Map<IDeviceID, DeviceContext> getDeviceIDToContext() {
-    return deviceIDToContext;
+    return deviceIdToContext;
   }
 
   public Optional<QueryDataSourceType> getQueryDataSourceType() {

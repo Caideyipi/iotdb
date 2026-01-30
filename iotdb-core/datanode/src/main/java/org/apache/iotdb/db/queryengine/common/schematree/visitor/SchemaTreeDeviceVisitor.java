@@ -47,7 +47,7 @@ public class SchemaTreeDeviceVisitor extends SchemaTreeVisitor<DeviceSchemaInfo>
   }
 
   @Override
-  protected boolean acceptFullMatchedNode(SchemaNode node) {
+  protected boolean acceptFullyMatchedNode(SchemaNode node) {
     return node.isEntity();
   }
 

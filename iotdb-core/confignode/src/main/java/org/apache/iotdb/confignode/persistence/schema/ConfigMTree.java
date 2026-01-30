@@ -442,6 +442,8 @@ public class ConfigMTree {
         }) {
 
       collector.setTargetLevel(nodeLevel);
+      // Note: skipDisabledSchema is not used in ConfigNode MTree as it only manages database-level
+      // nodes, but we accept it for API consistency
       collector.traverse();
       return new Pair<>(result, collector.getInvolvedDatabaseMNodes());
     }
@@ -476,6 +478,8 @@ public class ConfigMTree {
             return null;
           }
         }) {
+      // Note: skipDisabledSchema is not used in ConfigNode MTree as it only manages database-level
+      // nodes, but we accept it for API consistency
       collector.traverse();
       return new Pair<>(result, collector.getInvolvedDatabaseMNodes());
     } catch (IllegalPathException e) {
@@ -540,8 +544,8 @@ public class ConfigMTree {
         new MNodeCollector<Void, IConfigMNode>(
             root, new PartialPath(ALL_RESULT_NODES), store, false, scope) {
           @Override
-          protected boolean acceptFullMatchedNode(final IConfigMNode node) {
-            if (super.acceptFullMatchedNode(node)) {
+          protected boolean acceptFullyMatchedNode(final IConfigMNode node) {
+            if (super.acceptFullyMatchedNode(node)) {
               // if node not set template, go on traversing
               if (node.getSchemaTemplateId() != NON_TEMPLATE) {
                 if (filterPreUnset && node.isSchemaTemplatePreUnset()) {
@@ -590,8 +594,8 @@ public class ConfigMTree {
     try (final MNodeCollector<Void, IConfigMNode> collector =
         new MNodeCollector<Void, IConfigMNode>(root, pathPattern, store, false, ALL_MATCH_SCOPE) {
           @Override
-          protected boolean acceptFullMatchedNode(final IConfigMNode node) {
-            return node.getSchemaTemplateId() != NON_TEMPLATE || super.acceptFullMatchedNode(node);
+          protected boolean acceptFullyMatchedNode(final IConfigMNode node) {
+            return node.getSchemaTemplateId() != NON_TEMPLATE || super.acceptFullyMatchedNode(node);
           }
 
           @Override

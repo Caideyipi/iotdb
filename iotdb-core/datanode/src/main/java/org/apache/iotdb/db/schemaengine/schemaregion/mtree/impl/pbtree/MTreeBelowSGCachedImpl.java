@@ -90,6 +90,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -272,6 +273,20 @@ public class MTreeBelowSGCachedImpl {
     return measurementMNode;
   }
 
+  public IMeasurementMNode<ICachedMNode> createTimeSeriesWithPinnedReturn(
+      final PartialPath path,
+      final TSDataType dataType,
+      final TSEncoding encoding,
+      final CompressionType compressor,
+      final Map<String, String> props,
+      final String alias,
+      final boolean withMerge,
+      final AtomicBoolean isAligned)
+      throws MetadataException {
+    return createTimeSeriesWithPinnedReturn(
+        path, dataType, encoding, compressor, props, alias, withMerge, isAligned, true);
+  }
+
   /**
    * Create a time series with a full path from root to leaf node. Before creating a time series,
    * the database should be set first, throw exception otherwise
@@ -291,7 +306,8 @@ public class MTreeBelowSGCachedImpl {
       final Map<String, String> props,
       final String alias,
       final boolean withMerge,
-      final AtomicBoolean isAligned)
+      final AtomicBoolean isAligned,
+      final boolean setNonAlignedIfNull)
       throws MetadataException {
     final String[] nodeNames = path.getNodes();
     if (nodeNames.length <= 2) {
@@ -328,6 +344,8 @@ public class MTreeBelowSGCachedImpl {
               final IMeasurementMNode<ICachedMNode> measurementNode = node.getAsMeasurementMNode();
               if (measurementNode.isPreDeleted()) {
                 throw new MeasurementInBlackListException(path);
+              } else if (measurementNode.isInvalid()) {
+                throw new MetadataException(String.format("timeseries %s is invalid", path));
               } else if (!withMerge || measurementNode.getDataType() != dataType) {
                 // Report conflict if the types are different
                 throw new MeasurementAlreadyExistException(
@@ -350,7 +368,7 @@ public class MTreeBelowSGCachedImpl {
           }
 
           // create a non-aligned time series
-          if (entityMNode.isAlignedNullable() == null) {
+          if (setNonAlignedIfNull && entityMNode.isAlignedNullable() == null) {
             entityMNode.setAligned(false);
           }
 
@@ -755,6 +773,70 @@ public class MTreeBelowSGCachedImpl {
     return result;
   }
 
+  /**
+   * Construct schema black list and collect referenced disabled paths information.
+   *
+   * @param pathPattern the path pattern to match
+   * @param isAllLogicalView output parameter indicating if all matched series are logical views
+   * @param isAllInvalidSeries output parameter indicating if all matched series are invalid
+   * @param referencedDisabledPaths output list to collect referenced invalid paths information
+   * @return list of pre-deleted series paths
+   * @throws MetadataException if an error occurs while constructing the schema black list
+   */
+  public List<PartialPath> constructSchemaBlackListWithAliasInfo(
+      final PartialPath pathPattern,
+      final AtomicBoolean isAllLogicalView,
+      final AtomicBoolean isAllInvalidSeries,
+      final AtomicBoolean hasInvalidSeries,
+      final List<
+              org.apache.iotdb.db.schemaengine.schemaregion.write.resp
+                  .ConstructSchemaBlackListResult.ReferencedInvalidPathInfo>
+          referencedDisabledPaths)
+      throws MetadataException {
+    final List<PartialPath> result = new ArrayList<>();
+    final AtomicInteger timeSeriesNum = new AtomicInteger(0);
+    try (final MeasurementUpdater<ICachedMNode> updater =
+        new MeasurementUpdater<ICachedMNode>(
+            rootNode, pathPattern, store, false, SchemaConstant.ALL_MATCH_SCOPE) {
+
+          protected void updateMeasurement(final IMeasurementMNode<ICachedMNode> node)
+              throws MetadataException {
+            if (!node.isLogicalView()) {
+              isAllLogicalView.set(false);
+            }
+
+            final PartialPath path = getPartialPathFromRootToNode(node.getAsMNode());
+
+            // Check if this is an invalid series (DISABLED=true)
+            // Invalid series don't need pre-delete, they should be deleted directly
+            if (node.isInvalid()) {
+              hasInvalidSeries.set(true);
+              // Don't set preDeleted for invalid series
+              return;
+            }
+
+            isAllInvalidSeries.set(false);
+
+            // Check if this is a renamed (alias) series
+            if (node.isRenamed()) {
+              final PartialPath originalPath = node.getOriginalPath();
+              referencedDisabledPaths.add(
+                  new org.apache.iotdb.db.schemaengine.schemaregion.write.resp
+                      .ConstructSchemaBlackListResult.ReferencedInvalidPathInfo(
+                      path, originalPath, node.isRenamed()));
+            }
+
+            store.updateMNode(
+                node.getAsMNode(), o -> o.getAsMeasurementMNode().setPreDeleted(true));
+            result.add(path);
+          }
+        }) {
+      updater.update();
+    }
+    isAllInvalidSeries.set(isAllInvalidSeries.get() && timeSeriesNum.get() != 0);
+    return result;
+  }
+
   public List<PartialPath> rollbackSchemaBlackList(PartialPath pathPattern)
       throws MetadataException {
     List<PartialPath> result = new ArrayList<>();
@@ -782,7 +864,7 @@ public class MTreeBelowSGCachedImpl {
             rootNode, pathPattern, store, false, SchemaConstant.ALL_MATCH_SCOPE) {
 
           protected Void collectMeasurement(IMeasurementMNode<ICachedMNode> node) {
-            if (node.isPreDeleted()) {
+            if (node.isPreDeleted() || node.isInvalid()) {
               result.add(getPartialPathFromRootToNode(node.getAsMNode()));
             }
             return null;
@@ -1372,6 +1454,43 @@ public class MTreeBelowSGCachedImpl {
             showDevicesPlan.isPrefixMatch(),
             showDevicesPlan.getScope()) {
 
+          @Override
+          protected boolean acceptFullyMatchedNode(ICachedMNode node) {
+            // Call parent to check device and template filter
+            if (!super.acceptFullyMatchedNode(node)) {
+              return false;
+            }
+
+            // If skipDevicesWithOnlyInvalidSeries is enabled, check if device has any enabled
+            // measurements
+            if (showDevicesPlan.shouldSkipDevicesWithOnlyInvalidSeries() && node.isDevice()) {
+              try {
+                IMNodeIterator<ICachedMNode> iterator = store.getChildrenIterator(node);
+                try {
+                  boolean hasEnabledMeasurement = false;
+                  boolean deviceHasNoMeasurement = true;
+                  while (iterator.hasNext()) {
+                    ICachedMNode child = iterator.next();
+                    if (child.isMeasurement()) {
+                      deviceHasNoMeasurement = false;
+                      if (!child.getAsMeasurementMNode().isInvalid()) {
+                        hasEnabledMeasurement = true;
+                        break;
+                      }
+                    }
+                  }
+                  return deviceHasNoMeasurement || hasEnabledMeasurement;
+                } finally {
+                  iterator.close();
+                }
+              } catch (MetadataException e) {
+                // If we can't check, accept the device to be safe
+                return true;
+              }
+            }
+            return true;
+          }
+
           protected IDeviceSchemaInfo collectEntity(IDeviceMNode<ICachedMNode> node) {
             PartialPath device = getPartialPathFromRootToNode(node.getAsMNode());
             return new ShowDevicesResult(
@@ -1496,6 +1615,8 @@ public class MTreeBelowSGCachedImpl {
         };
 
     collector.setTemplateMap(showTimeSeriesPlan.getRelatedTemplate(), nodeFactory);
+    collector.setSkipInvalidSchema(showTimeSeriesPlan.shouldSkipInvalidSchema());
+    collector.setOnlyInvalidSchema(showTimeSeriesPlan.shouldOnlyInvalidSchema());
     ISchemaReader<ITimeSeriesSchemaInfo> reader =
         new TimeseriesReaderWithViewFetch(
             collector, showTimeSeriesPlan.getSchemaFilter(), showTimeSeriesPlan.needViewDetail());
@@ -1523,6 +1644,7 @@ public class MTreeBelowSGCachedImpl {
                 getPartialPathFromRootToNode(node).getFullPath(), node.getMNodeType());
           }
         };
+    collector.setSkipInvalidSchema(showNodesPlan.shouldSkipInvalidSchema());
     collector.setTargetLevel(showNodesPlan.getLevel());
     return new ISchemaReader<INodeSchemaInfo>() {
 

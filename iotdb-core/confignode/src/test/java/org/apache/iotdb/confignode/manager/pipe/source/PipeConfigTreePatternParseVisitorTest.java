@@ -36,6 +36,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeAlte
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeactivateTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CommitSetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CreateSchemaTemplatePlan;
@@ -49,7 +50,10 @@ import org.apache.tsfile.file.metadata.enums.TSEncoding;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -493,5 +497,130 @@ public class PipeConfigTreePatternParseVisitorTest {
         new PartialPath("root.db.device.a"), new PartialPath(plan.getMeasurementPath().getNodes()));
     Assert.assertEquals((byte) 0, plan.getOperationType());
     Assert.assertEquals(plan.getDataType(), TSDataType.DOUBLE);
+  }
+
+  @Test
+  public void testPipeRenameTimeSeries() throws IllegalPathException, IOException {
+    final PartialPath oldPath = new PartialPath("root.db.device.s1");
+    final PartialPath newPath = new PartialPath("root.db.device.s1_alias");
+
+    final ByteArrayOutputStream oldPathStream = new ByteArrayOutputStream();
+    final ByteArrayOutputStream newPathStream = new ByteArrayOutputStream();
+    final DataOutputStream oldPathDataStream = new DataOutputStream(oldPathStream);
+    final DataOutputStream newPathDataStream = new DataOutputStream(newPathStream);
+    oldPath.serialize(oldPathDataStream);
+    newPath.serialize(newPathDataStream);
+    final ByteBuffer oldPathBytes = ByteBuffer.wrap(oldPathStream.toByteArray());
+    final ByteBuffer newPathBytes = ByteBuffer.wrap(newPathStream.toByteArray());
+
+    final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlan =
+        new PipeRenameTimeSeriesPlan(oldPathBytes, newPathBytes);
+
+    // Test: Plan matches prefix pattern - should pass
+    final PipeRenameTimeSeriesPlan parsedPlan =
+        (PipeRenameTimeSeriesPlan)
+            IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+                .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlan, prefixPathPattern)
+                .orElseThrow(AssertionError::new);
+
+    Assert.assertEquals(pipeRenameTimeSeriesPlan, parsedPlan);
+
+    final PipeRenameTimeSeriesPlan parsedPlan2 =
+        (PipeRenameTimeSeriesPlan)
+            IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+                .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlan, fullPathPattern)
+                .orElseThrow(AssertionError::new);
+
+    // Test: Plan matches multiple path pattern - should pass
+    final PipeRenameTimeSeriesPlan parsedPlan3 =
+        (PipeRenameTimeSeriesPlan)
+            IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+                .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlan, multiplePathPattern)
+                .orElseThrow(AssertionError::new);
+
+    Assert.assertEquals(pipeRenameTimeSeriesPlan, parsedPlan3);
+
+    // Test: Plan should be filtered when neither oldPath nor newPath matches the pattern
+    final PartialPath unmatchedOldPath = new PartialPath("root.other_db.device.s1");
+    final PartialPath unmatchedNewPath = new PartialPath("root.other_db.device.s1_alias");
+
+    final ByteArrayOutputStream unmatchedOldPathStream = new ByteArrayOutputStream();
+    final ByteArrayOutputStream unmatchedNewPathStream = new ByteArrayOutputStream();
+    final DataOutputStream unmatchedOldPathDataStream =
+        new DataOutputStream(unmatchedOldPathStream);
+    final DataOutputStream unmatchedNewPathDataStream =
+        new DataOutputStream(unmatchedNewPathStream);
+    unmatchedOldPath.serialize(unmatchedOldPathDataStream);
+    unmatchedNewPath.serialize(unmatchedNewPathDataStream);
+    final ByteBuffer unmatchedOldPathBytes = ByteBuffer.wrap(unmatchedOldPathStream.toByteArray());
+    final ByteBuffer unmatchedNewPathBytes = ByteBuffer.wrap(unmatchedNewPathStream.toByteArray());
+
+    final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlanToFilter =
+        new PipeRenameTimeSeriesPlan(unmatchedOldPathBytes, unmatchedNewPathBytes);
+
+    // Should be filtered (return empty) when path doesn't match prefix pattern
+    Assert.assertFalse(
+        IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+            .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlanToFilter, prefixPathPattern)
+            .isPresent());
+
+    // Should be filtered when path doesn't match full path pattern
+    Assert.assertFalse(
+        IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+            .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlanToFilter, fullPathPattern)
+            .isPresent());
+
+    // Should be filtered when path doesn't match multiple path pattern
+    Assert.assertFalse(
+        IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+            .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlanToFilter, multiplePathPattern)
+            .isPresent());
+
+    // Test: Plan should pass when only oldPath matches the pattern (rename out of scope)
+    final PartialPath matchedOldPath = new PartialPath("root.db.device.s1");
+    final PartialPath unmatchedNewPath2 = new PartialPath("root.other_db.device.s1_alias");
+
+    final ByteArrayOutputStream matchedOldPathStream = new ByteArrayOutputStream();
+    final ByteArrayOutputStream unmatchedNewPathStream2 = new ByteArrayOutputStream();
+    final DataOutputStream matchedOldPathDataStream = new DataOutputStream(matchedOldPathStream);
+    final DataOutputStream unmatchedNewPathDataStream2 =
+        new DataOutputStream(unmatchedNewPathStream2);
+    matchedOldPath.serialize(matchedOldPathDataStream);
+    unmatchedNewPath2.serialize(unmatchedNewPathDataStream2);
+    final ByteBuffer matchedOldPathBytes = ByteBuffer.wrap(matchedOldPathStream.toByteArray());
+    final ByteBuffer unmatchedNewPathBytes2 =
+        ByteBuffer.wrap(unmatchedNewPathStream2.toByteArray());
+
+    final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlanOldMatch =
+        new PipeRenameTimeSeriesPlan(matchedOldPathBytes, unmatchedNewPathBytes2);
+
+    // Should pass when oldPath matches (rename out of scope is still captured)
+    Assert.assertTrue(
+        IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+            .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlanOldMatch, prefixPathPattern)
+            .isPresent());
+
+    // Test: Plan should pass when only newPath matches the pattern (rename into scope)
+    final PartialPath unmatchedOldPath2 = new PartialPath("root.other_db.device.s1");
+    final PartialPath matchedNewPath = new PartialPath("root.db.device.s1_alias");
+
+    final ByteArrayOutputStream unmatchedOldPathStream2 = new ByteArrayOutputStream();
+    final ByteArrayOutputStream matchedNewPathStream = new ByteArrayOutputStream();
+    final DataOutputStream unmatchedOldPathDataStream2 =
+        new DataOutputStream(unmatchedOldPathStream2);
+    final DataOutputStream matchedNewPathDataStream = new DataOutputStream(matchedNewPathStream);
+    unmatchedOldPath2.serialize(unmatchedOldPathDataStream2);
+    matchedNewPath.serialize(matchedNewPathDataStream);
+    final ByteBuffer unmatchedOldPathBytes2 =
+        ByteBuffer.wrap(unmatchedOldPathStream2.toByteArray());
+    final ByteBuffer matchedNewPathBytes = ByteBuffer.wrap(matchedNewPathStream.toByteArray());
+
+    final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlanNewMatch =
+        new PipeRenameTimeSeriesPlan(unmatchedOldPathBytes2, matchedNewPathBytes);
+
+    Assert.assertFalse(
+        IoTDBConfigRegionSource.TREE_PATTERN_PARSE_VISITOR
+            .visitPipeRenameTimeSeries(pipeRenameTimeSeriesPlanNewMatch, prefixPathPattern)
+            .isPresent());
   }
 }

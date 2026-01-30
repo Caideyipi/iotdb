@@ -364,8 +364,8 @@ public class SchemaStatisticsTest extends AbstractSchemaRegionTest {
     schemaRegion2.deleteTimeseriesInBlackList(patternTree);
 
     // check series number
-    Assert.assertEquals(2, schemaRegion1.getSchemaRegionStatistics().getSeriesNumber(true));
-    Assert.assertEquals(2, schemaRegion2.getSchemaRegionStatistics().getSeriesNumber(true));
+    Assert.assertEquals(2, schemaRegion1.getSchemaRegionStatistics().getSeriesNumber(true, true));
+    Assert.assertEquals(2, schemaRegion2.getSchemaRegionStatistics().getSeriesNumber(true, true));
     Assert.assertEquals(4, engineStatistics.getTotalSeriesNumber());
   }
 
@@ -538,9 +538,9 @@ public class SchemaStatisticsTest extends AbstractSchemaRegionTest {
     // check template statistic
     Assert.assertEquals(26, engineStatistics.getTemplateSeriesNumber());
     Assert.assertEquals(27, engineStatistics.getTotalSeriesNumber());
-    Assert.assertEquals(13, schemaRegion1.getSchemaRegionStatistics().getSeriesNumber(true));
+    Assert.assertEquals(13, schemaRegion1.getSchemaRegionStatistics().getSeriesNumber(true, true));
     Assert.assertEquals(12, schemaRegion1.getSchemaRegionStatistics().getTemplateSeriesNumber());
-    Assert.assertEquals(14, schemaRegion2.getSchemaRegionStatistics().getSeriesNumber(true));
+    Assert.assertEquals(14, schemaRegion2.getSchemaRegionStatistics().getSeriesNumber(true, true));
     Assert.assertEquals(14, schemaRegion2.getSchemaRegionStatistics().getTemplateSeriesNumber());
 
     // deactivate template
@@ -559,9 +559,9 @@ public class SchemaStatisticsTest extends AbstractSchemaRegionTest {
     // check template statistic
     Assert.assertEquals(20, engineStatistics.getTemplateSeriesNumber());
     Assert.assertEquals(21, engineStatistics.getTotalSeriesNumber());
-    Assert.assertEquals(10, schemaRegion1.getSchemaRegionStatistics().getSeriesNumber(true));
+    Assert.assertEquals(10, schemaRegion1.getSchemaRegionStatistics().getSeriesNumber(true, true));
     Assert.assertEquals(9, schemaRegion1.getSchemaRegionStatistics().getTemplateSeriesNumber());
-    Assert.assertEquals(11, schemaRegion2.getSchemaRegionStatistics().getSeriesNumber(true));
+    Assert.assertEquals(11, schemaRegion2.getSchemaRegionStatistics().getSeriesNumber(true, true));
     Assert.assertEquals(11, schemaRegion2.getSchemaRegionStatistics().getTemplateSeriesNumber());
   }
 }

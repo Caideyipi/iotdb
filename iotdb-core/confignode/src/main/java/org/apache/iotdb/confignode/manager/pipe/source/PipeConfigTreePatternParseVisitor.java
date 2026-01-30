@@ -37,6 +37,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeAlte
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeactivateTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CommitSetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CreateSchemaTemplatePlan;
@@ -49,7 +50,6 @@ import org.apache.tsfile.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -222,62 +222,54 @@ public class PipeConfigTreePatternParseVisitor
   public Optional<ConfigPhysicalPlan> visitPipeDeleteTimeSeries(
       final PipeDeleteTimeSeriesPlan pipeDeleteTimeSeriesPlan,
       final IoTDBTreePatternOperations pattern) {
-    try {
-      final PathPatternTree intersectedTree =
-          pattern.getIntersection(
-              PathPatternTree.deserialize(pipeDeleteTimeSeriesPlan.getPatternTreeBytes()));
-      return !intersectedTree.isEmpty()
-          ? Optional.of(new PipeDeleteTimeSeriesPlan(intersectedTree.serialize()))
-          : Optional.empty();
-    } catch (final IOException e) {
-      LOGGER.warn(
-          "Serialization failed for the delete time series plan in pipe transmission, skip transfer",
-          e);
-      return Optional.empty();
-    }
+    final PathPatternTree intersectedTree =
+        pattern.getIntersection(
+            PathPatternTree.deserialize(pipeDeleteTimeSeriesPlan.getPatternTreeBytes()));
+    return !intersectedTree.isEmpty()
+        ? Optional.of(new PipeDeleteTimeSeriesPlan(intersectedTree.serialize()))
+        : Optional.empty();
   }
 
   @Override
   public Optional<ConfigPhysicalPlan> visitPipeDeleteLogicalView(
       final PipeDeleteLogicalViewPlan pipeDeleteLogicalViewPlan,
       final IoTDBTreePatternOperations pattern) {
-    try {
-      final PathPatternTree intersectedTree =
-          pattern.getIntersection(
-              PathPatternTree.deserialize(pipeDeleteLogicalViewPlan.getPatternTreeBytes()));
-      return !intersectedTree.isEmpty()
-          ? Optional.of(new PipeDeleteLogicalViewPlan(intersectedTree.serialize()))
-          : Optional.empty();
-    } catch (final IOException e) {
-      LOGGER.warn(
-          "Serialization failed for the delete logical view plan in pipe transmission, skip transfer",
-          e);
-      return Optional.empty();
-    }
+    final PathPatternTree intersectedTree =
+        pattern.getIntersection(
+            PathPatternTree.deserialize(pipeDeleteLogicalViewPlan.getPatternTreeBytes()));
+    return !intersectedTree.isEmpty()
+        ? Optional.of(new PipeDeleteLogicalViewPlan(intersectedTree.serialize()))
+        : Optional.empty();
   }
 
   @Override
   public Optional<ConfigPhysicalPlan> visitPipeAlterEncodingCompressor(
       final PipeAlterEncodingCompressorPlan pipeAlterEncodingCompressorPlan,
       final IoTDBTreePatternOperations pattern) {
-    try {
-      final PathPatternTree intersectedTree =
-          pattern.getIntersection(
-              PathPatternTree.deserialize(pipeAlterEncodingCompressorPlan.getPatternTreeBytes()));
-      return !intersectedTree.isEmpty()
-          ? Optional.of(
-              new PipeAlterEncodingCompressorPlan(
-                  intersectedTree.serialize(),
-                  pipeAlterEncodingCompressorPlan.getEncoding(),
-                  pipeAlterEncodingCompressorPlan.getCompressor(),
-                  pipeAlterEncodingCompressorPlan.isMayAlterAudit()))
-          : Optional.empty();
-    } catch (final IOException e) {
-      LOGGER.warn(
-          "Serialization failed for the alter encoding time series plan in pipe transmission, skip transfer",
-          e);
-      return Optional.empty();
-    }
+    final PathPatternTree intersectedTree =
+        pattern.getIntersection(
+            PathPatternTree.deserialize(pipeAlterEncodingCompressorPlan.getPatternTreeBytes()));
+    return !intersectedTree.isEmpty()
+        ? Optional.of(
+            new PipeAlterEncodingCompressorPlan(
+                intersectedTree.serialize(),
+                pipeAlterEncodingCompressorPlan.getEncoding(),
+                pipeAlterEncodingCompressorPlan.getCompressor(),
+                pipeAlterEncodingCompressorPlan.isMayAlterAudit()))
+        : Optional.empty();
+  }
+
+  @Override
+  public Optional<ConfigPhysicalPlan> visitPipeRenameTimeSeries(
+      final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlan,
+      final IoTDBTreePatternOperations pattern) {
+    final PartialPath oldPath =
+        (PartialPath)
+            org.apache.iotdb.commons.path.PathDeserializeUtil.deserialize(
+                pipeRenameTimeSeriesPlan.getOldPathBytes());
+
+    final List<PartialPath> intersectionList = pattern.getIntersection(oldPath);
+    return !intersectionList.isEmpty() ? Optional.of(pipeRenameTimeSeriesPlan) : Optional.empty();
   }
 
   @Override

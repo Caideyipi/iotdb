@@ -28,6 +28,9 @@ import org.apache.tsfile.utils.ReadWriteIOUtils;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.apache.iotdb.db.queryengine.execution.operator.schema.source.TimeSeriesSchemaSource.mapToString;
@@ -42,8 +45,10 @@ public class TimeseriesContext {
 
   private final String deadband;
   private final String deadbandParameters;
+  private final Map<String, String> props;
+  private final String database;
 
-  public TimeseriesContext(IMeasurementSchemaInfo schemaInfo) {
+  public TimeseriesContext(IMeasurementSchemaInfo schemaInfo, String database) {
     this.dataType = schemaInfo.getSchema().getType().toString();
     this.encoding = schemaInfo.getSchema().getEncodingType().toString();
     this.compression = schemaInfo.getSchema().getCompressor().toString();
@@ -54,6 +59,9 @@ public class TimeseriesContext {
         MetaUtils.parseDeadbandInfo(schemaInfo.getSchema().getProps());
     this.deadband = deadbandInfo.left;
     this.deadbandParameters = deadbandInfo.right;
+    Map<String, String> schemaProps = schemaInfo.getSchema().getProps();
+    this.props = schemaProps != null ? schemaProps : Collections.emptyMap();
+    this.database = database;
   }
 
   public String getDataType() {
@@ -88,6 +96,14 @@ public class TimeseriesContext {
     return deadband;
   }
 
+  public Map<String, String> getProps() {
+    return props;
+  }
+
+  public String getDatabase() {
+    return database;
+  }
+
   public TimeseriesContext(
       String dataType,
       String alias,
@@ -96,7 +112,9 @@ public class TimeseriesContext {
       String tags,
       String attributes,
       String deadband,
-      String deadbandParameters) {
+      String deadbandParameters,
+      Map<String, String> props,
+      String database) {
     this.dataType = dataType;
     this.alias = alias;
     this.encoding = encoding;
@@ -105,6 +123,8 @@ public class TimeseriesContext {
     this.attributes = attributes;
     this.deadband = deadband;
     this.deadbandParameters = deadbandParameters;
+    this.props = props != null ? new HashMap<>(props) : new HashMap<>();
+    this.database = database;
   }
 
   public void serializeAttributes(ByteBuffer byteBuffer) {
@@ -116,6 +136,8 @@ public class TimeseriesContext {
     ReadWriteIOUtils.write(attributes, byteBuffer);
     ReadWriteIOUtils.write(deadband, byteBuffer);
     ReadWriteIOUtils.write(deadbandParameters, byteBuffer);
+    ReadWriteIOUtils.write(props, byteBuffer);
+    ReadWriteIOUtils.write(database, byteBuffer);
   }
 
   public void serializeAttributes(DataOutputStream stream) throws IOException {
@@ -127,6 +149,8 @@ public class TimeseriesContext {
     ReadWriteIOUtils.write(attributes, stream);
     ReadWriteIOUtils.write(deadband, stream);
     ReadWriteIOUtils.write(deadbandParameters, stream);
+    ReadWriteIOUtils.write(props, stream);
+    ReadWriteIOUtils.write(database, stream);
   }
 
   public static TimeseriesContext deserialize(ByteBuffer buffer) {
@@ -138,8 +162,19 @@ public class TimeseriesContext {
     String attributes = ReadWriteIOUtils.readString(buffer);
     String deadband = ReadWriteIOUtils.readString(buffer);
     String deadbandParameters = ReadWriteIOUtils.readString(buffer);
+    Map<String, String> props = ReadWriteIOUtils.readMap(buffer);
+    String database = ReadWriteIOUtils.readString(buffer);
     return new TimeseriesContext(
-        dataType, alias, encoding, compression, tags, attributes, deadband, deadbandParameters);
+        dataType,
+        alias,
+        encoding,
+        compression,
+        tags,
+        attributes,
+        deadband,
+        deadbandParameters,
+        props,
+        database);
   }
 
   @Override
@@ -159,13 +194,24 @@ public class TimeseriesContext {
             && Objects.equals(tags, that.tags)
             && Objects.equals(attributes, that.attributes)
             && Objects.equals(deadband, that.deadband)
-            && Objects.equals(deadbandParameters, that.deadbandParameters);
+            && Objects.equals(deadbandParameters, that.deadbandParameters)
+            && Objects.equals(props, that.props)
+            && Objects.equals(database, that.database);
     return res;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        dataType, alias, encoding, compression, tags, attributes, deadband, deadbandParameters);
+        dataType,
+        alias,
+        encoding,
+        compression,
+        tags,
+        attributes,
+        deadband,
+        deadbandParameters,
+        props,
+        database);
   }
 }

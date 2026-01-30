@@ -30,8 +30,10 @@ import org.apache.iotdb.confignode.client.async.CnToDnAsyncRequestType;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.subscription.CheckSchemaRegionUsingTemplateRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.subscription.ConsumerGroupPushMetaRPCHandler;
 import org.apache.iotdb.confignode.client.async.handlers.rpc.subscription.TopicPushMetaRPCHandler;
+import org.apache.iotdb.mpp.rpc.thrift.TCheckInvalidTimeSeriesResp;
 import org.apache.iotdb.mpp.rpc.thrift.TCheckSchemaRegionUsingTemplateResp;
 import org.apache.iotdb.mpp.rpc.thrift.TCheckTimeSeriesExistenceResp;
+import org.apache.iotdb.mpp.rpc.thrift.TConstructSchemaBlackListResp;
 import org.apache.iotdb.mpp.rpc.thrift.TCountPathsUsingTemplateResp;
 import org.apache.iotdb.mpp.rpc.thrift.TDeviceViewResp;
 import org.apache.iotdb.mpp.rpc.thrift.TFetchSchemaBlackListResp;
@@ -40,6 +42,7 @@ import org.apache.iotdb.mpp.rpc.thrift.TPushConsumerGroupMetaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TPushPipeMetaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TPushTopicMetaResp;
 import org.apache.iotdb.mpp.rpc.thrift.TRegionLeaderChangeResp;
+import org.apache.iotdb.mpp.rpc.thrift.TRenameTimeSeriesResp;
 
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -101,6 +104,14 @@ public abstract class DataNodeAsyncRequestRPCHandler<Response>
             dataNodeLocationMap,
             (Map<Integer, TSStatus>) responseMap,
             countDownLatch);
+      case CONSTRUCT_SCHEMA_BLACK_LIST_WITH_ALIAS_INFO:
+        return new ConstructSchemaBlackListWithAliasInfoRPCHandler(
+            requestType,
+            requestId,
+            targetDataNode,
+            dataNodeLocationMap,
+            (Map<Integer, TConstructSchemaBlackListResp>) responseMap,
+            countDownLatch);
       case FETCH_SCHEMA_BLACK_LIST:
         return new FetchSchemaBlackListRPCHandler(
             requestType,
@@ -132,6 +143,14 @@ public abstract class DataNodeAsyncRequestRPCHandler<Response>
             targetDataNode,
             dataNodeLocationMap,
             (Map<Integer, TCheckTimeSeriesExistenceResp>) responseMap,
+            countDownLatch);
+      case CHECK_INVALID_TIME_SERIES:
+        return new CheckInvalidTimeSeriesRPCHandler(
+            requestType,
+            requestId,
+            targetDataNode,
+            dataNodeLocationMap,
+            (Map<Integer, TCheckInvalidTimeSeriesResp>) responseMap,
             countDownLatch);
       case PIPE_HEARTBEAT:
         return new PipeHeartbeatRPCHandler(
@@ -186,6 +205,27 @@ public abstract class DataNodeAsyncRequestRPCHandler<Response>
             targetDataNode,
             dataNodeLocationMap,
             (Map<Integer, TTestConnectionResp>) responseMap,
+            countDownLatch);
+      case LOCK_ALIAS:
+        return new RenameTimeSeriesRPCHandler(
+            requestType,
+            requestId,
+            targetDataNode,
+            dataNodeLocationMap,
+            (Map<Integer, TRenameTimeSeriesResp>) responseMap,
+            countDownLatch);
+      case CREATE_ALIAS_SERIES:
+      case MARK_SERIES_INVALID:
+      case UPDATE_PHYSICAL_ALIAS_REF:
+      case DROP_ALIAS_SERIES:
+      case MARK_SERIES_ENABLED:
+      case UNLOCK_FOR_ALIAS:
+        return new SchemaUpdateRPCHandler(
+            requestType,
+            requestId,
+            targetDataNode,
+            dataNodeLocationMap,
+            (Map<Integer, TSStatus>) responseMap,
             countDownLatch);
       case DETECT_TREE_DEVICE_VIEW_FIELD_TYPE:
         return new TreeDeviceViewFieldDetectionHandler(

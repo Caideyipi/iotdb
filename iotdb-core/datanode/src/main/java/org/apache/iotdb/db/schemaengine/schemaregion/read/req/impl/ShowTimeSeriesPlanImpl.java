@@ -36,6 +36,8 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
 
   private final SchemaFilter schemaFilter;
   private final boolean needViewDetail;
+  private final boolean skipInvalidSchema;
+  private final boolean onlyInvalidSchema;
 
   public ShowTimeSeriesPlanImpl(
       PartialPath path,
@@ -46,10 +48,59 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
       SchemaFilter schemaFilter,
       boolean needViewDetail,
       PathPatternTree scope) {
+    this(
+        path,
+        relatedTemplate,
+        limit,
+        offset,
+        isPrefixMatch,
+        schemaFilter,
+        needViewDetail,
+        true,
+        false,
+        scope);
+  }
+
+  public ShowTimeSeriesPlanImpl(
+      PartialPath path,
+      Map<Integer, Template> relatedTemplate,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      SchemaFilter schemaFilter,
+      boolean needViewDetail,
+      boolean skipInvalidSchema,
+      PathPatternTree scope) {
+    this(
+        path,
+        relatedTemplate,
+        limit,
+        offset,
+        isPrefixMatch,
+        schemaFilter,
+        needViewDetail,
+        skipInvalidSchema,
+        false,
+        scope);
+  }
+
+  public ShowTimeSeriesPlanImpl(
+      PartialPath path,
+      Map<Integer, Template> relatedTemplate,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      SchemaFilter schemaFilter,
+      boolean needViewDetail,
+      boolean skipInvalidSchema,
+      boolean onlyInvalidSchema,
+      PathPatternTree scope) {
     super(path, limit, offset, isPrefixMatch, scope);
     this.relatedTemplate = relatedTemplate;
     this.schemaFilter = schemaFilter;
     this.needViewDetail = needViewDetail;
+    this.skipInvalidSchema = skipInvalidSchema;
+    this.onlyInvalidSchema = onlyInvalidSchema;
   }
 
   @Override
@@ -68,17 +119,36 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
   }
 
   @Override
+  public boolean shouldSkipInvalidSchema() {
+    return skipInvalidSchema;
+  }
+
+  @Override
+  public boolean shouldOnlyInvalidSchema() {
+    return onlyInvalidSchema;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     ShowTimeSeriesPlanImpl that = (ShowTimeSeriesPlanImpl) o;
-    return Objects.equals(relatedTemplate, that.relatedTemplate)
+    return needViewDetail == that.needViewDetail
+        && skipInvalidSchema == that.skipInvalidSchema
+        && onlyInvalidSchema == that.onlyInvalidSchema
+        && Objects.equals(relatedTemplate, that.relatedTemplate)
         && Objects.equals(schemaFilter, that.schemaFilter);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), relatedTemplate, schemaFilter);
+    return Objects.hash(
+        super.hashCode(),
+        relatedTemplate,
+        schemaFilter,
+        needViewDetail,
+        skipInvalidSchema,
+        onlyInvalidSchema);
   }
 }

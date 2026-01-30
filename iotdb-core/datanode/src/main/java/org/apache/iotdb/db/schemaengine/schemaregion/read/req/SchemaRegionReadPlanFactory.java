@@ -45,12 +45,50 @@ public class SchemaRegionReadPlanFactory {
 
   public static IShowDevicesPlan getShowDevicesPlan(
       PartialPath path,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      SchemaFilter schemaFilter,
+      PathPatternTree scope,
+      boolean skipDevicesWithOnlyInvalidSeries) {
+    return new ShowDevicesPlanImpl(
+        path,
+        limit,
+        offset,
+        isPrefixMatch,
+        -1,
+        schemaFilter,
+        skipDevicesWithOnlyInvalidSeries,
+        scope);
+  }
+
+  public static IShowDevicesPlan getShowDevicesPlan(
+      PartialPath path,
       int limit,
       int offset,
       boolean isPrefixMatch,
       int templateId,
       PathPatternTree scope) {
     return new ShowDevicesPlanImpl(path, limit, offset, isPrefixMatch, templateId, null, scope);
+  }
+
+  public static IShowDevicesPlan getShowDevicesPlan(
+      PartialPath path,
+      int limit,
+      int offset,
+      boolean isPrefixMatch,
+      int templateId,
+      PathPatternTree scope,
+      boolean skipDevicesWithOnlyInvalidSeries) {
+    return new ShowDevicesPlanImpl(
+        path,
+        limit,
+        offset,
+        isPrefixMatch,
+        templateId,
+        null,
+        skipDevicesWithOnlyInvalidSeries,
+        scope);
   }
 
   public static IShowTimeSeriesPlan getShowTimeSeriesPlan(
@@ -66,12 +104,73 @@ public class SchemaRegionReadPlanFactory {
         path, relatedTemplate, limit, offset, isPrefixMatch, schemaFilter, needViewDetail, scope);
   }
 
+  public static IShowTimeSeriesPlan getShowTimeSeriesPlan(
+      PartialPath path,
+      Map<Integer, Template> relatedTemplate,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      SchemaFilter schemaFilter,
+      boolean needViewDetail,
+      PathPatternTree scope,
+      boolean skipInvalidSchema) {
+    return new ShowTimeSeriesPlanImpl(
+        path,
+        relatedTemplate,
+        limit,
+        offset,
+        isPrefixMatch,
+        schemaFilter,
+        needViewDetail,
+        skipInvalidSchema,
+        false,
+        scope);
+  }
+
+  public static IShowTimeSeriesPlan getShowTimeSeriesPlan(
+      PartialPath path,
+      Map<Integer, Template> relatedTemplate,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      SchemaFilter schemaFilter,
+      boolean needViewDetail,
+      PathPatternTree scope,
+      boolean skipInvalidSchema,
+      boolean onlyInvalidSchema) {
+    return new ShowTimeSeriesPlanImpl(
+        path,
+        relatedTemplate,
+        limit,
+        offset,
+        isPrefixMatch,
+        schemaFilter,
+        needViewDetail,
+        skipInvalidSchema,
+        onlyInvalidSchema,
+        scope);
+  }
+
   public static IShowNodesPlan getShowNodesPlan(PartialPath path, PathPatternTree scope) {
     return new ShowNodesPlanImpl(path, -1, false, scope);
   }
 
   public static IShowNodesPlan getShowNodesPlan(
+      PartialPath path, PathPatternTree scope, boolean skipDisabledSchema) {
+    return new ShowNodesPlanImpl(path, -1, false, skipDisabledSchema, scope);
+  }
+
+  public static IShowNodesPlan getShowNodesPlan(
       PartialPath path, int level, boolean isPrefixMatch, PathPatternTree scope) {
     return new ShowNodesPlanImpl(path, level, isPrefixMatch, scope);
+  }
+
+  public static IShowNodesPlan getShowNodesPlan(
+      PartialPath path,
+      int level,
+      boolean isPrefixMatch,
+      PathPatternTree scope,
+      boolean skipInvalidSchema) {
+    return new ShowNodesPlanImpl(path, level, isPrefixMatch, skipInvalidSchema, scope);
   }
 }

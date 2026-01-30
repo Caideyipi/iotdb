@@ -375,7 +375,7 @@ public class SchemaEngine {
 
   // not including view number
   private long getTimeSeriesNumber(ISchemaRegion schemaRegion) {
-    return schemaRegion.getSchemaRegionStatistics().getSeriesNumber(false)
+    return schemaRegion.getSchemaRegionStatistics().getSeriesNumber(false, false)
         + schemaRegion.getSchemaRegionStatistics().getTable2DevicesNumMap().entrySet().stream()
             .map(
                 tableEntry -> {

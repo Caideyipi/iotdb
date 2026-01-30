@@ -52,6 +52,8 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
 
   private final Map<Integer, Template> templateMap;
 
+  private final boolean showInvalidTimeSeries;
+
   public TimeSeriesSchemaScanNode(
       PlanNodeId id,
       PartialPath partialPath,
@@ -62,10 +64,35 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
       boolean isPrefixPath,
       @NotNull Map<Integer, Template> templateMap,
       @NotNull PathPatternTree scope) {
+    this(
+        id,
+        partialPath,
+        schemaFilter,
+        limit,
+        offset,
+        orderByHeat,
+        isPrefixPath,
+        templateMap,
+        scope,
+        false);
+  }
+
+  public TimeSeriesSchemaScanNode(
+      PlanNodeId id,
+      PartialPath partialPath,
+      SchemaFilter schemaFilter,
+      long limit,
+      long offset,
+      boolean orderByHeat,
+      boolean isPrefixPath,
+      @NotNull Map<Integer, Template> templateMap,
+      @NotNull PathPatternTree scope,
+      boolean showInvalidTimeSeries) {
     super(id, partialPath, limit, offset, isPrefixPath, scope);
     this.schemaFilter = schemaFilter;
     this.orderByHeat = orderByHeat;
     this.templateMap = templateMap;
+    this.showInvalidTimeSeries = showInvalidTimeSeries;
   }
 
   public SchemaFilter getSchemaFilter() {
@@ -82,6 +109,7 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
     ReadWriteIOUtils.write(offset, byteBuffer);
     ReadWriteIOUtils.write(orderByHeat, byteBuffer);
     ReadWriteIOUtils.write(isPrefixPath, byteBuffer);
+    ReadWriteIOUtils.write(showInvalidTimeSeries, byteBuffer);
 
     ReadWriteIOUtils.write(templateMap.size(), byteBuffer);
     for (Template template : templateMap.values()) {
@@ -99,6 +127,7 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
     ReadWriteIOUtils.write(offset, stream);
     ReadWriteIOUtils.write(orderByHeat, stream);
     ReadWriteIOUtils.write(isPrefixPath, stream);
+    ReadWriteIOUtils.write(showInvalidTimeSeries, stream);
 
     ReadWriteIOUtils.write(templateMap.size(), stream);
     for (Template template : templateMap.values()) {
@@ -120,6 +149,7 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
     long offset = ReadWriteIOUtils.readLong(byteBuffer);
     boolean oderByHeat = ReadWriteIOUtils.readBool(byteBuffer);
     boolean isPrefixPath = ReadWriteIOUtils.readBool(byteBuffer);
+    boolean showInvalidTimeSeries = ReadWriteIOUtils.readBool(byteBuffer);
 
     int templateNum = ReadWriteIOUtils.readInt(byteBuffer);
     Map<Integer, Template> templateMap = new HashMap<>();
@@ -141,7 +171,8 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
         oderByHeat,
         isPrefixPath,
         templateMap,
-        scope);
+        scope,
+        showInvalidTimeSeries);
   }
 
   public boolean isOrderByHeat() {
@@ -150,6 +181,10 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
 
   public Map<Integer, Template> getTemplateMap() {
     return templateMap;
+  }
+
+  public boolean isShowInvalidTimeSeries() {
+    return showInvalidTimeSeries;
   }
 
   @Override
@@ -168,11 +203,17 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
         orderByHeat,
         isPrefixPath,
         templateMap,
-        scope);
+        scope,
+        showInvalidTimeSeries);
   }
 
   @Override
   public List<String> getOutputColumnNames() {
+    if (showInvalidTimeSeries) {
+      return ColumnHeaderConstant.showInvalidTimeSeriesColumnHeaders.stream()
+          .map(ColumnHeader::getColumnName)
+          .collect(Collectors.toList());
+    }
     return ColumnHeaderConstant.showTimeSeriesColumnHeaders.stream()
         .map(ColumnHeader::getColumnName)
         .collect(Collectors.toList());
@@ -190,7 +231,9 @@ public class TimeSeriesSchemaScanNode extends SchemaQueryScanNode {
       return false;
     }
     TimeSeriesSchemaScanNode that = (TimeSeriesSchemaScanNode) o;
-    return orderByHeat == that.orderByHeat && Objects.equals(schemaFilter, that.schemaFilter);
+    return orderByHeat == that.orderByHeat
+        && showInvalidTimeSeries == that.showInvalidTimeSeries
+        && Objects.equals(schemaFilter, that.schemaFilter);
   }
 
   @Override

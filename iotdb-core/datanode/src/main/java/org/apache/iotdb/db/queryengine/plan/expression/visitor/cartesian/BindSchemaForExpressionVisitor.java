@@ -19,8 +19,10 @@
 
 package org.apache.iotdb.db.queryengine.plan.expression.visitor.cartesian;
 
+import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
+import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.commons.schema.view.LogicalViewSchema;
 import org.apache.iotdb.commons.schema.view.viewExpression.ViewExpression;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
@@ -37,11 +39,15 @@ import org.apache.iotdb.db.utils.constant.SqlConstant;
 
 import org.apache.tsfile.external.commons.lang3.Validate;
 import org.apache.tsfile.write.schema.IMeasurementSchema;
+import org.apache.tsfile.write.schema.MeasurementSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.apache.iotdb.db.queryengine.plan.analyze.ExpressionUtils.cartesianProduct;
@@ -51,6 +57,9 @@ import static org.apache.iotdb.db.utils.constant.SqlConstant.COUNT_TIME;
 
 public class BindSchemaForExpressionVisitor
     extends CartesianProductVisitor<BindSchemaForExpressionVisitor.Context> {
+
+  private static final Logger logger =
+      LoggerFactory.getLogger(BindSchemaForExpressionVisitor.class);
 
   @Override
   public List<Expression> visitFunctionExpression(
@@ -109,12 +118,19 @@ public class BindSchemaForExpressionVisitor
     PartialPath timeSeriesOperandPath = timeSeriesOperand.getPath();
     List<MeasurementPath> actualPaths =
         context.getSchemaTree().searchMeasurementPaths(timeSeriesOperandPath).left;
-    // process logical view
+    // process logical view and alias series, skip invalid series
     List<MeasurementPath> nonViewActualPaths = new ArrayList<>();
     List<MeasurementPath> viewPaths = new ArrayList<>();
+    List<MeasurementPath> aliasSeriesPaths = new ArrayList<>();
     for (MeasurementPath measurementPath : actualPaths) {
+      // Skip invalid series
+      if (isInvalidSeries(measurementPath)) {
+        continue;
+      }
       if (measurementPath.getMeasurementSchema().isLogicalView()) {
         viewPaths.add(measurementPath);
+      } else if (isAliasSeries(measurementPath)) {
+        aliasSeriesPaths.add(measurementPath);
       } else {
         nonViewActualPaths.add(measurementPath);
       }
@@ -122,6 +138,23 @@ public class BindSchemaForExpressionVisitor
     List<Expression> reconstructTimeSeriesOperands =
         ExpressionUtils.reconstructTimeSeriesOperandsWithMemoryCheck(
             timeSeriesOperand, nonViewActualPaths, context.getQueryContext());
+    // handle alias series: convert to physical paths but preserve alias path for display
+    for (MeasurementPath aliasPath : aliasSeriesPaths) {
+      PartialPath physicalPath = getOriginalPathFromAliasSeries(aliasPath);
+      if (physicalPath != null) {
+        // Search for the physical path in schema tree
+        List<MeasurementPath> physicalPaths =
+            context.getSchemaTree().searchMeasurementPaths(physicalPath).left;
+        List<Expression> physicalExpressions =
+            ExpressionUtils.reconstructTimeSeriesOperandsWithMemoryCheck(
+                new TimeSeriesOperand(physicalPath), physicalPaths, context.getQueryContext());
+        // Set the alias path as viewPath to preserve it for display in query results
+        for (Expression expr : physicalExpressions) {
+          expr.setViewPath(aliasPath);
+        }
+        reconstructTimeSeriesOperands.addAll(physicalExpressions);
+      }
+    }
     // handle logical views
     for (MeasurementPath measurementPath : viewPaths) {
       Expression replacedExpression = transformViewPath(measurementPath, context.getSchemaTree());
@@ -155,6 +188,69 @@ public class BindSchemaForExpressionVisitor
     Expression expression = new TransformToExpressionVisitor().process(viewExpression, null);
     expression = new CompleteMeasurementSchemaVisitor().process(expression, schemaTree);
     return expression;
+  }
+
+  /**
+   * Check if a MeasurementPath represents an invalid series.
+   *
+   * @param measurementPath the MeasurementPath to check
+   * @return true if it's invalid, false otherwise
+   */
+  public static boolean isInvalidSeries(MeasurementPath measurementPath) {
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      return false;
+    }
+    Map<String, String> props = schema.getProps();
+    return MeasurementPropsUtils.isInvalid(props);
+  }
+
+  /**
+   * Check if a MeasurementPath represents an alias series (renamed series).
+   *
+   * @param measurementPath the MeasurementPath to check
+   * @return true if it's an alias series, false otherwise
+   */
+  public static boolean isAliasSeries(MeasurementPath measurementPath) {
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      return false;
+    }
+    Map<String, String> props = schema.getProps();
+    if (props == null) {
+      return false;
+    }
+    return MeasurementPropsUtils.isRenamed(props);
+  }
+
+  /**
+   * Get the original physical path from an alias series MeasurementPath.
+   *
+   * @param measurementPath the alias series MeasurementPath
+   * @return the original physical path, or null if not an alias series
+   */
+  public static PartialPath getOriginalPathFromAliasSeries(MeasurementPath measurementPath) {
+    if (!isAliasSeries(measurementPath)) {
+      return null;
+    }
+    IMeasurementSchema schema = measurementPath.getMeasurementSchema();
+    if (!(schema instanceof MeasurementSchema)) {
+      return null;
+    }
+    Map<String, String> props = schema.getProps();
+    if (props == null) {
+      return null;
+    }
+    String originalPathStr = MeasurementPropsUtils.getOriginalPathString(props);
+    if (originalPathStr == null) {
+      return null;
+    }
+    try {
+      return new PartialPath(originalPathStr);
+    } catch (IllegalPathException e) {
+      logger.warn("Failed to parse original path from alias series: {}", originalPathStr, e);
+      return null;
+    }
   }
 
   public static class Context implements QueryContextProvider {

@@ -468,6 +468,10 @@ INTO
     : I N T O
     ;
 
+INVALID
+    : I N V A L I D
+    ;
+
 IS
     : I S
     ;

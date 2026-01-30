@@ -44,11 +44,14 @@ public class NodeSchemaSource implements ISchemaSource<INodeSchemaInfo> {
   private final PartialPath pathPattern;
   private final PathPatternTree scope;
   private final int level;
+  private final boolean skipInvalidSchema;
 
-  NodeSchemaSource(PartialPath pathPattern, int level, PathPatternTree scope) {
+  NodeSchemaSource(
+      PartialPath pathPattern, int level, PathPatternTree scope, boolean skipInvalidSchema) {
     this.pathPattern = pathPattern;
     this.level = level;
     this.scope = scope;
+    this.skipInvalidSchema = skipInvalidSchema;
   }
 
   @Override
@@ -57,10 +60,11 @@ public class NodeSchemaSource implements ISchemaSource<INodeSchemaInfo> {
     if (-1 == level) {
       showNodesPlan =
           SchemaRegionReadPlanFactory.getShowNodesPlan(
-              pathPattern.concatNode(ONE_LEVEL_PATH_WILDCARD), scope);
+              pathPattern.concatNode(ONE_LEVEL_PATH_WILDCARD), scope, skipInvalidSchema);
     } else {
       showNodesPlan =
-          SchemaRegionReadPlanFactory.getShowNodesPlan(pathPattern, level, false, scope);
+          SchemaRegionReadPlanFactory.getShowNodesPlan(
+              pathPattern, level, false, scope, skipInvalidSchema);
     }
     try {
       return schemaRegion.getNodeReader(showNodesPlan);

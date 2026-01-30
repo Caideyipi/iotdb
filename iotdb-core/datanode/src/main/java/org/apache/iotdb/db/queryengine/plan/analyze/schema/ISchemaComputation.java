@@ -77,11 +77,66 @@ public interface ISchemaComputation {
   Pair<Integer, Integer> getRangeOfLogicalViewSchemaListRecorded();
 
   /**
+   * Compute measurement schema for logical view.
+   *
    * @param index the index of fetched measurement in array returned by getMeasurements
    * @param measurementSchemaInfo the measurement schema of source of the logical view
    * @param isAligned whether the source of this view is aligned.
    */
   void computeMeasurementOfView(
       int index, IMeasurementSchemaInfo measurementSchemaInfo, boolean isAligned);
+
+  // region used by alias series
+
+  /**
+   * Check if there are alias series that need to be processed.
+   *
+   * @return true if there are alias series to process, false otherwise
+   */
+  boolean hasAliasSeriesNeedProcess();
+
+  /**
+   * Get the original physical path list of alias series recorded by this statement.
+   *
+   * @return the original physical path list of alias series recorded by this statement. It may be
+   *     NULL if it is not used before.
+   */
+  List<PartialPath> getAliasSeriesOriginalPathList();
+
+  /**
+   * Get the index list of alias series paths, where source of alias series should be placed.
+   *
+   * @return the index list of alias series paths, where source of alias series should be placed.
+   *     For example, IndexListOfAliasSeriesPaths[alpha] = beta, then you should use
+   *     AliasSeriesOriginalPathList[alpha] to fill measurementSchema[beta].
+   */
+  List<Integer> getIndexListOfAliasSeriesPaths();
+
+  /**
+   * Record the beginning and ending of alias series path list.
+   *
+   * <p>After calling this interface, the range should be record. For example, the range is [0,4)
+   * which means 4 paths exist. Later, more 3 paths are added, this function is called, then it
+   * records [4,7).
+   */
+  void recordRangeOfAliasSeriesPathListNow();
+
+  /**
+   * Get the recorded range of alias series path list.
+   *
+   * @return the recorded range of alias series path list
+   */
+  Pair<Integer, Integer> getRangeOfAliasSeriesPathListRecorded();
+
+  /**
+   * Compute measurement schema for alias series.
+   *
+   * @param index the index of fetched measurement in array returned by getMeasurements
+   * @param measurementSchemaInfo the measurement schema of source of the alias series
+   * @param isAligned whether the source of this alias series is aligned.
+   */
+  void computeMeasurementOfAliasSeries(
+      int index, IMeasurementSchemaInfo measurementSchemaInfo, boolean isAligned);
+
   // endregion
 }

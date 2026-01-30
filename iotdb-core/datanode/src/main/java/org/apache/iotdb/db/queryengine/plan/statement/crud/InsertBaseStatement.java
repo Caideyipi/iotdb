@@ -106,6 +106,35 @@ public abstract class InsertBaseStatement extends Statement implements Accountab
   /** it is the end of current range. */
   protected int recordedEndOfLogicalViewSchemaList = 0;
 
+  // endregion
+
+  // region params used by analyzing alias series.
+
+  /**
+   * This param records the original physical paths of alias series appeared in this statement.
+   *
+   * <p>For example, if an alias series root.view.d1.temperature points to root.sg1.d1.temperature,
+   * then root.sg1.d1.temperature is stored here.
+   */
+  protected List<PartialPath> aliasSeriesOriginalPathList;
+
+  /**
+   * This param records the index of the location where the source of this alias series should be
+   * placed.
+   *
+   * <p>For example, indexOfAliasSeriesPaths[alpha] = beta means source of
+   * aliasSeriesOriginalPathList[alpha] should be filled into measurementSchemas[beta].
+   */
+  protected List<Integer> indexOfAliasSeriesPaths;
+
+  /** it is the end of last range, the beginning of current range. */
+  protected int recordedBeginOfAliasSeriesPathList = 0;
+
+  /** it is the end of current range. */
+  protected int recordedEndOfAliasSeriesPathList = 0;
+
+  // endregion
+
   @TableModel protected String databaseName;
 
   protected long ramBytesUsed = Long.MIN_VALUE;
@@ -504,12 +533,23 @@ public abstract class InsertBaseStatement extends Statement implements Accountab
 
   // endregion
 
-  // region functions used by analyzing logical views
+  // region functions used by analyzing logical views and alias series
   /**
-   * Remove logical view in this statement according to validated schemas. So this function should
-   * be called after validating schemas.
+   * Remove logical view and alias series in this statement according to validated schemas. This
+   * function should be called after validating schemas. It will split the statement into multiple
+   * statements based on the actual device paths of logical views and alias series. After this
+   * operation, logical views and alias series are replaced with their physical paths.
    */
-  public abstract InsertBaseStatement removeLogicalView();
+  public abstract InsertBaseStatement removeLogicalViewAndAliasSeries();
+
+  // region functions used by analyzing alias series
+  public List<PartialPath> getAliasSeriesOriginalPathList() {
+    return aliasSeriesOriginalPathList;
+  }
+
+  public List<Integer> getIndexListOfAliasSeriesPaths() {
+    return indexOfAliasSeriesPaths;
+  }
 
   public void setFailedMeasurementIndex2Info(
       Map<Integer, FailedMeasurementInfo> failedMeasurementIndex2Info) {
@@ -535,6 +575,17 @@ public abstract class InsertBaseStatement extends Statement implements Accountab
         indexMapToLogicalViewList[realIndex] = i;
       }
     }
+    // Track alias series indices similar to logical views
+    boolean[] isAliasSeries = new boolean[this.measurements.length];
+    int[] indexMapToAliasSeriesList = new int[this.measurements.length];
+    Arrays.fill(isAliasSeries, false);
+    if (this.indexOfAliasSeriesPaths != null) {
+      for (int i = 0; i < this.indexOfAliasSeriesPaths.size(); i++) {
+        int realIndex = this.indexOfAliasSeriesPaths.get(i);
+        isAliasSeries[realIndex] = true;
+        indexMapToAliasSeriesList[realIndex] = i;
+      }
+    }
     // construct map from device to measurements and record the index of its measurement
     // schema
     Map<PartialPath, List<Pair<String, Integer>>> mapFromDeviceToMeasurementAndIndex =
@@ -548,6 +599,12 @@ public abstract class InsertBaseStatement extends Statement implements Accountab
             this.logicalViewSchemaList.get(viewIndex).getSourcePathIfWritable().getDevicePath();
         measurementName =
             this.logicalViewSchemaList.get(viewIndex).getSourcePathIfWritable().getMeasurement();
+      } else if (isAliasSeries[i]) {
+        // Handle alias series: use physical path from aliasSeriesOriginalPathList
+        int aliasIndex = indexMapToAliasSeriesList[i];
+        PartialPath originalPath = this.aliasSeriesOriginalPathList.get(aliasIndex);
+        targetDevicePath = originalPath.getDevicePath();
+        measurementName = originalPath.getMeasurement();
       } else {
         targetDevicePath = this.devicePath;
         measurementName = this.measurements[i];

@@ -76,7 +76,9 @@ public class RegionScanLogicalPlannerTest {
                 "{\"key1\":\"value1\"}",
                 null,
                 null,
-                null)));
+                null,
+                new HashMap<>(),
+                "root.sg")));
     timeseriesSchemaInfoMap.put(
         new MeasurementPath("root.sg.d1.s2", TSDataType.DOUBLE),
         Collections.singletonList(
@@ -88,7 +90,9 @@ public class RegionScanLogicalPlannerTest {
                 "{\"key1\":\"value1\"}",
                 null,
                 null,
-                null)));
+                null,
+                new HashMap<>(),
+                "root.sg")));
     timeseriesSchemaInfoMap.put(
         new MeasurementPath("root.sg.d1.s3", TSDataType.BOOLEAN),
         Collections.singletonList(
@@ -100,7 +104,9 @@ public class RegionScanLogicalPlannerTest {
                 "{\"key1\":\"value2\"}",
                 null,
                 null,
-                null)));
+                null,
+                new HashMap<>(),
+                "root.sg")));
     deviceToTimeseriesSchemaInfoMap.put(new PartialPath("root.sg.d1"), timeseriesSchemaInfoMap);
 
     Map<PartialPath, List<TimeseriesContext>> timeseriesSchemaInfoMap2 = new HashMap<>();
@@ -115,7 +121,9 @@ public class RegionScanLogicalPlannerTest {
                 "{\"key1\":\"value1\"}",
                 null,
                 null,
-                null)));
+                null,
+                new HashMap<>(),
+                "root.sg")));
     timeseriesSchemaInfoMap2.put(
         new MeasurementPath("root.sg.d2.s2", TSDataType.DOUBLE),
         Collections.singletonList(
@@ -127,7 +135,9 @@ public class RegionScanLogicalPlannerTest {
                 "{\"key1\":\"value1\"}",
                 null,
                 null,
-                null)));
+                null,
+                new HashMap<>(),
+                "root.sg")));
     timeseriesSchemaInfoMap2.put(
         new MeasurementPath("root.sg.d2.s4", TSDataType.TEXT),
         Collections.singletonList(
@@ -139,7 +149,9 @@ public class RegionScanLogicalPlannerTest {
                 "{\"key2\":\"value1\"}",
                 null,
                 null,
-                null)));
+                null,
+                new HashMap<>(),
+                "root.sg")));
     deviceToTimeseriesSchemaInfoMap.put(new PartialPath("root.sg.d2"), timeseriesSchemaInfoMap2);
 
     List<String> schemas = new ArrayList<>();
@@ -156,7 +168,9 @@ public class RegionScanLogicalPlannerTest {
             "{\"key1\":\"value1\"}",
             null,
             null,
-            null));
+            null,
+            new HashMap<>(),
+            "root.sg"));
     timeseriesContextList.add(
         new TimeseriesContext(
             "DOUBLE",
@@ -166,7 +180,9 @@ public class RegionScanLogicalPlannerTest {
             "{\"key1\":\"value1\"}",
             null,
             null,
-            null));
+            null,
+            new HashMap<>(),
+            "root.sg"));
     timeseriesSchemaInfoMap3.put(
         new AlignedPath("root.sg.d2.a", schemas, Collections.emptyList()), timeseriesContextList);
     deviceToTimeseriesSchemaInfoMap.put(new PartialPath("root.sg.d2.a"), timeseriesSchemaInfoMap3);
@@ -258,7 +274,7 @@ public class RegionScanLogicalPlannerTest {
 
     TimeseriesRegionScanNode regionScanNode =
         new TimeseriesRegionScanNode(
-            queryId.genPlanNodeId(), getDeviceToTimeseriesSchemaInfoMap(), true, null);
+            queryId.genPlanNodeId(), getDeviceToTimeseriesSchemaInfoMap(), true, null, false);
 
     PlanNode actualPlan = parseSQLToPlanNode(sql);
     Assert.assertEquals(actualPlan, regionScanNode);
@@ -269,7 +285,11 @@ public class RegionScanLogicalPlannerTest {
 
     TimeseriesRegionScanNode timeseriesRegionScanNode =
         new TimeseriesRegionScanNode(
-            new PlanNodeId("timeseries_test_id"), getDeviceToTimeseriesSchemaInfoMap(), true, null);
+            new PlanNodeId("timeseries_test_id"),
+            getDeviceToTimeseriesSchemaInfoMap(),
+            true,
+            null,
+            false);
 
     ByteBuffer buffer = ByteBuffer.allocate(10240);
     timeseriesRegionScanNode.serialize(buffer);

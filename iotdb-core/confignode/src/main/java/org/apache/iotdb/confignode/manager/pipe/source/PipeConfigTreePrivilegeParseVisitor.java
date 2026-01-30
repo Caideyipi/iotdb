@@ -43,6 +43,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeAlte
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeactivateTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CommitSetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.template.CreateSchemaTemplatePlan;
@@ -57,7 +58,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -279,12 +279,6 @@ public class PipeConfigTreePrivilegeParseVisitor
       return result
           ? Optional.of(new PipeDeleteTimeSeriesPlan(intersectedTree.serialize()))
           : Optional.empty();
-    } catch (final IOException e) {
-      LOGGER.warn(
-          "Serialization failed for the delete time series plan in pipe transmission, skip transfer",
-          e);
-      logger.recordObjectAuthenticationAuditLog(userEntity.setResult(false), () -> auditObject);
-      return Optional.empty();
     } catch (final AuthException e) {
       logger.recordObjectAuthenticationAuditLog(userEntity.setResult(false), () -> auditObject);
       if (skip) {
@@ -317,12 +311,6 @@ public class PipeConfigTreePrivilegeParseVisitor
       return result
           ? Optional.of(new PipeDeleteLogicalViewPlan(intersectedTree.serialize()))
           : Optional.empty();
-    } catch (final IOException e) {
-      LOGGER.warn(
-          "Serialization failed for the delete time series plan in pipe transmission, skip transfer",
-          e);
-      logger.recordObjectAuthenticationAuditLog(userEntity.setResult(false), () -> auditObject);
-      return Optional.empty();
     } catch (final AuthException e) {
       logger.recordObjectAuthenticationAuditLog(userEntity.setResult(false), () -> auditObject);
       if (skip) {
@@ -361,12 +349,6 @@ public class PipeConfigTreePrivilegeParseVisitor
                   pipeAlterEncodingCompressor.getCompressor(),
                   pipeAlterEncodingCompressor.isMayAlterAudit()))
           : Optional.empty();
-    } catch (final IOException e) {
-      LOGGER.warn(
-          "Serialization failed for the delete time series plan in pipe transmission, skip transfer",
-          e);
-      logger.recordObjectAuthenticationAuditLog(userEntity.setResult(false), () -> auditObject);
-      return Optional.empty();
     } catch (final AuthException e) {
       logger.recordObjectAuthenticationAuditLog(userEntity.setResult(false), () -> auditObject);
       if (skip) {
@@ -473,6 +455,43 @@ public class PipeConfigTreePrivilegeParseVisitor
       } else {
         throw new AccessDeniedException(
             "Not has privilege to transfer plan: " + pipeAlterTimeSeriesPlan);
+      }
+    }
+  }
+
+  @Override
+  public Optional<ConfigPhysicalPlan> visitPipeRenameTimeSeries(
+      final PipeRenameTimeSeriesPlan pipeRenameTimeSeriesPlan, final IAuditEntity userEntity) {
+    final CNAuditLogger logger = ConfigNode.getInstance().getConfigManager().getAuditLogger();
+    userEntity.setPrivilegeType(PrivilegeType.READ_SCHEMA);
+    final PartialPath oldPath = PartialPath.deserialize(pipeRenameTimeSeriesPlan.getOldPathBytes());
+    final PartialPath newPath = PartialPath.deserialize(pipeRenameTimeSeriesPlan.getOldPathBytes());
+    final String auditObject = oldPath.getFullPath();
+    try {
+      final List<PartialPath> oldPaths =
+          getAllIntersectedPatterns(oldPath, userEntity, pipeRenameTimeSeriesPlan);
+
+      final List<PartialPath> newPaths =
+          getAllIntersectedPatterns(newPath, userEntity, pipeRenameTimeSeriesPlan);
+
+      final boolean result =
+          !newPaths.isEmpty()
+              && newPaths.get(0).getNodeLength() == newPath.getNodeLength()
+              && !oldPaths.isEmpty()
+              && oldPaths.get(0).getNodeLength() == oldPath.getNodeLength();
+      logger.recordObjectAuthenticationAuditLog(userEntity.setResult(result), () -> auditObject);
+      return result
+          ? Optional.of(
+              new PipeRenameTimeSeriesPlan(
+                  pipeRenameTimeSeriesPlan.getOldPathBytes(),
+                  pipeRenameTimeSeriesPlan.getNewPathBytes()))
+          : Optional.empty();
+    } catch (final AuthException e) {
+      if (skip) {
+        return Optional.empty();
+      } else {
+        throw new AccessDeniedException(
+            "Not has privilege to transfer plan: " + pipeRenameTimeSeriesPlan);
       }
     }
   }

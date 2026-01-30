@@ -55,7 +55,6 @@ import org.apache.tsfile.file.metadata.IDeviceID;
 
 import javax.annotation.Nullable;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -408,11 +407,7 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
   }
 
   private TSchemaPartitionReq constructSchemaPartitionReq(final PathPatternTree patternTree) {
-    try {
-      return new TSchemaPartitionReq(patternTree.serialize());
-    } catch (final IOException e) {
-      throw new StatementAnalyzeException("An error occurred when serializing pattern tree");
-    }
+    return new TSchemaPartitionReq(patternTree.serialize());
   }
 
   private TSchemaNodeManagementReq constructSchemaNodeManagementPartitionReq(
@@ -420,20 +415,16 @@ public class ClusterPartitionFetcher implements IPartitionFetcher {
       final PathPatternTree scope,
       final Integer level,
       boolean needAuditDB) {
-    try {
-      final TSchemaNodeManagementReq schemaNodeManagementReq =
-          new TSchemaNodeManagementReq(patternTree.serialize());
-      schemaNodeManagementReq.setScopePatternTree(scope.serialize());
-      schemaNodeManagementReq.setNeedAuditDB(needAuditDB);
-      if (null == level) {
-        schemaNodeManagementReq.setLevel(-1);
-      } else {
-        schemaNodeManagementReq.setLevel(level);
-      }
-      return schemaNodeManagementReq;
-    } catch (final IOException e) {
-      throw new StatementAnalyzeException("An error occurred when serializing pattern tree");
+    final TSchemaNodeManagementReq schemaNodeManagementReq =
+        new TSchemaNodeManagementReq(patternTree.serialize());
+    schemaNodeManagementReq.setScopePatternTree(scope.serialize());
+    schemaNodeManagementReq.setNeedAuditDB(needAuditDB);
+    if (null == level) {
+      schemaNodeManagementReq.setLevel(-1);
+    } else {
+      schemaNodeManagementReq.setLevel(level);
     }
+    return schemaNodeManagementReq;
   }
 
   private static class ComplexTimeSlotList {

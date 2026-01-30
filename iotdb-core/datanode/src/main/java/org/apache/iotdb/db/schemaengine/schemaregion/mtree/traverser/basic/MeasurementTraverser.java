@@ -66,7 +66,7 @@ public abstract class MeasurementTraverser<R, N extends IMNode<N>> extends Trave
   }
 
   @Override
-  protected boolean acceptFullMatchedNode(N node) {
+  protected boolean acceptFullyMatchedNode(N node) {
     return node.isMeasurement();
   }
 

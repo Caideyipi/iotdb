@@ -43,7 +43,7 @@ public class SchemaTreeDeviceUsingTemplateVisitor extends SchemaTreeVisitor<Part
   }
 
   @Override
-  protected boolean acceptFullMatchedNode(SchemaNode node) {
+  protected boolean acceptFullyMatchedNode(SchemaNode node) {
     return node.isEntity() && node.getAsEntityNode().getTemplateId() == templateId;
   }
 

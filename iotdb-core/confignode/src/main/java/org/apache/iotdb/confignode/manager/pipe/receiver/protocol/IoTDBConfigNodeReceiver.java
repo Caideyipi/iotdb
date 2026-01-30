@@ -66,6 +66,7 @@ import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDele
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteLogicalViewPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeDeleteTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeEnrichedPlan;
+import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeRenameTimeSeriesPlan;
 import org.apache.iotdb.confignode.consensus.request.write.pipe.payload.PipeUnsetSchemaTemplatePlan;
 import org.apache.iotdb.confignode.consensus.request.write.table.AbstractTablePlan;
 import org.apache.iotdb.confignode.consensus.request.write.table.AddTableColumnPlan;
@@ -447,6 +448,11 @@ public class IoTDBConfigNodeReceiver extends IoTDBFileReceiver {
             PrivilegeType.WRITE_SCHEMA,
             Collections.singletonList(((PipeAlterTimeSeriesPlan) plan).getMeasurementPath()),
             true);
+      case PipeRenameTimeSeries:
+        List<PartialPath> list = new ArrayList<>(2);
+        list.add(PartialPath.deserialize(((PipeRenameTimeSeriesPlan) plan).getOldPathBytes()));
+        list.add(PartialPath.deserialize(((PipeRenameTimeSeriesPlan) plan).getOldPathBytes()));
+        return checkPathsStatus(userEntity, PrivilegeType.WRITE_SCHEMA, list, true);
       case UpdateTriggerStateInTable:
         triggerName = ((UpdateTriggerStateInTablePlan) plan).getTriggerName();
         return checkGlobalStatus(userEntity, PrivilegeType.USE_TRIGGER, triggerName, true);
@@ -849,6 +855,14 @@ public class IoTDBConfigNodeReceiver extends IoTDBFileReceiver {
                 ((PipeAlterTimeSeriesPlan) plan).getMeasurementPath(),
                 ((PipeAlterTimeSeriesPlan) plan).getOperationType(),
                 ((PipeAlterTimeSeriesPlan) plan).getDataType(),
+                true);
+      case PipeRenameTimeSeries:
+        return configManager
+            .getProcedureManager()
+            .renameTimeSeries(
+                queryId,
+                PartialPath.deserialize(((PipeRenameTimeSeriesPlan) plan).getOldPathBytes()),
+                PartialPath.deserialize(((PipeRenameTimeSeriesPlan) plan).getNewPathBytes()),
                 true);
       case PipeCreateTableOrView:
         return executeIdempotentCreateTableOrView(

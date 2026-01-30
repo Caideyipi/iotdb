@@ -73,6 +73,12 @@ public abstract class Traverser<R, N extends IMNode<N>> extends AbstractTreeVisi
   // If true, the pre deleted measurement or pre deactivated template won't be processed
   protected boolean skipPreDeletedSchema = false;
 
+  // If true, the invalid measurement (DISABLED=true) won't be processed
+  protected boolean skipInvalidSchema = false;
+
+  // If true, only invalid measurement (DISABLED=true) will be processed
+  protected boolean onlyInvalidSchema = false;
+
   // Default false means fullPath pattern match
   protected boolean isPrefixMatch = false;
   private IDeviceMNode<N> skipTemplateDevice;
@@ -175,11 +181,12 @@ public abstract class Traverser<R, N extends IMNode<N>> extends AbstractTreeVisi
     }
     if (child == null) {
       child = store.getChild(parent, childName);
-      if (Objects.nonNull(child)
-          && skipPreDeletedSchema
-          && child.isMeasurement()
-          && child.getAsMeasurementMNode().isPreDeleted()) {
-        child = null;
+      if (Objects.nonNull(child) && child.isMeasurement()) {
+        if ((skipPreDeletedSchema && child.getAsMeasurementMNode().isPreDeleted())
+            || (skipInvalidSchema && child.getAsMeasurementMNode().isInvalid())
+            || (onlyInvalidSchema && !child.getAsMeasurementMNode().isInvalid())) {
+          child = null;
+        }
       }
     }
     return child;
@@ -278,6 +285,14 @@ public abstract class Traverser<R, N extends IMNode<N>> extends AbstractTreeVisi
 
   public void setSkipPreDeletedSchema(boolean skipPreDeletedSchema) {
     this.skipPreDeletedSchema = skipPreDeletedSchema;
+  }
+
+  public void setSkipInvalidSchema(boolean skipInvalidSchema) {
+    this.skipInvalidSchema = skipInvalidSchema;
+  }
+
+  public void setOnlyInvalidSchema(boolean onlyInvalidSchema) {
+    this.onlyInvalidSchema = onlyInvalidSchema;
   }
 
   @Override

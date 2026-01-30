@@ -26,6 +26,13 @@ import org.apache.iotdb.commons.path.PathDeserializeUtil;
 import org.apache.iotdb.commons.schema.view.viewExpression.ViewExpression;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.PlanNodeType;
 import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.AlterEncodingCompressorNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.CreateAliasSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.DropAliasSeriesNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.LockAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesEnabledNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.MarkSeriesInvalidNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UnlockForAliasNode;
+import org.apache.iotdb.db.queryengine.plan.planner.plan.node.metadata.write.UpdatePhysicalAliasRefNode;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.node.schema.ConstructTableDevicesBlackListNode;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.node.schema.CreateOrUpdateTableDeviceNode;
 import org.apache.iotdb.db.queryengine.plan.relational.planner.node.schema.DeleteTableDeviceNode;
@@ -481,6 +488,48 @@ public class SchemaRegionPlanDeserializer implements IDeserializer<ISchemaRegion
     public ISchemaRegionPlan visitAlterEncodingCompressor(
         final AlterEncodingCompressorNode alterEncodingCompressorNode, final ByteBuffer buffer) {
       return (AlterEncodingCompressorNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitCreateAliasSeries(
+        final CreateAliasSeriesNode createAliasSeriesNode, final ByteBuffer buffer) {
+      return (CreateAliasSeriesNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitMarkSeriesInvalid(
+        final MarkSeriesInvalidNode markSeriesInvalidNode, final ByteBuffer buffer) {
+      return (MarkSeriesInvalidNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitUpdatePhysicalAliasRef(
+        final UpdatePhysicalAliasRefNode updatePhysicalAliasRefNode, final ByteBuffer buffer) {
+      return (UpdatePhysicalAliasRefNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitDropAliasSeries(
+        final DropAliasSeriesNode dropAliasSeriesNode, final ByteBuffer buffer) {
+      return (DropAliasSeriesNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitMarkSeriesEnabled(
+        final MarkSeriesEnabledNode markSeriesEnabledNode, final ByteBuffer buffer) {
+      return (MarkSeriesEnabledNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitUnlockForAlias(
+        final UnlockForAliasNode unlockForAliasNode, final ByteBuffer buffer) {
+      return (UnlockForAliasNode) PlanNodeType.deserialize(buffer);
+    }
+
+    @Override
+    public ISchemaRegionPlan visitLockAlias(
+        final LockAliasNode lockAliasNode, final ByteBuffer buffer) {
+      return (LockAliasNode) PlanNodeType.deserialize(buffer);
     }
   }
 }
