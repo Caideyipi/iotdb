@@ -562,7 +562,7 @@ public class Base32 extends BaseNCodec {
       // For backwards compatibility 3 & 6 chars are decoded anyway rather than discarded.
       // See the encode(byte[]) method EOF section.
       switch (context.modulus) {
-          //              case 0 : // impossible, as excluded above
+        //              case 0 : // impossible, as excluded above
         case 1: // 5 bits - either ignore entirely, or raise an exception
           validateTrailingCharacters();
         case 2: // 10 bits, drop 2 and output one byte
