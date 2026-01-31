@@ -18,11 +18,15 @@
 package org.apache.iotdb.mqtt;
 
 import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.utils.RamUsageEstimator;
 
 import java.util.List;
 
 /** Message parsing into a table */
 public class TableMessage extends Message {
+
+  private static final long INSTANCE_SIZE =
+      RamUsageEstimator.shallowSizeOfInstance(TableMessage.class);
 
   private String database;
 
@@ -140,5 +144,24 @@ public class TableMessage extends Message {
         + ", timestamp="
         + timestamp
         + '}';
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    long size = INSTANCE_SIZE;
+    // Add parent class fields
+    size += RamUsageEstimator.sizeOf(timestamp);
+    // Add String fields
+    size += RamUsageEstimator.sizeOf(database);
+    size += RamUsageEstimator.sizeOf(table);
+    // Add List fields - includes list overhead and elements
+    size += RamUsageEstimator.sizeOfCollection(tagKeys);
+    size += RamUsageEstimator.sizeOfCollection(tagValues);
+    size += RamUsageEstimator.sizeOfCollection(attributeKeys);
+    size += RamUsageEstimator.sizeOfCollection(attributeValues);
+    size += RamUsageEstimator.sizeOfCollection(fields);
+    size += RamUsageEstimator.sizeOfCollection(dataTypes);
+    size += RamUsageEstimator.sizeOfCollection(values);
+    return size;
   }
 }

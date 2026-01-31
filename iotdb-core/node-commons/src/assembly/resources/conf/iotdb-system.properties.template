@@ -2318,6 +2318,17 @@ mqtt_payload_formatter=json
 # Datatype: int
 mqtt_max_message_size=1048576
 
+# Batch write interval for mqtt payloads, default value is 1000 ms
+# Datatype: long
+# effectiveMode: restart
+mqtt_payload_batch_interval_in_ms=1000
+
+# Maximum size in byte of the queue used for batching mqtt payloads, default value is 20971520 bytes (20MB)
+# If the size exceeds this value, further writes will be blocked.
+# Datatype: long
+# effectiveMode: restart
+mqtt_payload_batch_max_queue_bytes=20971520
+
 ####################
 ### Audit log Configuration
 ####################

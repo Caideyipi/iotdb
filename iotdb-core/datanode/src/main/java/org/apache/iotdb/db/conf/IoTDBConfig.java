@@ -130,6 +130,15 @@ public class IoTDBConfig {
   /** Max mqtt message size. Unit: byte */
   private int mqttMaxMessageSize = 1048576;
 
+  /** Batch write interval for mqtt payloads, default value is 1000 ms */
+  private long mqttPayloadBatchIntervalInMS = 1000;
+
+  /**
+   * Maximum size in byte of the queue used for batching mqtt payloads, default value is 20971520
+   * bytes (20MB)
+   */
+  private long mqttPayloadBatchMaxQueueBytes = 20971520;
+
   /** Rpc binding address. */
   private String rpcAddress = "127.0.0.1";
 
@@ -2610,6 +2619,22 @@ public class IoTDBConfig {
 
   public void setMqttMaxMessageSize(int mqttMaxMessageSize) {
     this.mqttMaxMessageSize = mqttMaxMessageSize;
+  }
+
+  public long getMqttPayloadBatchIntervalInMS() {
+    return mqttPayloadBatchIntervalInMS;
+  }
+
+  public void setMqttPayloadBatchIntervalInMS(long mqttPayloadBatchIntervalInMS) {
+    this.mqttPayloadBatchIntervalInMS = mqttPayloadBatchIntervalInMS;
+  }
+
+  public long getMqttPayloadBatchMaxQueueBytes() {
+    return mqttPayloadBatchMaxQueueBytes;
+  }
+
+  public void setMqttPayloadBatchMaxQueueBytes(long mqttPayloadBatchMaxQueueBytes) {
+    this.mqttPayloadBatchMaxQueueBytes = mqttPayloadBatchMaxQueueBytes;
   }
 
   public int getTagAttributeFlushInterval() {

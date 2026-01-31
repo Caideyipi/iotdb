@@ -2290,6 +2290,17 @@ public class IoTDBDescriptor {
       conf.setMqttMaxMessageSize(
           Integer.parseInt(properties.getProperty(IoTDBConstant.MQTT_MAX_MESSAGE_SIZE).trim()));
     }
+    if (properties.getProperty(IoTDBConstant.MQTT_PAYLOAD_BATCH_INTERVAL_IN_MS) != null) {
+      conf.setMqttPayloadBatchIntervalInMS(
+          Long.parseLong(
+              properties.getProperty(IoTDBConstant.MQTT_PAYLOAD_BATCH_INTERVAL_IN_MS).trim()));
+    }
+
+    if (properties.getProperty(IoTDBConstant.MQTT_PAYLOAD_BATCH_MAX_QUEUE_BYTES) != null) {
+      conf.setMqttPayloadBatchMaxQueueBytes(
+          Long.parseLong(
+              properties.getProperty(IoTDBConstant.MQTT_PAYLOAD_BATCH_MAX_QUEUE_BYTES).trim()));
+    }
   }
 
   // timed flush memtable

@@ -20,8 +20,6 @@ package org.apache.iotdb.mqtt;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.conf.IoTDBConstant.ClientVersion;
-import org.apache.iotdb.commons.path.PartialPath;
-import org.apache.iotdb.commons.schema.table.column.TsTableColumnCategory;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
@@ -40,9 +38,12 @@ import org.apache.iotdb.db.queryengine.plan.relational.metadata.Metadata;
 import org.apache.iotdb.db.queryengine.plan.relational.security.TreeAccessCheckContext;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.parser.SqlParser;
 import org.apache.iotdb.db.queryengine.plan.statement.crud.InsertRowStatement;
+import org.apache.iotdb.db.queryengine.plan.statement.crud.InsertRowsStatement;
 import org.apache.iotdb.db.queryengine.plan.statement.crud.InsertTabletStatement;
+import org.apache.iotdb.db.utils.AsyncBatchUtils;
 import org.apache.iotdb.db.utils.CommonUtils;
 import org.apache.iotdb.db.utils.TimestampPrecisionUtils;
+import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
 import org.apache.iotdb.service.rpc.thrift.TSProtocolVersion;
 
@@ -53,15 +54,22 @@ import io.moquette.interception.messages.InterceptPublishMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import org.apache.tsfile.enums.TSDataType;
-import org.apache.tsfile.utils.BitMap;
+import org.apache.tsfile.write.record.Tablet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static org.apache.iotdb.mqtt.MqttUtils.constructTabletFromMultipleMessages;
 
 /** PublishHandler handle the messages from MQTT clients. */
 public class MPPPublishHandler extends AbstractInterceptHandler {
@@ -77,6 +85,10 @@ public class MPPPublishHandler extends AbstractInterceptHandler {
   private final IPartitionFetcher partitionFetcher;
   private final ISchemaFetcher schemaFetcher;
   private final boolean useTableInsert;
+
+  private final ConcurrentHashMap<String, AsyncBatchUtils<? extends Message>> clientBatchMap =
+      new ConcurrentHashMap<>();
+  private final AtomicBoolean closed = new AtomicBoolean(false);
 
   public MPPPublishHandler(IoTDBConfig config) {
     this.payloadFormat = PayloadFormatManager.getPayloadFormat(config.getMqttPayloadFormatter());
@@ -113,6 +125,16 @@ public class MPPPublishHandler extends AbstractInterceptHandler {
 
   @Override
   public void onDisconnect(InterceptDisconnectMessage msg) {
+    String clientId = msg.getClientID();
+
+    // Clean up batch utils
+    AsyncBatchUtils<? extends Message> utils = clientBatchMap.remove(clientId);
+    if (utils != null) {
+      utils.flush();
+      utils.shutdown();
+      LOG.info("batch utils for client {} cleaned", clientId);
+    }
+
     MqttClientSession session = clientIdToSessionMap.remove(msg.getClientID());
     if (null != session) {
       sessionManager.removeCurrSessionForMqtt(session);
@@ -152,11 +174,7 @@ public class MPPPublishHandler extends AbstractInterceptHandler {
         if (message == null) {
           continue;
         }
-        if (useTableInsert) {
-          insertTable((TableMessage) message, session);
-        } else {
-          insertTree((TreeMessage) message, session);
-        }
+        insertWithBatch(message, session);
       }
     } catch (Throwable t) {
       LOG.warn("onPublish execution exception, msg is [{}], error is ", msg, t);
@@ -166,119 +184,93 @@ public class MPPPublishHandler extends AbstractInterceptHandler {
     }
   }
 
-  /** Inserting table using tablet */
-  private void insertTable(TableMessage message, MqttClientSession session) {
-    TSStatus tsStatus = null;
+  /**
+   * Push message to batch queue and handle completion. Dispatches to table or tree logic based on
+   * message type.
+   */
+  private void insertWithBatch(Message message, MqttClientSession session) {
+    if (message instanceof TableMessage) {
+      doInsertWithBatch(
+          (TableMessage) message,
+          session,
+          TableMessage::getTable,
+          (status, m) ->
+              status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()
+                  && status.getCode() != TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode(),
+          (m, e) ->
+              LOG.warn(
+                  "meet error when inserting database {}, table {}, tags {}, attributes {}, fields {}, at time {}",
+                  m.getDatabase(),
+                  m.getTable(),
+                  m.getTagKeys(),
+                  m.getAttributeKeys(),
+                  m.getFields(),
+                  m.getTimestamp(),
+                  e));
+    } else if (message instanceof TreeMessage) {
+      doInsertWithBatch(
+          (TreeMessage) message,
+          session,
+          TreeMessage::getDevice,
+          (status, m) -> status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode(),
+          (m, e) ->
+              LOG.warn(
+                  "meet error when inserting device {}, measurements {}, at time {}",
+                  m.getDevice(),
+                  m.getMeasurements(),
+                  m.getTimestamp(),
+                  e));
+    }
+  }
+
+  private <T extends Message> void doInsertWithBatch(
+      T message,
+      MqttClientSession session,
+      Function<T, String> targetName,
+      BiPredicate<TSStatus, T> isFailure,
+      BiConsumer<T, Exception> onInsertException) {
+    AsyncBatchUtils<T> utils;
     try {
-      TimestampPrecisionUtils.checkTimestampPrecision(message.getTimestamp());
-      InsertTabletStatement insertTabletStatement = constructInsertTabletStatement(message);
-      session.setDatabaseName(message.getDatabase().toLowerCase());
-      session.setSqlDialect(IClientSession.SqlDialect.TABLE);
-      long queryId = sessionManager.requestQueryId();
-      SqlParser relationSqlParser = new SqlParser();
-      Metadata metadata = LocalExecutionPlanner.getInstance().metadata;
-      ExecutionResult result =
-          Coordinator.getInstance()
-              .executeForTableModel(
-                  insertTabletStatement,
-                  relationSqlParser,
-                  session,
-                  queryId,
-                  sessionManager.getSessionInfo(session),
-                  "",
-                  metadata,
-                  config.getQueryTimeoutThreshold());
-
-      tsStatus = result.status;
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("process result: {}", tsStatus);
-      }
-      if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()
-          && tsStatus.getCode() != TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode()) {
-        LOG.warn(
-            "mqtt json insert error, code={}, message={}",
-            tsStatus.getCode(),
-            tsStatus.getMessage());
-      }
+      utils = getOrCreateBatchUtils(session.getClientID());
+    } catch (IllegalStateException e) {
+      LOG.warn("Server is shutting down, reject msg for client {}", session.getClientID());
+      return;
+    }
+    try {
+      CompletableFuture<TSStatus> future = utils.push(message);
+      future.whenComplete(
+          (status, ex) -> {
+            if (ex != null) {
+              LOG.warn("Insert failed permanently for {}", targetName.apply(message), ex);
+            } else if (isFailure.test(status, message)) {
+              LOG.warn("Insert failed for {}: {}", targetName.apply(message), status.message);
+            }
+          });
     } catch (Exception e) {
-      LOG.warn(
-          "meet error when inserting database {}, table {}, tags {}, attributes {}, fields {}, at time {}, because ",
-          message.getDatabase(),
-          message.getTable(),
-          message.getTagKeys(),
-          message.getAttributeKeys(),
-          message.getFields(),
-          message.getTimestamp(),
-          e);
+      onInsertException.accept(message, e);
     }
   }
 
-  private InsertTabletStatement constructInsertTabletStatement(TableMessage message) {
-    InsertTabletStatement insertStatement = new InsertTabletStatement();
-    insertStatement.setDevicePath(new PartialPath(message.getTable(), false));
-    List<String> measurements =
-        Stream.of(message.getFields(), message.getTagKeys(), message.getAttributeKeys())
-            .flatMap(List::stream)
-            .collect(Collectors.toList());
-    insertStatement.setMeasurements(measurements.toArray(new String[0]));
-    long[] timestamps = new long[] {message.getTimestamp()};
-    insertStatement.setTimes(timestamps);
-    int columnSize = measurements.size();
-    int rowSize = 1;
-
-    BitMap[] bitMaps = new BitMap[columnSize];
-    Object[] columns =
-        Stream.of(message.getValues(), message.getTagValues(), message.getAttributeValues())
-            .flatMap(List::stream)
-            .toArray(Object[]::new);
-    insertStatement.setColumns(columns);
-    insertStatement.setBitMaps(bitMaps);
-    insertStatement.setRowCount(rowSize);
-    insertStatement.setAligned(false);
-    insertStatement.setWriteToTable(true);
-    TSDataType[] dataTypes = new TSDataType[measurements.size()];
-    TsTableColumnCategory[] columnCategories = new TsTableColumnCategory[measurements.size()];
-    for (int i = 0; i < message.getFields().size(); i++) {
-      dataTypes[i] = message.getDataTypes().get(i);
-      columnCategories[i] = TsTableColumnCategory.FIELD;
-    }
-    for (int i = message.getFields().size();
-        i < message.getFields().size() + message.getTagKeys().size();
-        i++) {
-      dataTypes[i] = TSDataType.STRING;
-      columnCategories[i] = TsTableColumnCategory.TAG;
-    }
-    for (int i = message.getFields().size() + message.getTagKeys().size();
-        i
-            < message.getFields().size()
-                + message.getTagKeys().size()
-                + message.getAttributeKeys().size();
-        i++) {
-      dataTypes[i] = TSDataType.STRING;
-      columnCategories[i] = TsTableColumnCategory.ATTRIBUTE;
-    }
-    insertStatement.setDataTypes(dataTypes);
-    insertStatement.setColumnCategories(columnCategories);
-
-    return insertStatement;
+  @Override
+  public void onSessionLoopError(Throwable throwable) {
+    LOG.warn("Session loop error,{}", throwable.getMessage());
   }
 
-  private void insertTree(TreeMessage message, MqttClientSession session) {
-    TSStatus tsStatus = null;
+  private InsertRowStatement buildStatement(TreeMessage event) {
     try {
       InsertRowStatement statement = new InsertRowStatement();
       statement.setDevicePath(
-          DataNodeDevicePathCache.getInstance().getPartialPath(message.getDevice()));
-      TimestampPrecisionUtils.checkTimestampPrecision(message.getTimestamp());
-      statement.setTime(message.getTimestamp());
-      statement.setMeasurements(message.getMeasurements().toArray(new String[0]));
-      if (message.getDataTypes() == null) {
-        statement.setDataTypes(new TSDataType[message.getMeasurements().size()]);
-        statement.setValues(message.getValues().toArray(new Object[0]));
+          DataNodeDevicePathCache.getInstance().getPartialPath(event.getDevice()));
+      TimestampPrecisionUtils.checkTimestampPrecision(event.getTimestamp());
+      statement.setTime(event.getTimestamp());
+      statement.setMeasurements(event.getMeasurements().toArray(new String[0]));
+      if (event.getDataTypes() == null) {
+        statement.setDataTypes(new TSDataType[event.getMeasurements().size()]);
+        statement.setValues(event.getValues().toArray(new Object[0]));
         statement.setNeedInferType(true);
       } else {
-        List<TSDataType> dataTypes = message.getDataTypes();
-        List<String> values = message.getValues();
+        List<TSDataType> dataTypes = event.getDataTypes();
+        List<String> values = event.getValues();
         Object[] inferredValues = new Object[values.size()];
         for (int i = 0; i < values.size(); ++i) {
           inferredValues[i] = CommonUtils.parseValue(dataTypes.get(i), values.get(i));
@@ -287,51 +279,222 @@ public class MPPPublishHandler extends AbstractInterceptHandler {
         statement.setValues(inferredValues);
       }
       statement.setAligned(false);
+      return statement;
+    } catch (Exception e) {
+      LOG.warn("build statement failed", e);
+      return null;
+    }
+  }
 
-      tsStatus =
+  @SuppressWarnings("unchecked")
+  private <T extends Message> AsyncBatchUtils<T> getOrCreateBatchUtils(String clientId) {
+    if (closed.get()) {
+      throw new IllegalStateException("Server is shutting down");
+    }
+    return (AsyncBatchUtils<T>)
+        clientBatchMap.computeIfAbsent(
+            clientId,
+            id -> {
+              if (useTableInsert) {
+                AsyncBatchUtils<TableMessage> utils =
+                    new AsyncBatchUtils<>(
+                        "mqtt-table-" + id,
+                        config.getMqttPayloadBatchIntervalInMS(),
+                        config.getMqttPayloadBatchMaxQueueBytes(),
+                        new MqttTableInsertConsumer(id));
+                utils.start();
+                LOG.info("create table batch utils for client {}", id);
+                return utils;
+              } else {
+                AsyncBatchUtils<TreeMessage> utils =
+                    new AsyncBatchUtils<>(
+                        "mqtt-tree-" + id,
+                        config.getMqttPayloadBatchIntervalInMS(),
+                        config.getMqttPayloadBatchMaxQueueBytes(),
+                        new MqttTreeInsertConsumer(id));
+                utils.start();
+                LOG.info("create tree batch utils for client {}", id);
+                return utils;
+              }
+            });
+  }
+
+  private class MqttTreeInsertConsumer implements AsyncBatchUtils.BatchConsumer<TreeMessage> {
+    private final String clientId;
+
+    public MqttTreeInsertConsumer(String clientId) {
+      this.clientId = clientId;
+    }
+
+    @Override
+    public ExecutionResult consume(List<TreeMessage> batch) {
+      if (batch == null || batch.isEmpty()) {
+        return new ExecutionResult(null, new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+      }
+
+      // Build InsertRowStatement list from TreeMessage batch
+      List<InsertRowStatement> statements = new ArrayList<>();
+      for (TreeMessage message : batch) {
+        InsertRowStatement stmt = buildStatement(message);
+        if (stmt != null) {
+          statements.add(stmt);
+        }
+      }
+
+      if (statements.isEmpty()) {
+        return new ExecutionResult(null, new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+      }
+
+      InsertRowsStatement rowsStatement = new InsertRowsStatement();
+      rowsStatement.setInsertRowStatementList(statements);
+
+      MqttClientSession session = clientIdToSessionMap.get(clientId);
+
+      // Check privilege
+      TSStatus status =
           AuthorityChecker.checkAuthority(
-              statement,
+              rowsStatement,
               new TreeAccessCheckContext(
-                  session.getUserId(), session.getUsername(), session.getClientID()));
-      if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
-        LOG.warn(tsStatus.message);
-      } else {
+                  session.getUserId(), session.getUsername(), session.getClientAddress()));
+      if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        return new ExecutionResult(null, status);
+      }
+
+      long queryId = sessionManager.requestQueryId();
+      return Coordinator.getInstance()
+          .executeForTreeModel(
+              rowsStatement,
+              queryId,
+              sessionManager.getSessionInfo(session),
+              "",
+              partitionFetcher,
+              schemaFetcher,
+              config.getQueryTimeoutThreshold(),
+              false);
+    }
+  }
+
+  private class MqttTableInsertConsumer implements AsyncBatchUtils.BatchConsumer<TableMessage> {
+    private final String clientId;
+
+    public MqttTableInsertConsumer(String clientId) {
+      this.clientId = clientId;
+    }
+
+    @Override
+    public ExecutionResult consume(List<TableMessage> batch) {
+      if (batch == null || batch.isEmpty()) {
+        return new ExecutionResult(null, new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode()));
+      }
+
+      try {
+        MqttClientSession session = clientIdToSessionMap.get(clientId);
+        if (session == null) {
+          LOG.warn("Session not found for client {}", clientId);
+          return new ExecutionResult(
+              null,
+              new TSStatus(TSStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
+                  .setMessage("Session not found"));
+        }
+
+        // Group messages by (database, table) to ensure data consistency
+        // Messages with different tables cannot be merged into one statement
+        java.util.Map<String, List<TableMessage>> groupedMessages =
+            batch.stream()
+                .collect(Collectors.groupingBy(msg -> msg.getDatabase() + "." + msg.getTable()));
+
+        // Execute batch insert for each group
+        TSStatus finalStatus = new TSStatus(TSStatusCode.SUCCESS_STATUS.getStatusCode());
+        int successCount = 0;
+        int failCount = 0;
+
+        for (java.util.Map.Entry<String, List<TableMessage>> entry : groupedMessages.entrySet()) {
+          ExecutionResult result = executeBatchInsert(entry.getValue(), session);
+          if (result.status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()
+              || result.status.getCode() == TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode()) {
+            successCount += entry.getValue().size();
+          } else {
+            failCount += entry.getValue().size();
+            finalStatus = result.status; // Keep last error status
+          }
+        }
+
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(
+              "Batch insert completed for client {}: {} groups, {} success, {} failed",
+              clientId,
+              groupedMessages.size(),
+              successCount,
+              failCount);
+        }
+
+        return new ExecutionResult(null, finalStatus);
+      } catch (Exception e) {
+        LOG.warn("Failed to execute table batch insert for client {}", clientId, e);
+        return new ExecutionResult(
+            null,
+            new TSStatus(TSStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
+                .setMessage(e.getMessage()));
+      }
+    }
+
+    private ExecutionResult executeBatchInsert(
+        List<TableMessage> messages, MqttClientSession session) {
+      try {
+        // Set session context
+        String databaseName = messages.get(0).getDatabase().toLowerCase();
+        session.setDatabaseName(databaseName);
+        session.setSqlDialect(IClientSession.SqlDialect.TABLE);
+
+        // Construct batch InsertTabletStatement
+        Tablet tablet = constructTabletFromMultipleMessages(messages);
+        if (!RpcUtils.checkSorted(tablet)) {
+          RpcUtils.sortTablet(tablet);
+        }
+        InsertTabletStatement insertTabletStatement =
+            new InsertTabletStatement(tablet, true, databaseName);
+
         long queryId = sessionManager.requestQueryId();
+        SqlParser relationSqlParser = new SqlParser();
+        Metadata metadata = LocalExecutionPlanner.getInstance().metadata;
+
         ExecutionResult result =
             Coordinator.getInstance()
-                .executeForTreeModel(
-                    statement,
+                .executeForTableModel(
+                    insertTabletStatement,
+                    relationSqlParser,
+                    session,
                     queryId,
                     sessionManager.getSessionInfo(session),
                     "",
-                    partitionFetcher,
-                    schemaFetcher,
-                    config.getQueryTimeoutThreshold(),
-                    false);
-        tsStatus = result.status;
+                    metadata,
+                    config.getQueryTimeoutThreshold());
+
+        TSStatus tsStatus = result.status;
         if (LOG.isDebugEnabled()) {
-          LOG.debug("process result: {}", tsStatus);
+          LOG.debug(
+              "Batch insert result for {} rows in table {}: {}",
+              messages.size(),
+              messages.get(0).getTable(),
+              tsStatus);
         }
         if (tsStatus.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()
             && tsStatus.getCode() != TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode()) {
           LOG.warn(
-              "mqtt json insert error, code={}, message={}",
+              "mqtt table batch insert error for table {}, code={}, message={}",
+              messages.get(0).getTable(),
               tsStatus.getCode(),
               tsStatus.getMessage());
         }
-      }
-    } catch (Exception e) {
-      LOG.warn(
-          "meet error when inserting device {}, measurements {}, at time {}, because ",
-          message.getDevice(),
-          message.getMeasurements(),
-          message.getTimestamp(),
-          e);
-    }
-  }
 
-  @Override
-  public void onSessionLoopError(Throwable throwable) {
-    // TODO: Implement something sensible here ...
+        return result;
+      } catch (Exception e) {
+        LOG.warn("Failed to execute batch insert for table {}", messages.get(0).getTable(), e);
+        return new ExecutionResult(
+            null,
+            new TSStatus(TSStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
+                .setMessage(e.getMessage()));
+      }
+    }
   }
 }

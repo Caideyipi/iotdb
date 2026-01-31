@@ -48,15 +48,14 @@ public class LinePayloadFormatterTest {
     assertEquals("tag1", message.getTagKeys().get(0));
     assertEquals("attr1", message.getAttributeKeys().get(0));
     assertEquals(
-        "value1",
-        ((Binary[]) message.getValues().get(0))[0].getStringValue(StandardCharsets.UTF_8));
-    assertEquals(1L, ((long[]) message.getValues().get(1))[0], 0);
-    assertEquals(2L, ((long[]) message.getValues().get(2))[0], 0);
-    assertEquals(3L, ((int[]) message.getValues().get(3))[0], 0);
-    assertTrue(((boolean[]) message.getValues().get(4))[0]);
-    assertFalse(((boolean[]) message.getValues().get(5))[0]);
-    assertEquals(4d, ((double[]) message.getValues().get(6))[0], 0);
-    assertEquals(5f, ((float[]) message.getValues().get(7))[0], 0);
+        "value1", ((Binary) message.getValues().get(0)).getStringValue(StandardCharsets.UTF_8));
+    assertEquals(1L, ((long) message.getValues().get(1)), 0);
+    assertEquals(2L, ((long) message.getValues().get(2)), 0);
+    assertEquals(3L, ((int) message.getValues().get(3)), 0);
+    assertTrue(((boolean) message.getValues().get(4)));
+    assertFalse(((boolean) message.getValues().get(5)));
+    assertEquals(4d, ((double) message.getValues().get(6)), 0);
+    assertEquals(5f, ((float) message.getValues().get(7)), 0);
   }
 
   @Test
@@ -75,7 +74,7 @@ public class LinePayloadFormatterTest {
     assertEquals(Long.valueOf(2L), message.getTimestamp());
     assertEquals("tag3", message.getTagKeys().get(0));
     assertEquals("attr3", message.getAttributeKeys().get(0));
-    assertEquals(10, ((int[]) message.getValues().get(2))[0], 0);
+    assertEquals(10, ((int) message.getValues().get(2)), 0);
   }
 
   @Test

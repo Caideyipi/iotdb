@@ -307,6 +307,10 @@ public class IoTDBConstant {
   public static final String MQTT_PAYLOAD_FORMATTER_NAME = "mqtt_payload_formatter";
   public static final String MQTT_DATA_PATH = "mqtt_data_path";
   public static final String MQTT_MAX_MESSAGE_SIZE = "mqtt_max_message_size";
+  public static final String MQTT_PAYLOAD_BATCH_INTERVAL_IN_MS =
+      "mqtt_payload_batch_interval_in_ms";
+  public static final String MQTT_PAYLOAD_BATCH_MAX_QUEUE_BYTES =
+      "mqtt_payload_batch_max_queue_bytes";
 
   // thrift
   public static final int DEFAULT_FETCH_SIZE = 5000;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.timecho.iotdb.db.utils;
+package org.apache.iotdb.db.utils;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.concurrent.IoTDBThreadPoolFactory;
@@ -182,7 +182,7 @@ public class AsyncBatchUtils<T extends Accountable> {
       flushExecutor.submit(
           () -> {
             try {
-              flushInternal();
+              flush();
             } finally {
               flushing.set(false);
             }
@@ -191,7 +191,7 @@ public class AsyncBatchUtils<T extends Accountable> {
   }
 
   /** Flush implementation: drain all data and retry on failure */
-  private void flushInternal() {
+  public void flush() {
     long startNs = System.nanoTime();
 
     List<BatchItem<T>> items = new ArrayList<>();

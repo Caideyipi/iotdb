@@ -18,11 +18,15 @@
 package org.apache.iotdb.mqtt;
 
 import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.utils.RamUsageEstimator;
 
 import java.util.List;
 
 /** Message parsing into a tree */
 public class TreeMessage extends Message {
+
+  private static final long INSTANCE_SIZE =
+      RamUsageEstimator.shallowSizeOfInstance(TreeMessage.class);
   private String device;
   private List<String> measurements;
   private List<TSDataType> dataTypes;
@@ -73,5 +77,19 @@ public class TreeMessage extends Message {
         + ", values="
         + values
         + '}';
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    long size = INSTANCE_SIZE;
+    // Add parent class fields
+    size += RamUsageEstimator.sizeOf(timestamp);
+    // Add String field
+    size += RamUsageEstimator.sizeOf(device);
+    // Add List fields - includes list overhead and elements
+    size += RamUsageEstimator.sizeOfCollection(measurements);
+    size += RamUsageEstimator.sizeOfCollection(dataTypes);
+    size += RamUsageEstimator.sizeOfCollection(values);
+    return size;
   }
 }

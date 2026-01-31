@@ -145,7 +145,7 @@ public class LinePayloadFormatter implements PayloadFormatter {
           String[] keyValue = tagPair.split(EQUAL);
           if (keyValue.length == 2 && !NULL.equals(keyValue[1])) {
             tagKeys.add(keyValue[0]);
-            tagValues.add(new Binary[] {new Binary(keyValue[1].getBytes(StandardCharsets.UTF_8))});
+            tagValues.add(new Binary(keyValue[1].getBytes(StandardCharsets.UTF_8)));
           }
         }
       }
@@ -170,8 +170,7 @@ public class LinePayloadFormatter implements PayloadFormatter {
           String[] keyValue = attributePair.split(EQUAL);
           if (keyValue.length == 2 && !NULL.equals(keyValue[1])) {
             attributeKeys.add(keyValue[0]);
-            attributeValues.add(
-                new Binary[] {new Binary(keyValue[1].getBytes(StandardCharsets.UTF_8))});
+            attributeValues.add(new Binary(keyValue[1].getBytes(StandardCharsets.UTF_8)));
           }
         }
       }
@@ -229,32 +228,26 @@ public class LinePayloadFormatter implements PayloadFormatter {
       // String
       return new Pair<>(
           TSDataType.TEXT,
-          new Binary[] {
-            new Binary(value.substring(1, value.length() - 1).getBytes(StandardCharsets.UTF_8))
-          });
+          new Binary(value.substring(1, value.length() - 1).getBytes(StandardCharsets.UTF_8)));
     } else if (value.equalsIgnoreCase("t")
         || value.equalsIgnoreCase("true")
         || value.equalsIgnoreCase("f")
         || value.equalsIgnoreCase("false")) {
       // boolean
       return new Pair<>(
-          TSDataType.BOOLEAN,
-          new boolean[] {value.equalsIgnoreCase("t") || value.equalsIgnoreCase("true")});
+          TSDataType.BOOLEAN, value.equalsIgnoreCase("t") || value.equalsIgnoreCase("true"));
     } else if (value.endsWith("f")) {
       // float
-      return new Pair<>(
-          TSDataType.FLOAT, new float[] {Float.parseFloat(value.substring(0, value.length() - 1))});
+      return new Pair<>(TSDataType.FLOAT, Float.parseFloat(value.substring(0, value.length() - 1)));
     } else if (value.endsWith("i32")) {
       // int
-      return new Pair<>(
-          TSDataType.INT32, new int[] {Integer.parseInt(value.substring(0, value.length() - 3))});
+      return new Pair<>(TSDataType.INT32, Integer.parseInt(value.substring(0, value.length() - 3)));
     } else if (value.endsWith("u") || value.endsWith("i")) {
       // long
-      return new Pair<>(
-          TSDataType.INT64, new long[] {Long.parseLong(value.substring(0, value.length() - 1))});
+      return new Pair<>(TSDataType.INT64, Long.parseLong(value.substring(0, value.length() - 1)));
     } else {
       // double
-      return new Pair<>(TSDataType.DOUBLE, new double[] {Double.parseDouble(value)});
+      return new Pair<>(TSDataType.DOUBLE, Double.parseDouble(value));
     }
   }
 

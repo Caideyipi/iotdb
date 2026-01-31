@@ -26,6 +26,15 @@ import org.apache.iotdb.service.rpc.thrift.TSExecuteStatementResp;
 import org.apache.iotdb.service.rpc.thrift.TSFetchResultsResp;
 import org.apache.iotdb.service.rpc.thrift.TSOpenSessionResp;
 
+import org.apache.tsfile.enums.ColumnCategory;
+import org.apache.tsfile.enums.TSDataType;
+import org.apache.tsfile.utils.Binary;
+import org.apache.tsfile.utils.BitMap;
+import org.apache.tsfile.utils.Pair;
+import org.apache.tsfile.write.UnSupportedDataTypeException;
+import org.apache.tsfile.write.record.Tablet;
+import org.apache.tsfile.write.schema.IMeasurementSchema;
+import org.apache.tsfile.write.schema.MeasurementSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +42,13 @@ import java.lang.reflect.Proxy;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +85,8 @@ public class RpcUtils {
   public static final String MICROSECOND = "us";
 
   public static final String NANOSECOND = "ns";
+
+  public static final String MSG_UNSUPPORTED_DATA_TYPE = "Unsupported data type:";
 
   private RpcUtils() {
     // util class
@@ -444,5 +458,229 @@ public class RpcUtils {
       default:
         throw new IllegalArgumentException("Unknown time factor: " + timeFactor);
     }
+  }
+
+  public static Tablet constructTabletFromMutipleRecords(
+      String tableName,
+      List<Long> times,
+      List<List<String>> measurementsList,
+      List<List<TSDataType>> typesList,
+      List<List<ColumnCategory>> columnCategoriesList,
+      List<List<Object>> valuesList) {
+    int rowCount = measurementsList.size();
+    Map<String, Pair<TSDataType, Boolean>> measurementsMap = new HashMap<>();
+    Map<String, ColumnCategory> columnCategoryMap = new HashMap<>();
+    for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      List<String> measurements = measurementsList.get(rowIndex);
+      List<TSDataType> types = typesList.get(rowIndex);
+      List<ColumnCategory> categories = columnCategoriesList.get(rowIndex);
+      for (int colIndex = 0; colIndex < measurements.size(); colIndex++) {
+        String measurement = measurements.get(colIndex);
+        if (!measurementsMap.containsKey(measurement)) {
+          measurementsMap.put(measurement, new Pair<>(types.get(colIndex), true));
+          columnCategoryMap.put(measurement, categories.get(colIndex));
+        }
+      }
+    }
+    List<String> columnNameList = new ArrayList<>(measurementsMap.size());
+    List<TSDataType> dataTypeList = new ArrayList<>(measurementsMap.size());
+    List<ColumnCategory> dataColumnCategories = new ArrayList<>(measurementsMap.size());
+
+    for (Map.Entry<String, Pair<TSDataType, Boolean>> entry : measurementsMap.entrySet()) {
+      columnNameList.add(entry.getKey());
+      dataTypeList.add(entry.getValue().left);
+      dataColumnCategories.add(columnCategoryMap.get(entry.getKey()));
+    }
+    Tablet tablet =
+        new Tablet(tableName, columnNameList, dataTypeList, dataColumnCategories, rowCount);
+    for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      addRecordToTablet(
+          tablet,
+          times.get(rowIndex),
+          measurementsList.get(rowIndex),
+          valuesList.get(rowIndex),
+          measurementsMap);
+    }
+    return tablet;
+  }
+
+  private static void addRecordToTablet(
+      Tablet tablet,
+      Long timestamp,
+      List<String> measurements,
+      List<Object> values,
+      Map<String, Pair<TSDataType, Boolean>> allMeasurementMap) {
+    int row = tablet.getRowSize();
+    tablet.addTimestamp(row, timestamp);
+    // tablet without null value
+    if (measurements.size() == allMeasurementMap.size()) {
+      for (int i = 0; i < measurements.size(); i++) {
+        tablet.addValue(measurements.get(i), row, values.get(i));
+      }
+      return;
+    }
+    // tablet with null value
+    for (int i = 0; i < measurements.size(); i++) {
+      String measurement = measurements.get(i);
+      tablet.addValue(measurement, row, values.get(i));
+      allMeasurementMap.get(measurement).setRight(false);
+    }
+    for (Map.Entry<String, Pair<TSDataType, Boolean>> entry : allMeasurementMap.entrySet()) {
+      if (entry.getValue().getRight()) {
+        tablet.addValue(entry.getKey(), row, null);
+      } else {
+        entry.getValue().setRight(true);
+      }
+    }
+  }
+
+  @SuppressWarnings({
+    "squid:S3776"
+  }) // ignore Cognitive Complexity of methods should not be too high
+  public static void sortTablet(Tablet tablet) {
+    /*
+     * following part of code sort the batch data by time,
+     * so we can insert continuous data in value list to get a better performance
+     */
+    // sort to get index, and use index to sort value list
+    long[] timestamps = tablet.getTimestamps();
+    Object[] values = tablet.getValues();
+    BitMap[] bitMaps = tablet.getBitMaps();
+    Integer[] index = new Integer[tablet.getRowSize()];
+    for (int i = 0; i < tablet.getRowSize(); i++) {
+      index[i] = i;
+    }
+    Arrays.sort(index, Comparator.comparingLong(o -> timestamps[o]));
+    Arrays.sort(timestamps, 0, tablet.getRowSize());
+    int columnIndex = 0;
+    for (int i = 0; i < tablet.getSchemas().size(); i++) {
+      IMeasurementSchema schema = tablet.getSchemas().get(i);
+      if (schema instanceof MeasurementSchema) {
+        values[columnIndex] = sortList(values[columnIndex], schema.getType(), index);
+        if (bitMaps != null && bitMaps[columnIndex] != null) {
+          bitMaps[columnIndex] = sortBitMap(bitMaps[columnIndex], index);
+        }
+        columnIndex++;
+      } else {
+        int measurementSize = schema.getSubMeasurementsList().size();
+        for (int j = 0; j < measurementSize; j++) {
+          values[columnIndex] =
+              sortList(
+                  values[columnIndex], schema.getSubMeasurementsTSDataTypeList().get(j), index);
+          if (bitMaps != null && bitMaps[columnIndex] != null) {
+            bitMaps[columnIndex] = sortBitMap(bitMaps[columnIndex], index);
+          }
+          columnIndex++;
+        }
+      }
+    }
+  }
+
+  /**
+   * sort value list by index
+   *
+   * @param valueList value list
+   * @param dataType data type
+   * @param index index
+   * @return sorted list
+   */
+  private static Object sortList(Object valueList, TSDataType dataType, Integer[] index) {
+    switch (dataType) {
+      case BOOLEAN:
+        boolean[] boolValues = (boolean[]) valueList;
+        boolean[] sortedValues = new boolean[boolValues.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedValues[i] = boolValues[index[i]];
+        }
+        return sortedValues;
+      case INT32:
+        int[] intValues = (int[]) valueList;
+        int[] sortedIntValues = new int[intValues.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedIntValues[i] = intValues[index[i]];
+        }
+        return sortedIntValues;
+      case DATE:
+        LocalDate[] date = (LocalDate[]) valueList;
+        LocalDate[] sortedDateValues = new LocalDate[date.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedDateValues[i] = date[index[i]];
+        }
+        return sortedDateValues;
+      case INT64:
+      case TIMESTAMP:
+        long[] longValues = (long[]) valueList;
+        long[] sortedLongValues = new long[longValues.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedLongValues[i] = longValues[index[i]];
+        }
+        return sortedLongValues;
+      case FLOAT:
+        float[] floatValues = (float[]) valueList;
+        float[] sortedFloatValues = new float[floatValues.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedFloatValues[i] = floatValues[index[i]];
+        }
+        return sortedFloatValues;
+      case DOUBLE:
+        double[] doubleValues = (double[]) valueList;
+        double[] sortedDoubleValues = new double[doubleValues.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedDoubleValues[i] = doubleValues[index[i]];
+        }
+        return sortedDoubleValues;
+      case TEXT:
+      case BLOB:
+      case STRING:
+      case OBJECT:
+        Binary[] binaryValues = (Binary[]) valueList;
+        Binary[] sortedBinaryValues = new Binary[binaryValues.length];
+        for (int i = 0; i < index.length; i++) {
+          sortedBinaryValues[i] = binaryValues[index[i]];
+        }
+        return sortedBinaryValues;
+      default:
+        throw new UnSupportedDataTypeException(MSG_UNSUPPORTED_DATA_TYPE + dataType);
+    }
+  }
+
+  /**
+   * sort BitMap by index
+   *
+   * @param bitMap BitMap to be sorted
+   * @param index index
+   * @return sorted bitMap
+   */
+  private static BitMap sortBitMap(BitMap bitMap, Integer[] index) {
+    BitMap sortedBitMap = new BitMap(bitMap.getSize());
+    for (int i = 0; i < index.length; i++) {
+      if (bitMap.isMarked(index[i])) {
+        sortedBitMap.mark(i);
+      }
+    }
+    return sortedBitMap;
+  }
+
+  /**
+   * check whether the batch has been sorted
+   *
+   * @return whether the batch has been sorted
+   */
+  public static boolean checkSorted(Tablet tablet) {
+    for (int i = 1; i < tablet.getRowSize(); i++) {
+      if (tablet.getTimestamp(i) < tablet.getTimestamp(i - 1)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static boolean checkSorted(List<Long> times) {
+    for (int i = 1; i < times.size(); i++) {
+      if (times.get(i) < times.get(i - 1)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

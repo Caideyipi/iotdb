@@ -104,6 +104,7 @@ public class IoTDBMQTTServiceIT {
               () -> {
                 connection.publish(
                     DATABASE + "/myTopic", payload1.getBytes(), QoS.AT_LEAST_ONCE, false);
+                Thread.sleep(5000);
                 try (final SessionDataSet dataSet =
                     session.executeQueryStatement(
                         "select tag1,tag2,field1,field2,field3 from test1 where time = 1")) {
@@ -139,6 +140,7 @@ public class IoTDBMQTTServiceIT {
               () -> {
                 connection.publish(
                     DATABASE + "/myTopic", payload1.getBytes(), QoS.AT_LEAST_ONCE, false);
+                Thread.sleep(5000);
                 try (final SessionDataSet dataSet =
                     session.executeQueryStatement(
                         "select tag1,tag2,attr3,attr4,field1,field2,field3 from test2 where time = 1")) {

@@ -31,6 +31,7 @@ import org.apache.iotdb.rpc.BatchExecutionException;
 import org.apache.iotdb.rpc.IoTDBConnectionException;
 import org.apache.iotdb.rpc.NoValidValueException;
 import org.apache.iotdb.rpc.RedirectException;
+import org.apache.iotdb.rpc.RpcUtils;
 import org.apache.iotdb.rpc.StatementExecutionException;
 import org.apache.iotdb.service.rpc.thrift.TCreateTimeseriesUsingSchemaTemplateReq;
 import org.apache.iotdb.service.rpc.thrift.TSAppendSchemaTemplateReq;
@@ -68,10 +69,7 @@ import org.apache.tsfile.enums.TSDataType;
 import org.apache.tsfile.file.metadata.IDeviceID;
 import org.apache.tsfile.file.metadata.enums.CompressionType;
 import org.apache.tsfile.file.metadata.enums.TSEncoding;
-import org.apache.tsfile.utils.Binary;
-import org.apache.tsfile.utils.BitMap;
 import org.apache.tsfile.utils.Pair;
-import org.apache.tsfile.write.UnSupportedDataTypeException;
 import org.apache.tsfile.write.record.Tablet;
 import org.apache.tsfile.write.schema.IMeasurementSchema;
 import org.apache.tsfile.write.schema.MeasurementSchema;
@@ -81,7 +79,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2531,7 +2528,7 @@ public class Session implements ISession {
       throw new IllegalArgumentException(VALUES_SIZE_SHOULD_BE_EQUAL);
     }
 
-    if (!checkSorted(times)) {
+    if (!RpcUtils.checkSorted(times)) {
       // sort
       Integer[] index = new Integer[times.size()];
       for (int i = 0; i < times.size(); i++) {
@@ -2589,7 +2586,7 @@ public class Session implements ISession {
       throw new IllegalArgumentException(VALUES_SIZE_SHOULD_BE_EQUAL);
     }
 
-    if (!checkSorted(times)) {
+    if (!RpcUtils.checkSorted(times)) {
       Integer[] index = new Integer[times.size()];
       for (int i = 0; i < index.length; i++) {
         index[i] = i;
@@ -3037,7 +3034,7 @@ public class Session implements ISession {
   }
 
   private TSInsertTabletReq genTSInsertTabletReq(Tablet tablet, boolean sorted, boolean isAligned) {
-    if (!checkSorted(tablet)) {
+    if (!RpcUtils.checkSorted(tablet)) {
       sortTablet(tablet);
     }
 
@@ -3205,7 +3202,7 @@ public class Session implements ISession {
 
   private void updateTSInsertTabletsReq(
       TSInsertTabletsReq request, Tablet tablet, boolean sorted, boolean isAligned) {
-    if (!checkSorted(tablet)) {
+    if (!RpcUtils.checkSorted(tablet)) {
       sortTablet(tablet);
     }
     request.addToPrefixPaths(tablet.getDeviceId());
@@ -3621,156 +3618,6 @@ public class Session implements ISession {
     request.setStartTime(startTime);
     request.setEndTime(endTime);
     return request;
-  }
-
-  /**
-   * check whether the batch has been sorted
-   *
-   * @return whether the batch has been sorted
-   */
-  private boolean checkSorted(Tablet tablet) {
-    for (int i = 1; i < tablet.getRowSize(); i++) {
-      if (tablet.getTimestamp(i) < tablet.getTimestamp(i - 1)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private boolean checkSorted(List<Long> times) {
-    for (int i = 1; i < times.size(); i++) {
-      if (times.get(i) < times.get(i - 1)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @SuppressWarnings({
-    "squid:S3776"
-  }) // ignore Cognitive Complexity of methods should not be too high
-  public void sortTablet(Tablet tablet) {
-    /*
-     * following part of code sort the batch data by time,
-     * so we can insert continuous data in value list to get a better performance
-     */
-    // sort to get index, and use index to sort value list
-    long[] timestamps = tablet.getTimestamps();
-    Object[] values = tablet.getValues();
-    BitMap[] bitMaps = tablet.getBitMaps();
-    Integer[] index = new Integer[tablet.getRowSize()];
-    for (int i = 0; i < tablet.getRowSize(); i++) {
-      index[i] = i;
-    }
-    Arrays.sort(index, Comparator.comparingLong(o -> timestamps[o]));
-    Arrays.sort(timestamps, 0, tablet.getRowSize());
-    int columnIndex = 0;
-    for (int i = 0; i < tablet.getSchemas().size(); i++) {
-      IMeasurementSchema schema = tablet.getSchemas().get(i);
-      if (schema instanceof MeasurementSchema) {
-        values[columnIndex] = sortList(values[columnIndex], schema.getType(), index);
-        if (bitMaps != null && bitMaps[columnIndex] != null) {
-          bitMaps[columnIndex] = sortBitMap(bitMaps[columnIndex], index);
-        }
-        columnIndex++;
-      } else {
-        int measurementSize = schema.getSubMeasurementsList().size();
-        for (int j = 0; j < measurementSize; j++) {
-          values[columnIndex] =
-              sortList(
-                  values[columnIndex], schema.getSubMeasurementsTSDataTypeList().get(j), index);
-          if (bitMaps != null && bitMaps[columnIndex] != null) {
-            bitMaps[columnIndex] = sortBitMap(bitMaps[columnIndex], index);
-          }
-          columnIndex++;
-        }
-      }
-    }
-  }
-
-  /**
-   * sort value list by index
-   *
-   * @param valueList value list
-   * @param dataType data type
-   * @param index index
-   * @return sorted list
-   */
-  private Object sortList(Object valueList, TSDataType dataType, Integer[] index) {
-    switch (dataType) {
-      case BOOLEAN:
-        boolean[] boolValues = (boolean[]) valueList;
-        boolean[] sortedValues = new boolean[boolValues.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedValues[i] = boolValues[index[i]];
-        }
-        return sortedValues;
-      case INT32:
-        int[] intValues = (int[]) valueList;
-        int[] sortedIntValues = new int[intValues.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedIntValues[i] = intValues[index[i]];
-        }
-        return sortedIntValues;
-      case DATE:
-        LocalDate[] date = (LocalDate[]) valueList;
-        LocalDate[] sortedDateValues = new LocalDate[date.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedDateValues[i] = date[index[i]];
-        }
-        return sortedDateValues;
-      case INT64:
-      case TIMESTAMP:
-        long[] longValues = (long[]) valueList;
-        long[] sortedLongValues = new long[longValues.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedLongValues[i] = longValues[index[i]];
-        }
-        return sortedLongValues;
-      case FLOAT:
-        float[] floatValues = (float[]) valueList;
-        float[] sortedFloatValues = new float[floatValues.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedFloatValues[i] = floatValues[index[i]];
-        }
-        return sortedFloatValues;
-      case DOUBLE:
-        double[] doubleValues = (double[]) valueList;
-        double[] sortedDoubleValues = new double[doubleValues.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedDoubleValues[i] = doubleValues[index[i]];
-        }
-        return sortedDoubleValues;
-      case TEXT:
-      case BLOB:
-      case STRING:
-      case OBJECT:
-        Binary[] binaryValues = (Binary[]) valueList;
-        Binary[] sortedBinaryValues = new Binary[binaryValues.length];
-        for (int i = 0; i < index.length; i++) {
-          sortedBinaryValues[i] = binaryValues[index[i]];
-        }
-        return sortedBinaryValues;
-      default:
-        throw new UnSupportedDataTypeException(MSG_UNSUPPORTED_DATA_TYPE + dataType);
-    }
-  }
-
-  /**
-   * sort BitMap by index
-   *
-   * @param bitMap BitMap to be sorted
-   * @param index index
-   * @return sorted bitMap
-   */
-  private BitMap sortBitMap(BitMap bitMap, Integer[] index) {
-    BitMap sortedBitMap = new BitMap(bitMap.getSize());
-    for (int i = 0; i < index.length; i++) {
-      if (bitMap.isMarked(index[i])) {
-        sortedBitMap.mark(i);
-      }
-    }
-    return sortedBitMap;
   }
 
   @Override
@@ -4262,6 +4109,11 @@ public class Session implements ISession {
   @Override
   public void setEnableRedirection(boolean enableRedirection) {
     this.enableRedirection = enableRedirection;
+  }
+
+  @Override
+  public void sortTablet(Tablet tablet) {
+    RpcUtils.sortTablet(tablet);
   }
 
   @Override

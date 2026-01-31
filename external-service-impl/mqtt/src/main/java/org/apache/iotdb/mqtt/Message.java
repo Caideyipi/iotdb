@@ -18,8 +18,13 @@
 
 package org.apache.iotdb.mqtt;
 
+import org.apache.tsfile.utils.Accountable;
+import org.apache.tsfile.utils.RamUsageEstimator;
+
 /** Generic parsing of messages */
-public class Message {
+public class Message implements Accountable {
+
+  private static final long INSTANCE_SIZE = RamUsageEstimator.shallowSizeOfInstance(Message.class);
 
   protected Long timestamp;
 
@@ -29,5 +34,10 @@ public class Message {
 
   public void setTimestamp(Long timestamp) {
     this.timestamp = timestamp;
+  }
+
+  @Override
+  public long ramBytesUsed() {
+    return INSTANCE_SIZE + RamUsageEstimator.sizeOf(timestamp);
   }
 }
