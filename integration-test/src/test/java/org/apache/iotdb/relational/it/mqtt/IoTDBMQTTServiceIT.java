@@ -18,6 +18,7 @@
 package org.apache.iotdb.relational.it.mqtt;
 
 import org.apache.iotdb.isession.ITableSession;
+import org.apache.iotdb.isession.SessionConfig;
 import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
@@ -53,8 +54,9 @@ import static org.junit.Assert.fail;
 public class IoTDBMQTTServiceIT {
   private BlockingConnection connection;
   private static final String IP = System.getProperty("RemoteIp", "127.0.0.1");
-  private static final String USER = System.getProperty("RemoteUser", "root");
-  private static final String PASSWORD = System.getProperty("RemotePassword", "TimechoDB@2021");
+  private static final String USER = System.getProperty("RemoteUser", SessionConfig.DEFAULT_USER);
+  private static final String PASSWORD =
+      System.getProperty("RemotePassword", SessionConfig.DEFAULT_PASSWORD);
   private static final String DATABASE = "mqtttest";
   public static final String FORMATTER = "line";
 
@@ -81,7 +83,7 @@ public class IoTDBMQTTServiceIT {
   @After
   public void tearDown() throws Exception {
     try {
-      if (connection != null) {
+      if (connection != null && connection.isConnected()) {
         connection.disconnect();
       }
     } catch (IOException e) {
