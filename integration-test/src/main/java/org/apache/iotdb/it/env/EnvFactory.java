@@ -61,7 +61,7 @@ public class EnvFactory {
             env = new AIEnv();
             break;
           case MultiCluster:
-            logger.warn(
+            logger.error(
                 "EnvFactory only supports EnvType Simple, Cluster1 and Remote, please use MultiEnvFactory instead.");
             System.exit(-1);
             break;

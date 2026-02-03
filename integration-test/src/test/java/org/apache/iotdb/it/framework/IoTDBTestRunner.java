@@ -22,7 +22,10 @@ package org.apache.iotdb.it.framework;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.EnvType;
 import org.apache.iotdb.it.env.MultiEnvFactory;
+import org.apache.iotdb.itbase.category.ExternalServiceImplClusterIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplLocalStandaloneIT;
 
+import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -56,8 +59,11 @@ public class IoTDBTestRunner extends BlockJUnit4ClassRunner {
     final long currentTime = System.currentTimeMillis();
     if (EnvType.getSystemEnvType() != EnvType.MultiCluster) {
       EnvFactory.getEnv().setTestMethodName(description.getMethodName());
+      EnvFactory.getEnv().setIsExternalServiceRelatedTest(isExternalServiceRelatedTest());
+    } else {
+      MultiEnvFactory.setTestMethodName(description.getMethodName());
+      MultiEnvFactory.setIsExternalServiceRelatedTest(isExternalServiceRelatedTest());
     }
-    MultiEnvFactory.setTestMethodName(description.getMethodName());
     if (Thread.currentThread().getName().equals("main")) {
       Thread.currentThread().setName("main-" + description.getMethodName());
     }
@@ -66,5 +72,19 @@ public class IoTDBTestRunner extends BlockJUnit4ClassRunner {
     final String testName = description.getClassName() + "." + description.getMethodName();
     logger.info("Done {}. Cost: {}s", description.getMethodName(), timeCost);
     listener.addTestStat(new IoTDBTestStat(testName, timeCost));
+  }
+
+  private boolean isExternalServiceRelatedTest() {
+    Category category = getTestClass().getAnnotation(Category.class);
+    if (category == null) {
+      return false;
+    }
+    for (Class<?> c : category.value()) {
+      if (ExternalServiceImplLocalStandaloneIT.class.isAssignableFrom(c)
+          || ExternalServiceImplClusterIT.class.isAssignableFrom(c)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

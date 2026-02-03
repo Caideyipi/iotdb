@@ -228,6 +228,16 @@ public class ClusterConstant {
           + "lib"
           + File.separator
           + "*";
+  public static final String TEMPLATE_NODE_SERVICE_LIB_WITH_EXTERNAL_SERVICE_PATH =
+      System.getProperty(USER_DIR)
+          + File.separator
+          + TARGET
+          + File.separator
+          + "template-node-share"
+          + File.separator
+          + "lib-with-external-service"
+          + File.separator
+          + "*";
 
   // Env Constant
   public static final int NODE_START_TIMEOUT = 100;

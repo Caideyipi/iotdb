@@ -91,6 +91,7 @@ import static org.apache.iotdb.it.env.cluster.ClusterConstant.NODE_NETWORK_TIMEO
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.NODE_START_TIMEOUT;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_LIB_PATH;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_PATH;
+import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_SERVICE_LIB_WITH_EXTERNAL_SERVICE_PATH;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.ZERO_TIME_ZONE;
 import static org.apache.iotdb.jdbc.Config.VERSION;
 
@@ -105,6 +106,7 @@ public abstract class AbstractEnv implements BaseEnv {
   protected int index = 0;
   protected long startTime;
   protected int retryCount = 120;
+  protected boolean isExternalServiceRelatedTest;
   private IClientManager<TEndPoint, SyncConfigNodeIServiceClient> clientManager;
   private List<String> configNodeKillPoints = new ArrayList<>();
   private List<String> dataNodeKillPoints = new ArrayList<>();
@@ -195,7 +197,8 @@ public abstract class AbstractEnv implements BaseEnv {
             EnvUtils.searchAvailablePorts(),
             index,
             this instanceof MultiClusterEnv,
-            startTime);
+            startTime,
+            isExternalServiceRelatedTest);
     seedConfigNodeWrapper.createNodeDir();
     seedConfigNodeWrapper.changeConfig(
         (MppConfigNodeConfig) clusterConfig.getConfigNodeConfig(),
@@ -273,7 +276,8 @@ public abstract class AbstractEnv implements BaseEnv {
             EnvUtils.searchAvailablePorts(),
             index,
             this instanceof MultiClusterEnv,
-            startTime);
+            startTime,
+            isExternalServiceRelatedTest);
 
     configNodeWrapper.createNodeDir();
     configNodeWrapper.changeConfig(
@@ -294,7 +298,8 @@ public abstract class AbstractEnv implements BaseEnv {
             EnvUtils.searchAvailablePorts(),
             index,
             this instanceof MultiClusterEnv,
-            startTime);
+            startTime,
+            isExternalServiceRelatedTest);
 
     dataNodeWrapper.createNodeDir();
     dataNodeWrapper.changeConfig(
@@ -317,7 +322,8 @@ public abstract class AbstractEnv implements BaseEnv {
             testMethodName,
             index,
             EnvUtils.searchAvailablePorts(),
-            startTime);
+            startTime,
+            isExternalServiceRelatedTest);
     aiNodeWrapperList.add(aiNodeWrapper);
     aiNodeEndPoint = aiNodeWrapper.getIpAndPortString();
     aiNodeWrapper.createNodeDir();
@@ -1360,7 +1366,8 @@ public abstract class AbstractEnv implements BaseEnv {
             EnvUtils.searchAvailablePorts(),
             index,
             this instanceof MultiClusterEnv,
-            startTime);
+            startTime,
+            isExternalServiceRelatedTest);
     configNodeWrapperList.add(newConfigNodeWrapper);
     newConfigNodeWrapper.createNodeDir();
     newConfigNodeWrapper.changeConfig(
@@ -1381,7 +1388,8 @@ public abstract class AbstractEnv implements BaseEnv {
             EnvUtils.searchAvailablePorts(),
             index,
             this instanceof MultiClusterEnv,
-            startTime);
+            startTime,
+            isExternalServiceRelatedTest);
     dataNodeWrapperList.add(newDataNodeWrapper);
     newDataNodeWrapper.createNodeDir();
     newDataNodeWrapper.changeConfig(
@@ -1572,7 +1580,9 @@ public abstract class AbstractEnv implements BaseEnv {
 
   @Override
   public String getLibPath() {
-    return TEMPLATE_NODE_LIB_PATH;
+    return isExternalServiceRelatedTest
+        ? TEMPLATE_NODE_SERVICE_LIB_WITH_EXTERNAL_SERVICE_PATH
+        : TEMPLATE_NODE_LIB_PATH;
   }
 
   @Override
@@ -1605,5 +1615,10 @@ public abstract class AbstractEnv implements BaseEnv {
 
   public void clearClientManager() {
     clientManager.clearAll();
+  }
+
+  @Override
+  public void setIsExternalServiceRelatedTest(boolean isExternalServiceRelatedTest) {
+    this.isExternalServiceRelatedTest = isExternalServiceRelatedTest;
   }
 }

@@ -376,4 +376,6 @@ public interface BaseEnv {
     }
     return info;
   }
+
+  void setIsExternalServiceRelatedTest(boolean isExternalServiceRelatedTest);
 }

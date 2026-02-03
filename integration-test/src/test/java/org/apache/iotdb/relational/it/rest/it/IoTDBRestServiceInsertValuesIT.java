@@ -48,10 +48,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({
-  TableExternalServiceImplLocalStandaloneIT.class,
-  TableExternalServiceImplClusterIT.class
-})
+@Category({ExternalServiceImplLocalStandaloneIT.class, ExternalServiceImplClusterIT.class})
 public class IoTDBRestServiceInsertValuesIT {
 
   private int port = 18080;

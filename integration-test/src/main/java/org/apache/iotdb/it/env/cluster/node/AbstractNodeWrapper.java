@@ -122,6 +122,7 @@ import static org.apache.iotdb.it.env.cluster.ClusterConstant.TAB;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TARGET;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_LIB_PATH;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_PATH;
+import static org.apache.iotdb.it.env.cluster.ClusterConstant.TEMPLATE_NODE_SERVICE_LIB_WITH_EXTERNAL_SERVICE_PATH;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.TRIGGER_LIB_DIR;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.UDF_LIB_DIR;
 import static org.apache.iotdb.it.env.cluster.ClusterConstant.USER_DIR;
@@ -145,6 +146,7 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
   private final int metricPort;
   private final long startTime;
   private List<String> killPoints = new ArrayList<>();
+  private final boolean isExternalServiceRelatedTest;
 
   /**
    * Mutable properties are always hardcoded default values to make the cluster be set up
@@ -176,10 +178,12 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
       int[] portList,
       int clusterIndex,
       boolean isMultiCluster,
-      long startTime) {
+      long startTime,
+      boolean isExternalServiceRelatedTest) {
     this.testClassName = testClassName;
     this.testMethodName = testMethodName;
     this.portList = portList;
+    this.isExternalServiceRelatedTest = isExternalServiceRelatedTest;
     this.nodeAddress = "127.0.0.1";
     this.nodePort = portList[0];
     this.metricPort = portList[portList.length - 2];
@@ -494,7 +498,7 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
               + File.separator
               + "template-node-share"
               + File.separator
-              + "lib"
+              + (isExternalServiceRelatedTest ? "lib-with-external-service" : "lib")
               + File.separator;
       File directory = new File(libPath);
       String osName = System.getProperty("os.name").toLowerCase();
@@ -503,7 +507,13 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
         File[] files = directory.listFiles();
         for (File file : files) {
           if (file.getName().startsWith("iotdb-server")) {
-            server_node_lib_path = libPath + file.getName() + ":" + TEMPLATE_NODE_LIB_PATH;
+            server_node_lib_path =
+                libPath
+                    + file.getName()
+                    + ":"
+                    + (isExternalServiceRelatedTest
+                        ? TEMPLATE_NODE_SERVICE_LIB_WITH_EXTERNAL_SERVICE_PATH
+                        : TEMPLATE_NODE_LIB_PATH);
             break;
           }
         }
@@ -536,7 +546,13 @@ public abstract class AbstractNodeWrapper implements BaseNodeWrapper {
             .environment()
             .put("user_encrypt_token", DataNodeWrapper.getEncryptionToken());
       }
-      processBuilder.environment().put("CLASSPATH", TEMPLATE_NODE_LIB_PATH);
+      processBuilder
+          .environment()
+          .put(
+              "CLASSPATH",
+              isExternalServiceRelatedTest
+                  ? TEMPLATE_NODE_SERVICE_LIB_WITH_EXTERNAL_SERVICE_PATH
+                  : TEMPLATE_NODE_LIB_PATH);
       this.instance = processBuilder.start();
       logger.info("In test {} {} started.", getTestLogDirName(), getId());
     } catch (IOException ex) {

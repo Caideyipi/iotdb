@@ -44,15 +44,34 @@
                 <include>integration-test-${project.version}.jar</include>
             </includes>
         </fileSet>
+        <fileSet>
+            <outputDirectory>lib-with-external-service</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/distribution/target/timechodb-${project.version}-bin/timechodb-${project.version}-bin/lib</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>lib-with-external-service</outputDirectory>
+            <directory>${maven.multiModuleProjectDirectory}/library-udf/target/</directory>
+            <includes>
+                <include>library-udf-${project.version}-jar-with-dependencies.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>lib-with-external-service</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>integration-test-${project.version}.jar</include>
+            </includes>
+        </fileSet>
     </fileSets>
+    <!-- For external-service-impl jars -->
     <files>
         <file>
             <source>${project.basedir}/../external-service-impl/mqtt/target/mqtt-${project.version}-jar-with-dependencies.jar</source>
-            <outputDirectory>lib</outputDirectory>
+            <outputDirectory>lib-with-external-service</outputDirectory>
         </file>
         <file>
             <source>${project.basedir}/../external-service-impl/rest/target/rest-${project.version}-jar-with-dependencies.jar</source>
-            <outputDirectory>lib</outputDirectory>
+            <outputDirectory>lib-with-external-service</outputDirectory>
         </file>
     </files>
 </assembly>

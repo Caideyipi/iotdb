@@ -97,8 +97,16 @@ public class DataNodeWrapper extends AbstractNodeWrapper {
       final int[] portList,
       final int clusterIndex,
       final boolean isMultiCluster,
-      final long startTime) {
-    super(testClassName, testMethodName, portList, clusterIndex, isMultiCluster, startTime);
+      final long startTime,
+      boolean isExternalServiceRelatedTest) {
+    super(
+        testClassName,
+        testMethodName,
+        portList,
+        clusterIndex,
+        isMultiCluster,
+        startTime,
+        isExternalServiceRelatedTest);
     this.internalAddress = super.getIp();
     this.mppDataExchangePort = portList[1];
     this.internalPort = portList[2];

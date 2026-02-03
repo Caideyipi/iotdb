@@ -86,8 +86,16 @@ public class AINodeWrapper extends AbstractNodeWrapper {
       String testMethodName,
       int clusterIndex,
       int[] port,
-      long startTime) {
-    super(testClassName, testMethodName, port, clusterIndex, false, startTime);
+      long startTime,
+      boolean isExternalServiceRelatedTest) {
+    super(
+        testClassName,
+        testMethodName,
+        port,
+        clusterIndex,
+        false,
+        startTime,
+        isExternalServiceRelatedTest);
     this.seedConfigNode = seedConfigNode;
     this.clusterIngressPort = clusterIngressPort;
     this.startTime = startTime;

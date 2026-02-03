@@ -25,10 +25,15 @@ import org.apache.tsfile.utils.Pair;
 
 public class MultiClusterEnv extends AbstractEnv {
 
-  public MultiClusterEnv(final long startTime, final int index, final String currentMethodName) {
+  public MultiClusterEnv(
+      final long startTime,
+      final int index,
+      final String currentMethodName,
+      boolean isExternalServiceRelatedTest) {
     super(startTime);
     this.index = index;
     this.testMethodName = currentMethodName;
+    this.isExternalServiceRelatedTest = isExternalServiceRelatedTest;
   }
 
   @Override

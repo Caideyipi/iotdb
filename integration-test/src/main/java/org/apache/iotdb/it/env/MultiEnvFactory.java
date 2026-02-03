@@ -33,6 +33,7 @@ public class MultiEnvFactory {
   private static final List<BaseEnv> envList = new ArrayList<>();
   private static final Logger logger = IoTDBTestLogger.logger;
   private static String currentMethodName;
+  private static boolean isExternalServiceRelatedTest = false;
 
   private MultiEnvFactory() {
     // Empty constructor
@@ -41,6 +42,12 @@ public class MultiEnvFactory {
   public static void setTestMethodName(final String testMethodName) {
     currentMethodName = testMethodName;
     envList.forEach(baseEnv -> baseEnv.setTestMethodName(testMethodName));
+  }
+
+  public static void setIsExternalServiceRelatedTest(boolean externalServiceRelatedTest) {
+    isExternalServiceRelatedTest = externalServiceRelatedTest;
+    envList.forEach(
+        baseEnv -> baseEnv.setIsExternalServiceRelatedTest(isExternalServiceRelatedTest));
   }
 
   /** Get an environment with the specific index. */
@@ -55,7 +62,8 @@ public class MultiEnvFactory {
     for (int i = 0; i < num; ++i) {
       try {
         Class.forName(Config.JDBC_DRIVER_NAME);
-        envList.add(new MultiClusterEnv(startTime, i, currentMethodName));
+        envList.add(
+            new MultiClusterEnv(startTime, i, currentMethodName, isExternalServiceRelatedTest));
       } catch (final ClassNotFoundException e) {
         logger.error("Create env error", e);
         System.exit(-1);

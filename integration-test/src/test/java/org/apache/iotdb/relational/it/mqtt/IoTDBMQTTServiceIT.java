@@ -23,8 +23,8 @@ import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.TableExternalServiceImplClusterIT;
-import org.apache.iotdb.itbase.category.TableExternalServiceImplLocalStandaloneIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplClusterIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplLocalStandaloneIT;
 import org.apache.iotdb.itbase.env.BaseEnv;
 import org.apache.iotdb.rpc.StatementExecutionException;
 
@@ -47,10 +47,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(IoTDBTestRunner.class)
-@Category({
-  TableExternalServiceImplLocalStandaloneIT.class,
-  TableExternalServiceImplClusterIT.class
-})
+@Category({ExternalServiceImplLocalStandaloneIT.class, ExternalServiceImplClusterIT.class})
 public class IoTDBMQTTServiceIT {
   private BlockingConnection connection;
   private static final String IP = System.getProperty("RemoteIp", "127.0.0.1");

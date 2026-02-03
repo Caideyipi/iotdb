@@ -24,8 +24,8 @@ import org.apache.iotdb.isession.SessionDataSet;
 import org.apache.iotdb.it.env.EnvFactory;
 import org.apache.iotdb.it.env.cluster.node.DataNodeWrapper;
 import org.apache.iotdb.it.framework.IoTDBTestRunner;
-import org.apache.iotdb.itbase.category.ClusterIT;
-import org.apache.iotdb.itbase.category.LocalStandaloneIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplClusterIT;
+import org.apache.iotdb.itbase.category.ExternalServiceImplLocalStandaloneIT;
 import org.apache.iotdb.itbase.env.BaseEnv;
 import org.apache.iotdb.rpc.StatementExecutionException;
 
@@ -54,7 +54,7 @@ import static org.junit.Assert.fail;
  * model data insertion.
  */
 @RunWith(IoTDBTestRunner.class)
-@Category({LocalStandaloneIT.class, ClusterIT.class})
+@Category({ExternalServiceImplLocalStandaloneIT.class, ExternalServiceImplClusterIT.class})
 public class IoTDBMQTTServiceJsonIT {
 
   private BlockingConnection connection;
