@@ -582,13 +582,11 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
       limit = 0;
       offset = 0;
     } else if (!canPushDownOffsetLimit) {
-      if (showTimeSeriesStatement.getLimit() != 0) {
-        limit = showTimeSeriesStatement.getLimit() + showTimeSeriesStatement.getOffset();
-        offset = 0;
-      } else {
-        limit = 0;
-        offset = 0;
-      }
+      limit =
+          showTimeSeriesStatement.getLimit() != 0
+              ? showTimeSeriesStatement.getLimit() + showTimeSeriesStatement.getOffset()
+              : 0;
+      offset = 0;
     }
     planBuilder =
         planBuilder
@@ -651,7 +649,10 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
     long limit = showDevicesStatement.getLimit();
     long offset = showDevicesStatement.getOffset();
     if (!canPushDownOffsetLimit) {
-      limit = showDevicesStatement.getLimit() + showDevicesStatement.getOffset();
+      limit =
+          showDevicesStatement.getLimit() != 0
+              ? showDevicesStatement.getLimit() + showDevicesStatement.getOffset()
+              : 0;
       offset = 0;
     }
 
@@ -1030,7 +1031,10 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
     long limit = showLogicalViewStatement.getLimit();
     long offset = showLogicalViewStatement.getOffset();
     if (!canPushDownOffsetLimit) {
-      limit = showLogicalViewStatement.getLimit() + showLogicalViewStatement.getOffset();
+      limit =
+          showLogicalViewStatement.getLimit() != 0
+              ? showLogicalViewStatement.getLimit() + showLogicalViewStatement.getOffset()
+              : 0;
       offset = 0;
     }
     planBuilder =
