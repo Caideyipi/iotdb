@@ -2447,6 +2447,101 @@ public class IoTDBDeletionTableIT {
     }
   }
 
+  @Test
+  public void testCreateAndDropDatabaseWithTableModel() throws SQLException {
+    String testDatabase1 = "1234567890";
+    String testDatabase2 = "123qweqwe";
+    try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
+        Statement statement = connection.createStatement()) {
+
+      statement.execute(
+          "CREATE DATABASE \""
+              + testDatabase1
+              + "\" WITH (ttl='INF', time_partition_interval=604800000)");
+
+      try (ResultSet resultSet = statement.executeQuery("SHOW databases")) {
+        boolean found = false;
+        while (resultSet.next()) {
+          String dbName = resultSet.getString(1);
+          if (testDatabase1.equals(dbName)) {
+            found = true;
+            break;
+          }
+        }
+        assertTrue("Database should be created", found);
+      }
+
+      statement.execute("USE \"" + testDatabase1 + "\"");
+      statement.execute(
+          "CREATE TABLE test_table(deviceId STRING TAG, s0 INT32 FIELD, s1 INT64 FIELD, s2 FLOAT FIELD, s3 TEXT FIELD, s4 BOOLEAN FIELD)");
+
+      try (ResultSet resultSet = statement.executeQuery("SHOW tables")) {
+        boolean found = false;
+        while (resultSet.next()) {
+          String tableName = resultSet.getString(1);
+          if ("test_table".equals(tableName)) {
+            found = true;
+            break;
+          }
+        }
+        assertTrue("Table should be created", found);
+      }
+
+      statement.execute(
+          "CREATE DATABASE \""
+              + testDatabase2
+              + "\" WITH (ttl='INF', time_partition_interval=604800000)");
+
+      try (ResultSet resultSet = statement.executeQuery("SHOW databases")) {
+        boolean found1 = false;
+        boolean found2 = false;
+        while (resultSet.next()) {
+          String dbName = resultSet.getString(1);
+          if (testDatabase1.equals(dbName)) {
+            found1 = true;
+          }
+          if (testDatabase2.equals(dbName)) {
+            found2 = true;
+          }
+        }
+        assertTrue("First database should be created", found1);
+        assertTrue("Second database should be created", found2);
+      }
+
+      statement.execute("USE \"" + testDatabase2 + "\"");
+      statement.execute(
+          "CREATE TABLE test_table(deviceId STRING TAG, s0 INT32 FIELD, s1 INT64 FIELD, s2 FLOAT FIELD, s3 TEXT FIELD, s4 BOOLEAN FIELD)");
+
+      statement.execute("DROP DATABASE \"" + testDatabase1 + "\"");
+
+      try (ResultSet resultSet = statement.executeQuery("SHOW databases")) {
+        boolean found = false;
+        while (resultSet.next()) {
+          String dbName = resultSet.getString(1);
+          if (testDatabase1.equals(dbName)) {
+            found = true;
+            break;
+          }
+        }
+        assertFalse("First database should be dropped", found);
+      }
+
+      statement.execute("DROP DATABASE \"" + testDatabase2 + "\"");
+
+      try (ResultSet resultSet = statement.executeQuery("SHOW databases")) {
+        boolean found = false;
+        while (resultSet.next()) {
+          String dbName = resultSet.getString(1);
+          if (testDatabase2.equals(dbName)) {
+            found = true;
+            break;
+          }
+        }
+        assertFalse("Second database should be dropped", found);
+      }
+    }
+  }
+
   private static void prepareDatabase() {
     try (Connection connection = EnvFactory.getEnv().getConnection(BaseEnv.TABLE_SQL_DIALECT);
         Statement statement = connection.createStatement()) {

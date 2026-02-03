@@ -29,6 +29,7 @@ import org.apache.iotdb.commons.exception.runtime.ThriftSerDeException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.service.metric.MetricService;
+import org.apache.iotdb.commons.utils.PathUtils;
 import org.apache.iotdb.commons.utils.ThriftConfigNodeSerDeUtils;
 import org.apache.iotdb.confignode.client.async.CnToDnAsyncRequestType;
 import org.apache.iotdb.confignode.client.async.CnToDnInternalServiceAsyncRequestManager;
@@ -384,7 +385,9 @@ public class DeleteDatabaseProcedure
   @Override
   public void applyPathPatterns(PathPatternTree patternTree) {
     String databaseName = getDatabase();
-    if (databaseName == null || databaseName.isEmpty()) {
+    if (databaseName == null
+        || databaseName.isEmpty()
+        || PathUtils.isTableModelDatabase(databaseName)) {
       return;
     }
     try {
@@ -410,6 +413,10 @@ public class DeleteDatabaseProcedure
    */
   private InvalidTimeSeriesCheckResult checkInvalidTimeSeries(
       final ConfigNodeProcedureEnv env, final String databaseName) {
+    if (PathUtils.isTableModelDatabase(databaseName)) {
+      return new InvalidTimeSeriesCheckResult(false, 0, 0, new ArrayList<>());
+    }
+
     try {
       final List<TRegionReplicaSet> schemaRegions = filterSchemaRegions(env, databaseName);
       if (schemaRegions.isEmpty()) {

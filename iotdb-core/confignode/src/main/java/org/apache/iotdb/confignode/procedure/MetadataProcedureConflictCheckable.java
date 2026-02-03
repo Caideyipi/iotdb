@@ -51,7 +51,7 @@ public interface MetadataProcedureConflictCheckable {
    * @return true if there is no conflict (can proceed), false if there is a conflict (should throw
    *     exception)
    */
-  default boolean hasConflictWith(PathPatternTree patternTree) {
+  default boolean hasNoConflictWith(PathPatternTree patternTree) {
     if (patternTree == null || patternTree.isEmpty()) {
       return true; // No conflict if the pattern tree is empty
     }
@@ -59,6 +59,9 @@ public interface MetadataProcedureConflictCheckable {
     PathPatternTree thisProcedureTree = new PathPatternTree();
     applyPathPatterns(thisProcedureTree);
     thisProcedureTree.constructTree();
+    if (thisProcedureTree.isEmpty()) {
+      return true;
+    }
     // Check if there's overlap
     return !thisProcedureTree.isOverlapWith(patternTree);
   }

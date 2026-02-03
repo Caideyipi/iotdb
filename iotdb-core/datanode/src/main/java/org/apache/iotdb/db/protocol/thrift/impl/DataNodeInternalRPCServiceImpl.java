@@ -1924,7 +1924,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
       final TCheckInvalidTimeSeriesReq req, final ISchemaRegion schemaRegion)
       throws MetadataException {
     final PathPatternTree patternTree = new PathPatternTree();
-    patternTree.appendPathPattern(new PartialPath(req.getDatabaseName() + ".**"));
+    patternTree.appendPathPattern(
+        new PartialPath(req.getDatabaseName() + PATH_SEPARATOR + MULTI_LEVEL_PATH_WILDCARD));
     patternTree.constructTree();
     return schemaRegion.fetchSeriesSchema(patternTree, null, false, false, false, false);
   }
@@ -1940,7 +1941,8 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
       final ISchemaRegion schemaRegion,
       final TCheckInvalidTimeSeriesResp resp)
       throws IllegalPathException {
-    final PartialPath searchPattern = new PartialPath(req.getDatabaseName() + ".**");
+    final PartialPath searchPattern =
+        new PartialPath(req.getDatabaseName() + PATH_SEPARATOR + MULTI_LEVEL_PATH_WILDCARD);
     final Pair<List<MeasurementPath>, Integer> searchResult =
         schemaTree.searchMeasurementPaths(searchPattern);
 

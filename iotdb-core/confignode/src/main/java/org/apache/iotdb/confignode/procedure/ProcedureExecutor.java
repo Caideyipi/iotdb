@@ -975,7 +975,7 @@ public class ProcedureExecutor<Env> {
         PathPatternTree runningTasksTree =
             MetadataProcedureConflictChecker.buildRunningTasksPatternTree(procedures.values());
         // Check if this procedure conflicts with running tasks
-        if (!checkable.hasConflictWith(runningTasksTree)) {
+        if (!checkable.hasNoConflictWith(runningTasksTree)) {
           // Set failure on the procedure instead of throwing exception
           procedure.setFailure(
               new ProcedureException(
