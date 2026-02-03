@@ -212,7 +212,9 @@ public class MPPPublishHandler extends AbstractInterceptHandler {
           (TreeMessage) message,
           session,
           TreeMessage::getDevice,
-          (status, m) -> status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode(),
+          (status, m) ->
+              status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()
+                  && status.getCode() != TSStatusCode.REDIRECTION_RECOMMEND.getStatusCode(),
           (m, e) ->
               LOG.warn(
                   "meet error when inserting device {}, measurements {}, at time {}",
