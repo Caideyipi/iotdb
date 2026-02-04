@@ -121,6 +121,7 @@ public class ErrorHandlingUtils {
             || status.getCode() == TSStatusCode.CANNOT_FETCH_FI_STATE.getStatusCode()
             || status.getCode() == TSStatusCode.QUERY_EXECUTION_MEMORY_NOT_ENOUGH.getStatusCode()
             || status.getCode() == TSStatusCode.EXECUTE_UDF_ERROR.getStatusCode()
+            || status.getCode() == TSStatusCode.PIPE_NOT_EXIST_ERROR.getStatusCode()
             || status.getCode() == TSStatusCode.QUERY_TIMEOUT.getStatusCode()) {
           LOGGER.info(message);
         } else {
