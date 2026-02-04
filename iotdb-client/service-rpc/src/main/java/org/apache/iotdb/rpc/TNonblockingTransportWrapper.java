@@ -23,8 +23,16 @@ import org.apache.thrift.transport.TNonblockingSocket;
 import org.apache.thrift.transport.TNonblockingTransport;
 import org.apache.thrift.transport.TTransportException;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.nio.file.AccessDeniedException;
+import java.security.KeyStore;
 
 /**
  * In Thrift 0.14.1, TNonblockingSocket's constructor throws a never-happened exception. So, we
@@ -63,17 +71,62 @@ public class TNonblockingTransportWrapper {
       String host,
       int port,
       int timeout,
-      String keyStorePath,
+      String keyStore,
       String keyStorePwd,
-      String trustStorePath,
+      String trustStore,
       String trustStorePwd) {
     try {
-      return new NettyTNonblockingTransport(
-          host, port, timeout, keyStorePath, keyStorePwd, trustStorePath, trustStorePwd);
-    } catch (TTransportException e) {
-      // never happen
-      return null;
+      SSLContext sslContext = createSSLContext(keyStore, keyStorePwd, trustStore, trustStorePwd);
+      return new TNonblockingSSLSocket(host, port, timeout, sslContext);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
+  }
+
+  private static SSLContext createSSLContext(
+      String keystorePath,
+      String keystorePassword,
+      String truststorePath,
+      String truststorePassword)
+      throws Exception {
+
+    KeyManagerFactory kmf = null;
+    TrustManagerFactory tmf = null;
+
+    SSLContext ctx = SSLContext.getInstance("TLS");
+    if (keystorePath != null && keystorePassword != null) {
+      KeyStore keyStore = KeyStore.getInstance("JKS");
+      try (FileInputStream fis = new FileInputStream(keystorePath)) {
+        keyStore.load(fis, keystorePassword.toCharArray());
+      } catch (AccessDeniedException e) {
+        throw new AccessDeniedException("Failed to load keystore file");
+      } catch (FileNotFoundException e) {
+        throw new FileNotFoundException("keystore file not found");
+      }
+      kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+      kmf.init(keyStore, keystorePassword.toCharArray());
+    }
+
+    if (truststorePath != null && truststorePassword != null) {
+      KeyStore trustStore = KeyStore.getInstance("JKS");
+      try (FileInputStream fis = new FileInputStream(truststorePath)) {
+        trustStore.load(fis, truststorePassword.toCharArray());
+      } catch (AccessDeniedException e) {
+        throw new AccessDeniedException("Failed to load truststore file");
+      } catch (FileNotFoundException e) {
+        throw new FileNotFoundException("truststore file not found");
+      }
+      tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      tmf.init(trustStore);
+    }
+    if (kmf != null && tmf != null) {
+      ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+    } else if (kmf != null) {
+      ctx.init(kmf.getKeyManagers(), null, null);
+    } else if (tmf != null) {
+      ctx.init(null, tmf.getTrustManagers(), null);
+    }
+    return ctx;
   }
 
   private TNonblockingTransportWrapper() {}
