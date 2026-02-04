@@ -74,6 +74,7 @@ import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.reader.impl.Times
 import org.apache.iotdb.db.schemaengine.schemaregion.utils.MetaFormatUtils;
 import org.apache.iotdb.db.schemaengine.schemaregion.utils.filter.DeviceFilterVisitor;
 import org.apache.iotdb.db.schemaengine.schemaregion.write.resp.ConstructSchemaBlackListResult;
+import org.apache.iotdb.db.schemaengine.template.ClusterTemplateManager;
 import org.apache.iotdb.db.storageengine.rescon.quotas.DataNodeSpaceQuotaManager;
 import org.apache.iotdb.db.utils.SchemaUtils;
 import org.apache.iotdb.rpc.TSStatusCode;
@@ -115,6 +116,7 @@ import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.PATH_SEPARATOR;
+import static org.apache.iotdb.commons.schema.SchemaConstant.NON_TEMPLATE;
 
 /**
  * The hierarchical struct of the Metadata Tree is implemented in this class.
@@ -150,7 +152,7 @@ public class MTreeBelowSGMemoryImpl {
   private final Function<IMeasurementMNode<IMemMNode>, Map<String, String>> attributeGetter;
   private final IMNodeFactory<IMemMNode> nodeFactory =
       MNodeFactoryLoader.getInstance().getMemMNodeIMNodeFactory();
-  private final int levelOfSG;
+  private final int levelOfDB;
   private final MemSchemaRegionStatistics regionStatistics;
 
   // region MTree initialization, clear and serialization
@@ -164,7 +166,7 @@ public class MTreeBelowSGMemoryImpl {
     this.regionStatistics = regionStatistics;
     this.databaseMNode = store.getRoot();
     this.rootNode = store.generatePrefix(databasePath);
-    levelOfSG = databasePath.getNodeLength() - 1;
+    levelOfDB = databasePath.getNodeLength() - 1;
     this.tagGetter = tagGetter;
     this.attributeGetter = attributeGetter;
   }
@@ -179,7 +181,7 @@ public class MTreeBelowSGMemoryImpl {
     this.regionStatistics = regionStatistics;
     this.databaseMNode = store.getRoot();
     this.rootNode = store.generatePrefix(databasePath);
-    levelOfSG = databasePath.getNodeLength() - 1;
+    levelOfDB = databasePath.getNodeLength() - 1;
     this.tagGetter = tagGetter;
     this.attributeGetter = attributeGetter;
   }
@@ -439,14 +441,14 @@ public class MTreeBelowSGMemoryImpl {
       throws MetadataException {
     final String[] nodeNames = devicePath.getNodes();
     MetaFormatUtils.checkTimeseries(devicePath);
-    if (nodeNames.length == levelOfSG + 1) {
+    if (nodeNames.length == levelOfDB + 1) {
       return null;
     }
     IMemMNode cur = databaseMNode;
     IMemMNode child;
     String childName;
     // e.g, path = root.sg.d1.s1,  create internal nodes and set cur to sg node, parent of d1
-    for (int i = levelOfSG + 1; i < nodeNames.length - 1; i++) {
+    for (int i = levelOfDB + 1; i < nodeNames.length - 1; i++) {
       childName = nodeNames[i];
       child = cur.getChild(childName);
       if (child == null) {
@@ -882,9 +884,18 @@ public class MTreeBelowSGMemoryImpl {
     final String[] nodeNames = deviceId.getNodes();
     IMemMNode cur = databaseMNode;
     IMemMNode child;
-    for (int i = levelOfSG + 1; i < nodeNames.length; i++) {
+    for (int i = levelOfDB + 1; i < nodeNames.length; i++) {
       child = cur.getChild(nodeNames[i]);
       if (child == null) {
+        if (cur.isDevice() && cur.getAsDeviceMNode().getSchemaTemplateId() != NON_TEMPLATE) {
+          final Template template =
+              ClusterTemplateManager.getInstance()
+                  .getTemplate(cur.getAsDeviceMNode().getSchemaTemplateId());
+          if (Objects.nonNull(template) && template.getSchema(nodeNames[i]) != null) {
+            throw new PathAlreadyExistException(
+                new PartialPath(Arrays.copyOf(deviceId.getNodes(), i + 1)).getFullPath());
+          }
+        }
         child =
             store.addChild(cur, nodeNames[i], nodeFactory.createInternalMNode(cur, nodeNames[i]));
       }
@@ -1029,7 +1040,7 @@ public class MTreeBelowSGMemoryImpl {
     final String[] nodes = path.getNodes();
     IMemMNode cur = databaseMNode;
     IMemMNode next;
-    for (int i = levelOfSG + 1; i < nodes.length; i++) {
+    for (int i = levelOfDB + 1; i < nodes.length; i++) {
       next = cur.getChild(nodes[i]);
       if (next == null) {
         throw new PathNotExistException(path.getFullPath(), true);
@@ -1064,7 +1075,7 @@ public class MTreeBelowSGMemoryImpl {
       throws MetadataException {
     final String[] nodes = activatePath.getNodes();
     IMemMNode cur = databaseMNode;
-    for (int i = levelOfSG + 1; i < nodes.length; i++) {
+    for (int i = levelOfDB + 1; i < nodes.length; i++) {
       cur = cur.getChild(nodes[i]);
     }
 
@@ -1171,7 +1182,7 @@ public class MTreeBelowSGMemoryImpl {
       final PartialPath activatePath, final int templateId, final boolean isAligned) {
     final String[] nodes = activatePath.getNodes();
     IMemMNode cur = databaseMNode;
-    for (int i = levelOfSG + 1; i < nodes.length; i++) {
+    for (int i = levelOfDB + 1; i < nodes.length; i++) {
       cur = cur.getChild(nodes[i]);
     }
 
