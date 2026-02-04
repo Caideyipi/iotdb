@@ -20,6 +20,7 @@
 package org.apache.iotdb.db.pipe.agent.task.subtask.sink;
 
 import org.apache.iotdb.commons.exception.pipe.PipeRuntimeException;
+import org.apache.iotdb.commons.exception.pipe.PipeRuntimeOutOfMemoryCriticalException;
 import org.apache.iotdb.commons.pipe.agent.task.connection.UnboundedBlockingPendingQueue;
 import org.apache.iotdb.commons.pipe.agent.task.subtask.PipeAbstractSinkSubtask;
 import org.apache.iotdb.commons.pipe.event.EnrichedEvent;
@@ -131,6 +132,11 @@ public class PipeSinkSubtask extends PipeAbstractSinkSubtask {
       }
 
       decreaseReferenceCountAndReleaseLastEvent(event, true);
+    } catch (final PipeRuntimeOutOfMemoryCriticalException e) {
+      LOGGER.info(
+          "Temporarily out of memory in pipe event processing, will wait for the memory to release.",
+          e);
+      return false;
     } catch (final PipeException e) {
       if (!isClosed.get()) {
         setLastExceptionEvent(event);
