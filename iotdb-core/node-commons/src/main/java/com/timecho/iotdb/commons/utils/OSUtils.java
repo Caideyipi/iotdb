@@ -82,4 +82,12 @@ public class OSUtils {
     Base32 base32 = new Base32();
     return base32.encodeAsString(md5.digest(originalInfo.getBytes())).substring(0, 8);
   }
+
+  public static void main(String[] args) {
+    try {
+      System.out.println(generateSystemInfoContentWithVersion());
+    } catch (LicenseException e) {
+      e.printStackTrace();
+    }
+  }
 }
