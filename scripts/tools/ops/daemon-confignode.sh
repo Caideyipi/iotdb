@@ -17,7 +17,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-IOTDB_SBIN_HOME="$(cd "`dirname "$0"`"/../../sbin; pwd)"
+TIMECHODB_SBIN_HOME="$(cd "`dirname "$0"`"/../../sbin; pwd)"
 SYSTEMD_DIR="/etc/systemd/system"
 
 if [ ! -d "$SYSTEMD_DIR" ]; then
@@ -30,12 +30,12 @@ if [ -z "$JAVA_HOME" ]; then
     exit 1
 fi
 
-FILE_NAME=$SYSTEMD_DIR/iotdb-confignode.service
+FILE_NAME=$SYSTEMD_DIR/timechodb-confignode.service
 
 cat > "$FILE_NAME" <<EOF
 [Unit]
-Description=iotdb-confignode
-Documentation=https://iotdb.apache.org/
+Description=timechodb-confignode
+Documentation=https://www.timecho.com/
 After=network.target
 
 [Service]
@@ -46,8 +46,8 @@ Type=simple
 User=root
 Group=root
 Environment=JAVA_HOME=$JAVA_HOME
-ExecStart=$IOTDB_SBIN_HOME/start-confignode.sh
-ExecStop=$IOTDB_SBIN_HOME/stop-confignode.sh
+ExecStart=$TIMECHODB_SBIN_HOME/start-confignode.sh
+ExecStop=$TIMECHODB_SBIN_HOME/stop-confignode.sh
 Restart=on-failure
 SuccessExitStatus=143
 RestartSec=5
@@ -59,21 +59,21 @@ RestartPreventExitStatus=SIGKILL
 WantedBy=multi-user.target
 EOF
 
-echo "Daemon service of IoTDB ConfigNode has been successfully registered."
+echo "Daemon service of TimechoDB ConfigNode has been successfully registered."
 
 systemctl daemon-reload
 echo
-echo "Do you want to execute 'systemctl start iotdb-confignode'? y/n (default y)"
+echo "Do you want to execute 'systemctl start timechodb-confignode'? y/n (default y)"
 read -r START_SERVICE
 if [[ -z "$START_SERVICE" || "$START_SERVICE" =~ ^[Yy]$ ]]; then
-    "${IOTDB_SBIN_HOME}"/stop-confignode.sh >/dev/null 2>&1 &
-    systemctl start iotdb-confignode
+    "${TIMECHODB_SBIN_HOME}"/stop-confignode.sh >/dev/null 2>&1 &
+    systemctl start timechodb-confignode
     echo "Executed successfully."
 fi
 echo
-echo "Do you want to execute 'systemctl enable iotdb-confignode' to start at boot? y/n (default y)"
+echo "Do you want to execute 'systemctl enable timechodb-confignode' to start at boot? y/n (default y)"
 read -r ADD_STARTUP
 if [[ -z "$ADD_STARTUP" || "$ADD_STARTUP" =~ ^[Yy]$ ]]; then
-   systemctl enable iotdb-confignode >/dev/null 2>&1
+   systemctl enable timechodb-confignode >/dev/null 2>&1
    echo "Executed successfully."
 fi

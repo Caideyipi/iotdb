@@ -17,7 +17,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-IOTDB_AINODE_SBIN_HOME="$(cd "`dirname "$0"`"/../../sbin; pwd)"
+TIMECHODB_AINODE_SBIN_HOME="$(cd "`dirname "$0"`"/../../sbin; pwd)"
 SYSTEMD_DIR="/etc/systemd/system"
 
 if [ ! -d "$SYSTEMD_DIR" ]; then
@@ -25,12 +25,12 @@ if [ ! -d "$SYSTEMD_DIR" ]; then
     exit 1  # Exit with an error status
 fi
 
-FILE_NAME=$SYSTEMD_DIR/iotdb-ainode.service
+FILE_NAME=$SYSTEMD_DIR/timechodb-ainode.service
 
 cat > "$FILE_NAME" <<EOF
 [Unit]
-Description=iotdb-ainode
-Documentation=https://iotdb.apache.org/
+Description=timechodb-ainode
+Documentation=https://www.timecho.com/
 After=network.target
 
 [Service]
@@ -40,7 +40,7 @@ LimitNOFILE=65536
 Type=simple
 User=root
 Group=root
-ExecStart=$IOTDB_AINODE_SBIN_HOME/start-ainode.sh
+ExecStart=$TIMECHODB_AINODE_SBIN_HOME/start-ainode.sh
 ExecStop=/bin/kill -TERM -\$MAINPID
 Restart=on-failure
 SuccessExitStatus=143
@@ -54,21 +54,21 @@ TimeoutStopSec=60s
 WantedBy=multi-user.target
 EOF
 
-echo "Daemon service of IoTDB AINode has been successfully registered."
+echo "Daemon service of TimechoDB AINode has been successfully registered."
 
 systemctl daemon-reload
 echo
-echo "Do you want to execute 'systemctl start iotdb-ainode'? y/n (default y)"
+echo "Do you want to execute 'systemctl start timechodb-ainode'? y/n (default y)"
 read -r START_SERVICE
 if [[ -z "$START_SERVICE" || "$START_SERVICE" =~ ^[Yy]$ ]]; then
-    "${IOTDB_AINODE_SBIN_HOME}"/stop-ainode.sh >/dev/null 2>&1 &
-    systemctl start iotdb-ainode
+    "${TIMECHODB_AINODE_SBIN_HOME}"/stop-ainode.sh >/dev/null 2>&1 &
+    systemctl start timechodb-ainode
     echo "Executed successfully."
 fi
 echo
-echo "Do you want to execute 'systemctl enable iotdb-ainode' to start at boot? y/n (default y)"
+echo "Do you want to execute 'systemctl enable timechodb-ainode' to start at boot? y/n (default y)"
 read -r ADD_STARTUP
 if [[ -z "$ADD_STARTUP" || "$ADD_STARTUP" =~ ^[Yy]$ ]]; then
-   systemctl enable iotdb-ainode >/dev/null 2>&1
+   systemctl enable timechodb-ainode >/dev/null 2>&1
    echo "Executed successfully."
 fi
