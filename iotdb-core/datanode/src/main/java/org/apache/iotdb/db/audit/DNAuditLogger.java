@@ -40,6 +40,8 @@ import org.apache.iotdb.commons.pipe.config.constant.SystemConstant;
 import org.apache.iotdb.commons.utils.CommonDateTimeUtils;
 import org.apache.iotdb.confignode.rpc.thrift.TGetDatabaseReq;
 import org.apache.iotdb.confignode.rpc.thrift.TShowDatabaseResp;
+import org.apache.iotdb.confignode.rpc.thrift.TShowTableResp;
+import org.apache.iotdb.confignode.rpc.thrift.TTableInfo;
 import org.apache.iotdb.db.auth.AuthorityChecker;
 import org.apache.iotdb.db.conf.IoTDBConfig;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
@@ -293,11 +295,17 @@ public class DNAuditLogger extends AbstractAuditLogger {
             final TShowDatabaseResp tableResp = client.showDatabase(tableModelReq);
             if (tableResp.getDatabaseInfoMapSize() > 0
                 && tableResp.getDatabaseInfoMap().containsKey(SystemConstant.AUDIT_PREFIX_KEY)) {
-              logger.info(
-                  "[AUDIT] Database {} already exists for audit log",
-                  SystemConstant.AUDIT_PREFIX_KEY);
-              tableViewIsInitialized.set(true);
-              return;
+              TShowTableResp showTableResp =
+                  client.showTables(SystemConstant.AUDIT_PREFIX_KEY, false);
+              for (TTableInfo tableInfo : showTableResp.getTableInfoList()) {
+                if (tableInfo.getTableName().equals("audit_log")) {
+                  logger.info(
+                      "[AUDIT] Database {} already exists for audit log",
+                      SystemConstant.AUDIT_PREFIX_KEY);
+                  tableViewIsInitialized.set(true);
+                  return;
+                }
+              }
             }
           }
         } catch (ClientManagerException | TException e) {
