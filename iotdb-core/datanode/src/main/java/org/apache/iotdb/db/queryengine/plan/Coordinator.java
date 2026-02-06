@@ -727,62 +727,76 @@ public class Coordinator {
     return queryIdGenerator.createNextQueryId();
   }
 
+  public void cleanupQueryExecution(Long queryId, Supplier<String> contentSupplier, Throwable t) {
+    IQueryExecution queryExecution = getQueryExecution(queryId);
+    if (queryExecution != null) {
+      cleanupQueryExecutionInternal(queryId, queryExecution, contentSupplier, t);
+    }
+  }
+
   public void cleanupQueryExecution(
       Long queryId, org.apache.thrift.TBase<?, ?> nativeApiRequest, Throwable t) {
     IQueryExecution queryExecution = getQueryExecution(queryId);
     if (queryExecution != null) {
-      try (SetThreadName threadName = new SetThreadName(queryExecution.getQueryId())) {
-        LOGGER.debug("[CleanUpQuery]]");
-        queryExecution.stopAndCleanup(t);
-        boolean isUserQuery = queryExecution.isQuery() && queryExecution.isUserQuery();
-        Supplier<String> contentOfQuerySupplier =
-            new ContentOfQuerySupplier(nativeApiRequest, queryExecution);
-        if (isUserQuery) {
-          recordCurrentQueries(
-              queryExecution.getQueryId(),
-              queryExecution.getStartExecutionTime(),
-              System.currentTimeMillis(),
-              queryExecution.getTotalExecutionTime(),
-              contentOfQuerySupplier,
-              queryExecution.getUser(),
-              queryExecution.getClientHostname());
-        }
-        queryExecutionMap.remove(queryId);
-        if (isUserQuery) {
-          recordQueries(queryExecution::getTotalExecutionTime, contentOfQuerySupplier, t);
-        }
-        if (isUserQuery
-            && queryExecution.getTotalExecutionTime() / 1_000_000
-                >= CONFIG.getSlowQueryThreshold()) {
-          AuditLogFields auditLogFields =
-              new AuditLogFields(
-                  queryExecution.getContext().getUserId(),
-                  queryExecution.getUser(),
-                  queryExecution.getClientHostname(),
-                  AuditEventType.SLOW_OPERATION,
-                  AuditLogOperation.QUERY,
-                  PrivilegeType.READ_DATA,
-                  queryExecution.getStatus().status != null
-                      && queryExecution.getStatus().status.getCode()
-                          == TSStatusCode.SUCCESS_STATUS.getStatusCode(),
-                  queryExecution.getContext().getDatabaseName().orElse(""),
-                  queryExecution.getExecuteSQL().orElse(""));
-          DNAuditLogger.getInstance()
-              .log(
-                  auditLogFields,
-                  () ->
-                      String.format(
-                          "SLOW_QUERY: cost %d ms, %s",
-                          queryExecution.getTotalExecutionTime() / 1_000_000,
-                          queryExecution.getExecuteSQL().orElse("")));
-        }
+      Supplier<String> contentSupplier =
+          new ContentOfQuerySupplier(nativeApiRequest, queryExecution);
+      cleanupQueryExecutionInternal(queryId, queryExecution, contentSupplier, t);
+    }
+  }
+
+  private void cleanupQueryExecutionInternal(
+      Long queryId,
+      IQueryExecution queryExecution,
+      Supplier<String> contentOfQuerySupplier,
+      Throwable t) {
+    try (SetThreadName threadName = new SetThreadName(queryExecution.getQueryId())) {
+      LOGGER.debug("[CleanUpQuery]]");
+      queryExecution.stopAndCleanup(t);
+      boolean isUserQuery = queryExecution.isQuery() && queryExecution.isUserQuery();
+      if (isUserQuery) {
+        recordCurrentQueries(
+            queryExecution.getQueryId(),
+            queryExecution.getStartExecutionTime(),
+            System.currentTimeMillis(),
+            queryExecution.getTotalExecutionTime(),
+            contentOfQuerySupplier,
+            queryExecution.getUser(),
+            queryExecution.getClientHostname());
+      }
+      queryExecutionMap.remove(queryId);
+      if (isUserQuery) {
+        recordQueries(queryExecution::getTotalExecutionTime, contentOfQuerySupplier, t);
+      }
+      if (isUserQuery
+          && queryExecution.getTotalExecutionTime() / 1_000_000 >= CONFIG.getSlowQueryThreshold()) {
+        AuditLogFields auditLogFields =
+            new AuditLogFields(
+                queryExecution.getContext().getUserId(),
+                queryExecution.getUser(),
+                queryExecution.getClientHostname(),
+                AuditEventType.SLOW_OPERATION,
+                AuditLogOperation.QUERY,
+                PrivilegeType.READ_DATA,
+                queryExecution.getStatus().status != null
+                    && queryExecution.getStatus().status.getCode()
+                        == TSStatusCode.SUCCESS_STATUS.getStatusCode(),
+                queryExecution.getContext().getDatabaseName().orElse(""),
+                queryExecution.getExecuteSQL().orElse(""));
+        DNAuditLogger.getInstance()
+            .log(
+                auditLogFields,
+                () ->
+                    String.format(
+                        "SLOW_QUERY: cost %d ms, %s",
+                        queryExecution.getTotalExecutionTime() / 1_000_000,
+                        queryExecution.getExecuteSQL().orElse("")));
       }
     }
   }
 
   private static class ContentOfQuerySupplier implements Supplier<String> {
 
-    private final org.apache.thrift.TBase<?, ?> nativeApiRequest;
+    private final TBase<?, ?> nativeApiRequest;
     private final IQueryExecution queryExecution;
 
     private ContentOfQuerySupplier(TBase<?, ?> nativeApiRequest, IQueryExecution queryExecution) {
@@ -820,7 +834,7 @@ public class Coordinator {
   }
 
   public void cleanupQueryExecution(Long queryId) {
-    cleanupQueryExecution(queryId, null, null);
+    cleanupQueryExecution(queryId, (org.apache.thrift.TBase<?, ?>) null, null);
   }
 
   public IClientManager<TEndPoint, SyncDataNodeInternalServiceClient>
