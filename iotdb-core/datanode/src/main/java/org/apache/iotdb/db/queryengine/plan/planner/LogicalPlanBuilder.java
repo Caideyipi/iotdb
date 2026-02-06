@@ -937,7 +937,7 @@ public class LogicalPlanBuilder {
   }
 
   public LogicalPlanBuilder planLimit(long rowLimit) {
-    if (rowLimit == 0) {
+    if (rowLimit <= 0) {
       return this;
     }
 
@@ -1027,7 +1027,8 @@ public class LogicalPlanBuilder {
       boolean orderByHeat,
       boolean prefixPath,
       Map<Integer, Template> templateMap,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      Ordering ordering) {
     return planTimeSeriesSchemaSource(
         pathPattern,
         schemaFilter,
@@ -1037,7 +1038,8 @@ public class LogicalPlanBuilder {
         prefixPath,
         templateMap,
         scope,
-        false);
+        false,
+        ordering);
   }
 
   public LogicalPlanBuilder planTimeSeriesSchemaSource(
@@ -1049,7 +1051,8 @@ public class LogicalPlanBuilder {
       boolean prefixPath,
       Map<Integer, Template> templateMap,
       PathPatternTree scope,
-      boolean showInvalidTimeSeries) {
+      boolean showInvalidTimeSeries,
+      Ordering timeseriesOrdering) {
     this.root =
         new TimeSeriesSchemaScanNode(
             context.getQueryId().genPlanNodeId(),
@@ -1061,7 +1064,8 @@ public class LogicalPlanBuilder {
             prefixPath,
             templateMap,
             scope,
-            showInvalidTimeSeries);
+            showInvalidTimeSeries,
+            timeseriesOrdering);
     return this;
   }
 

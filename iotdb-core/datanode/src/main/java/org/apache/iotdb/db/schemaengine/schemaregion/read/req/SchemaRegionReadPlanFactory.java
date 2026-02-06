@@ -23,6 +23,7 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.filter.SchemaFilter;
 import org.apache.iotdb.commons.schema.template.Template;
+import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.req.impl.ShowDevicesPlanImpl;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.req.impl.ShowNodesPlanImpl;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.req.impl.ShowTimeSeriesPlanImpl;
@@ -99,21 +100,8 @@ public class SchemaRegionReadPlanFactory {
       boolean isPrefixMatch,
       SchemaFilter schemaFilter,
       boolean needViewDetail,
-      PathPatternTree scope) {
-    return new ShowTimeSeriesPlanImpl(
-        path, relatedTemplate, limit, offset, isPrefixMatch, schemaFilter, needViewDetail, scope);
-  }
-
-  public static IShowTimeSeriesPlan getShowTimeSeriesPlan(
-      PartialPath path,
-      Map<Integer, Template> relatedTemplate,
-      long limit,
-      long offset,
-      boolean isPrefixMatch,
-      SchemaFilter schemaFilter,
-      boolean needViewDetail,
       PathPatternTree scope,
-      boolean skipInvalidSchema) {
+      Ordering timeseriesOrdering) {
     return new ShowTimeSeriesPlanImpl(
         path,
         relatedTemplate,
@@ -122,9 +110,8 @@ public class SchemaRegionReadPlanFactory {
         isPrefixMatch,
         schemaFilter,
         needViewDetail,
-        skipInvalidSchema,
-        false,
-        scope);
+        scope,
+        timeseriesOrdering);
   }
 
   public static IShowTimeSeriesPlan getShowTimeSeriesPlan(
@@ -137,7 +124,33 @@ public class SchemaRegionReadPlanFactory {
       boolean needViewDetail,
       PathPatternTree scope,
       boolean skipInvalidSchema,
-      boolean onlyInvalidSchema) {
+      Ordering ordering) {
+    return new ShowTimeSeriesPlanImpl(
+        path,
+        relatedTemplate,
+        limit,
+        offset,
+        isPrefixMatch,
+        schemaFilter,
+        needViewDetail,
+        skipInvalidSchema,
+        false,
+        scope,
+        ordering);
+  }
+
+  public static IShowTimeSeriesPlan getShowTimeSeriesPlan(
+      PartialPath path,
+      Map<Integer, Template> relatedTemplate,
+      long limit,
+      long offset,
+      boolean isPrefixMatch,
+      SchemaFilter schemaFilter,
+      boolean needViewDetail,
+      PathPatternTree scope,
+      boolean skipInvalidSchema,
+      boolean onlyInvalidSchema,
+      Ordering ordering) {
     return new ShowTimeSeriesPlanImpl(
         path,
         relatedTemplate,
@@ -148,7 +161,8 @@ public class SchemaRegionReadPlanFactory {
         needViewDetail,
         skipInvalidSchema,
         onlyInvalidSchema,
-        scope);
+        scope,
+        ordering);
   }
 
   public static IShowNodesPlan getShowNodesPlan(PartialPath path, PathPatternTree scope) {

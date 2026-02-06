@@ -202,7 +202,12 @@ showDevices
 
 // ---- Show Timeseries
 showTimeseries
-    : SHOW (INVALID | LATEST)? TIMESERIES prefixPath? timeseriesWhereClause? timeConditionClause? rowPaginationClause?
+    : SHOW (INVALID | LATEST)? TIMESERIES prefixPath? timeseriesWhereClause? timeConditionClause? orderByTimeseriesClause? rowPaginationClause?
+    ;
+
+// order by timeseries for SHOW TIMESERIES
+orderByTimeseriesClause
+    : ORDER BY TIMESERIES (ASC | DESC)?
     ;
 
 // ---- Show Child Paths

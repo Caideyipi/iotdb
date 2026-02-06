@@ -26,6 +26,7 @@ import org.apache.iotdb.commons.schema.filter.SchemaFilter;
 import org.apache.iotdb.commons.schema.table.TsTable;
 import org.apache.iotdb.commons.schema.table.column.TsTableColumnSchema;
 import org.apache.iotdb.commons.schema.template.Template;
+import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.IDeviceSchemaInfo;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.INodeSchemaInfo;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.ITimeSeriesSchemaInfo;
@@ -48,7 +49,7 @@ public class SchemaSourceFactory {
       Map<Integer, Template> templateMap,
       PathPatternTree scope) {
     return new TimeSeriesSchemaSource(
-        pathPattern, isPrefixMatch, 0, 0, schemaFilter, templateMap, false, scope, true);
+        pathPattern, isPrefixMatch, 0, 0, schemaFilter, templateMap, false, scope, true, null);
   }
 
   // show time series
@@ -59,9 +60,19 @@ public class SchemaSourceFactory {
       long offset,
       SchemaFilter schemaFilter,
       Map<Integer, Template> templateMap,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      Ordering timeseriesOrdering) {
     return new TimeSeriesSchemaSource(
-        pathPattern, isPrefixMatch, limit, offset, schemaFilter, templateMap, true, scope, true);
+        pathPattern,
+        isPrefixMatch,
+        limit,
+        offset,
+        schemaFilter,
+        templateMap,
+        true,
+        scope,
+        true,
+        timeseriesOrdering);
   }
 
   // count device
@@ -134,7 +145,8 @@ public class SchemaSourceFactory {
       boolean isPrefixMatch,
       long limit,
       long offset,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      Ordering ordering) {
     return new TimeSeriesSchemaSource(
         pathPattern,
         isPrefixMatch,
@@ -146,6 +158,7 @@ public class SchemaSourceFactory {
         scope,
         false, // skipInvalidSchema=false to get all series (including invalid)
         true, // onlyInvalidSchema=true to filter only invalid
-        true); // showInvalidTimeSeries=true to use invalid column headers
+        true,
+        ordering); // showInvalidTimeSeries=true to use invalid column headers
   }
 }

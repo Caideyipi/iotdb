@@ -52,4 +52,14 @@ public class LogicalViewMNode extends AbstractMeasurementMNode<IMemMNode, BasicM
   public final boolean isLogicalView() {
     return true;
   }
+
+  @Override
+  public long getSubtreeMeasurementCount() {
+    return basicMNode.getSubtreeMeasurementCount();
+  }
+
+  @Override
+  public void setSubtreeMeasurementCount(long subtreeMeasurementCount) {
+    basicMNode.setSubtreeMeasurementCount(subtreeMeasurementCount);
+  }
 }

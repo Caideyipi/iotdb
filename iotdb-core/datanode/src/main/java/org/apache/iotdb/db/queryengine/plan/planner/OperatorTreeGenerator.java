@@ -913,7 +913,8 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
               node.isPrefixPath(),
               node.getLimit(),
               node.getOffset(),
-              node.getScope()));
+              node.getScope(),
+              node.getTimeseriesOrdering()));
     } else {
       return new SchemaQueryScanOperator<>(
           node.getPlanNodeId(),
@@ -925,7 +926,8 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
               node.getOffset(),
               node.getSchemaFilter(),
               node.getTemplateMap(),
-              node.getScope()));
+              node.getScope(),
+              node.getTimeseriesOrdering()));
     }
   }
 

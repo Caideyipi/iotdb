@@ -30,6 +30,7 @@ import org.apache.iotdb.commons.schema.filter.SchemaFilter;
 import org.apache.iotdb.commons.schema.template.Template;
 import org.apache.iotdb.commons.schema.utils.MeasurementPropsUtils;
 import org.apache.iotdb.commons.schema.view.ViewType;
+import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
 import org.apache.iotdb.db.schemaengine.schemaregion.ISchemaRegion;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.req.SchemaRegionReadPlanFactory;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.resp.info.ITimeSeriesSchemaInfo;
@@ -58,6 +59,7 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
   private final boolean skipInvalidSchema;
   private final boolean onlyInvalidSchema;
   private final boolean showInvalidTimeSeries;
+  private final Ordering timeseriesOrdering;
 
   TimeSeriesSchemaSource(
       PartialPath pathPattern,
@@ -68,7 +70,8 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
       Map<Integer, Template> templateMap,
       boolean needViewDetail,
       PathPatternTree scope,
-      boolean skipInvalidSchema) {
+      boolean skipInvalidSchema,
+      Ordering timeseriesOrdering) {
     this(
         pathPattern,
         isPrefixMatch,
@@ -80,7 +83,8 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
         scope,
         skipInvalidSchema,
         false,
-        false);
+        false,
+        timeseriesOrdering);
   }
 
   TimeSeriesSchemaSource(
@@ -94,7 +98,8 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
       PathPatternTree scope,
       boolean skipInvalidSchema,
       boolean onlyInvalidSchema,
-      boolean showInvalidTimeSeries) {
+      boolean showInvalidTimeSeries,
+      Ordering timeseriesOrdering) {
     this.pathPattern = pathPattern;
     this.isPrefixMatch = isPrefixMatch;
     this.limit = limit;
@@ -106,6 +111,7 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
     this.skipInvalidSchema = skipInvalidSchema;
     this.onlyInvalidSchema = onlyInvalidSchema;
     this.showInvalidTimeSeries = showInvalidTimeSeries;
+    this.timeseriesOrdering = timeseriesOrdering;
   }
 
   @Override
@@ -122,7 +128,8 @@ public class TimeSeriesSchemaSource implements ISchemaSource<ITimeSeriesSchemaIn
               needViewDetail,
               scope,
               skipInvalidSchema,
-              onlyInvalidSchema));
+              onlyInvalidSchema,
+              timeseriesOrdering));
     } catch (MetadataException e) {
       throw new SchemaExecutionException(e.getMessage(), e);
     }

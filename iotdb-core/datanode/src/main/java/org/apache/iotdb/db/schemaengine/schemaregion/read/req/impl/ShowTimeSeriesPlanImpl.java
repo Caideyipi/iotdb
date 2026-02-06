@@ -24,6 +24,7 @@ import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
 import org.apache.iotdb.commons.schema.filter.SchemaFilter;
 import org.apache.iotdb.commons.schema.template.Template;
+import org.apache.iotdb.db.queryengine.plan.statement.component.Ordering;
 import org.apache.iotdb.db.schemaengine.schemaregion.read.req.IShowTimeSeriesPlan;
 
 import java.util.Map;
@@ -39,6 +40,9 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
   private final boolean skipInvalidSchema;
   private final boolean onlyInvalidSchema;
 
+  // order-by-timeseries pushdown ordering inside a single SchemaRegion
+  private final Ordering timeseriesOrdering;
+
   public ShowTimeSeriesPlanImpl(
       PartialPath path,
       Map<Integer, Template> relatedTemplate,
@@ -47,7 +51,8 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
       boolean isPrefixMatch,
       SchemaFilter schemaFilter,
       boolean needViewDetail,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      Ordering ordering) {
     this(
         path,
         relatedTemplate,
@@ -58,7 +63,8 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
         needViewDetail,
         true,
         false,
-        scope);
+        scope,
+        ordering);
   }
 
   public ShowTimeSeriesPlanImpl(
@@ -70,7 +76,8 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
       SchemaFilter schemaFilter,
       boolean needViewDetail,
       boolean skipInvalidSchema,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      Ordering ordering) {
     this(
         path,
         relatedTemplate,
@@ -81,7 +88,8 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
         needViewDetail,
         skipInvalidSchema,
         false,
-        scope);
+        scope,
+        ordering);
   }
 
   public ShowTimeSeriesPlanImpl(
@@ -94,13 +102,15 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
       boolean needViewDetail,
       boolean skipInvalidSchema,
       boolean onlyInvalidSchema,
-      PathPatternTree scope) {
+      PathPatternTree scope,
+      Ordering timeseriesOrdering) {
     super(path, limit, offset, isPrefixMatch, scope);
     this.relatedTemplate = relatedTemplate;
     this.schemaFilter = schemaFilter;
     this.needViewDetail = needViewDetail;
     this.skipInvalidSchema = skipInvalidSchema;
     this.onlyInvalidSchema = onlyInvalidSchema;
+    this.timeseriesOrdering = timeseriesOrdering;
   }
 
   @Override
@@ -129,6 +139,11 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
   }
 
   @Override
+  public Ordering getTimeseriesOrdering() {
+    return timeseriesOrdering;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
@@ -137,6 +152,7 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
     return needViewDetail == that.needViewDetail
         && skipInvalidSchema == that.skipInvalidSchema
         && onlyInvalidSchema == that.onlyInvalidSchema
+        && Objects.equals(timeseriesOrdering, that.timeseriesOrdering)
         && Objects.equals(relatedTemplate, that.relatedTemplate)
         && Objects.equals(schemaFilter, that.schemaFilter);
   }
@@ -149,6 +165,7 @@ public class ShowTimeSeriesPlanImpl extends AbstractShowSchemaPlanImpl
         schemaFilter,
         needViewDetail,
         skipInvalidSchema,
-        onlyInvalidSchema);
+        onlyInvalidSchema,
+        timeseriesOrdering);
   }
 }
