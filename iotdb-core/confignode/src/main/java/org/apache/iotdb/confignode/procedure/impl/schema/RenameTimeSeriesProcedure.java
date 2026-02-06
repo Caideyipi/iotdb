@@ -564,7 +564,7 @@ public class RenameTimeSeriesProcedure
   // ==================== Utilities & Boilerplate ====================
 
   private void invalidateCache(final ConfigNodeProcedureEnv env) {
-    SchemaUtils.invalidateCache(env, oldPath, newPath);
+    SchemaUtils.invalidateCache(env, true, oldPath, newPath);
   }
 
   private void unlock(final ConfigNodeProcedureEnv env) {

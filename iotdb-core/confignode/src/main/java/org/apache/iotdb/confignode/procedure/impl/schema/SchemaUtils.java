@@ -364,6 +364,19 @@ public class SchemaUtils {
   }
 
   /**
+   * Invalidate schema cache for the given paths.
+   *
+   * @param env the ConfigNodeProcedureEnv
+   * @param needLock whether lock is needed
+   * @param paths the paths to invalidate cache for
+   */
+  public static void invalidateCache(
+      final ConfigNodeProcedureEnv env, final boolean needLock, final PartialPath... paths) {
+    final ByteBuffer patternTreeBytes = createPatternTreeBytesData(paths);
+    invalidateCache(env, patternTreeBytes, null, null, needLock);
+  }
+
+  /**
    * Invalidate schema cache for the given pattern tree bytes.
    *
    * @param env the ConfigNodeProcedureEnv
@@ -392,9 +405,9 @@ public class SchemaUtils {
     for (final TSStatus status : statusMap.values()) {
       // All dataNodes must clear the related schemaEngine cache
       if (status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
+        final Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaUtils.class);
+        logger.error("Failed to invalidate schemaEngine cache of timeSeries {}", requestMessage);
         if (setFailure != null) {
-          final Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaUtils.class);
-          logger.error("Failed to invalidate schemaEngine cache of timeSeries {}", requestMessage);
           setFailure.accept(
               new ProcedureException(
                   new MetadataException("Invalidate schemaEngine cache failed")));
