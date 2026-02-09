@@ -1678,9 +1678,33 @@ public class MTreeBelowSGMemoryImpl {
 
           @Override
           protected boolean acceptFullyMatchedNode(final IMemMNode node) {
+
+            // Only accept measurement nodes
             if (!node.isMeasurement()) {
               return false;
             }
+            IMeasurementMNode<IMemMNode> measurementMNode = node.getAsMeasurementMNode();
+            // Only return invalid series if onlyInvalidSchema is enabled
+            if (onlyInvalidSchema) {
+              if (!measurementMNode.isInvalid()) {
+                return false;
+              } else {
+                return skipOffset();
+              }
+            }
+            // Skip invalid series if skipInvalidSchema is enabled
+            if (skipInvalidSchema) {
+              if (measurementMNode.isInvalid()) {
+                return false;
+              } else {
+                return skipOffset();
+              }
+            }
+
+            return skipOffset();
+          }
+
+          private boolean skipOffset() {
             if (remainingOffset > 0) {
               // skip this measurement
               remainingOffset--;
