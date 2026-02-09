@@ -202,7 +202,7 @@ public class StatementMemorySourceVisitor
     tsBlockBuilder.getTimeColumnBuilder().writeLong(0L);
     tsBlockBuilder
         .getColumnBuilder(0)
-        .writeBinary(new Binary(IoTDBConstant.VERSION, TSFileConfig.STRING_CHARSET));
+        .writeBinary(new Binary(IoTDBConstant.VERSION_WITH_PROFILE, TSFileConfig.STRING_CHARSET));
     tsBlockBuilder
         .getColumnBuilder(1)
         .writeBinary(new Binary(IoTDBConstant.BUILD_INFO, TSFileConfig.STRING_CHARSET));

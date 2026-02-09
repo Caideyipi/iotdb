@@ -109,17 +109,21 @@ public class IoTDBConstant {
           : VERSION.split("\\.")[0] + "." + VERSION.split("\\.")[1];
   public static final String VERSION_WITH_BUILD = VERSION + " (Build: " + BUILD_INFO + ")";
 
-  // Get version with build profile suffix
-  public static final String getVersionWithProfile() {
-    String versionSuffix = ModuleConfigManager.getInstance().getVersionSuffix();
-    return VERSION + versionSuffix;
+  // Lazy holder pattern to avoid repeated calculation while ensuring proper initialization order
+  private static class VersionHolder {
+    private static final String VERSION_SUFFIX =
+        ModuleConfigManager.getInstance().getVersionSuffix();
+    private static final String VERSION_WITH_PROFILE = VERSION + VERSION_SUFFIX;
+    private static final String VERSION_WITH_BUILD_AND_PROFILE =
+        VERSION + VERSION_SUFFIX + " (Build: " + BUILD_INFO + ")";
   }
 
+  // Get version with build profile suffix
+  public static final String VERSION_WITH_PROFILE = VersionHolder.VERSION_WITH_PROFILE;
+
   // Get version with build info and profile suffix
-  public static final String getVersionWithBuildAndProfile() {
-    String versionSuffix = ModuleConfigManager.getInstance().getVersionSuffix();
-    return VERSION + versionSuffix + " (Build: " + BUILD_INFO + ")";
-  }
+  public static final String VERSION_WITH_BUILD_AND_PROFILE =
+      VersionHolder.VERSION_WITH_BUILD_AND_PROFILE;
 
   public static final String AUDIT_LOGGER_NAME = "IoTDB_AUDIT_LOGGER";
   public static final String SLOW_SQL_LOGGER_NAME = "SLOW_SQL";

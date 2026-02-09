@@ -257,7 +257,7 @@ public class SystemPropertiesUtils {
   public static void storeSystemParameters() throws IOException {
     Properties systemProperties = systemPropertiesHandler.read();
 
-    systemProperties.setProperty("iotdb_version", IoTDBConstant.VERSION);
+    systemProperties.setProperty("iotdb_version", IoTDBConstant.VERSION_WITH_PROFILE);
     systemProperties.setProperty("commit_id", IoTDBConstant.BUILD_INFO);
 
     // Cluster configuration

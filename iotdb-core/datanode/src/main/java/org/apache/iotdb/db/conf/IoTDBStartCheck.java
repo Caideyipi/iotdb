@@ -136,7 +136,7 @@ public class IoTDBStartCheck {
   }
 
   private IoTDBStartCheck() {
-    logger.info("Starting IoTDB {}", IoTDBConstant.getVersionWithBuildAndProfile());
+    logger.info("Starting IoTDB {}", IoTDBConstant.VERSION_WITH_BUILD_AND_PROFILE);
 
     // check whether SCHEMA_DIR exists, create if not exists
     File dir = SystemFileFactory.INSTANCE.getFile(SCHEMA_DIR);
@@ -151,7 +151,7 @@ public class IoTDBStartCheck {
 
     systemPropertiesHandler = DataNodeSystemPropertiesHandler.getInstance();
 
-    systemProperties.put(IOTDB_VERSION_STRING, () -> IoTDBConstant.VERSION);
+    systemProperties.put(IOTDB_VERSION_STRING, () -> IoTDBConstant.VERSION_WITH_PROFILE);
     systemProperties.put(COMMIT_ID_STRING, () -> IoTDBConstant.BUILD_INFO);
     for (String param : variableParamValueTable.keySet()) {
       systemProperties.put(param, () -> getVal(param));
@@ -261,7 +261,7 @@ public class IoTDBStartCheck {
             properties.setProperty(k, v.get());
           }
         });
-    properties.setProperty(IOTDB_VERSION_STRING, IoTDBConstant.VERSION);
+    properties.setProperty(IOTDB_VERSION_STRING, IoTDBConstant.VERSION_WITH_PROFILE);
     properties.setProperty(COMMIT_ID_STRING, IoTDBConstant.BUILD_INFO);
     systemPropertiesHandler.overwrite(properties);
   }

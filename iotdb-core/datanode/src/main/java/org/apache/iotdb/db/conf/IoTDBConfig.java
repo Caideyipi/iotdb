@@ -1901,7 +1901,7 @@ public class IoTDBConfig {
   }
 
   public String getIoTDBVersion() {
-    return IoTDBConstant.VERSION;
+    return IoTDBConstant.VERSION_WITH_PROFILE;
   }
 
   public String getIoTDBMajorVersion() {

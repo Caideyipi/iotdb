@@ -141,7 +141,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
   protected void start() throws IoTDBException {
     try {
       // Do ConfigNode startup checks
-      LOGGER.info("Starting IoTDB {}", IoTDBConstant.getVersionWithBuildAndProfile());
+      LOGGER.info("Starting IoTDB {}", IoTDBConstant.VERSION_WITH_BUILD_AND_PROFILE);
       ConfigNodeStartupCheck checks = new ConfigNodeStartupCheck(IoTDBConstant.CN_ROLE);
       checks.startUpCheck();
     } catch (StartupException | ConfigurationException | IOException e) {
@@ -212,7 +212,8 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
                   .getNodeManager()
                   .updateConfigNodeIfNecessary(
                       configNodeId,
-                      new TNodeVersionInfo(IoTDBConstant.VERSION, IoTDBConstant.BUILD_INFO));
+                      new TNodeVersionInfo(
+                          IoTDBConstant.VERSION_WITH_PROFILE, IoTDBConstant.BUILD_INFO));
           if (status.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
             break;
           } else {
@@ -247,7 +248,7 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
             .getNodeManager()
             .applyConfigNode(
                 CONF.generateLocalConfigNodeLocationWithSpecifiedNodeId(SEED_CONFIG_NODE_ID),
-                new TNodeVersionInfo(IoTDBConstant.VERSION, IoTDBConstant.BUILD_INFO));
+                new TNodeVersionInfo(IoTDBConstant.VERSION_WITH_PROFILE, IoTDBConstant.BUILD_INFO));
         setUpMetricService();
         // Notice: We always set up Seed-ConfigNode's RPC service lastly to ensure
         // that the external service is not provided until Seed-ConfigNode is fully initialized
@@ -407,7 +408,8 @@ public class ConfigNode extends ServerCommandLine implements ConfigNodeMBean {
             configManager.getClusterParameters(),
             CONF.generateLocalConfigNodeLocationWithSpecifiedNodeId(INIT_NON_SEED_CONFIG_NODE_ID));
 
-    req.setVersionInfo(new TNodeVersionInfo(IoTDBConstant.VERSION, IoTDBConstant.BUILD_INFO));
+    req.setVersionInfo(
+        new TNodeVersionInfo(IoTDBConstant.VERSION_WITH_PROFILE, IoTDBConstant.BUILD_INFO));
 
     TEndPoint seedConfigNode = CONF.getSeedConfigNode();
     if (seedConfigNode == null) {
