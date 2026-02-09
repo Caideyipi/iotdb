@@ -213,6 +213,8 @@ public class CommonConfig {
   private int pipeRealTimeQueuePollHistoricalTsFileThreshold = 1;
   private int pipeRealTimeQueueMaxWaitingTsFileSize =
       Math.max(16, Runtime.getRuntime().availableProcessors());
+  private boolean pipeRealtimeForceDowngradingEnabled = true;
+  private double pipeRealtimeForceDowngradingProportion = 0.25d;
 
   /** The maximum number of threads that can be used to execute subtasks in PipeSubtaskExecutor. */
   private int pipeSubtaskExecutorMaxThreadNum =
@@ -1627,6 +1629,34 @@ public class CommonConfig {
     logger.info(
         "pipeRealTimeQueueMaxWaitingTsFileSize is set to {}.",
         pipeRealTimeQueueMaxWaitingTsFileSize);
+  }
+
+  public boolean getPipeRealtimeForceDowngradingEnabled() {
+    return pipeRealtimeForceDowngradingEnabled;
+  }
+
+  public void setPipeRealtimeForceDowngradingEnabled(boolean pipeRealtimeForceDowngradingEnabled) {
+    if (this.pipeRealtimeForceDowngradingEnabled == pipeRealtimeForceDowngradingEnabled) {
+      return;
+    }
+    this.pipeRealtimeForceDowngradingEnabled = pipeRealtimeForceDowngradingEnabled;
+    logger.info(
+        "pipeRealtimeForceDowngradingTime is set to {}.", pipeRealtimeForceDowngradingEnabled);
+  }
+
+  public double getPipeRealtimeForceDowngradingProportion() {
+    return pipeRealtimeForceDowngradingProportion;
+  }
+
+  public void setPipeRealtimeForceDowngradingProportion(
+      double pipeRealtimeForceDowngradingProportion) {
+    if (this.pipeRealtimeForceDowngradingProportion == pipeRealtimeForceDowngradingProportion) {
+      return;
+    }
+    this.pipeRealtimeForceDowngradingProportion = pipeRealtimeForceDowngradingProportion;
+    logger.info(
+        "pipeRealtimeForceDowngradingProportion is set to {}.",
+        pipeRealtimeForceDowngradingProportion);
   }
 
   public void setPipeAirGapReceiverEnabled(boolean pipeAirGapReceiverEnabled) {
