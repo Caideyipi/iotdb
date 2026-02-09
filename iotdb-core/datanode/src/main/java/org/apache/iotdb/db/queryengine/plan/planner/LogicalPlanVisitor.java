@@ -576,13 +576,10 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
     boolean orderByTimeseriesDesc = timeseriesOrdering == Ordering.DESC;
     if (showTimeSeriesStatement.hasTimeCondition()) {
       planBuilder =
-          planBuilder
-              .planTimeseriesRegionScan(
-                  analysis.getDeviceToTimeseriesSchemas(),
-                  false,
-                  showTimeSeriesStatement.isOnlyShowDisable())
-              .planLimit(limit)
-              .planOffset(offset);
+          planBuilder.planTimeseriesRegionScan(
+              analysis.getDeviceToTimeseriesSchemas(),
+              false,
+              showTimeSeriesStatement.isOnlyShowDisable());
       if (orderByTimeseries) {
         SortItem sortItem = new SortItem(ColumnHeaderConstant.TIMESERIES, timeseriesOrdering);
         planBuilder = planBuilder.planOrderBy(Collections.singletonList(sortItem));
@@ -607,7 +604,7 @@ public class LogicalPlanVisitor extends StatementVisitor<PlanNode, MPPQueryConte
         || (!isMemorySchemaEngine && orderByTimeseriesDesc)) {
       limit = 0;
       offset = 0;
-    } else if (!singleSchemaRegion) {
+    } else if (!singleSchemaRegion || showTimeSeriesStatement.isOnlyShowDisable()) {
       limit = showTimeSeriesStatement.getLimitWithOffset();
       offset = 0;
     } else {

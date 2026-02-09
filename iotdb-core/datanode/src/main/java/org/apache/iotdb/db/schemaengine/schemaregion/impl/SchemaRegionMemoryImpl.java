@@ -171,6 +171,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.iotdb.db.queryengine.plan.planner.TableOperatorGenerator.makeLayout;
 import static org.apache.iotdb.db.queryengine.plan.relational.metadata.fetcher.TableDeviceSchemaFetcher.convertTagValuesToDeviceID;
+import static org.apache.iotdb.db.schemaengine.schemaregion.mtree.impl.mem.MTreeBelowSGMemoryImpl.applySubtreeMeasurementDelta;
 import static org.apache.tsfile.common.constant.TsFileConstant.PATH_SEPARATOR;
 
 /**
@@ -1400,6 +1401,8 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
     // Mark physical node as invalid (INVALID=true)
     physicalNode.setInvalid(true);
 
+    applySubtreeMeasurementDelta(physicalNode.getAsMNode(), -1);
+
     // Set ALIAS_PATH to point to the alias series (newPath)
     physicalNode.setAliasPath(newPath);
 
@@ -1432,6 +1435,8 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
 
     // Remove INVALID flag (set INVALID=false)
     physicalNode.setInvalid(false);
+
+    applySubtreeMeasurementDelta(physicalNode.getAsMNode(), 1);
 
     // Clear ALIAS_PATH (set to null)
     physicalNode.setAliasPath(null);
@@ -1757,6 +1762,9 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
 
     // Remove INVALID flag and clear ALIAS_PATH
     physicalNode.setInvalid(false);
+
+    applySubtreeMeasurementDelta(physicalNode.getAsMNode(), 1);
+
     physicalNode.setAliasPath(null);
 
     // Update schema and tags/attributes if timeSeriesInfo is provided
@@ -1921,6 +1929,8 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
       // Re-mark as invalid (set INVALID=true) and restore ALIAS_PATH
       physicalNode.setInvalid(true);
       physicalNode.setAliasPath(aliasPath);
+
+      applySubtreeMeasurementDelta(physicalNode.getAsMNode(), -1);
 
       // Update statistics
       regionStatistics.addInvalidSeries(1L);

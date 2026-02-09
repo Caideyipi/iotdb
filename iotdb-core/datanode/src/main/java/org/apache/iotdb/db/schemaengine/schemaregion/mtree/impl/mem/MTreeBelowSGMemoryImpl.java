@@ -197,7 +197,7 @@ public class MTreeBelowSGMemoryImpl {
     return store.createSnapshot(snapshotDir);
   }
 
-  private void applySubtreeMeasurementDelta(IMemMNode startNode, final long delta) {
+  public static void applySubtreeMeasurementDelta(IMemMNode startNode, final long delta) {
     if (delta == 0 || startNode == null) {
       return;
     }
@@ -1271,7 +1271,8 @@ public class MTreeBelowSGMemoryImpl {
   }
 
   private long rebuildSubtreeMeasurementCountFromNode(final IMemMNode node) {
-    long count = node.isMeasurement() ? 1L : 0L;
+    // only count valid timeseries(invalid timeseries meaning it's been renamed)
+    long count = (node.isMeasurement() && !node.getAsMeasurementMNode().isInvalid()) ? 1L : 0L;
     final IMNodeIterator<IMemMNode> iterator = store.getChildrenIterator(node);
     while (iterator.hasNext()) {
       count += rebuildSubtreeMeasurementCountFromNode(iterator.next());
