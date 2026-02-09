@@ -433,8 +433,8 @@ public class TsTable {
   public static boolean isInvalid4ObjectType(final String path) {
     return path.equals(".")
         || path.equals("..")
-        || path.contains("./")
-        || path.contains(".\\")
+        || path.contains("/")
+        || path.contains("\\")
         || !WindowsOSUtils.isLegalPathSegment4Windows(path);
   }
 

@@ -763,7 +763,7 @@ public class IoTDBTableIT {
 
   @Test
   public void testTableObjectCheck() throws Exception {
-    final Set<String> illegal = new HashSet<>(Arrays.asList("./", ".", "..", ".\\", "../hack"));
+    final Set<String> illegal = new HashSet<>(Arrays.asList("./", ".", "..", ".\\", "/hack"));
     if (SystemUtils.IS_OS_WINDOWS) {
       illegal.add("C.");
       illegal.add("a:b<|");
