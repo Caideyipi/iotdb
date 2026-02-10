@@ -212,9 +212,9 @@ struct TCheckInvalidTimeSeriesReq {
 
 struct TCheckInvalidTimeSeriesResp {
   1: required common.TSStatus status
-  2: required bool hasInvalidTimeSeries
-  3: optional list<string> invalidTimeSeriesPaths  // List of paths that have invalid time series (disabled)
-  4: optional list<string> aliasTimeSeriesPaths  // List of paths that have alias time series
+  2: optional list<string> invalidTimeSeriesPaths  // List of paths that have invalid time series (disabled)
+  3: optional list<string> physicalPathsForAliasSeries  // List of physical paths for alias time series
+  4: optional i32 invalidTimeSeriesCount  // Count of invalid time series
 }
 
 struct TCleanDataNodeCacheReq {

@@ -25,6 +25,7 @@ import org.apache.iotdb.common.rpc.thrift.TDataNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
 import org.apache.iotdb.commons.exception.IllegalPathException;
+import org.apache.iotdb.commons.exception.MetadataException;
 import org.apache.iotdb.commons.exception.runtime.ThriftSerDeException;
 import org.apache.iotdb.commons.path.PartialPath;
 import org.apache.iotdb.commons.path.PathPatternTree;
@@ -48,6 +49,8 @@ import org.apache.iotdb.confignode.rpc.thrift.TDatabaseSchema;
 import org.apache.iotdb.consensus.exception.ConsensusException;
 import org.apache.iotdb.mpp.rpc.thrift.TCheckInvalidTimeSeriesReq;
 import org.apache.iotdb.mpp.rpc.thrift.TCheckInvalidTimeSeriesResp;
+import org.apache.iotdb.mpp.rpc.thrift.TDeleteDataForDeleteSchemaReq;
+import org.apache.iotdb.mpp.rpc.thrift.TDeleteTimeSeriesReq;
 import org.apache.iotdb.rpc.TSStatusCode;
 
 import org.apache.thrift.TException;
@@ -58,6 +61,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +69,7 @@ import java.util.Objects;
 
 import static org.apache.iotdb.commons.conf.IoTDBConstant.MULTI_LEVEL_PATH_WILDCARD;
 import static org.apache.iotdb.commons.conf.IoTDBConstant.PATH_SEPARATOR;
+import static org.apache.iotdb.confignode.procedure.state.schema.DeleteDatabaseState.DELETE_ALIAS_DATA;
 
 public class DeleteDatabaseProcedure
     extends StateMachineProcedure<ConfigNodeProcedureEnv, DeleteDatabaseState>
@@ -73,42 +78,40 @@ public class DeleteDatabaseProcedure
   private static final int RETRY_THRESHOLD = 5;
 
   private TDatabaseSchema deleteDatabaseSchema;
+  private transient List<String> physicalPathsForAliasSeries = new ArrayList<>();
 
   /**
-   * Result class for invalid time series check. Encapsulates the counts and paths of invalid time
-   * series and alias time series.
+   * Result class for invalid time series check. Contains the list of invalid time series paths and
+   * the list of physical paths for alias time series.
    */
   public static class InvalidTimeSeriesCheckResult {
-    private final boolean hasInvalidTimeSeries;
-    private final int invalidTimeSeriesCount;
-    private final int aliasTimeSeriesCount;
-    private final List<String> paths;
+    private final int invalidSeriesCount;
+    private final List<String> invalidPaths;
+    private final List<String> physicalPathsForAliasSeries;
 
     public InvalidTimeSeriesCheckResult(
-        boolean hasInvalidTimeSeries,
-        int invalidTimeSeriesCount,
-        int aliasTimeSeriesCount,
-        List<String> paths) {
-      this.hasInvalidTimeSeries = hasInvalidTimeSeries;
-      this.invalidTimeSeriesCount = invalidTimeSeriesCount;
-      this.aliasTimeSeriesCount = aliasTimeSeriesCount;
-      this.paths = paths != null ? new ArrayList<>(paths) : new ArrayList<>();
+        final int invalidSeriesCount,
+        final List<String> invalidPaths,
+        final List<String> physicalPathsForAliasSeries) {
+      this.invalidSeriesCount = invalidSeriesCount;
+      this.invalidPaths = invalidPaths;
+      this.physicalPathsForAliasSeries = physicalPathsForAliasSeries;
     }
 
-    public boolean hasInvalidTimeSeries() {
-      return hasInvalidTimeSeries;
+    public List<String> getInvalidPaths() {
+      return invalidPaths;
+    }
+
+    public List<String> getPhysicalPathsForAliasSeries() {
+      return physicalPathsForAliasSeries;
     }
 
     public int getInvalidTimeSeriesCount() {
-      return invalidTimeSeriesCount;
+      return invalidPaths.size();
     }
 
-    public int getAliasTimeSeriesCount() {
-      return aliasTimeSeriesCount;
-    }
-
-    public List<String> getPaths() {
-      return paths;
+    public int getPhysicalPathsForAliasSeriesCount() {
+      return physicalPathsForAliasSeries.size();
     }
   }
 
@@ -146,48 +149,8 @@ public class DeleteDatabaseProcedure
           setNextState(DeleteDatabaseState.CHECK_INVALID_TIME_SERIES);
           break;
         case CHECK_INVALID_TIME_SERIES:
-          LOG.info(
-              "[DeleteDatabaseProcedure] Check invalid time series for database: {}",
-              deleteDatabaseSchema.getName());
-          final InvalidTimeSeriesCheckResult checkResult =
-              checkInvalidTimeSeries(env, deleteDatabaseSchema.getName());
-
-          // Check if query failed (null indicates query failure)
-          if (checkResult == null) {
-            setFailure(
-                new ProcedureException(
-                    String.format(
-                        "Failed to check invalid time series for database %s",
-                        deleteDatabaseSchema.getName())));
-            return Flow.NO_MORE_STATE;
-          }
-
-          if (checkResult.hasInvalidTimeSeries()) {
-            final int invalidCount = checkResult.getInvalidTimeSeriesCount();
-            final int aliasCount = checkResult.getAliasTimeSeriesCount();
-            final List<String> allPaths = checkResult.getPaths();
-            String errorMessage;
-
-            // Limit to 5 paths for display
-            final int maxDisplayPaths = 5;
-            final List<String> displayPaths =
-                allPaths.size() > maxDisplayPaths ? allPaths.subList(0, maxDisplayPaths) : allPaths;
-
-            final StringBuilder pathsInfo = new StringBuilder();
-            if (!displayPaths.isEmpty()) {
-              pathsInfo.append(String.join(", ", displayPaths));
-              if (allPaths.size() > maxDisplayPaths) {
-                pathsInfo.append(
-                    String.format(" ... and %d more", allPaths.size() - maxDisplayPaths));
-              }
-            }
-            errorMessage =
-                String.format(
-                    "Cannot delete database %s: contains %d invalid and %d alias time series. "
-                        + "Sample paths: %s",
-                    deleteDatabaseSchema.getName(), invalidCount, aliasCount, pathsInfo);
-
-            setFailure(new ProcedureException(errorMessage));
+          handleCheckInvalidTimeSeries(env);
+          if (isFailed()) {
             return Flow.NO_MORE_STATE;
           }
           setNextState(DeleteDatabaseState.INVALIDATE_CACHE);
@@ -306,11 +269,39 @@ public class DeleteDatabaseProcedure
             LOG.info(
                 "[DeleteDatabaseProcedure] Database: {} is deleted successfully",
                 deleteDatabaseSchema.getName());
-            return Flow.NO_MORE_STATE;
+            setNextState(DELETE_ALIAS_DATA);
           } else if (getCycles() > RETRY_THRESHOLD) {
             setFailure(
                 new ProcedureException("[DeleteDatabaseProcedure] Delete DatabaseSchema failed"));
           }
+        case DELETE_ALIAS_DATA:
+          if (physicalPathsForAliasSeries == null || physicalPathsForAliasSeries.isEmpty()) {
+            return Flow.NO_MORE_STATE;
+          }
+          LOG.info(
+              "Delete data of physical paths for alias series in database: {}",
+              deleteDatabaseSchema.getName());
+          deleteDataOfPhysicalPathsForAliasSeries(env);
+          break;
+        case DELETE_ALIAS_SCHEMA:
+          LOG.info(
+              "Delete schema of physical paths for alias series in database: {}",
+              deleteDatabaseSchema.getName());
+          deleteSchemaForPhysicalPathsOfAliasSeries(env);
+          if (isFailed()) {
+            return Flow.NO_MORE_STATE;
+          }
+          setNextState(DeleteDatabaseState.INVALIDATE_ALIAS_CACHE);
+          break;
+        case INVALIDATE_ALIAS_CACHE:
+          LOG.info(
+              "Invalidate cache of physical paths for alias series in database: {}",
+              deleteDatabaseSchema.getName());
+          invalidateAliasCache(env);
+          if (isFailed()) {
+            return Flow.NO_MORE_STATE;
+          }
+          return Flow.NO_MORE_STATE;
       }
     } catch (final ConsensusException | TException | IOException e) {
       if (isRollbackSupported(state)) {
@@ -340,6 +331,9 @@ public class DeleteDatabaseProcedure
     switch (state) {
       case PRE_DELETE_DATABASE:
       case CHECK_INVALID_TIME_SERIES:
+      case DELETE_ALIAS_DATA:
+      case DELETE_ALIAS_SCHEMA:
+      case INVALIDATE_ALIAS_CACHE:
       case INVALIDATE_CACHE:
         LOG.info(
             "[DeleteDatabaseProcedure] Rollback to preDeleted: {}", deleteDatabaseSchema.getName());
@@ -356,6 +350,9 @@ public class DeleteDatabaseProcedure
     switch (state) {
       case PRE_DELETE_DATABASE:
       case CHECK_INVALID_TIME_SERIES:
+      case DELETE_ALIAS_DATA:
+      case DELETE_ALIAS_SCHEMA:
+      case INVALIDATE_ALIAS_CACHE:
       case INVALIDATE_CACHE:
         return true;
       default:
@@ -405,27 +402,86 @@ public class DeleteDatabaseProcedure
   }
 
   /**
+   * Handle checking invalid time series. This method focuses on execution and validation, leaving
+   * state transitions to the switch block.
+   *
+   * @param env ConfigNodeProcedureEnv
+   */
+  private void handleCheckInvalidTimeSeries(ConfigNodeProcedureEnv env) {
+    final String databaseName = deleteDatabaseSchema.getName();
+    LOG.info(
+        "[DeleteDatabaseProcedure] checking invalid time series for database: {}", databaseName);
+
+    final InvalidTimeSeriesCheckResult checkResult = checkInvalidTimeSeries(env, databaseName);
+
+    if (checkResult == null) {
+      setFailure(
+          new ProcedureException(
+              String.format("Failed to check invalid time series for database %s", databaseName)));
+      return;
+    }
+
+    if (checkResult.getInvalidTimeSeriesCount() > 0) {
+      setFailure(
+          new ProcedureException(new MetadataException(buildInvalidPathErrorMessage(checkResult))));
+      return;
+    }
+
+    if (checkResult.getPhysicalPathsForAliasSeriesCount() > 0) {
+      LOG.info(
+          "[DeleteDatabaseProcedure] found {} alias series in database: {}. preparing physical path cleanup.",
+          checkResult.getPhysicalPathsForAliasSeriesCount(),
+          databaseName);
+      this.physicalPathsForAliasSeries = checkResult.getPhysicalPathsForAliasSeries();
+    }
+  }
+
+  /**
+   * Build error message for invalid paths.
+   *
+   * @param result InvalidTimeSeriesCheckResult
+   * @return error message string
+   */
+  private String buildInvalidPathErrorMessage(InvalidTimeSeriesCheckResult result) {
+    final int maxDisplay = 5;
+    final List<String> invalidPaths = result.getInvalidPaths();
+
+    String pathInfo =
+        invalidPaths.stream().limit(maxDisplay).collect(java.util.stream.Collectors.joining(", "));
+
+    if (invalidPaths.size() > maxDisplay) {
+      pathInfo += String.format(" ... and %d more", invalidPaths.size() - maxDisplay);
+    }
+
+    return String.format(
+        "cannot delete database %s: contains %d invalid time series. sample paths: [%s]",
+        deleteDatabaseSchema.getName(), result.getInvalidTimeSeriesCount(), pathInfo);
+  }
+
+  /**
    * Check if the database has invalid time series by querying all SchemaRegions in the database.
    *
    * @param env ConfigNodeProcedureEnv
    * @param databaseName database name
-   * @return InvalidTimeSeriesCheckResult containing hasInvalidTimeSeries flag, counts, and paths
+   * @return InvalidTimeSeriesCheckResult containing counts and paths
    */
   private InvalidTimeSeriesCheckResult checkInvalidTimeSeries(
       final ConfigNodeProcedureEnv env, final String databaseName) {
     if (PathUtils.isTableModelDatabase(databaseName)) {
-      return new InvalidTimeSeriesCheckResult(false, 0, 0, new ArrayList<>());
+      return new InvalidTimeSeriesCheckResult(0, Collections.emptyList(), Collections.emptyList());
     }
 
     try {
       final List<TRegionReplicaSet> schemaRegions = filterSchemaRegions(env, databaseName);
       if (schemaRegions.isEmpty()) {
-        return new InvalidTimeSeriesCheckResult(false, 0, 0, new ArrayList<>());
+        return new InvalidTimeSeriesCheckResult(
+            0, Collections.emptyList(), Collections.emptyList());
       }
 
       final RequestContext requestContext = createCheckRequests(schemaRegions, databaseName);
       if (requestContext.isEmpty()) {
-        return new InvalidTimeSeriesCheckResult(false, 0, 0, new ArrayList<>());
+        return new InvalidTimeSeriesCheckResult(
+            0, Collections.emptyList(), Collections.emptyList());
       }
 
       sendCheckRequests(requestContext.handler);
@@ -512,8 +568,8 @@ public class DeleteDatabaseProcedure
   private InvalidTimeSeriesCheckResult processCheckResponses(
       final RequestContext requestContext, final String databaseName) {
     final List<String> invalidPaths = new ArrayList<>();
-    final List<String> aliasPaths = new ArrayList<>();
-    boolean hasInvalid = false;
+    final List<String> physicalPathsForAliasSeries = new ArrayList<>();
+    int invalidSeriesCount = 0;
 
     for (final Map.Entry<Integer, TCheckInvalidTimeSeriesResp> entry :
         requestContext.handler.getResponseMap().entrySet()) {
@@ -530,14 +586,18 @@ public class DeleteDatabaseProcedure
         return null;
       }
 
-      if (resp.isHasInvalidTimeSeries()) {
-        hasInvalid = true;
-        collectPaths(resp, invalidPaths, aliasPaths);
-        logInvalidTimeSeries(resp, databaseName, region);
+      if (resp.isSetInvalidTimeSeriesCount() && resp.getInvalidTimeSeriesCount() > 0) {
+        invalidPaths.addAll(resp.getInvalidTimeSeriesPaths());
+        invalidSeriesCount += resp.getInvalidTimeSeriesCount();
+      }
+
+      if (resp.isSetPhysicalPathsForAliasSeries()
+          && !resp.getPhysicalPathsForAliasSeries().isEmpty()) {
+        physicalPathsForAliasSeries.addAll(resp.getPhysicalPathsForAliasSeries());
       }
     }
 
-    return buildResult(hasInvalid, invalidPaths, aliasPaths);
+    return buildResult(invalidSeriesCount, invalidPaths, physicalPathsForAliasSeries);
   }
 
   private boolean isResponseSuccess(final TCheckInvalidTimeSeriesResp resp) {
@@ -545,50 +605,120 @@ public class DeleteDatabaseProcedure
         && resp.getStatus().getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode();
   }
 
-  private void collectPaths(
-      final TCheckInvalidTimeSeriesResp resp,
-      final List<String> invalidPaths,
-      final List<String> aliasPaths) {
-    if (resp.isSetInvalidTimeSeriesPaths() && !resp.getInvalidTimeSeriesPaths().isEmpty()) {
-      invalidPaths.addAll(resp.getInvalidTimeSeriesPaths());
-    }
-    if (resp.isSetAliasTimeSeriesPaths() && !resp.getAliasTimeSeriesPaths().isEmpty()) {
-      aliasPaths.addAll(resp.getAliasTimeSeriesPaths());
-    }
-  }
-
-  private void logInvalidTimeSeries(
-      final TCheckInvalidTimeSeriesResp resp,
-      final String databaseName,
-      final TRegionReplicaSet region) {
-    final int invalidCount =
-        resp.isSetInvalidTimeSeriesPaths() && !resp.getInvalidTimeSeriesPaths().isEmpty()
-            ? resp.getInvalidTimeSeriesPaths().size()
-            : 0;
-    final int aliasCount =
-        resp.isSetAliasTimeSeriesPaths() && !resp.getAliasTimeSeriesPaths().isEmpty()
-            ? resp.getAliasTimeSeriesPaths().size()
-            : 0;
-
-    LOG.warn(
-        "[DeleteDatabaseProcedure] Found {} invalid time series and {} alias time series "
-            + "in database: {} on SchemaRegion: {} (hasPaths={})",
-        invalidCount,
-        aliasCount,
-        databaseName,
-        region.getRegionId(),
-        invalidCount > 0 || aliasCount > 0);
-  }
-
   private InvalidTimeSeriesCheckResult buildResult(
-      final boolean hasInvalid, final List<String> invalidPaths, final List<String> aliasPaths) {
-    final List<String> allPaths = new ArrayList<>();
-    if (hasInvalid) {
-      allPaths.addAll(invalidPaths);
-      allPaths.addAll(aliasPaths);
-    }
+      final int invalidSeriesCount,
+      final List<String> invalidPaths,
+      final List<String> physicalPathsForAliasSeries) {
     return new InvalidTimeSeriesCheckResult(
-        hasInvalid, invalidPaths.size(), aliasPaths.size(), allPaths);
+        invalidSeriesCount, invalidPaths, physicalPathsForAliasSeries);
+  }
+
+  private PathPatternTree buildPatternTreeForPhysicalPathsOfAliasSeries() {
+    final PathPatternTree patternTree = new PathPatternTree();
+    for (final String path : physicalPathsForAliasSeries) {
+      try {
+        patternTree.appendFullPath(new PartialPath(path));
+      } catch (final IllegalPathException e) {
+        LOG.warn("[DeleteDatabaseProcedure] Invalid physical path for alias series: {}", path, e);
+      }
+    }
+    patternTree.constructTree();
+    return patternTree;
+  }
+
+  private void deleteDataOfPhysicalPathsForAliasSeries(final ConfigNodeProcedureEnv env) {
+    final PathPatternTree physicalPathsPatternTree =
+        buildPatternTreeForPhysicalPathsOfAliasSeries();
+    if (physicalPathsPatternTree.isEmpty()) {
+      setNextState(DeleteDatabaseState.INVALIDATE_ALIAS_CACHE);
+      return;
+    }
+
+    final Map<TConsensusGroupId, TRegionReplicaSet> relatedDataRegionGroup =
+        env.getConfigManager().getRelatedDataRegionGroup(physicalPathsPatternTree, false);
+
+    if (relatedDataRegionGroup.isEmpty()) {
+      setNextState(DeleteDatabaseState.DELETE_ALIAS_SCHEMA);
+      return;
+    }
+
+    final SchemaUtils.SchemaRegionTaskExecutor<TDeleteDataForDeleteSchemaReq> deleteDataTask =
+        new SchemaUtils.SchemaRegionTaskExecutor<>(
+            "delete data of physical paths for alias series",
+            env,
+            relatedDataRegionGroup,
+            false,
+            CnToDnAsyncRequestType.DELETE_DATA_FOR_DELETE_SCHEMA,
+            ((dataNodeLocation, consensusGroupIdList) ->
+                new TDeleteDataForDeleteSchemaReq(
+                        new ArrayList<>(consensusGroupIdList), physicalPathsPatternTree.serialize())
+                    .setIsGeneratedByPipe(isGeneratedByPipe)),
+            ((failureMessage, setFailure) -> {
+              final ProcedureException exception =
+                  new ProcedureException(
+                      new MetadataException(
+                          String.format(
+                              "Delete physical paths for alias series %s", failureMessage)));
+              setFailure.accept(exception);
+            }),
+            this::setFailure);
+    deleteDataTask.execute();
+
+    if (isFailed()) {
+      return;
+    }
+    setNextState(DeleteDatabaseState.DELETE_ALIAS_SCHEMA);
+  }
+
+  private void deleteSchemaForPhysicalPathsOfAliasSeries(final ConfigNodeProcedureEnv env) {
+    if (physicalPathsForAliasSeries == null || physicalPathsForAliasSeries.isEmpty()) {
+      return;
+    }
+
+    final PathPatternTree physicalPathsPatternTree =
+        buildPatternTreeForPhysicalPathsOfAliasSeries();
+    if (physicalPathsPatternTree.isEmpty()) {
+      return;
+    }
+
+    final SchemaUtils.SchemaRegionTaskExecutor<TDeleteTimeSeriesReq> deleteTimeSeriesTask =
+        new SchemaUtils.SchemaRegionTaskExecutor<>(
+            "delete schema for physical paths of alias series",
+            env,
+            env.getConfigManager().getRelatedSchemaRegionGroup(physicalPathsPatternTree, false),
+            CnToDnAsyncRequestType.DELETE_TIMESERIES,
+            ((dataNodeLocation, consensusGroupIdList) ->
+                new TDeleteTimeSeriesReq(consensusGroupIdList, physicalPathsPatternTree.serialize())
+                    .setIsGeneratedByPipe(isGeneratedByPipe)),
+            ((failureMessage, setFailure) -> {
+              final ProcedureException exception =
+                  new ProcedureException(
+                      new MetadataException(
+                          String.format(
+                              "Delete physical paths for alias series %s", failureMessage)));
+              setFailure.accept(exception);
+            }),
+            this::setFailure);
+    deleteTimeSeriesTask.execute();
+  }
+
+  private void invalidateAliasCache(final ConfigNodeProcedureEnv env) {
+    if (physicalPathsForAliasSeries == null || physicalPathsForAliasSeries.isEmpty()) {
+      return;
+    }
+
+    final PathPatternTree physicalPathsPatternTree =
+        buildPatternTreeForPhysicalPathsOfAliasSeries();
+    if (physicalPathsPatternTree.isEmpty()) {
+      return;
+    }
+
+    final String requestMessage =
+        String.format(
+            "physical paths for alias series in database %s", deleteDatabaseSchema.getName());
+
+    SchemaUtils.invalidateCache(
+        env, physicalPathsPatternTree.serialize(), requestMessage, this::setFailure, true);
   }
 
   @Override

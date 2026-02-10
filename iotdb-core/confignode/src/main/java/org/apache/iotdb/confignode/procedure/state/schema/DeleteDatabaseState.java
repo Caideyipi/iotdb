@@ -22,6 +22,9 @@ package org.apache.iotdb.confignode.procedure.state.schema;
 public enum DeleteDatabaseState {
   PRE_DELETE_DATABASE,
   CHECK_INVALID_TIME_SERIES,
+  DELETE_ALIAS_DATA,
+  DELETE_ALIAS_SCHEMA,
+  INVALIDATE_ALIAS_CACHE,
   INVALIDATE_CACHE,
   DELETE_DATABASE_SCHEMA
 }

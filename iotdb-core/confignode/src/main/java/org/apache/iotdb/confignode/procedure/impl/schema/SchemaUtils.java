@@ -62,6 +62,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -414,6 +416,59 @@ public class SchemaUtils {
         }
         return;
       }
+    }
+  }
+
+  public static class SchemaRegionTaskExecutor<Q> extends DataNodeTSStatusTaskExecutor<Q> {
+
+    private final String taskName;
+    private final BiConsumer<String, Consumer<ProcedureException>> failureHandler;
+    private final Consumer<ProcedureException> setFailure;
+
+    public SchemaRegionTaskExecutor(
+        final String taskName,
+        final ConfigNodeProcedureEnv env,
+        final Map<TConsensusGroupId, TRegionReplicaSet> targetRegionGroup,
+        final CnToDnAsyncRequestType dataNodeRequestType,
+        final BiFunction<TDataNodeLocation, List<TConsensusGroupId>, Q> dataNodeRequestGenerator,
+        final BiConsumer<String, Consumer<ProcedureException>> failureHandler,
+        final Consumer<ProcedureException> setFailure) {
+      super(env, targetRegionGroup, false, dataNodeRequestType, dataNodeRequestGenerator);
+      this.taskName = taskName;
+      this.failureHandler = failureHandler;
+      this.setFailure = setFailure;
+    }
+
+    public SchemaRegionTaskExecutor(
+        final String taskName,
+        final ConfigNodeProcedureEnv env,
+        final Map<TConsensusGroupId, TRegionReplicaSet> targetRegionGroup,
+        final boolean executeOnAllReplicaset,
+        final CnToDnAsyncRequestType dataNodeRequestType,
+        final BiFunction<TDataNodeLocation, List<TConsensusGroupId>, Q> dataNodeRequestGenerator,
+        final BiConsumer<String, Consumer<ProcedureException>> failureHandler,
+        final Consumer<ProcedureException> setFailure) {
+      super(
+          env,
+          targetRegionGroup,
+          executeOnAllReplicaset,
+          dataNodeRequestType,
+          dataNodeRequestGenerator);
+      this.taskName = taskName;
+      this.failureHandler = failureHandler;
+      this.setFailure = setFailure;
+    }
+
+    @Override
+    protected void onAllReplicasetFailure(
+        final TConsensusGroupId consensusGroupId,
+        final Set<TDataNodeLocation> dataNodeLocationSet) {
+      final String failureMessage =
+          String.format(
+              "failed when [%s] because failed to execute in all replicaset of %s %s. Failures: %s",
+              taskName, consensusGroupId.type, consensusGroupId.id, printFailureMap());
+      failureHandler.accept(failureMessage, setFailure);
+      interruptTask();
     }
   }
 }

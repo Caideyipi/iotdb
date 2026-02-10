@@ -1129,36 +1129,10 @@ public class IoTDBDeletionWithAliasAndInvalidIT {
       }
 
       // Test 1: Delete database with alias series (same database)
-      // This should fail if there are alias series pointing to this database
-      try {
-        statement.execute("DELETE DATABASE root.db3");
-        fail("Delete database should fail");
-      } catch (SQLException e) {
-        // Expected: should throw exception if database contains alias series
-        // or if there are alias series pointing to this database
-        assertTrue(
-            e.getMessage().contains("alias")
-                || e.getMessage().contains("invalid")
-                || e.getMessage().contains("renamed"));
-      }
+      statement.execute("DELETE DATABASE root.db3");
 
       // Test 2: Delete database that is source of cross-database alias
-      // This should fail if there are alias series pointing to this database
-      try {
-        statement.execute("DELETE DATABASE root.db4");
-        fail("Delete database should fail");
-      } catch (SQLException e) {
-        // Expected: should throw exception if database is source of alias series
-        assertTrue(
-            e.getMessage().contains("alias")
-                || e.getMessage().contains("invalid")
-                || e.getMessage().contains("renamed")
-                || e.getMessage().contains("original path"));
-      }
-
-      // Clean up
-      statement.execute("DELETE TIMESERIES root.**");
-      statement.execute("DELETE DATABASE root.**");
+      statement.execute("DELETE DATABASE root.db4");
     }
   }
 
@@ -1227,20 +1201,9 @@ public class IoTDBDeletionWithAliasAndInvalidIT {
       // Create alias series: across databases
       statement.execute("ALTER TIMESERIES root.db7.d1.s1_physical RENAME TO root.db6.d1.s1_cross");
 
-      // Test: Try to delete database with mixed scenario
-      try {
-        statement.execute("DELETE DATABASE root.db6");
-        fail("The delete operation should fail");
-      } catch (SQLException e) {
-        assertTrue(
-            e.getMessage().contains("alias")
-                || e.getMessage().contains("invalid")
-                || e.getMessage().contains("renamed")
-                || e.getMessage().contains("original path"));
-      }
+      statement.execute("DELETE DATABASE root.db6");
 
       // Clean up
-      statement.execute("DELETE TIMESERIES root.**");
       statement.execute("DELETE DATABASE root.**");
     }
   }
@@ -1660,16 +1623,7 @@ public class IoTDBDeletionWithAliasAndInvalidIT {
       }
 
       // Test: Try to delete database that is target of alias from aligned series
-      try {
-        statement.execute("DELETE DATABASE root.db13");
-        fail("Delete database should fail");
-      } catch (SQLException e) {
-        // Expected: should throw exception if database is target of alias
-        assertTrue(
-            e.getMessage().contains("alias")
-                || e.getMessage().contains("invalid")
-                || e.getMessage().contains("renamed"));
-      }
+      statement.execute("DELETE DATABASE root.db13");
 
       // Clean up
       statement.execute("DELETE TIMESERIES root.**");
@@ -3437,6 +3391,104 @@ public class IoTDBDeletionWithAliasAndInvalidIT {
       }
 
       // Clean up
+      statement.execute("DELETE TIMESERIES root.**");
+      statement.execute("DELETE DATABASE root.**");
+    }
+  }
+
+  /**
+   * Test delete database with alias series: delete physical database should fail, then delete alias
+   * database should succeed.
+   */
+  @Test
+  public void testDeleteDatabaseWithPhysicalSeries() throws SQLException {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+
+      // Setup: Create 4 databases - 1 for alias series, 3 for physical series
+      statement.execute(
+          "CREATE TIMESERIES root.db29.d1.s1_physical WITH DATATYPE=INT32, ENCODING=RLE");
+      statement.execute(
+          "CREATE TIMESERIES root.db30.d1.s2_physical WITH DATATYPE=INT32, ENCODING=RLE");
+      statement.execute(
+          "CREATE TIMESERIES root.db31.d1.s3_physical WITH DATATYPE=INT32, ENCODING=RLE");
+      statement.execute("CREATE TIMESERIES root.db32.d1.s4 WITH DATATYPE=INT32, ENCODING=RLE");
+
+      // Insert data
+      for (int i = 1; i <= 10; i++) {
+        statement.execute(
+            String.format(
+                "INSERT INTO root.db29.d1(timestamp, s1_physical) VALUES(%d, %d)", i * 10, i));
+        statement.execute(
+            String.format(
+                "INSERT INTO root.db30.d1(timestamp, s2_physical) VALUES(%d, %d)", i * 10, i * 2));
+        statement.execute(
+            String.format(
+                "INSERT INTO root.db31.d1(timestamp, s3_physical) VALUES(%d, %d)", i * 10, i * 3));
+        statement.execute(
+            String.format("INSERT INTO root.db32.d1(timestamp, s4) VALUES(%d, %d)", i * 10, i * 4));
+      }
+
+      // Rename physical series to create alias in db32 (alias database)
+      statement.execute(
+          "ALTER TIMESERIES root.db29.d1.s1_physical RENAME TO root.db32.d1.s1_alias");
+
+      // Test: Try to delete physical series database (db29) - should fail
+      try {
+        statement.execute("DELETE DATABASE root.db29");
+        fail(
+            "Delete database root.db29 should fail because it contains physical series with alias");
+      } catch (SQLException e) {
+        // Expected: should throw exception if database contains physical series with alias
+        assertTrue(
+            e.getMessage()
+                .contains(
+                    "TSStatus(code:507, message:cannot delete database root.db29: contains 1 invalid time series. sample paths: [root.db29.d1.s1_physical])"));
+      }
+
+      // Verify db29 still exists
+      try (ResultSet resultSet = statement.executeQuery("SHOW DATABASES")) {
+        boolean db29Exists = false;
+        while (resultSet.next()) {
+          if (resultSet.getString(1).equals("root.db29")) {
+            db29Exists = true;
+            break;
+          }
+        }
+        assertTrue("Database root.db29 should still exist", db29Exists);
+      }
+
+      // Test: Delete alias series database (db32) - should succeed
+      statement.execute("DELETE DATABASE root.db32");
+
+      // Verify db32 is deleted
+      try (ResultSet resultSet = statement.executeQuery("SHOW DATABASES")) {
+        boolean db32Exists = false;
+        while (resultSet.next()) {
+          if (resultSet.getString(1).equals("root.db32")) {
+            db32Exists = true;
+            break;
+          }
+        }
+        assertFalse("Database root.db32 should be deleted", db32Exists);
+      }
+
+      // Test: Delete physical series database (db29) again - should succeed now
+      statement.execute("DELETE DATABASE root.db29");
+
+      // Verify db29 is deleted
+      try (ResultSet resultSet = statement.executeQuery("SHOW DATABASES")) {
+        boolean db29Exists = false;
+        while (resultSet.next()) {
+          if (resultSet.getString(1).equals("root.db29")) {
+            db29Exists = true;
+            break;
+          }
+        }
+        assertFalse("Database root.db29 should be deleted", db29Exists);
+      }
+
+      // Clean up remaining databases
       statement.execute("DELETE TIMESERIES root.**");
       statement.execute("DELETE DATABASE root.**");
     }

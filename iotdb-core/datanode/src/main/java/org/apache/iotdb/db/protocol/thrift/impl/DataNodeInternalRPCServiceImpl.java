@@ -1901,17 +1901,15 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
 
       final ClusterSchemaTree schemaTree = fetchSchemaTree(req, schemaRegion);
       final boolean hasInvalidTimeSeries = checkHasInvalidTimeSeries(schemaTree);
-      resp.setHasInvalidTimeSeries(hasInvalidTimeSeries);
 
       if (hasInvalidTimeSeries) {
-        processInvalidTimeSeries(req, schemaTree, schemaRegionId, schemaRegion, resp);
+        processInvalidTimeSeries(req, schemaTree, resp);
       }
 
       resp.setStatus(RpcUtils.SUCCESS_STATUS);
     } catch (final Exception e) {
       LOGGER.error("Error checking invalid time series", e);
       resp.setStatus(RpcUtils.getStatus(TSStatusCode.EXECUTE_STATEMENT_ERROR, e.getMessage()));
-      resp.setHasInvalidTimeSeries(false);
     }
     return resp;
   }
@@ -1939,8 +1937,6 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
   private void processInvalidTimeSeries(
       final TCheckInvalidTimeSeriesReq req,
       final ClusterSchemaTree schemaTree,
-      final SchemaRegionId schemaRegionId,
-      final ISchemaRegion schemaRegion,
       final TCheckInvalidTimeSeriesResp resp)
       throws IllegalPathException {
     final PartialPath searchPattern =
@@ -1956,9 +1952,6 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     final PathCollectionResult pathResult =
         collectInvalidAndAliasPaths(searchResult.getLeft(), databasePathPattern);
     setPathResults(pathResult, resp);
-
-    logInvalidTimeSeriesResults(
-        pathResult, schemaRegionId, schemaRegion, schemaTree, searchResult.getLeft().size());
   }
 
   private PartialPath createDatabasePathPattern(
@@ -1974,49 +1967,70 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
     }
   }
 
+  /**
+   * Result class for collecting invalid and alias paths. Maintains count separately to avoid memory
+   * overhead of storing all path strings.
+   */
   private static class PathCollectionResult {
-    final List<String> invalidTimeSeriesPaths;
-    final List<String> aliasTimeSeriesPaths;
+    private final List<String> invalidTimeSeriesPaths;
+    private int invalidTimeSeriesCount;
+    private final List<String> physicalPathsForAliasSeries;
 
-    PathCollectionResult(List<String> invalidTimeSeriesPaths, List<String> aliasTimeSeriesPaths) {
-      this.invalidTimeSeriesPaths = invalidTimeSeriesPaths;
-      this.aliasTimeSeriesPaths = aliasTimeSeriesPaths;
+    PathCollectionResult() {
+      this.invalidTimeSeriesPaths = new ArrayList<>();
+      this.invalidTimeSeriesCount = 0;
+      this.physicalPathsForAliasSeries = new ArrayList<>();
+    }
+
+    List<String> getInvalidTimeSeriesPaths() {
+      return invalidTimeSeriesPaths;
+    }
+
+    int getInvalidTimeSeriesCount() {
+      return invalidTimeSeriesCount;
+    }
+
+    void incrementInvalidTimeSeriesCount() {
+      this.invalidTimeSeriesCount++;
+    }
+
+    List<String> getPhysicalPathsForAliasSeries() {
+      return physicalPathsForAliasSeries;
     }
   }
 
   private PathCollectionResult collectInvalidAndAliasPaths(
       final List<MeasurementPath> measurementPaths, final PartialPath databasePathPattern) {
-    final List<String> invalidTimeSeriesPaths = new ArrayList<>();
-    final List<String> aliasTimeSeriesPaths = new ArrayList<>();
+    final PathCollectionResult result = new PathCollectionResult();
 
     for (final MeasurementPath measurementPath : measurementPaths) {
-      processMeasurementPath(
-          measurementPath, databasePathPattern, invalidTimeSeriesPaths, aliasTimeSeriesPaths);
+      processMeasurementPath(measurementPath, databasePathPattern, result);
     }
 
-    return new PathCollectionResult(invalidTimeSeriesPaths, aliasTimeSeriesPaths);
+    return result;
   }
 
   private void processMeasurementPath(
       final MeasurementPath measurementPath,
       final PartialPath databasePathPattern,
-      final List<String> invalidTimeSeriesPaths,
-      final List<String> aliasTimeSeriesPaths) {
+      final PathCollectionResult result) {
     final IMeasurementSchema schema = measurementPath.getMeasurementSchema();
     if (!(schema instanceof MeasurementSchema)) {
       return;
     }
 
     final Map<String, String> props = schema.getProps();
-    processInvalidPath(measurementPath, props, databasePathPattern, invalidTimeSeriesPaths);
-    processAliasPath(measurementPath, props, databasePathPattern, aliasTimeSeriesPaths);
+    processInvalidPath(measurementPath, props, databasePathPattern, result);
+    if (result.getInvalidTimeSeriesCount() == 0) {
+      processAliasPath(measurementPath, props, databasePathPattern, result);
+    }
   }
 
   private void processInvalidPath(
       final MeasurementPath measurementPath,
       final Map<String, String> props,
       final PartialPath databasePathPattern,
-      final List<String> invalidTimeSeriesPaths) {
+      final PathCollectionResult result) {
     if (!MeasurementPropsUtils.isInvalid(props)) {
       return;
     }
@@ -2026,12 +2040,18 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
       LOGGER.error(
           "Unexpected: invalid time series {} does not have an alias path",
           measurementPath.getFullPath());
-      invalidTimeSeriesPaths.add(measurementPath.getFullPath());
       return;
     }
 
     if (!databasePathPattern.prefixMatchFullPath(aliasPath)) {
-      invalidTimeSeriesPaths.add(measurementPath.getFullPath());
+      // Increment count independently to avoid memory overhead
+      result.incrementInvalidTimeSeriesCount();
+      result.getPhysicalPathsForAliasSeries().clear();
+      // Only add path to list for error reporting (limited to avoid memory issues)
+      // Keep a small sample for error messages, but maintain accurate count
+      if (result.getInvalidTimeSeriesPaths().size() < 5) {
+        result.getInvalidTimeSeriesPaths().add(measurementPath.getFullPath());
+      }
     }
   }
 
@@ -2039,47 +2059,36 @@ public class DataNodeInternalRPCServiceImpl implements IDataNodeRPCService.Iface
       final MeasurementPath measurementPath,
       final Map<String, String> props,
       final PartialPath databasePathPattern,
-      final List<String> aliasTimeSeriesPaths) {
+      final PathCollectionResult result) {
     if (!MeasurementPropsUtils.isRenamed(props)) {
       return;
     }
 
     final PartialPath originalPath = MeasurementPropsUtils.getOriginalPath(props);
-    if (originalPath == null || !databasePathPattern.prefixMatchFullPath(originalPath)) {
-      aliasTimeSeriesPaths.add(measurementPath.getFullPath());
+    if (originalPath == null) {
+      LOGGER.error(
+          "Unexpected: alias time series {} does not have an original path",
+          measurementPath.getFullPath());
+      return;
+    }
+
+    if (!databasePathPattern.prefixMatchFullPath(originalPath)) {
+      // Add the physical path (original path) instead of the alias path
+      result.getPhysicalPathsForAliasSeries().add(originalPath.getFullPath());
     }
   }
 
   private void setPathResults(
       final PathCollectionResult pathResult, final TCheckInvalidTimeSeriesResp resp) {
-    if (!pathResult.invalidTimeSeriesPaths.isEmpty()) {
-      resp.setInvalidTimeSeriesPaths(pathResult.invalidTimeSeriesPaths);
-    }
-    if (!pathResult.aliasTimeSeriesPaths.isEmpty()) {
-      resp.setAliasTimeSeriesPaths(pathResult.aliasTimeSeriesPaths);
-    }
 
-    if (pathResult.invalidTimeSeriesPaths.isEmpty() && pathResult.aliasTimeSeriesPaths.isEmpty()) {
-      resp.setHasInvalidTimeSeries(false);
-    }
-  }
+    // Set invalid time series paths (limited sample for error messages)
+    resp.setInvalidTimeSeriesPaths(pathResult.getInvalidTimeSeriesPaths());
 
-  private void logInvalidTimeSeriesResults(
-      final PathCollectionResult pathResult,
-      final SchemaRegionId schemaRegionId,
-      final ISchemaRegion schemaRegion,
-      final ClusterSchemaTree schemaTree,
-      final int searchResultSize) {
-    LOGGER.warn(
-        "Found {} invalid time series and {} alias time series in SchemaRegion: {} "
-            + "for database: {} (hasAliasSeries={}, hasInvalidSeries={}, searchResultSize={})",
-        pathResult.invalidTimeSeriesPaths.size(),
-        pathResult.aliasTimeSeriesPaths.size(),
-        schemaRegionId,
-        schemaRegion.getDatabaseFullPath(),
-        schemaTree.hasAliasSeries(),
-        schemaTree.hasInvalidSeries(),
-        searchResultSize);
+    // Set alias time series physical paths
+    resp.setPhysicalPathsForAliasSeries(pathResult.getPhysicalPathsForAliasSeries());
+
+    // Set invalid time series count (maintained independently to avoid memory overhead)
+    resp.setInvalidTimeSeriesCount(pathResult.getInvalidTimeSeriesCount());
   }
 
   @Override

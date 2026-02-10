@@ -54,21 +54,6 @@ public class CheckInvalidTimeSeriesRPCHandler
     responseMap.put(requestId, response);
     if (tsStatus.getCode() == TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       nodeLocationMap.remove(requestId);
-      if (response.isHasInvalidTimeSeries()) {
-        final int invalidCount =
-            response.isSetInvalidTimeSeriesPaths()
-                ? response.getInvalidTimeSeriesPaths().size()
-                : 0;
-        final int aliasCount =
-            response.isSetAliasTimeSeriesPaths() ? response.getAliasTimeSeriesPaths().size() : 0;
-        LOGGER.warn(
-            "Found {} invalid time series and {} alias time series on DataNode: {}",
-            invalidCount,
-            aliasCount,
-            targetNode);
-      } else {
-        LOGGER.info("No invalid time series found on DataNode: {}", targetNode);
-      }
     } else if (tsStatus.getCode() == TSStatusCode.MULTIPLE_ERROR.getStatusCode()) {
       nodeLocationMap.remove(requestId);
       LOGGER.error("Failed to check invalid time series on DataNode {}, {}", targetNode, tsStatus);
@@ -94,7 +79,6 @@ public class CheckInvalidTimeSeriesRPCHandler
     resp.setStatus(
         new TSStatus(
             RpcUtils.getStatus(TSStatusCode.EXECUTE_STATEMENT_ERROR.getStatusCode(), errorMsg)));
-    resp.setHasInvalidTimeSeries(false);
     responseMap.put(requestId, resp);
   }
 }
