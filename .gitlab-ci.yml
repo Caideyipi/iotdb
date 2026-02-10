@@ -64,12 +64,12 @@ stages:
 #  - sonarqube-vulnerability-report
 
 before_script:
-  - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
-  - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
-  - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
-  - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
-  - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
-  - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
+  # - 'mv /root/.m2/repository/org/apache/iotdb/tools /root/.m2/repository/ || true'
+  # - 'rm -rf /root/.m2/repository/org/apache/iotdb || true'
+  # - 'mv /root/.m2/repository/tools /root/.m2/repository/org/apache/iotdb/ || true'
+  # - 'rm -rf /root/.m2/repository/com/timecho/iotdb || true'
+  # - 'rm -rf /root/.m2/repository/org/apache/tsfile || true'
+  # - 'rm -rf /root/.m2/repository/org/apache/ratis || true'
   - 'grep -rlZ "\u0000" ~/.m2 | xargs -0 -I {} rm -fv {} || true'
 
 unit-test:
