@@ -706,6 +706,11 @@ public class QueryExecution implements IQueryExecution {
   }
 
   @Override
+  public boolean isDebug() {
+    return context.isDebug();
+  }
+
+  @Override
   public MPPQueryContext getContext() {
     return context;
   }

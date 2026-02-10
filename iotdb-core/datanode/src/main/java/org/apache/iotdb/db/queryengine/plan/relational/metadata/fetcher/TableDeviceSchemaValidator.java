@@ -245,6 +245,7 @@ public class TableDeviceSchemaValidator {
             LocalExecutionPlanner.getInstance().metadata,
             // Never timeout for write statement
             Long.MAX_VALUE,
+            false,
             false);
     if (executionResult.status.getCode() != TSStatusCode.SUCCESS_STATUS.getStatusCode()) {
       throw new IoTDBRuntimeException(

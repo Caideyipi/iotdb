@@ -82,4 +82,6 @@ public interface IQueryExecution {
   String getClientHostname();
 
   MPPQueryContext getContext();
+
+  boolean isDebug();
 }

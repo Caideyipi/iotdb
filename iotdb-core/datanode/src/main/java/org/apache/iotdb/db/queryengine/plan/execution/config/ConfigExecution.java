@@ -363,4 +363,9 @@ public class ConfigExecution implements IQueryExecution {
   public MPPQueryContext getContext() {
     return context;
   }
+
+  @Override
+  public boolean isDebug() {
+    return context.isDebug();
+  }
 }

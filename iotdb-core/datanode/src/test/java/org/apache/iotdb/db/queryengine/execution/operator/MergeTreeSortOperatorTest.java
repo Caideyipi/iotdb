@@ -1921,5 +1921,10 @@ public class MergeTreeSortOperatorTest {
     public MPPQueryContext getContext() {
       return null;
     }
+
+    @Override
+    public boolean isDebug() {
+      return false;
+    }
   }
 }
