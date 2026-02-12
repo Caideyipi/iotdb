@@ -1718,6 +1718,289 @@ public class IoTDBAliasSeriesMetadataIT extends AbstractSchemaIT {
     }
   }
 
+  @Test
+  public void testCountTimeseriesAfterDeleteDatabaseWithMixedSeries() throws SQLException {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+
+      // Create two databases
+      statement.execute("CREATE DATABASE root.db6");
+      statement.execute("CREATE DATABASE root.db7");
+
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d1.s1_physical WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d1.s2_physical WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d1.s3 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d2.s1_physical WITH DATATYPE=INT32, ENCODING=TS_2DIFF, COMPRESSION=UNCOMPRESSED");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d2.s2_physical WITH DATATYPE=BOOLEAN, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d2.s3 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d3.s1 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db6.d3.s2 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+
+      statement.execute(
+          "INSERT INTO root.db6.d1(timestamp, s1_physical, s2_physical, s3) VALUES (1000, 1, 1.1, 1.11)");
+      statement.execute(
+          "INSERT INTO root.db6.d1(timestamp, s1_physical, s2_physical, s3) VALUES (2000, 2, 2.2, 2.22)");
+      statement.execute(
+          "INSERT INTO root.db6.d2(timestamp, s1_physical, s2_physical, s3) VALUES (1000, 10, true, 100)");
+      statement.execute(
+          "INSERT INTO root.db6.d2(timestamp, s1_physical, s2_physical, s3) VALUES (2000, 20, false, 200)");
+      statement.execute("INSERT INTO root.db6.d3(timestamp, s1, s2) VALUES (1000, 10.5, 10.55)");
+      statement.execute("INSERT INTO root.db6.d3(timestamp, s1, s2) VALUES (2000, 20.5, 20.55)");
+
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d1.t1 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d1.t2 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d1.t3 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d2.t1 WITH DATATYPE=INT32, ENCODING=TS_2DIFF, COMPRESSION=UNCOMPRESSED");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d2.t2 WITH DATATYPE=BOOLEAN, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d2.t3 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d3.t1 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d3.t2 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d4.t1 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d4.t2 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d5.t1 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d5.t2 WITH DATATYPE=INT32, ENCODING=TS_2DIFF, COMPRESSION=UNCOMPRESSED");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d6.t1 WITH DATATYPE=BOOLEAN, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db7.d6.t2 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+
+      statement.execute(
+          "INSERT INTO root.db7.d1(timestamp, t1, t2, t3) VALUES (1000, 1, 1.1, 1.11)");
+      statement.execute(
+          "INSERT INTO root.db7.d1(timestamp, t1, t2, t3) VALUES (2000, 2, 2.2, 2.22)");
+      statement.execute(
+          "INSERT INTO root.db7.d2(timestamp, t1, t2, t3) VALUES (1000, 10, true, 100)");
+      statement.execute(
+          "INSERT INTO root.db7.d2(timestamp, t1, t2, t3) VALUES (2000, 20, false, 200)");
+      statement.execute("INSERT INTO root.db7.d3(timestamp, t1, t2) VALUES (1000, 10.5, 10.55)");
+      statement.execute("INSERT INTO root.db7.d3(timestamp, t1, t2) VALUES (2000, 20.5, 20.55)");
+      statement.execute("INSERT INTO root.db7.d4(timestamp, t1, t2) VALUES (1000, 100, 100.1)");
+      statement.execute("INSERT INTO root.db7.d4(timestamp, t1, t2) VALUES (2000, 200, 200.2)");
+      statement.execute("INSERT INTO root.db7.d5(timestamp, t1, t2) VALUES (1000, 1000.5, 10)");
+      statement.execute("INSERT INTO root.db7.d5(timestamp, t1, t2) VALUES (2000, 2000.5, 20)");
+      statement.execute("INSERT INTO root.db7.d6(timestamp, t1, t2) VALUES (1000, true, 1000)");
+      statement.execute("INSERT INTO root.db7.d6(timestamp, t1, t2) VALUES (2000, false, 2000)");
+
+      statement.execute("ALTER TIMESERIES root.db6.d1.s1_physical RENAME TO root.db7.d1.s1_alias");
+      statement.execute("ALTER TIMESERIES root.db6.d2.s1_physical RENAME TO root.db7.d2.s1_alias");
+      statement.execute("ALTER TIMESERIES root.db6.d1.s2_physical RENAME TO root.db7.d3.s2_alias");
+      statement.execute("ALTER TIMESERIES root.db6.d2.s2_physical RENAME TO root.db7.d4.s2_alias");
+      statement.execute("ALTER TIMESERIES root.db6.d3.s1 RENAME TO root.db7.d5.s1_alias");
+      statement.execute("ALTER TIMESERIES root.db6.d3.s2 RENAME TO root.db7.d6.s2_alias");
+
+      statement.execute("INSERT INTO root.db7.d1(timestamp, s1_alias) VALUES (3000, 3)");
+      statement.execute("INSERT INTO root.db7.d2(timestamp, s1_alias) VALUES (3000, 30)");
+      statement.execute("INSERT INTO root.db7.d3(timestamp, s2_alias) VALUES (3000, 3.3)");
+      statement.execute("INSERT INTO root.db7.d4(timestamp, s2_alias) VALUES (3000, false)");
+      statement.execute("INSERT INTO root.db7.d5(timestamp, s1_alias) VALUES (3000, 30.5)");
+      statement.execute("INSERT INTO root.db7.d6(timestamp, s2_alias) VALUES (3000, 30.55)");
+
+      String querySql = "SELECT s1_alias FROM root.db7.d1 WHERE time = 3000";
+      try (ResultSet resultSet = statement.executeQuery(querySql)) {
+        Assert.assertTrue("Should have data in alias series", resultSet.next());
+        Assert.assertEquals("Data should be 3", 3L, resultSet.getLong("root.db7.d1.s1_alias"));
+      }
+
+      long db6CountBefore = getCountTimeseries(statement, "root.db6.**");
+      long db7CountBefore = getCountTimeseries(statement, "root.db7.**");
+      Assert.assertTrue("root.db6 should have timeseries", db6CountBefore > 0);
+      Assert.assertTrue("root.db7 should have timeseries", db7CountBefore > 0);
+
+      statement.execute("DELETE DATABASE root.db7");
+
+      verifyTimeSeriesExists(statement, "root.db7.d1.s1_alias", false);
+      verifyTimeSeriesExists(statement, "root.db7.d2.s1_alias", false);
+      verifyTimeSeriesExists(statement, "root.db7.d3.s2_alias", false);
+
+      try (ResultSet resultSet = statement.executeQuery(querySql)) {
+        Assert.assertFalse("Data should be deleted after database deletion", resultSet.next());
+      } catch (SQLException e) {
+        Assert.assertTrue("Should throw exception when querying deleted database", true);
+      }
+
+      long db6CountAfter = getCountTimeseries(statement, "root.db6.**");
+      Assert.assertEquals(
+          "root.db6 should have 2 valid timeseries (s3 from d1 and d2)", 2, db6CountAfter);
+
+      long showCount = getShowTimeseriesCount(statement, "root.db6.**");
+      Assert.assertEquals("COUNT should match SHOW count", showCount, db6CountAfter);
+
+      String queryDb6Sql = "SELECT s3 FROM root.db6.d1 WHERE time = 1000";
+      try (ResultSet resultSet = statement.executeQuery(queryDb6Sql)) {
+        Assert.assertTrue("root.db6.d1.s3 should have data", resultSet.next());
+        Assert.assertEquals(
+            "Data should be 1.11", 1.11, resultSet.getDouble("root.db6.d1.s3"), 0.001);
+      }
+
+      statement.execute("DELETE TIMESERIES root.**");
+      statement.execute("DELETE database root.**");
+    }
+  }
+
+  @Test
+  public void testCountTimeseriesAfterDeleteTimeseriesWithMixedSeries() throws SQLException {
+    try (Connection connection = EnvFactory.getEnv().getConnection();
+        Statement statement = connection.createStatement()) {
+      long initialAllCount = getCountTimeseries(statement, "root.db*.**");
+
+      // Create two databases
+      statement.execute("CREATE DATABASE root.db8");
+      statement.execute("CREATE DATABASE root.db9");
+
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d1.s1_physical WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d1.s2_physical WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d1.s3 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d2.s1_physical WITH DATATYPE=INT32, ENCODING=TS_2DIFF, COMPRESSION=UNCOMPRESSED");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d2.s2_physical WITH DATATYPE=BOOLEAN, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d2.s3 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d3.s1 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db8.d3.s2 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+
+      // Insert data for DB1
+      statement.execute(
+          "INSERT INTO root.db8.d1(timestamp, s1_physical, s2_physical, s3) VALUES (1000, 1, 1.1, 1.11)");
+      statement.execute(
+          "INSERT INTO root.db8.d1(timestamp, s1_physical, s2_physical, s3) VALUES (2000, 2, 2.2, 2.22)");
+      statement.execute(
+          "INSERT INTO root.db8.d2(timestamp, s1_physical, s2_physical, s3) VALUES (1000, 10, true, 100)");
+      statement.execute(
+          "INSERT INTO root.db8.d2(timestamp, s1_physical, s2_physical, s3) VALUES (2000, 20, false, 200)");
+      statement.execute("INSERT INTO root.db8.d3(timestamp, s1, s2) VALUES (1000, 10.5, 10.55)");
+      statement.execute("INSERT INTO root.db8.d3(timestamp, s1, s2) VALUES (2000, 20.5, 20.55)");
+
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d1.t1 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d1.t2 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d1.t3 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d2.t1 WITH DATATYPE=INT32, ENCODING=TS_2DIFF, COMPRESSION=UNCOMPRESSED");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d2.t2 WITH DATATYPE=BOOLEAN, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d2.t3 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d3.t1 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d3.t2 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d4.t1 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d4.t2 WITH DATATYPE=FLOAT, ENCODING=RLE, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d5.t1 WITH DATATYPE=DOUBLE, ENCODING=GORILLA, COMPRESSION=LZ4");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d5.t2 WITH DATATYPE=INT32, ENCODING=TS_2DIFF, COMPRESSION=UNCOMPRESSED");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d6.t1 WITH DATATYPE=BOOLEAN, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+      statement.execute(
+          "CREATE TIMESERIES root.db9.d6.t2 WITH DATATYPE=INT64, ENCODING=PLAIN, COMPRESSION=SNAPPY");
+
+      statement.execute(
+          "INSERT INTO root.db9.d1(timestamp, t1, t2, t3) VALUES (1000, 1, 1.1, 1.11)");
+      statement.execute(
+          "INSERT INTO root.db9.d1(timestamp, t1, t2, t3) VALUES (2000, 2, 2.2, 2.22)");
+      statement.execute(
+          "INSERT INTO root.db9.d2(timestamp, t1, t2, t3) VALUES (1000, 10, true, 100)");
+      statement.execute(
+          "INSERT INTO root.db9.d2(timestamp, t1, t2, t3) VALUES (2000, 20, false, 200)");
+      statement.execute("INSERT INTO root.db9.d3(timestamp, t1, t2) VALUES (1000, 10.5, 10.55)");
+      statement.execute("INSERT INTO root.db9.d3(timestamp, t1, t2) VALUES (2000, 20.5, 20.55)");
+      statement.execute("INSERT INTO root.db9.d4(timestamp, t1, t2) VALUES (1000, 100, 100.1)");
+      statement.execute("INSERT INTO root.db9.d4(timestamp, t1, t2) VALUES (2000, 200, 200.2)");
+      statement.execute("INSERT INTO root.db9.d5(timestamp, t1, t2) VALUES (1000, 1000.5, 10)");
+      statement.execute("INSERT INTO root.db9.d5(timestamp, t1, t2) VALUES (2000, 2000.5, 20)");
+      statement.execute("INSERT INTO root.db9.d6(timestamp, t1, t2) VALUES (1000, true, 1000)");
+      statement.execute("INSERT INTO root.db9.d6(timestamp, t1, t2) VALUES (2000, false, 2000)");
+
+      statement.execute("ALTER TIMESERIES root.db8.d1.s1_physical RENAME TO root.db9.d1.s1_alias");
+      statement.execute("ALTER TIMESERIES root.db8.d2.s1_physical RENAME TO root.db9.d2.s1_alias");
+      statement.execute("ALTER TIMESERIES root.db8.d1.s2_physical RENAME TO root.db9.d3.s2_alias");
+      statement.execute("ALTER TIMESERIES root.db8.d2.s2_physical RENAME TO root.db9.d4.s2_alias");
+      statement.execute("ALTER TIMESERIES root.db8.d3.s1 RENAME TO root.db9.d5.s1_alias");
+      statement.execute("ALTER TIMESERIES root.db8.d3.s2 RENAME TO root.db9.d6.s2_alias");
+
+      statement.execute("INSERT INTO root.db9.d1(timestamp, s1_alias) VALUES (3000, 3)");
+      statement.execute("INSERT INTO root.db9.d2(timestamp, s1_alias) VALUES (3000, 30)");
+      statement.execute("INSERT INTO root.db9.d3(timestamp, s2_alias) VALUES (3000, 3.3)");
+      statement.execute("INSERT INTO root.db9.d4(timestamp, s2_alias) VALUES (3000, false)");
+      statement.execute("INSERT INTO root.db9.d5(timestamp, s1_alias) VALUES (3000, 30.5)");
+      statement.execute("INSERT INTO root.db9.d6(timestamp, s2_alias) VALUES (3000, 30.55)");
+
+      String querySql = "SELECT s1_alias FROM root.db9.d1 WHERE time = 3000";
+      try (ResultSet resultSet = statement.executeQuery(querySql)) {
+        Assert.assertTrue("Should have data in alias series", resultSet.next());
+        Assert.assertEquals("Data should be 3", 3L, resultSet.getLong("root.db9.d1.s1_alias"));
+      }
+
+      long db8CountBefore = getCountTimeseries(statement, "root.db8.**");
+      long db9CountBefore = getCountTimeseries(statement, "root.db9.**");
+      Assert.assertTrue("root.db8 should have timeseries", db8CountBefore > 0);
+      Assert.assertTrue("root.db9 should have timeseries", db9CountBefore > 0);
+
+      statement.execute("DELETE TIMESERIES root.db9.**");
+
+      verifyTimeSeriesExists(statement, "root.db9.d1.s1_alias", false);
+      verifyTimeSeriesExists(statement, "root.db9.d2.s1_alias", false);
+      verifyTimeSeriesExists(statement, "root.db9.d3.s2_alias", false);
+
+      try (ResultSet resultSet = statement.executeQuery(querySql)) {
+        Assert.assertFalse("Data should be deleted after timeseries deletion", resultSet.next());
+      } catch (SQLException e) {
+        Assert.assertTrue("Should throw exception when querying deleted timeseries", true);
+      }
+
+      long db8CountAfter = getCountTimeseries(statement, "root.db8.**");
+      Assert.assertEquals(
+          "root.db8 should have 2 valid timeseries (s3 from d1 and d2)", 2, db8CountAfter);
+
+      long showCount = getShowTimeseriesCount(statement, "root.db8.**");
+      Assert.assertEquals("COUNT should match SHOW count", showCount, db8CountAfter);
+
+      long allCount = getCountTimeseries(statement, "root.db*.**");
+      Assert.assertEquals("All timeseries count should match", initialAllCount + 2, allCount);
+
+      String queryDb8Sql = "SELECT s3 FROM root.db8.d1 WHERE time = 1000";
+      try (ResultSet resultSet = statement.executeQuery(queryDb8Sql)) {
+        Assert.assertTrue("root.db8.d1.s3 should have data", resultSet.next());
+        Assert.assertEquals(
+            "Data should be 1.11", 1.11, resultSet.getDouble("root.db8.d1.s3"), 0.001);
+      }
+
+      statement.execute("DELETE TIMESERIES root.**");
+      statement.execute("DELETE database root.**");
+    }
+  }
+
   // ============================================================================
   // Helper Methods
   // ============================================================================

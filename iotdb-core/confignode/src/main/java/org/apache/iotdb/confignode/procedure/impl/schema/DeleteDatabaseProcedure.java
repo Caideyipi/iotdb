@@ -270,10 +270,13 @@ public class DeleteDatabaseProcedure
                 "[DeleteDatabaseProcedure] Database: {} is deleted successfully",
                 deleteDatabaseSchema.getName());
             setNextState(DELETE_ALIAS_DATA);
+            break;
           } else if (getCycles() > RETRY_THRESHOLD) {
             setFailure(
                 new ProcedureException("[DeleteDatabaseProcedure] Delete DatabaseSchema failed"));
+            return Flow.NO_MORE_STATE;
           }
+          break;
         case DELETE_ALIAS_DATA:
           if (physicalPathsForAliasSeries == null || physicalPathsForAliasSeries.isEmpty()) {
             return Flow.NO_MORE_STATE;

@@ -619,10 +619,11 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
                 if (measurementMNode.isLogicalView()) {
                   regionStatistics.addView(1L);
                 } else {
-                  regionStatistics.addMeasurement(1L);
                   // Count invalid series during recovery
                   if (measurementMNode.isInvalid()) {
                     regionStatistics.addInvalidSeries(1L);
+                  } else {
+                    regionStatistics.addMeasurement(1L);
                   }
                 }
                 if (measurementMNode.getOffset() == -1) {
@@ -1408,6 +1409,7 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
 
     // Update statistics
     regionStatistics.addInvalidSeries(1L);
+    regionStatistics.deleteMeasurement(1L);
 
     // Write log
     writeToMLog(node);
@@ -1934,6 +1936,7 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
 
       // Update statistics
       regionStatistics.addInvalidSeries(1L);
+      regionStatistics.deleteMeasurement(1L);
 
       // Write log
       writeToMLog(node);
@@ -2055,7 +2058,11 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
     if (measurementMNode.isLogicalView()) {
       regionStatistics.deleteView(1L);
     } else {
-      regionStatistics.deleteMeasurement(1L);
+      if (measurementMNode.isInvalid()) {
+        regionStatistics.deleteInvalidSeries(1L);
+      } else {
+        regionStatistics.deleteMeasurement(1L);
+      }
     }
   }
 
@@ -2074,7 +2081,11 @@ public class SchemaRegionMemoryImpl implements ISchemaRegion {
     if (measurementMNode.isLogicalView()) {
       regionStatistics.deleteView(1L);
     } else {
-      regionStatistics.deleteMeasurement(1L);
+      if (measurementMNode.isInvalid()) {
+        regionStatistics.deleteInvalidSeries(1L);
+      } else {
+        regionStatistics.deleteMeasurement(1L);
+      }
     }
   }
 

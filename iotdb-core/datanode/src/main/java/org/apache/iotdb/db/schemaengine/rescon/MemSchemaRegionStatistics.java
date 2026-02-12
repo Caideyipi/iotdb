@@ -74,9 +74,9 @@ public class MemSchemaRegionStatistics implements ISchemaRegionStatistics {
     } else {
       result = measurementNumber.get() + getTemplateSeriesNumber();
     }
-    // Exclude invalid series if includeInvalidSeries is false
-    if (!includeInvalidSeries) {
-      result -= invalidSeriesNumber.get();
+
+    if (includeInvalidSeries) {
+      result += invalidSeriesNumber.get();
     }
     return result;
   }

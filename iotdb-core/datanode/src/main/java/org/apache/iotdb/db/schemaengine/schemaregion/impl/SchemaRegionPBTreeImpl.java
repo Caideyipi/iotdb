@@ -109,6 +109,7 @@ import org.apache.iotdb.db.schemaengine.schemaregion.write.req.impl.CreateAligne
 import org.apache.iotdb.db.schemaengine.schemaregion.write.req.impl.CreateTimeSeriesPlanImpl;
 import org.apache.iotdb.db.schemaengine.schemaregion.write.req.view.IAlterLogicalViewPlan;
 import org.apache.iotdb.db.schemaengine.schemaregion.write.req.view.ICreateLogicalViewPlan;
+import org.apache.iotdb.db.schemaengine.schemaregion.write.resp.ConstructSchemaBlackListResult;
 import org.apache.iotdb.db.storageengine.rescon.memory.SystemInfo;
 import org.apache.iotdb.db.utils.SchemaUtils;
 import org.apache.iotdb.mpp.rpc.thrift.TTimeSeriesInfo;
@@ -278,10 +279,11 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
       if (measurementMNode.isLogicalView()) {
         regionStatistics.addView(1L);
       } else {
-        regionStatistics.addMeasurement(1L);
         // Count invalid series during recovery
         if (measurementMNode.isInvalid()) {
           regionStatistics.addInvalidSeries(1L);
+        } else {
+          regionStatistics.addMeasurement(1L);
         }
       }
       if (measurementMNode.getOffset() == -1) {
@@ -968,8 +970,7 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
       isAllInvalidSeries.set(true);
     }
 
-    return new org.apache.iotdb.db.schemaengine.schemaregion.write.resp
-        .ConstructSchemaBlackListResult(
+    return new ConstructSchemaBlackListResult(
         preDeletedNum,
         isAllLogicalView.get(),
         isAllInvalidSeries.get(),
@@ -1419,7 +1420,8 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
           });
 
       // Update statistics (decrease invalid series count)
-      regionStatistics.addInvalidSeries(-1L);
+      regionStatistics.deleteInvalidSeries(1L);
+      regionStatistics.addMeasurement(1L);
 
       // Write log
       if (!isRecovering) {
@@ -1473,6 +1475,7 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
 
       // Update statistics
       regionStatistics.addInvalidSeries(1L);
+      regionStatistics.deleteMeasurement(1L);
 
       // Write log
       if (!isRecovering) {
@@ -1825,6 +1828,7 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
 
       updatePhysicalNodeForEnable(physicalNode, timeSeriesInfo, physicalPath);
       regionStatistics.deleteInvalidSeries(1L);
+      regionStatistics.addMeasurement(1L);
       writeLogIfNotRecovering(node);
     } finally {
       mtree.unPinMNode(physicalNode.getAsMNode());
@@ -2045,6 +2049,7 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
 
         // Update statistics
         regionStatistics.addInvalidSeries(1L);
+        regionStatistics.addMeasurement(1L);
 
         // Write log
         if (!isRecovering) {
@@ -2200,7 +2205,11 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
     if (measurementMNode.isLogicalView()) {
       regionStatistics.deleteView(1L);
     } else {
-      regionStatistics.deleteMeasurement(1L);
+      if (measurementMNode.isInvalid()) {
+        regionStatistics.deleteInvalidSeries(1L);
+      } else {
+        regionStatistics.deleteMeasurement(1L);
+      }
     }
   }
 
@@ -2218,7 +2227,11 @@ public class SchemaRegionPBTreeImpl implements ISchemaRegion {
     if (measurementMNode.isLogicalView()) {
       regionStatistics.deleteView(1L);
     } else {
-      regionStatistics.deleteMeasurement(1L);
+      if (measurementMNode.isInvalid()) {
+        regionStatistics.deleteInvalidSeries(1L);
+      } else {
+        regionStatistics.deleteMeasurement(1L);
+      }
     }
   }
 
