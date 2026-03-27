@@ -67,7 +67,6 @@ class ModelInfo:
                 base_model_id if base_model_id is not None else self.base_model_id
             ),
         )
-        self.origin_id = None
 
     def __repr__(self):
         return (
@@ -156,6 +155,18 @@ BUILTIN_HF_TRANSFORMERS_MODEL_MAP = {
         auto_map={
             "AutoConfig": "configuration_sundial.SundialConfig",
             "AutoModelForCausalLM": "modeling_sundial.SundialForPrediction",
+        },
+        transformers_registered=True,
+    ),
+    "dual_weaver_sundial": ModelInfo(
+        model_id="dual_weaver_sundial",
+        category=ModelCategory.BUILTIN,
+        state=ModelStates.INACTIVE,
+        model_type="dual_weaver_sundial",
+        pipeline_cls="pipeline_dual_weaver_sundial.DualWeaverSundialPipeline",
+        auto_map={
+            "AutoConfig": "configuration_dual_weaver_sundial.DualWeaverSundialConfig",
+            "AutoModelForCausalLM": "modeling_dual_weaver_sundial.DualWeaverSundialForPrediction",
         },
         transformers_registered=True,
     ),
