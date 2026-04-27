@@ -25,6 +25,7 @@ import org.apache.iotdb.commons.pipe.agent.task.subtask.PipeAbstractSinkSubtask;
 import org.apache.iotdb.commons.pipe.config.PipeConfig;
 import org.apache.iotdb.commons.pipe.event.EnrichedEvent;
 import org.apache.iotdb.commons.pipe.sink.protocol.IoTDBSink;
+import org.apache.iotdb.commons.pipe.sink.protocol.PipeConnectorWithEventDiscard;
 import org.apache.iotdb.commons.utils.ErrorHandlingCommonUtils;
 import org.apache.iotdb.db.pipe.agent.PipeDataNodeAgent;
 import org.apache.iotdb.db.pipe.event.UserDefinedEnrichedEvent;
@@ -248,8 +249,8 @@ public class PipeSinkSubtask extends PipeAbstractSinkSubtask {
       decreaseHighPriorityTaskCount();
     }
 
-    if (outputPipeSink instanceof IoTDBSink) {
-      ((IoTDBSink) outputPipeSink)
+    if (outputPipeSink instanceof PipeConnectorWithEventDiscard) {
+      ((PipeConnectorWithEventDiscard) outputPipeSink)
           .discardEventsOfPipe(pipeNameToDrop, creationTimeToDrop, regionId);
     }
   }
