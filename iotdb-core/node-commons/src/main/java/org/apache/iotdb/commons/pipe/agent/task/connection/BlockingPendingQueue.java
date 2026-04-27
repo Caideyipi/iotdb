@@ -141,12 +141,13 @@ public abstract class BlockingPendingQueue<E extends Event> {
     eventCounter.reset();
   }
 
-  public void discardEventsOfPipe(final String pipeNameToDrop, final int regionId) {
+  public void discardEventsOfPipe(
+      final String pipeNameToDrop, final long creationTimeToDrop, final int regionId) {
     pendingQueue.removeIf(
         event -> {
           if (event instanceof EnrichedEvent
-              && pipeNameToDrop.equals(((EnrichedEvent) event).getPipeName())
-              && regionId == ((EnrichedEvent) event).getRegionId()) {
+              && isEventFromPipe(
+                  ((EnrichedEvent) event), pipeNameToDrop, creationTimeToDrop, regionId)) {
             if (((EnrichedEvent) event).clearReferenceCount(BlockingPendingQueue.class.getName())) {
               eventCounter.decreaseEventCount(event);
             }
@@ -180,5 +181,15 @@ public abstract class BlockingPendingQueue<E extends Event> {
     if (isClosed.get() && event instanceof EnrichedEvent) {
       ((EnrichedEvent) event).clearReferenceCount(BlockingPendingQueue.class.getName());
     }
+  }
+
+  protected static boolean isEventFromPipe(
+      final EnrichedEvent event,
+      final String pipeNameToDrop,
+      final long creationTimeToDrop,
+      final int regionId) {
+    return pipeNameToDrop.equals(event.getPipeName())
+        && creationTimeToDrop == event.getCreationTime()
+        && regionId == event.getRegionId();
   }
 }
