@@ -176,12 +176,7 @@ public class CreatePipeProcedureV2 extends AbstractOperatePipeProcedureV2 {
       return;
     }
 
-    if (sourceParameters.hasAttribute(PipeSourceConstant.EXTRACTOR_IOTDB_USER_KEY)
-        || sourceParameters.hasAttribute(PipeSourceConstant.SOURCE_IOTDB_USER_KEY)
-        || sourceParameters.hasAttribute(PipeSourceConstant.EXTRACTOR_IOTDB_USERNAME_KEY)
-        || sourceParameters.hasAttribute(PipeSourceConstant.SOURCE_IOTDB_USERNAME_KEY)
-        || sourceParameters.hasAttribute(PipeSourceConstant.EXTRACTOR_IOTDB_PASSWORD_KEY)
-        || sourceParameters.hasAttribute(PipeSourceConstant.SOURCE_IOTDB_PASSWORD_KEY)) {
+    if (hasExplicitSourceAuthenticationAttributes(sourceParameters)) {
       final String username =
           sourceParameters.getStringByKeys(
               PipeSourceConstant.EXTRACTOR_IOTDB_USER_KEY,
@@ -232,12 +227,7 @@ public class CreatePipeProcedureV2 extends AbstractOperatePipeProcedureV2 {
       return;
     }
 
-    if (sinkParameters.hasAttribute(PipeSinkConstant.CONNECTOR_IOTDB_USER_KEY)
-        || sinkParameters.hasAttribute(PipeSinkConstant.SINK_IOTDB_USER_KEY)
-        || sinkParameters.hasAttribute(PipeSinkConstant.CONNECTOR_IOTDB_USERNAME_KEY)
-        || sinkParameters.hasAttribute(PipeSinkConstant.SINK_IOTDB_USERNAME_KEY)
-        || sinkParameters.hasAttribute(PipeSinkConstant.CONNECTOR_IOTDB_PASSWORD_KEY)
-        || sinkParameters.hasAttribute(PipeSinkConstant.SINK_IOTDB_PASSWORD_KEY)) {
+    if (hasExplicitSinkAuthenticationAttributes(sinkParameters)) {
       final String hashedPassword =
           env.getConfigManager()
               .getPermissionManager()
@@ -257,6 +247,32 @@ public class CreatePipeProcedureV2 extends AbstractOperatePipeProcedureV2 {
           new PipeParameters(
               Collections.singletonMap(PipeSinkConstant.SINK_IOTDB_PASSWORD_KEY, hashedPassword)));
     }
+  }
+
+  private static boolean hasExplicitSourceAuthenticationAttributes(
+      final PipeParameters sourceParameters) {
+    return sourceParameters.hasAttribute(PipeSourceConstant.EXTRACTOR_IOTDB_USER_KEY)
+        || sourceParameters.hasAttribute(PipeSourceConstant.SOURCE_IOTDB_USER_KEY)
+        || (!sourceParameters.hasAnyAttributes(
+                PipeSourceConstant.EXTRACTOR_IOTDB_USER_ID, PipeSourceConstant.SOURCE_IOTDB_USER_ID)
+            && sourceParameters.hasAnyAttributes(
+                PipeSourceConstant.EXTRACTOR_IOTDB_USERNAME_KEY,
+                PipeSourceConstant.SOURCE_IOTDB_USERNAME_KEY))
+        || sourceParameters.hasAttribute(PipeSourceConstant.EXTRACTOR_IOTDB_PASSWORD_KEY)
+        || sourceParameters.hasAttribute(PipeSourceConstant.SOURCE_IOTDB_PASSWORD_KEY);
+  }
+
+  private static boolean hasExplicitSinkAuthenticationAttributes(
+      final PipeParameters sinkParameters) {
+    return sinkParameters.hasAttribute(PipeSinkConstant.CONNECTOR_IOTDB_USER_KEY)
+        || sinkParameters.hasAttribute(PipeSinkConstant.SINK_IOTDB_USER_KEY)
+        || (!sinkParameters.hasAnyAttributes(
+                PipeSinkConstant.CONNECTOR_IOTDB_USER_ID, PipeSinkConstant.SINK_IOTDB_USER_ID)
+            && sinkParameters.hasAnyAttributes(
+                PipeSinkConstant.CONNECTOR_IOTDB_USERNAME_KEY,
+                PipeSinkConstant.SINK_IOTDB_USERNAME_KEY))
+        || sinkParameters.hasAttribute(PipeSinkConstant.CONNECTOR_IOTDB_PASSWORD_KEY)
+        || sinkParameters.hasAttribute(PipeSinkConstant.SINK_IOTDB_PASSWORD_KEY);
   }
 
   @Override

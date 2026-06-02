@@ -225,6 +225,8 @@ import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCluster;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowClusterId;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowConfigNodes;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowConfiguration;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCreateDatabase;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCreatePipe;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCurrentDatabase;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCurrentSqlDialect;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCurrentTimestamp;
@@ -411,6 +413,13 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
   public Node visitCountDatabasesStatement(
       final RelationalSqlParser.CountDatabasesStatementContext ctx) {
     return new CountDB(getLocation(ctx));
+  }
+
+  @Override
+  public Node visitShowCreateDatabaseStatement(
+      final RelationalSqlParser.ShowCreateDatabaseStatementContext ctx) {
+    return new ShowCreateDatabase(
+        getLocation(ctx), lowerIdentifier((Identifier) visit(ctx.database)).getValue());
   }
 
   @Override
@@ -1337,6 +1346,11 @@ public class AstBuilder extends RelationalSqlBaseVisitor<Node> {
         getIdentifierIfPresent(ctx.identifier()).map(Identifier::getValue).orElse(null);
     final boolean hasWhereClause = ctx.WHERE() != null;
     return new ShowPipes(pipeName, hasWhereClause);
+  }
+
+  @Override
+  public Node visitShowCreatePipeStatement(RelationalSqlParser.ShowCreatePipeStatementContext ctx) {
+    return new ShowCreatePipe(((Identifier) visit(ctx.pipeName)).getValue());
   }
 
   @Override

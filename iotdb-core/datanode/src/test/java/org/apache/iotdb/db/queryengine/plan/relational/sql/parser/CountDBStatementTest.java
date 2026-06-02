@@ -24,6 +24,8 @@ import org.apache.iotdb.commons.queryengine.plan.relational.sql.parser.ParsingEx
 import org.apache.iotdb.db.protocol.session.IClientSession;
 import org.apache.iotdb.db.protocol.session.InternalClientSession;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.CountDB;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCreateDatabase;
+import org.apache.iotdb.db.queryengine.plan.relational.sql.ast.ShowCreatePipe;
 import org.apache.iotdb.db.queryengine.plan.relational.sql.util.DataNodeSqlFormatter;
 
 import org.junit.Before;
@@ -61,5 +63,28 @@ public class CountDBStatementTest {
     assertTrue(statement instanceof CountDB);
     assertEquals("COUNT DATABASES", statement.toString());
     assertEquals("COUNT DATABASES", DataNodeSqlFormatter.formatDataNodeSql(statement));
+  }
+
+  @Test
+  public void testShowCreateDatabaseStatement() {
+    final Statement statement =
+        sqlParser.createStatement(
+            "show create database test_db", ZoneId.systemDefault(), clientSession);
+
+    assertTrue(statement instanceof ShowCreateDatabase);
+    assertEquals("SHOW CREATE DATABASE test_db", statement.toString());
+    assertEquals(
+        "SHOW CREATE DATABASE \"test_db\"", DataNodeSqlFormatter.formatDataNodeSql(statement));
+  }
+
+  @Test
+  public void testShowCreatePipeStatement() {
+    final Statement statement =
+        sqlParser.createStatement(
+            "show create pipe test_pipe", ZoneId.systemDefault(), clientSession);
+
+    assertTrue(statement instanceof ShowCreatePipe);
+    assertEquals(
+        "SHOW CREATE PIPE \"test_pipe\"", DataNodeSqlFormatter.formatDataNodeSql(statement));
   }
 }

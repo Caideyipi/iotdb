@@ -50,6 +50,7 @@ statement
     | useDatabaseStatement
     | showDatabasesStatement
     | countDatabasesStatement
+    | showCreateDatabaseStatement
     | createDbStatement
     | alterDbStatement
     | dropDbStatement
@@ -102,6 +103,7 @@ statement
     | startPipeStatement
     | stopPipeStatement
     | showPipesStatement
+    | showCreatePipeStatement
     | createPipePluginStatement
     | dropPipePluginStatement
     | showPipePluginsStatement
@@ -206,6 +208,10 @@ showDatabasesStatement
 
 countDatabasesStatement
     : COUNT DATABASES
+    ;
+
+showCreateDatabaseStatement
+    : SHOW CREATE DATABASE database=identifier
     ;
 
 createDbStatement
@@ -517,6 +523,10 @@ stopPipeStatement
 
 showPipesStatement
     : SHOW ((PIPE pipeName=identifier) | PIPES (WHERE (CONNECTOR | SINK) USED BY pipeName=identifier)?)
+    ;
+
+showCreatePipeStatement
+    : SHOW CREATE PIPE pipeName=identifier
     ;
 
 createPipePluginStatement

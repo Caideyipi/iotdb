@@ -20,6 +20,7 @@
 package org.apache.iotdb.confignode.procedure.impl.pipe.task;
 
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.pipe.config.constant.PipeSinkConstant;
 import org.apache.iotdb.commons.pipe.config.constant.PipeSourceConstant;
 import org.apache.iotdb.confignode.manager.ConfigManager;
 import org.apache.iotdb.confignode.manager.PermissionManager;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 public class CreatePipeProcedureV2Test {
@@ -128,5 +130,49 @@ public class CreatePipeProcedureV2Test {
         "hashed-password", sourceAttributes.get(PipeSourceConstant.SOURCE_IOTDB_PASSWORD_KEY));
     Mockito.verify(permissionManager).login("user", "raw-password", true);
     Mockito.verify(permissionManager).login4Pipe("user", "raw-password");
+  }
+
+  @Test
+  public void testCheckAndEnrichSourceAuthenticationSkipsAutoInjectedUser() {
+    final ConfigNodeProcedureEnv env = Mockito.mock(ConfigNodeProcedureEnv.class);
+    final ConfigManager configManager = Mockito.mock(ConfigManager.class);
+    final PermissionManager permissionManager = Mockito.mock(PermissionManager.class);
+    Mockito.when(env.getConfigManager()).thenReturn(configManager);
+    Mockito.when(configManager.getPermissionManager()).thenReturn(permissionManager);
+
+    final Map<String, String> sourceAttributes = new HashMap<>();
+    sourceAttributes.put(PipeSourceConstant.SOURCE_KEY, "iotdb-source");
+    sourceAttributes.put(PipeSourceConstant.SOURCE_IOTDB_USER_ID, "0");
+    sourceAttributes.put(PipeSourceConstant.SOURCE_IOTDB_USERNAME_KEY, "root");
+    sourceAttributes.put(PipeSourceConstant.SOURCE_IOTDB_CLI_HOSTNAME, "localhost");
+
+    CreatePipeProcedureV2.checkAndEnrichSourceAuthentication(env, sourceAttributes);
+
+    Mockito.verify(permissionManager, Mockito.never())
+        .login(Mockito.any(), Mockito.any(), Mockito.anyBoolean());
+    Mockito.verify(permissionManager, Mockito.never())
+        .login4Pipe(Mockito.anyString(), Mockito.any());
+    assertFalse(sourceAttributes.containsKey(PipeSourceConstant.SOURCE_IOTDB_PASSWORD_KEY));
+  }
+
+  @Test
+  public void testCheckAndEnrichSinkAuthenticationSkipsAutoInjectedUser() {
+    final ConfigNodeProcedureEnv env = Mockito.mock(ConfigNodeProcedureEnv.class);
+    final ConfigManager configManager = Mockito.mock(ConfigManager.class);
+    final PermissionManager permissionManager = Mockito.mock(PermissionManager.class);
+    Mockito.when(env.getConfigManager()).thenReturn(configManager);
+    Mockito.when(configManager.getPermissionManager()).thenReturn(permissionManager);
+
+    final Map<String, String> sinkAttributes = new HashMap<>();
+    sinkAttributes.put(PipeSinkConstant.SINK_KEY, "write-back-sink");
+    sinkAttributes.put(PipeSinkConstant.SINK_IOTDB_USER_ID, "0");
+    sinkAttributes.put(PipeSinkConstant.SINK_IOTDB_USERNAME_KEY, "root");
+    sinkAttributes.put(PipeSinkConstant.SINK_IOTDB_CLI_HOSTNAME, "localhost");
+
+    CreatePipeProcedureV2.checkAndEnrichSinkAuthentication(env, sinkAttributes);
+
+    Mockito.verify(permissionManager, Mockito.never())
+        .login4Pipe(Mockito.anyString(), Mockito.any());
+    assertFalse(sinkAttributes.containsKey(PipeSinkConstant.SINK_IOTDB_PASSWORD_KEY));
   }
 }
