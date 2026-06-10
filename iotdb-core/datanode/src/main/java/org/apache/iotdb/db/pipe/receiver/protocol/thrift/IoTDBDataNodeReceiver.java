@@ -864,10 +864,10 @@ public class IoTDBDataNodeReceiver extends IoTDBFileReceiver {
 
   private static Map<String, String> parseHandshakeV2Params(final TPipeTransferReq req) {
     final Map<String, String> params = new HashMap<>();
-    if (req.getBody() == null) {
+    if (req.body == null) {
       return params;
     }
-    final ByteBuffer body = req.getBody().duplicate();
+    final ByteBuffer body = req.body.duplicate();
     body.rewind();
     final int size = ReadWriteIOUtils.readInt(body);
     for (int i = 0; i < size; ++i) {
