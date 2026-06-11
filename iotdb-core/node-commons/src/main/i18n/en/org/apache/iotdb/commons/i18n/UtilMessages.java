@@ -178,16 +178,16 @@ public final class UtilMessages {
   public static final String WRITE_T_AI_NODE_INFO_FAILED = "Write TAINodeInfo failed: ";
   public static final String READ_T_AI_NODE_INFO_FAILED = "Read TAINodeInfo failed: ";
   public static final String WRITE_T_AI_NODE_LOCATION_FAILED = "Write TAINodeLocation failed: ";
-  public static final String READ_T_AI_NODE_LOCATION_FAILED = "Read TDataNodeLocation failed: ";
+  public static final String READ_T_AI_NODE_LOCATION_FAILED = "Read TAINodeLocation failed: ";
+  public static final String WRITE_T_AI_NODE_CONFIGURATION_FAILED =
+      "Write TAINodeConfiguration failed: ";
   public static final String READ_T_AI_NODE_CONFIGURATION_FAILED =
       "Read TAINodeConfiguration failed: ";
 
   // ======================== ThriftConfigNodeSerDeUtils ========================
 
-  public static final String WRITE_T_STORAGE_GROUP_SCHEMA_FAILED =
-      "Write TStorageGroupSchema failed: ";
-  public static final String READ_T_STORAGE_GROUP_SCHEMA_FAILED =
-      "Read TStorageGroupSchema failed: ";
+  public static final String WRITE_T_DATABASE_SCHEMA_FAILED = "Write TDatabaseSchema failed: ";
+  public static final String READ_T_DATABASE_SCHEMA_FAILED = "Read TDatabaseSchema failed: ";
   public static final String WRITE_T_CONFIG_NODE_LOCATION_FAILED =
       "Write TConfigNodeLocation failed: ";
   public static final String READ_T_CONFIG_NODE_LOCATION_FAILED =

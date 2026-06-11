@@ -219,7 +219,7 @@ public class ThriftCommonsSerDeUtils {
   public static TTimeSlotList deserializeTTimePartitionSlotList(ByteBuffer buffer) {
     TTimeSlotList timePartitionSlotList = new TTimeSlotList();
     try {
-      timePartitionSlotList.read(generateWriteProtocol(buffer));
+      timePartitionSlotList.read(generateReadProtocol(buffer));
     } catch (TException e) {
       throw new ThriftSerDeException(UtilMessages.READ_T_TIME_SLOT_LIST_FAILED, e);
     }
@@ -338,7 +338,7 @@ public class ThriftCommonsSerDeUtils {
     try {
       aiNodeConfiguration.write(generateWriteProtocol(stream));
     } catch (TException e) {
-      throw new ThriftSerDeException(UtilMessages.WRITE_T_DATA_NODE_CONFIGURATION_FAILED, e);
+      throw new ThriftSerDeException(UtilMessages.WRITE_T_AI_NODE_CONFIGURATION_FAILED, e);
     }
   }
 
@@ -366,7 +366,7 @@ public class ThriftCommonsSerDeUtils {
     try {
       aiNodeLocation.read(generateReadProtocol(buffer));
     } catch (TException e) {
-      throw new ThriftSerDeException(UtilMessages.READ_T_DATA_NODE_LOCATION_FAILED, e);
+      throw new ThriftSerDeException(UtilMessages.READ_T_AI_NODE_LOCATION_FAILED, e);
     }
     return aiNodeLocation;
   }

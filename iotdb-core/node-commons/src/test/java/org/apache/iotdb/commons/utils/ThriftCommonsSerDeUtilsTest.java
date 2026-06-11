@@ -18,6 +18,8 @@
  */
 package org.apache.iotdb.commons.utils;
 
+import org.apache.iotdb.common.rpc.thrift.TAINodeConfiguration;
+import org.apache.iotdb.common.rpc.thrift.TAINodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupId;
 import org.apache.iotdb.common.rpc.thrift.TConsensusGroupType;
 import org.apache.iotdb.common.rpc.thrift.TDataNodeConfiguration;
@@ -27,6 +29,8 @@ import org.apache.iotdb.common.rpc.thrift.TNodeResource;
 import org.apache.iotdb.common.rpc.thrift.TRegionReplicaSet;
 import org.apache.iotdb.common.rpc.thrift.TSeriesPartitionSlot;
 import org.apache.iotdb.common.rpc.thrift.TTimePartitionSlot;
+import org.apache.iotdb.commons.exception.runtime.ThriftSerDeException;
+import org.apache.iotdb.confignode.rpc.thrift.TTimeSlotList;
 
 import org.apache.tsfile.utils.PublicBAOS;
 import org.junit.After;
@@ -35,6 +39,7 @@ import org.junit.Test;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -136,6 +141,25 @@ public class ThriftCommonsSerDeUtilsTest {
   }
 
   @Test
+  public void readWriteTTimePartitionSlotListTest() throws IOException {
+    TTimeSlotList timeSlotList0 = new TTimeSlotList();
+    timeSlotList0.setTimePartitionSlots(new ArrayList<>());
+    timeSlotList0.getTimePartitionSlots().add(new TTimePartitionSlot(100));
+    timeSlotList0.getTimePartitionSlots().add(new TTimePartitionSlot(200));
+    timeSlotList0.setNeedLeftAll(true);
+    timeSlotList0.setNeedRightAll(false);
+
+    try (PublicBAOS byteArrayOutputStream = new PublicBAOS();
+        DataOutputStream outputStream = new DataOutputStream(byteArrayOutputStream)) {
+      ThriftCommonsSerDeUtils.serializeTTimePartitionSlotList(timeSlotList0, outputStream);
+      TTimeSlotList timeSlotList1 =
+          ThriftCommonsSerDeUtils.deserializeTTimePartitionSlotList(
+              ByteBuffer.wrap(byteArrayOutputStream.getBuf(), 0, byteArrayOutputStream.size()));
+      Assert.assertEquals(timeSlotList0, timeSlotList1);
+    }
+  }
+
+  @Test
   public void readWriteTConsensusGroupIdTest() throws IOException {
     TConsensusGroupId consensusGroupId0 =
         new TConsensusGroupId(TConsensusGroupType.ConfigRegion, 0);
@@ -171,6 +195,80 @@ public class ThriftCommonsSerDeUtilsTest {
           ThriftCommonsSerDeUtils.deserializeTRegionReplicaSet(
               ByteBuffer.wrap(byteArrayOutputStream.getBuf(), 0, byteArrayOutputStream.size()));
       Assert.assertEquals(regionReplicaSet0, regionReplicaSet1);
+    }
+  }
+
+  @Test
+  public void readWriteTAINodeConfigurationTest() throws IOException {
+    TAINodeLocation aiNodeLocation0 = new TAINodeLocation(0, new TEndPoint("0.0.0.0", 10810));
+
+    TNodeResource aiNodeResource0 = new TNodeResource();
+    aiNodeResource0.setCpuCoreNum(8);
+    aiNodeResource0.setMaxMemory(1024L * 1024L * 1024L);
+
+    TAINodeConfiguration aiNodeConfiguration0 =
+        new TAINodeConfiguration(aiNodeLocation0, aiNodeResource0);
+
+    try (PublicBAOS byteArrayOutputStream = new PublicBAOS();
+        DataOutputStream outputStream = new DataOutputStream(byteArrayOutputStream)) {
+      ThriftCommonsSerDeUtils.serializeTAINodeConfiguration(aiNodeConfiguration0, outputStream);
+      TAINodeConfiguration aiNodeConfiguration1 =
+          ThriftCommonsSerDeUtils.deserializeTAINodeConfiguration(
+              ByteBuffer.wrap(byteArrayOutputStream.getBuf(), 0, byteArrayOutputStream.size()));
+      Assert.assertEquals(aiNodeConfiguration0, aiNodeConfiguration1);
+    }
+  }
+
+  @Test
+  public void readWriteTAINodeLocationTest() throws IOException {
+    TAINodeLocation aiNodeLocation0 = new TAINodeLocation(0, new TEndPoint("0.0.0.0", 10810));
+
+    try (PublicBAOS byteArrayOutputStream = new PublicBAOS();
+        DataOutputStream outputStream = new DataOutputStream(byteArrayOutputStream)) {
+      ThriftCommonsSerDeUtils.serializeTAINodeLocation(aiNodeLocation0, outputStream);
+      TAINodeLocation aiNodeLocation1 =
+          ThriftCommonsSerDeUtils.deserializeTAINodeLocation(
+              ByteBuffer.wrap(byteArrayOutputStream.getBuf(), 0, byteArrayOutputStream.size()));
+      Assert.assertEquals(aiNodeLocation0, aiNodeLocation1);
+    }
+  }
+
+  @Test
+  public void writeTAINodeConfigurationFailureUsesAINodeMessage() {
+    TAINodeConfiguration aiNodeConfiguration =
+        new TAINodeConfiguration(
+            new TAINodeLocation(0, new TEndPoint("0.0.0.0", 10810)), new TNodeResource(8, 1024));
+
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () ->
+                ThriftCommonsSerDeUtils.serializeTAINodeConfiguration(
+                    aiNodeConfiguration, new DataOutputStream(new FailingOutputStream())));
+
+    Assert.assertTrue(
+        exception.getMessage(), exception.getMessage().contains("TAINodeConfiguration"));
+    Assert.assertFalse(
+        exception.getMessage(), exception.getMessage().contains("TDataNodeConfiguration"));
+  }
+
+  @Test
+  public void readTAINodeLocationFailureUsesAINodeMessage() {
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () -> ThriftCommonsSerDeUtils.deserializeTAINodeLocation(ByteBuffer.allocate(0)));
+
+    Assert.assertTrue(exception.getMessage(), exception.getMessage().contains("TAINodeLocation"));
+    Assert.assertFalse(
+        exception.getMessage(), exception.getMessage().contains("TDataNodeLocation"));
+  }
+
+  private static class FailingOutputStream extends OutputStream {
+
+    @Override
+    public void write(int b) throws IOException {
+      throw new IOException("forced failure");
     }
   }
 }

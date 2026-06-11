@@ -176,16 +176,16 @@ public final class UtilMessages {
   public static final String WRITE_T_AI_NODE_INFO_FAILED = "写入 TAINodeInfo 失败：";
   public static final String READ_T_AI_NODE_INFO_FAILED = "读取 TAINodeInfo 失败：";
   public static final String WRITE_T_AI_NODE_LOCATION_FAILED = "写入 TAINodeLocation 失败：";
-  public static final String READ_T_AI_NODE_LOCATION_FAILED = "读取 TDataNodeLocation 失败：";
+  public static final String READ_T_AI_NODE_LOCATION_FAILED = "读取 TAINodeLocation 失败：";
+  public static final String WRITE_T_AI_NODE_CONFIGURATION_FAILED =
+      "写入 TAINodeConfiguration 失败：";
   public static final String READ_T_AI_NODE_CONFIGURATION_FAILED =
       "读取 TAINodeConfiguration 失败：";
 
   // ======================== ThriftConfigNodeSerDeUtils ========================
 
-  public static final String WRITE_T_STORAGE_GROUP_SCHEMA_FAILED =
-      "写入 TStorageGroupSchema 失败：";
-  public static final String READ_T_STORAGE_GROUP_SCHEMA_FAILED =
-      "读取 TStorageGroupSchema 失败：";
+  public static final String WRITE_T_DATABASE_SCHEMA_FAILED = "写入 TDatabaseSchema 失败：";
+  public static final String READ_T_DATABASE_SCHEMA_FAILED = "读取 TDatabaseSchema 失败：";
   public static final String WRITE_T_CONFIG_NODE_LOCATION_FAILED =
       "写入 TConfigNodeLocation 失败：";
   public static final String READ_T_CONFIG_NODE_LOCATION_FAILED =

@@ -20,12 +20,16 @@ package org.apache.iotdb.commons.utils;
 
 import org.apache.iotdb.common.rpc.thrift.TConfigNodeLocation;
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
+import org.apache.iotdb.commons.exception.runtime.ThriftSerDeException;
 import org.apache.iotdb.confignode.rpc.thrift.TDatabaseSchema;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public class ThriftConfigNodeSerDeUtilsTest {
@@ -38,18 +42,17 @@ public class ThriftConfigNodeSerDeUtilsTest {
   }
 
   @Test
-  public void readWriteTStorageGroupSchemaTest() {
-    TDatabaseSchema storageGroupSchema0 = new TDatabaseSchema();
-    storageGroupSchema0.setName("root.sg");
-    storageGroupSchema0.setSchemaReplicationFactor(3);
-    storageGroupSchema0.setDataReplicationFactor(3);
-    storageGroupSchema0.setTimePartitionInterval(604800);
+  public void readWriteTDatabaseSchemaTest() {
+    TDatabaseSchema databaseSchema0 = new TDatabaseSchema();
+    databaseSchema0.setName("root.sg");
+    databaseSchema0.setSchemaReplicationFactor(3);
+    databaseSchema0.setDataReplicationFactor(3);
+    databaseSchema0.setTimePartitionInterval(604800);
 
-    ThriftConfigNodeSerDeUtils.serializeTDatabaseSchema(storageGroupSchema0, buffer);
+    ThriftConfigNodeSerDeUtils.serializeTDatabaseSchema(databaseSchema0, buffer);
     buffer.flip();
-    TDatabaseSchema storageGroupSchema1 =
-        ThriftConfigNodeSerDeUtils.deserializeTDatabaseSchema(buffer);
-    Assert.assertEquals(storageGroupSchema0, storageGroupSchema1);
+    TDatabaseSchema databaseSchema1 = ThriftConfigNodeSerDeUtils.deserializeTDatabaseSchema(buffer);
+    Assert.assertEquals(databaseSchema0, databaseSchema1);
   }
 
   @Test
@@ -63,5 +66,41 @@ public class ThriftConfigNodeSerDeUtilsTest {
     TConfigNodeLocation configNodeLocation1 =
         ThriftConfigNodeSerDeUtils.deserializeTConfigNodeLocation(buffer);
     Assert.assertEquals(configNodeLocation0, configNodeLocation1);
+  }
+
+  @Test
+  public void writeTDatabaseSchemaFailureUsesDatabaseSchemaMessage() {
+    TDatabaseSchema databaseSchema = new TDatabaseSchema("root.sg");
+
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () ->
+                ThriftConfigNodeSerDeUtils.serializeTDatabaseSchema(
+                    databaseSchema, new DataOutputStream(new FailingOutputStream())));
+
+    Assert.assertTrue(exception.getMessage(), exception.getMessage().contains("TDatabaseSchema"));
+    Assert.assertFalse(
+        exception.getMessage(), exception.getMessage().contains("TStorageGroupSchema"));
+  }
+
+  @Test
+  public void readTDatabaseSchemaFailureUsesDatabaseSchemaMessage() {
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () -> ThriftConfigNodeSerDeUtils.deserializeTDatabaseSchema(ByteBuffer.allocate(0)));
+
+    Assert.assertTrue(exception.getMessage(), exception.getMessage().contains("TDatabaseSchema"));
+    Assert.assertFalse(
+        exception.getMessage(), exception.getMessage().contains("TStorageGroupSchema"));
+  }
+
+  private static class FailingOutputStream extends OutputStream {
+
+    @Override
+    public void write(int b) throws IOException {
+      throw new IOException("forced failure");
+    }
   }
 }
