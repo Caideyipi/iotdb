@@ -253,6 +253,73 @@ public class ThriftCommonsSerDeUtilsTest {
   }
 
   @Test
+  public void writeTDataNodeInfoFailureUsesDataNodeConfigurationMessage() {
+    TDataNodeConfiguration dataNodeConfiguration = new TDataNodeConfiguration();
+    TDataNodeLocation dataNodeLocation = new TDataNodeLocation();
+    dataNodeLocation.setDataNodeId(0);
+    dataNodeLocation.setClientRpcEndPoint(new TEndPoint("0.0.0.0", 6667));
+    dataNodeLocation.setInternalEndPoint(new TEndPoint("0.0.0.0", 10730));
+    dataNodeLocation.setMPPDataExchangeEndPoint(new TEndPoint("0.0.0.0", 10740));
+    dataNodeLocation.setDataRegionConsensusEndPoint(new TEndPoint("0.0.0.0", 10760));
+    dataNodeLocation.setSchemaRegionConsensusEndPoint(new TEndPoint("0.0.0.0", 10750));
+    dataNodeConfiguration.setLocation(dataNodeLocation);
+    dataNodeConfiguration.setResource(new TNodeResource(16, 1024));
+
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () ->
+                ThriftCommonsSerDeUtils.serializeTDataNodeInfo(
+                    dataNodeConfiguration, new DataOutputStream(new FailingOutputStream())));
+
+    Assert.assertTrue(
+        exception.getMessage(), exception.getMessage().contains("TDataNodeConfiguration"));
+    Assert.assertFalse(exception.getMessage(), exception.getMessage().contains("TDataNodeInfo"));
+  }
+
+  @Test
+  public void readTDataNodeInfoFailureUsesDataNodeConfigurationMessage() {
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () -> ThriftCommonsSerDeUtils.deserializeTDataNodeInfo(ByteBuffer.allocate(0)));
+
+    Assert.assertTrue(
+        exception.getMessage(), exception.getMessage().contains("TDataNodeConfiguration"));
+    Assert.assertFalse(exception.getMessage(), exception.getMessage().contains("TDataNodeInfo"));
+  }
+
+  @Test
+  public void writeTAINodeInfoFailureUsesAINodeConfigurationMessage() {
+    TAINodeConfiguration aiNodeConfiguration =
+        new TAINodeConfiguration(
+            new TAINodeLocation(0, new TEndPoint("0.0.0.0", 10810)), new TNodeResource(8, 1024));
+
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () ->
+                ThriftCommonsSerDeUtils.serializeTAINodeInfo(
+                    aiNodeConfiguration, new DataOutputStream(new FailingOutputStream())));
+
+    Assert.assertTrue(
+        exception.getMessage(), exception.getMessage().contains("TAINodeConfiguration"));
+    Assert.assertFalse(exception.getMessage(), exception.getMessage().contains("TAINodeInfo"));
+  }
+
+  @Test
+  public void readTAINodeInfoFailureUsesAINodeConfigurationMessage() {
+    ThriftSerDeException exception =
+        Assert.assertThrows(
+            ThriftSerDeException.class,
+            () -> ThriftCommonsSerDeUtils.deserializeTAINodeInfo(ByteBuffer.allocate(0)));
+
+    Assert.assertTrue(
+        exception.getMessage(), exception.getMessage().contains("TAINodeConfiguration"));
+    Assert.assertFalse(exception.getMessage(), exception.getMessage().contains("TAINodeInfo"));
+  }
+
+  @Test
   public void readTAINodeLocationFailureUsesAINodeMessage() {
     ThriftSerDeException exception =
         Assert.assertThrows(

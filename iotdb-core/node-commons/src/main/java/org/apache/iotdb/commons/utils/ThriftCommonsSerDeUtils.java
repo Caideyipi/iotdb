@@ -174,7 +174,7 @@ public class ThriftCommonsSerDeUtils {
     try {
       dataNodeInfo.write(generateWriteProtocol(stream));
     } catch (TException e) {
-      throw new ThriftSerDeException(UtilMessages.WRITE_T_DATA_NODE_INFO_FAILED, e);
+      throw new ThriftSerDeException(UtilMessages.WRITE_T_DATA_NODE_CONFIGURATION_FAILED, e);
     }
   }
 
@@ -183,7 +183,7 @@ public class ThriftCommonsSerDeUtils {
     try {
       dataNodeInfo.read(generateReadProtocol(buffer));
     } catch (TException e) {
-      throw new ThriftSerDeException(UtilMessages.READ_T_DATA_NODE_INFO_FAILED, e);
+      throw new ThriftSerDeException(UtilMessages.READ_T_DATA_NODE_CONFIGURATION_FAILED, e);
     }
     return dataNodeInfo;
   }
@@ -319,7 +319,7 @@ public class ThriftCommonsSerDeUtils {
     try {
       aiNodeInfo.write(generateWriteProtocol(stream));
     } catch (TException e) {
-      throw new ThriftSerDeException(UtilMessages.WRITE_T_AI_NODE_INFO_FAILED, e);
+      throw new ThriftSerDeException(UtilMessages.WRITE_T_AI_NODE_CONFIGURATION_FAILED, e);
     }
   }
 
@@ -328,7 +328,7 @@ public class ThriftCommonsSerDeUtils {
     try {
       aiNodeInfo.read(generateReadProtocol(buffer));
     } catch (TException e) {
-      throw new ThriftSerDeException(UtilMessages.READ_T_AI_NODE_INFO_FAILED, e);
+      throw new ThriftSerDeException(UtilMessages.READ_T_AI_NODE_CONFIGURATION_FAILED, e);
     }
     return aiNodeInfo;
   }

@@ -153,8 +153,6 @@ public final class UtilMessages {
       "Read TDataNodeLocation failed: ";
   public static final String WRITE_T_CREATE_CQ_REQ_FAILED = "Write TCreateCQReq failed: ";
   public static final String READ_T_CREATE_CQ_REQ_FAILED = "Read TCreateCQReq failed: ";
-  public static final String WRITE_T_DATA_NODE_INFO_FAILED = "Write TDataNodeInfo failed: ";
-  public static final String READ_T_DATA_NODE_INFO_FAILED = "Read TDataNodeInfo failed: ";
   public static final String WRITE_T_SERIES_PARTITION_SLOT_FAILED =
       "Write TSeriesPartitionSlot failed: ";
   public static final String READ_T_SERIES_PARTITION_SLOT_FAILED =
@@ -175,8 +173,6 @@ public final class UtilMessages {
       "Read TRegionReplicaSet failed: ";
   public static final String WRITE_T_SCHEMA_NODE_FAILED = "Write TSchemaNode failed: ";
   public static final String READ_T_SCHEMA_NODE_FAILED = "Read TSchemaNode failed: ";
-  public static final String WRITE_T_AI_NODE_INFO_FAILED = "Write TAINodeInfo failed: ";
-  public static final String READ_T_AI_NODE_INFO_FAILED = "Read TAINodeInfo failed: ";
   public static final String WRITE_T_AI_NODE_LOCATION_FAILED = "Write TAINodeLocation failed: ";
   public static final String READ_T_AI_NODE_LOCATION_FAILED = "Read TAINodeLocation failed: ";
   public static final String WRITE_T_AI_NODE_CONFIGURATION_FAILED =

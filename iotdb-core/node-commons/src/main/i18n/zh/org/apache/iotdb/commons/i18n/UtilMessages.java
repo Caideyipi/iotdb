@@ -151,8 +151,6 @@ public final class UtilMessages {
       "读取 TDataNodeLocation 失败：";
   public static final String WRITE_T_CREATE_CQ_REQ_FAILED = "写入 TCreateCQReq 失败：";
   public static final String READ_T_CREATE_CQ_REQ_FAILED = "读取 TCreateCQReq 失败：";
-  public static final String WRITE_T_DATA_NODE_INFO_FAILED = "写入 TDataNodeInfo 失败：";
-  public static final String READ_T_DATA_NODE_INFO_FAILED = "读取 TDataNodeInfo 失败：";
   public static final String WRITE_T_SERIES_PARTITION_SLOT_FAILED =
       "写入 TSeriesPartitionSlot 失败：";
   public static final String READ_T_SERIES_PARTITION_SLOT_FAILED =
@@ -173,8 +171,6 @@ public final class UtilMessages {
       "读取 TRegionReplicaSet 失败：";
   public static final String WRITE_T_SCHEMA_NODE_FAILED = "写入 TSchemaNode 失败：";
   public static final String READ_T_SCHEMA_NODE_FAILED = "读取 TSchemaNode 失败：";
-  public static final String WRITE_T_AI_NODE_INFO_FAILED = "写入 TAINodeInfo 失败：";
-  public static final String READ_T_AI_NODE_INFO_FAILED = "读取 TAINodeInfo 失败：";
   public static final String WRITE_T_AI_NODE_LOCATION_FAILED = "写入 TAINodeLocation 失败：";
   public static final String READ_T_AI_NODE_LOCATION_FAILED = "读取 TAINodeLocation 失败：";
   public static final String WRITE_T_AI_NODE_CONFIGURATION_FAILED =
