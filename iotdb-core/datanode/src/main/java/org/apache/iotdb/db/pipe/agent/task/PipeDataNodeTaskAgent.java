@@ -374,7 +374,7 @@ public class PipeDataNodeTaskAgent extends PipeTaskAgent {
   ///////////////////////// Heartbeat /////////////////////////
 
   public void collectPipeMetaList(final TDataNodeHeartbeatResp resp) throws TException {
-    if (!tryReadLockWithTimeOut(
+    if (!tryReadLockWithTimeOutInMs(
         CommonDescriptor.getInstance().getConfig().getDnConnectionTimeoutInMS() * 2L / 3)) {
       return;
     }
@@ -586,7 +586,7 @@ public class PipeDataNodeTaskAgent extends PipeTaskAgent {
     }
   }
 
-  public boolean isFullSync(final PipeParameters parameters) {
+  public boolean isFullSync(final PipeParameters parameters) throws IllegalPathException {
     if (isSnapshotMode(parameters)) {
       return false;
     }
@@ -600,7 +600,10 @@ public class PipeDataNodeTaskAgent extends PipeTaskAgent {
             Arrays.asList(EXTRACTOR_REALTIME_ENABLE_KEY, SOURCE_REALTIME_ENABLE_KEY),
             EXTRACTOR_REALTIME_ENABLE_DEFAULT_VALUE);
 
-    return isHistoryEnable && isRealtimeEnable;
+    return isHistoryEnable
+        && isRealtimeEnable
+        && DataRegionListeningFilter.parseInsertionDeletionListeningOptionPair(parameters)
+            .getLeft();
   }
 
   @Override

@@ -21,6 +21,7 @@ package org.apache.iotdb.db.pipe.sink.protocol.thrift.sync;
 
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
 import org.apache.iotdb.common.rpc.thrift.TSStatus;
+import org.apache.iotdb.commons.pipe.agent.task.progress.CommitterKey;
 import org.apache.iotdb.commons.pipe.event.EnrichedEvent;
 import org.apache.iotdb.commons.pipe.sink.client.IoTDBSyncClient;
 import org.apache.iotdb.commons.pipe.sink.limiter.TsFileSendRateLimiter;
@@ -274,7 +275,7 @@ public class IoTDBDataRegionSyncSink extends IoTDBDataNodeSyncSink {
     final Map<Pair<String, Long>, Double> pipe2WeightMap = batchToTransfer.deepCopyPipe2WeightMap();
 
     for (final File tsFile : sealedFiles) {
-      doTransfer(pipe2WeightMap, tsFile, null);
+      doTransfer(pipe2WeightMap, tsFile, null, null);
       try {
         RetryUtils.retryOnException(
             () -> {
@@ -427,7 +428,8 @@ public class IoTDBDataRegionSyncSink extends IoTDBDataNodeSyncSink {
                   pipeTsFileInsertionEvent.getCreationTime()),
               1.0),
           pipeTsFileInsertionEvent.getTsFile(),
-          pipeTsFileInsertionEvent.isWithMod() ? pipeTsFileInsertionEvent.getModFile() : null);
+          pipeTsFileInsertionEvent.isWithMod() ? pipeTsFileInsertionEvent.getModFile() : null,
+          pipeTsFileInsertionEvent.getDatabaseName());
     } finally {
       pipeTsFileInsertionEvent.decreaseReferenceCount(
           IoTDBDataRegionSyncSink.class.getName(), false);
@@ -437,7 +439,8 @@ public class IoTDBDataRegionSyncSink extends IoTDBDataNodeSyncSink {
   private void doTransfer(
       final Map<Pair<String, Long>, Double> pipeName2WeightMap,
       final File tsFile,
-      final File modFile)
+      final File modFile,
+      final String dataBaseName)
       throws PipeException, IOException {
 
     final Pair<IoTDBSyncClient, Boolean> clientAndStatus = clientManager.getClient();
@@ -453,7 +456,11 @@ public class IoTDBDataRegionSyncSink extends IoTDBDataNodeSyncSink {
         final TPipeTransferReq req =
             compressIfNeeded(
                 PipeTransferTsFileSealWithModReq.toTPipeTransferReq(
-                    modFile.getName(), modFile.length(), tsFile.getName(), tsFile.length()));
+                    modFile.getName(),
+                    modFile.length(),
+                    tsFile.getName(),
+                    tsFile.length(),
+                    dataBaseName));
 
         pipeName2WeightMap.forEach(
             (pipePair, weight) ->
@@ -478,7 +485,11 @@ public class IoTDBDataRegionSyncSink extends IoTDBDataNodeSyncSink {
       try {
         final TPipeTransferReq req =
             compressIfNeeded(
-                PipeTransferTsFileSealReq.toTPipeTransferReq(tsFile.getName(), tsFile.length()));
+                dataBaseName == null
+                    ? PipeTransferTsFileSealReq.toTPipeTransferReq(
+                        tsFile.getName(), tsFile.length())
+                    : PipeTransferTsFileSealWithModReq.toTPipeTransferReq(
+                        tsFile.getName(), tsFile.length(), dataBaseName));
 
         pipeName2WeightMap.forEach(
             (pipePair, weight) ->
@@ -521,9 +532,15 @@ public class IoTDBDataRegionSyncSink extends IoTDBDataNodeSyncSink {
   }
 
   @Override
-  public synchronized void discardEventsOfPipe(final String pipeNameToDrop, final int regionId) {
+  public synchronized void discardEventsOfPipe(
+      final String pipeNameToDrop, final long creationTimeToDrop, final int regionId) {
+    discardEventsOfPipe(new CommitterKey(pipeNameToDrop, creationTimeToDrop, regionId, -1));
+  }
+
+  @Override
+  public synchronized void discardEventsOfPipe(final CommitterKey committerKey) {
     if (Objects.nonNull(tabletBatchBuilder)) {
-      tabletBatchBuilder.discardEventsOfPipe(pipeNameToDrop, regionId);
+      tabletBatchBuilder.discardEventsOfPipe(committerKey);
     }
   }
 

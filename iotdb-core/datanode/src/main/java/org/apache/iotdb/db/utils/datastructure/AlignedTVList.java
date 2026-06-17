@@ -138,6 +138,16 @@ public abstract class AlignedTVList extends TVList {
   }
 
   @Override
+  public synchronized AlignedTVList cloneForFlushSort() {
+    AlignedTVList cloneList = AlignedTVList.newAlignedList(new ArrayList<>(dataTypes));
+    cloneAs(cloneList);
+    cloneList.memoryBinaryChunkSize = this.memoryBinaryChunkSize;
+    cloneList.values = this.values;
+    cloneList.bitMaps = this.bitMaps;
+    return cloneList;
+  }
+
+  @Override
   public synchronized AlignedTVList clone() {
     AlignedTVList cloneList = AlignedTVList.newAlignedList(new ArrayList<>(dataTypes));
     cloneAs(cloneList);
@@ -836,8 +846,9 @@ public abstract class AlignedTVList extends TVList {
   }
 
   @Override
-  public synchronized long calculateRamSize() {
-    return timestamps.size() * alignedTvListArrayMemCost();
+  public synchronized RamInfo calculateRamSize() {
+    return new RamInfo(
+        timestamps.size(), alignedTvListArrayMemCost(), rowCount, new ArrayList<>(dataTypes));
   }
 
   /**

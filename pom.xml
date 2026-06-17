@@ -60,7 +60,7 @@
         <argLine/>
         <awaitility.version>4.2.0</awaitility.version>
         <boost.include.dir/>
-        <bouncycastle.version>1.81</bouncycastle.version>
+        <bouncycastle.version>1.84</bouncycastle.version>
         <!-- This was the last version to support Java 8 -->
         <caffeine.version>2.9.3</caffeine.version>
         <cglib.version>3.3.0</cglib.version>
@@ -75,7 +75,6 @@
         <commons-pool2.version>2.11.1</commons-pool2.version>
         <commons.collections4.version>4.4</commons.collections4.version>
         <ctest.skip.tests>false</ctest.skip.tests>
-        <disruptor.version>3.4.4</disruptor.version>
         <drill.freemarker.maven.plugin.version>1.21.1</drill.freemarker.maven.plugin.version>
         <dropwizard.metrics.version>4.2.19</dropwizard.metrics.version>
         <eclipse-collections.version>11.1.0</eclipse-collections.version>
@@ -127,7 +126,7 @@
         <!-- This was the last version to support Java 8 -->
         <!--mockito.version>4.11.0</mockito.version-->
         <moquette.version>0.18.0</moquette.version>
-        <netty.version>4.1.126.Final</netty.version>
+        <netty.version>4.1.134.Final</netty.version>
         <!-- This was the last version to support Java 8 -->
         <openapi.generator.version>6.6.0</openapi.generator.version>
         <osgi.version>7.0.0</osgi.version>
@@ -158,6 +157,7 @@
         <!-- Override this to `true`, if you want to disable spotless -->
         <spotless.skip>false</spotless.skip>
         <spotless.version>2.43.0</spotless.version>
+        <clang.format.version>17.0.6</clang.format.version>
         <!-- This was the last version to support Java 8 -->
         <swagger.version>1.6.14</swagger.version>
         <thrift.exec-cmd.executable>chmod</thrift.exec-cmd.executable>
@@ -453,11 +453,6 @@
                 <groupId>com.h2database</groupId>
                 <artifactId>h2-mvstore</artifactId>
                 <version>${h2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.lmax</groupId>
-                <artifactId>disruptor</artifactId>
-                <version>${disruptor.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -869,9 +864,9 @@
                     <version>1.7.1</version>
                 </plugin>
                 <plugin>
-                    <groupId>com.googlecode.cmake-maven-project</groupId>
+                    <groupId>io.github.cmake-maven-plugin</groupId>
                     <artifactId>cmake-maven-plugin</artifactId>
-                    <version>3.29.3-b2</version>
+                    <version>4.2.3-b1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

@@ -57,6 +57,7 @@ import org.apache.iotdb.rpc.TSStatusCode;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransportException;
 import org.apache.tsfile.utils.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,13 +65,13 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.apache.iotdb.db.queryengine.metric.QueryExecutionMetricSet.DISPATCH_READ;
+import static org.apache.iotdb.db.utils.ErrorHandlingUtils.onThriftFrameOversizeException;
 
 public class FragmentInstanceDispatcherImpl implements IFragInstanceDispatcher {
 
@@ -79,8 +80,6 @@ public class FragmentInstanceDispatcherImpl implements IFragInstanceDispatcher {
 
   private static final CommonConfig COMMON_CONFIG = CommonDescriptor.getInstance().getConfig();
 
-  private final ExecutorService executor;
-  private final ExecutorService writeOperationExecutor;
   private final QueryType type;
   private final MPPQueryContext queryContext;
   private final String localhostIpAddr;
@@ -102,15 +101,11 @@ public class FragmentInstanceDispatcherImpl implements IFragInstanceDispatcher {
   public FragmentInstanceDispatcherImpl(
       QueryType type,
       MPPQueryContext queryContext,
-      ExecutorService executor,
-      ExecutorService writeOperationExecutor,
       IClientManager<TEndPoint, SyncDataNodeInternalServiceClient> syncInternalServiceClientManager,
       IClientManager<TEndPoint, AsyncDataNodeInternalServiceClient>
           asyncInternalServiceClientManager) {
     this.type = type;
     this.queryContext = queryContext;
-    this.executor = executor;
-    this.writeOperationExecutor = writeOperationExecutor;
     this.syncInternalServiceClientManager = syncInternalServiceClientManager;
     this.asyncInternalServiceClientManager = asyncInternalServiceClientManager;
     this.localhostIpAddr = IoTDBDescriptor.getInstance().getConfig().getInternalAddress();
@@ -518,6 +513,15 @@ public class FragmentInstanceDispatcherImpl implements IFragInstanceDispatcher {
                   TSStatusCode.EXECUTE_STATEMENT_ERROR,
                   String.format("unknown read type [%s]", instance.getType())));
       }
+    } catch (TException e) {
+      Throwable rootCause = ExceptionUtils.getRootCause(e);
+      if (rootCause instanceof TTransportException
+          && ((TTransportException) rootCause).getType() == TTransportException.CORRUPTED_DATA) {
+        // Don't set DISPATCH_ERROR status to avoid retry if dispatch failed because of thrift frame
+        // is oversize
+        throw new FragmentInstanceDispatchException(onThriftFrameOversizeException(rootCause));
+      }
+      throw e;
     }
   }
 

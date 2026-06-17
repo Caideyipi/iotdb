@@ -140,10 +140,10 @@ import org.apache.iotdb.db.exception.metadata.PathNotExistException;
 import org.apache.iotdb.db.exception.metadata.SchemaQuotaExceededException;
 import org.apache.iotdb.db.exception.sql.SemanticException;
 import org.apache.iotdb.db.pipe.agent.PipeDataNodeAgent;
+import org.apache.iotdb.db.pipe.source.dataregion.DataRegionListeningFilter;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClient;
 import org.apache.iotdb.db.protocol.client.ConfigNodeClientManager;
 import org.apache.iotdb.db.protocol.client.ConfigNodeInfo;
-import org.apache.iotdb.db.protocol.client.DataNodeClientPoolFactory;
 import org.apache.iotdb.db.queryengine.common.MPPQueryContext;
 import org.apache.iotdb.db.queryengine.common.schematree.ISchemaTree;
 import org.apache.iotdb.db.queryengine.plan.Coordinator;
@@ -305,13 +305,6 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
   private static final IClientManager<ConfigRegionId, ConfigNodeClient> CONFIG_NODE_CLIENT_MANAGER =
       ConfigNodeClientManager.getInstance();
-
-  /** FIXME Consolidate this clientManager with the upper one. */
-  private static final IClientManager<ConfigRegionId, ConfigNodeClient>
-      CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER =
-          new IClientManager.Factory<ConfigRegionId, ConfigNodeClient>()
-              .createClientManager(
-                  new DataNodeClientPoolFactory.ClusterDeletionConfigNodeClientPoolFactory());
 
   private static final class ClusterConfigTaskExecutorHolder {
 
@@ -1598,7 +1591,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
     req.setPathPatternTree(
         serializePatternListToByteBuffer(deactivateTemplateStatement.getPathPatternList()));
     try (final ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -1699,7 +1692,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
             alterSchemaTemplateStatement.getOperationType(),
             alterSchemaTemplateStatement.getTemplateAlterInfo()));
     try (final ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -1754,7 +1747,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
     req.setTemplateName(unsetSchemaTemplateStatement.getTemplateName());
     req.setPath(unsetSchemaTemplateStatement.getPath().getFullPath());
     try (final ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -1834,10 +1827,10 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
         new PipeParameters(createPipeStatement.getSourceAttributes());
     final PipeParameters sinkPipeParameters =
         new PipeParameters(createPipeStatement.getSinkAttributes());
-    if (PipeConfig.getInstance().getPipeAutoSplitFullEnabled()
-        && PipeDataNodeAgent.task().isFullSync(sourcePipeParameters)) {
-      try (final ConfigNodeClient configNodeClient =
-          CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+    try (final ConfigNodeClient configNodeClient =
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+      if (PipeConfig.getInstance().getPipeAutoSplitFullEnabled()
+          && PipeDataNodeAgent.task().isFullSync(sourcePipeParameters)) {
         // 1. Send request to create the real-time data synchronization pipeline
         final TCreatePipeReq realtimeReq =
             new TCreatePipeReq()
@@ -1882,11 +1875,19 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
                                     Boolean.toString(false),
                                     PipeSourceConstant.EXTRACTOR_HISTORY_ENABLE_KEY,
                                     Boolean.toString(true),
-                                    // We force the historical pipe to transfer data only
+                                    PipeSourceConstant.EXTRACTOR_MODE_KEY,
+                                    PipeSourceConstant.EXTRACTOR_MODE_SNAPSHOT_VALUE,
+                                    // We force the historical pipe to transfer data (and maybe
+                                    // deletion) only
                                     // Thus we can transfer schema only once
                                     // And may drop the historical pipe on successfully transferred
                                     PipeSourceConstant.SOURCE_INCLUSION_KEY,
-                                    PipeSourceConstant.EXTRACTOR_INCLUSION_DEFAULT_VALUE,
+                                    DataRegionListeningFilter
+                                            .parseInsertionDeletionListeningOptionPair(
+                                                sourcePipeParameters)
+                                            .getRight()
+                                        ? "data"
+                                        : PipeSourceConstant.EXTRACTOR_INCLUSION_DEFAULT_VALUE,
                                     PipeSourceConstant.SOURCE_EXCLUSION_KEY,
                                     PipeSourceConstant.EXTRACTOR_EXCLUSION_DEFAULT_VALUE)))
                         .getAttribute())
@@ -1909,31 +1910,24 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
 
         // 3. Set success status only if both pipelines are created successfully
         future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
-      } catch (final Exception e) {
-        // Catch any other exceptions (e.g., network issues)
-        future.setException(e);
-      }
-      return future;
-    }
-
-    try (final ConfigNodeClient configNodeClient =
-        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
-      TCreatePipeReq req =
-          new TCreatePipeReq()
-              .setPipeName(pipeName)
-              .setIfNotExistsCondition(createPipeStatement.hasIfNotExistsCondition())
-              .setExtractorAttributes(createPipeStatement.getSourceAttributes())
-              .setProcessorAttributes(createPipeStatement.getProcessorAttributes())
-              .setConnectorAttributes(createPipeStatement.getSinkAttributes());
-      TSStatus tsStatus = configNodeClient.createPipe(req);
-      if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != tsStatus.getCode()) {
-        LOGGER.warn(
-            "Failed to create pipe {} in config node, status is {}.",
-            createPipeStatement.getPipeName(),
-            tsStatus);
-        future.setException(new IoTDBException(tsStatus));
       } else {
-        future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
+        final TCreatePipeReq req =
+            new TCreatePipeReq()
+                .setPipeName(pipeName)
+                .setIfNotExistsCondition(createPipeStatement.hasIfNotExistsCondition())
+                .setExtractorAttributes(createPipeStatement.getSourceAttributes())
+                .setProcessorAttributes(createPipeStatement.getProcessorAttributes())
+                .setConnectorAttributes(createPipeStatement.getSinkAttributes());
+        final TSStatus tsStatus = configNodeClient.createPipe(req);
+        if (TSStatusCode.SUCCESS_STATUS.getStatusCode() != tsStatus.getCode()) {
+          LOGGER.warn(
+              "Failed to create pipe {} in config node, status is {}.",
+              createPipeStatement.getPipeName(),
+              tsStatus);
+          future.setException(new IoTDBException(tsStatus));
+        } else {
+          future.set(new ConfigTaskResult(TSStatusCode.SUCCESS_STATUS));
+        }
       }
     } catch (final Exception e) {
       future.setException(e);
@@ -2406,7 +2400,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
             queryId,
             serializePatternListToByteBuffer(deleteTimeSeriesStatement.getPathPatternList()));
     try (ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -2452,7 +2446,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
             queryId,
             serializePatternListToByteBuffer(deleteLogicalViewStatement.getPathPatternList()));
     try (ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -2541,7 +2535,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
         new TDeleteLogicalViewReq(
             queryId, serializePatternListToByteBuffer(Collections.singletonList(oldName)));
     try (ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -2613,7 +2607,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
         new TAlterLogicalViewReq(
             context.getQueryId().getId(), ByteBuffer.wrap(stream.toByteArray()));
     try (final ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       TSStatus tsStatus;
       do {
         try {
@@ -2675,7 +2669,7 @@ public class ClusterConfigTaskExecutor implements IConfigTaskExecutor {
             .setIsGeneratedByPipe(shouldMarkAsPipeRequest);
     TSStatus tsStatus;
     try (ConfigNodeClient client =
-        CLUSTER_DELETION_CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
+        CONFIG_NODE_CLIENT_MANAGER.borrowClient(ConfigNodeInfo.CONFIG_REGION_ID)) {
       do {
         try {
           tsStatus = client.alterLogicalView(req);

@@ -443,11 +443,13 @@ public class PipeDescriptor {
                 "rate_limiter_hot_reload_check_interval_ms",
                 String.valueOf(config.getRateLimiterHotReloadCheckIntervalMs()))));
 
-    config.setPipeConnectorRequestSliceThresholdBytes(
+    config.setPipeSinkRequestSliceThresholdBytes(
         Integer.parseInt(
-            properties.getProperty(
-                "pipe_connector_request_slice_threshold_bytes",
-                String.valueOf(config.getPipeSinkRequestSliceThresholdBytes()))));
+            Optional.ofNullable(properties.getProperty("pipe_sink_request_slice_threshold_bytes"))
+                .orElse(
+                    properties.getProperty(
+                        "pipe_connector_request_slice_threshold_bytes",
+                        String.valueOf(config.getPipeSinkRequestSliceThresholdBytes())))));
 
     config.setPipeReceiverLoginPeriodicVerificationIntervalMs(
         Long.parseLong(
@@ -613,7 +615,7 @@ public class PipeDescriptor {
             "pipe_async_connector_selector_number",
             isHotModify);
     if (value != null) {
-      config.setPipeAsyncConnectorSelectorNumber(Integer.parseInt(value));
+      config.setPipeAsyncSinkSelectorNumber(Integer.parseInt(value));
     }
 
     value =
@@ -623,7 +625,7 @@ public class PipeDescriptor {
             "pipe_async_connector_max_client_number",
             isHotModify);
     if (value != null) {
-      config.setPipeAsyncConnectorMaxClientNumber(Integer.parseInt(value));
+      config.setPipeAsyncSinkMaxClientNumber(Integer.parseInt(value));
     }
 
     value =
@@ -633,7 +635,7 @@ public class PipeDescriptor {
             "pipe_async_connector_max_tsfile_client_number",
             isHotModify);
     if (value != null) {
-      config.setPipeAsyncConnectorMaxTsFileClientNumber(Integer.parseInt(value));
+      config.setPipeAsyncSinkMaxTsFileClientNumber(Integer.parseInt(value));
     }
 
     value =
