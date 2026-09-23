@@ -435,21 +435,17 @@ public class ConsensusPrefetchingQueueTest {
     }
   }
 
-  @Test
-  public void testLagIncludesUnreadWalSearchIndexDistance() throws Exception {
+  public void testLagPreservesRawWalGapMagnitude() throws Exception {
     final String originalSystemDir = IoTDBDescriptor.getInstance().getConfig().getSystemDir();
-    final File systemDir = temporaryFolder.newFolder("lagWithUnreadWal");
+    final File systemDir = temporaryFolder.newFolder("lagWithRawWalGap");
     ConsensusPrefetchingQueue queue = null;
     try {
-      final DataRegionId regionId = new DataRegionId(9);
+      final DataRegionId regionId = new DataRegionId(10);
       final FakeConsensusReqReader reader = new FakeConsensusReqReader();
-      reader.currentSearchIndex = 300_000L;
+      reader.currentSearchIndex = 400_000L;
       final IoTConsensusServerImpl serverImpl = mock(IoTConsensusServerImpl.class);
       when(serverImpl.getConsensusReqReader()).thenReturn(reader);
       when(serverImpl.getWriterSafeFrontierTracker()).thenReturn(new WriterSafeFrontierTracker());
-      final ConsensusLogToTabletConverter converter = mock(ConsensusLogToTabletConverter.class);
-      when(converter.getDatabaseName()).thenReturn("db");
-      when(converter.convert(any())).thenReturn(Collections.singletonList(createTablet()));
       queue =
           new ConsensusPrefetchingQueue(
               "consumerGroup",
@@ -461,25 +457,19 @@ public class ConsensusPrefetchingQueueTest {
                   "topic",
                   SubscriptionWalRetentionPolicy.UNBOUNDED,
                   SubscriptionWalRetentionPolicy.UNBOUNDED),
-              converter,
+              mock(ConsensusLogToTabletConverter.class),
               newCommitManager(systemDir),
               new RegionProgress(Collections.emptyMap()),
-              1L,
+              33_001L,
               1L,
               true);
-      queue.setSubscriptionMemoryManager(new SubscriptionMemoryManager(16L * 1024 * 1024));
 
-      assertEquals(300_000L, queue.getRawWalGap());
-      assertEquals(300_000L, queue.getLag());
+      assertEquals(367_000L, queue.getRawWalGap());
+      assertEquals(367_000L, queue.getLag());
 
-      assertNull(queue.poll("consumer"));
-      assertTrue(pendingEntries(queue).offer(createRequest(1L)));
-      queue.drivePrefetchOnce();
-
-      assertEquals(2L, queue.getCurrentReadSearchIndex());
-      assertEquals(299_999L, queue.getRawWalGap());
-      assertEquals(1L, queue.getRemainingEventCount());
-      assertEquals(300_000L, queue.getLag());
+      assertTrue(pendingEntries(queue).offer(createRequest(33_001L)));
+      assertEquals(367_001L, queue.getLag());
+      assertEquals("367001", queue.coreReportMessage().get("lag"));
     } finally {
       if (queue != null) {
         queue.close();

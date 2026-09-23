@@ -43,12 +43,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -537,7 +540,6 @@ public class ConsensusSubscriptionBroker implements ISubscriptionBroker {
               .map(q -> q.getConsensusGroupId().toString())
               .sorted()
               .collect(Collectors.toList());
-
       final TopicOwnershipSnapshot existingSnapshot = topicOwnershipSnapshots.get(topicName);
       if (Objects.nonNull(existingSnapshot)
           && existingSnapshot.hasSameConsumers(sortedConsumers)
@@ -873,71 +875,99 @@ public class ConsensusSubscriptionBroker implements ISubscriptionBroker {
         final List<String> activeConsumers,
         final List<String> activeRegionIds,
         final TopicOwnershipSnapshot previousSnapshot) {
-      if (activeConsumers.isEmpty() || activeRegionIds.isEmpty()) {
+      final List<String> sortedConsumers = immutableSortedDistinctCopy(activeConsumers);
+      final List<String> sortedRegionIds = immutableSortedDistinctCopy(activeRegionIds);
+      if (sortedConsumers.isEmpty() || sortedRegionIds.isEmpty()) {
         return new TopicOwnershipSnapshot(
-            Collections.unmodifiableList(new ArrayList<>(activeConsumers)),
-            Collections.unmodifiableList(new ArrayList<>(activeRegionIds)),
+            sortedConsumers,
+            sortedRegionIds,
             Collections.emptyMap(),
-            0);
+            Objects.hash(sortedConsumers, sortedRegionIds));
       }
 
+      final Set<String> activeConsumerSet = new HashSet<>(sortedConsumers);
       final Map<String, String> ownerByRegionId = new LinkedHashMap<>();
-      final Map<String, Integer> regionCountByConsumer = new HashMap<>();
-      activeConsumers.forEach(consumer -> regionCountByConsumer.put(consumer, 0));
+      final Map<String, Integer> loadByConsumer = new HashMap<>();
+      final Map<String, NavigableSet<String>> regionsByConsumer = new HashMap<>();
+      for (final String consumer : sortedConsumers) {
+        loadByConsumer.put(consumer, 0);
+        regionsByConsumer.put(consumer, new TreeSet<>());
+      }
 
       // Keep assignments that are still valid. Reassigning every region whenever membership
       // changes causes consumers to repeatedly lose their WAL queues and makes empty polls likely.
-      if (Objects.nonNull(previousSnapshot)) {
-        for (final String regionId : activeRegionIds) {
-          final String owner = previousSnapshot.getOwnerConsumerId(regionId);
-          if (Objects.nonNull(owner) && regionCountByConsumer.containsKey(owner)) {
-            ownerByRegionId.put(regionId, owner);
-            regionCountByConsumer.computeIfPresent(owner, (ignored, count) -> count + 1);
-          }
+      final List<String> unassignedRegionIds = new ArrayList<>();
+      for (final String regionId : sortedRegionIds) {
+        final String previousOwner =
+            Objects.isNull(previousSnapshot) ? null : previousSnapshot.getOwnerConsumerId(regionId);
+        if (activeConsumerSet.contains(previousOwner)) {
+          assignRegion(regionId, previousOwner, ownerByRegionId, loadByConsumer, regionsByConsumer);
+        } else {
+          unassignedRegionIds.add(regionId);
         }
       }
-
-      final List<String> unassignedRegionIds =
-          activeRegionIds.stream()
-              .filter(regionId -> !ownerByRegionId.containsKey(regionId))
-              .collect(Collectors.toCollection(ArrayList::new));
-
-      // Assign newly created regions, or regions whose owner left, before moving valid ownership.
       for (final String regionId : unassignedRegionIds) {
-        final String leastLoadedConsumer =
-            findLeastLoadedConsumer(activeConsumers, regionCountByConsumer);
-        ownerByRegionId.put(regionId, leastLoadedConsumer);
-        regionCountByConsumer.computeIfPresent(leastLoadedConsumer, (ignored, count) -> count + 1);
+        assignRegion(
+            regionId,
+            findLeastLoadedConsumer(sortedConsumers, loadByConsumer),
+            ownerByRegionId,
+            loadByConsumer,
+            regionsByConsumer);
       }
 
       // Move only enough valid ownerships to make the distribution balanced. Choosing consumers
       // and regions deterministically keeps ownership stable across JVMs.
       while (true) {
-        final String leastLoadedConsumer =
-            findLeastLoadedConsumer(activeConsumers, regionCountByConsumer);
-        final String mostLoadedConsumer =
-            findMostLoadedConsumer(activeConsumers, regionCountByConsumer);
-        if (regionCountByConsumer.get(mostLoadedConsumer)
-                - regionCountByConsumer.get(leastLoadedConsumer)
-            <= 1) {
+        final String leastLoadedConsumer = findLeastLoadedConsumer(sortedConsumers, loadByConsumer);
+        final String mostLoadedConsumer = findMostLoadedConsumer(sortedConsumers, loadByConsumer);
+        if (loadByConsumer.get(mostLoadedConsumer) - loadByConsumer.get(leastLoadedConsumer) <= 1) {
           break;
         }
 
-        final String regionToMove =
-            activeRegionIds.stream()
-                .filter(regionId -> mostLoadedConsumer.equals(ownerByRegionId.get(regionId)))
-                .max(Comparator.naturalOrder())
-                .orElseThrow(IllegalStateException::new);
+        final String regionToMove = regionsByConsumer.get(mostLoadedConsumer).pollLast();
         ownerByRegionId.put(regionToMove, leastLoadedConsumer);
-        regionCountByConsumer.computeIfPresent(mostLoadedConsumer, (ignored, count) -> count - 1);
-        regionCountByConsumer.computeIfPresent(leastLoadedConsumer, (ignored, count) -> count + 1);
+        loadByConsumer.compute(mostLoadedConsumer, (ignored, load) -> load - 1);
+        loadByConsumer.compute(leastLoadedConsumer, (ignored, load) -> load + 1);
+        regionsByConsumer.get(leastLoadedConsumer).add(regionToMove);
       }
 
       return new TopicOwnershipSnapshot(
-          Collections.unmodifiableList(new ArrayList<>(activeConsumers)),
-          Collections.unmodifiableList(new ArrayList<>(activeRegionIds)),
+          sortedConsumers,
+          sortedRegionIds,
           Collections.unmodifiableMap(ownerByRegionId),
-          ownerByRegionId.hashCode());
+          Objects.hash(sortedConsumers, sortedRegionIds, ownerByRegionId));
+    }
+
+    static TopicOwnershipSnapshot create(
+        final List<String> activeConsumers, final List<String> activeRegionIds) {
+      return create(activeConsumers, activeRegionIds, null);
+    }
+
+    private static List<String> immutableSortedDistinctCopy(final List<String> ids) {
+      return Collections.unmodifiableList(new ArrayList<>(new TreeSet<>(ids)));
+    }
+
+    private static void assignRegion(
+        final String regionId,
+        final String consumerId,
+        final Map<String, String> ownerByRegionId,
+        final Map<String, Integer> loadByConsumer,
+        final Map<String, NavigableSet<String>> regionsByConsumer) {
+      ownerByRegionId.put(regionId, consumerId);
+      loadByConsumer.compute(consumerId, (ignored, load) -> load + 1);
+      regionsByConsumer.get(consumerId).add(regionId);
+    }
+
+    private static String findLeastLoadedConsumer(
+        final List<String> consumers, final Map<String, Integer> loadByConsumer) {
+      String selectedConsumer = null;
+      for (final String consumer : consumers) {
+        if (Objects.isNull(selectedConsumer)
+            || loadByConsumer.get(consumer) < loadByConsumer.get(selectedConsumer)) {
+          selectedConsumer = consumer;
+        }
+      }
+      return selectedConsumer;
     }
 
     private static TopicOwnershipSnapshot empty() {
@@ -945,22 +975,16 @@ public class ConsensusSubscriptionBroker implements ISubscriptionBroker {
           Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), 0);
     }
 
-    private static String findLeastLoadedConsumer(
-        final List<String> activeConsumers, final Map<String, Integer> regionCountByConsumer) {
-      return activeConsumers.stream()
-          .min(
-              Comparator.comparingInt((String consumer) -> regionCountByConsumer.get(consumer))
-                  .thenComparing(Comparator.naturalOrder()))
-          .orElseThrow(IllegalStateException::new);
-    }
-
     private static String findMostLoadedConsumer(
-        final List<String> activeConsumers, final Map<String, Integer> regionCountByConsumer) {
-      return activeConsumers.stream()
-          .min(
-              Comparator.comparingInt((String consumer) -> -regionCountByConsumer.get(consumer))
-                  .thenComparing(Comparator.naturalOrder()))
-          .orElseThrow(IllegalStateException::new);
+        final List<String> consumers, final Map<String, Integer> loadByConsumer) {
+      String selectedConsumer = null;
+      for (final String consumer : consumers) {
+        if (Objects.isNull(selectedConsumer)
+            || loadByConsumer.get(consumer) > loadByConsumer.get(selectedConsumer)) {
+          selectedConsumer = consumer;
+        }
+      }
+      return selectedConsumer;
     }
 
     private boolean isEmpty() {

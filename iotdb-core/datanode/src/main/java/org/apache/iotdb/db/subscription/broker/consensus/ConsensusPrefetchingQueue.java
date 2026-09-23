@@ -4258,10 +4258,10 @@ public class ConsensusPrefetchingQueue {
   /**
    * Returns the queue-local lag used by metrics.
    *
-   * <p>Entries in the materialized lifecycle stages have already advanced the WAL cursor. Pending
-   * entries have not, so they overlap with the raw WAL search-index gap. Taking the maximum for the
-   * unmaterialized part avoids double-counting that overlap while still exposing a large unread WAL
-   * backlog instead of collapsing it to one unit.
+   * <p>Events that have already entered an in-memory lifecycle stage are counted exactly. Unread
+   * WAL data is represented by its raw local search-index distance. The resulting value is an
+   * approximation because not every WAL search index necessarily becomes a topic event, but it
+   * preserves the magnitude of a WAL backlog without scanning WAL only for reporting.
    */
   public long getLag() {
     final long materializedLag =
