@@ -261,8 +261,7 @@ public abstract class SubscriptionPrefetchingQueue {
               "Subscription: SubscriptionPrefetchingQueue {} poll non-pollable event {} from prefetching queue (broken invariant), nack and remove it",
               this,
               event);
-          event.nack(); // now pollable
-          // no need to update inFlightEvents and prefetchingQueue
+          nackAndRequeue(event);
           continue;
         }
 
@@ -330,8 +329,7 @@ public abstract class SubscriptionPrefetchingQueue {
                 "Subscription: SubscriptionPrefetchingQueue {} poll non-pollable event {} from prefetching queue (broken invariant), nack and remove it",
                 this,
                 event);
-            event.nack(); // now pollable
-            // no need to update inFlightEvents and prefetchingQueue
+            nackAndRequeue(event);
             continue;
           }
 
@@ -354,6 +352,12 @@ public abstract class SubscriptionPrefetchingQueue {
     } while (!timer.isExpired());
 
     return null;
+  }
+
+  private void nackAndRequeue(final SubscriptionEvent event) {
+    event.nack(); // now pollable
+    // The event has already been removed from this queue, so put it back after resetting its state.
+    prefetchingQueue.offer(event);
   }
 
   /////////////////////////////// prefetch ///////////////////////////////
