@@ -114,7 +114,10 @@ public class SubscriptionBroker {
     for (final String topicName : sortedTopicNames) {
       final SubscriptionPrefetchingQueue prefetchingQueue =
           topicNameToPrefetchingQueue.get(topicName);
-      remainingTopicSize -= 1;
+      // Include the current topic when splitting the remaining receiver deadline. Otherwise, the
+      // first topic receives too large a share and later topics are polled after it has mostly
+      // elapsed.
+      final int currentTopicSize = remainingTopicSize--;
 
       // Recheck
       if (Objects.isNull(prefetchingQueue) || prefetchingQueue.isClosed()) {
@@ -128,7 +131,7 @@ public class SubscriptionBroker {
         final PollTimer timer =
             new PollTimer(
                 System.currentTimeMillis(),
-                SubscriptionAgent.receiver().remainingMs() / Math.max(1, remainingTopicSize));
+                SubscriptionAgent.receiver().remainingMs() / Math.max(1, currentTopicSize));
         event = prefetchingQueue.pollV2(consumerId, timer);
       } else {
         // TODO: migrate poll to pollV2
